@@ -3,7 +3,7 @@ import { Suspense, lazy } from 'react'
 import { createBrowserRouter } from 'react-router-dom'
 
 // Lazy load pages for code splitting
-const HomePage = lazy(() => import('@/pages/customer/HomePage'))
+const HomePage = lazy(() => import('@/pages/homepage/HomePage'))
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 

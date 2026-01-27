@@ -31,6 +31,24 @@
   }
 }
 
+@utility login-card {
+  background: rgba(15, 14, 23, 0.4);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  box-shadow: 0 0 40px rgba(139, 92, 246, 0.1);
+}
+
+@utility glass-input {
+  background: rgba(15, 14, 23, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  &:focus-within {
+    border-color: #8b5cf6;
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);
+  }
+}
+
 @utility text-gradient {
   @apply bg-clip-text text-transparent bg-gradient-to-r from-[#8b5cf6] to-[#d946ef];
 }
