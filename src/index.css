@@ -53,3 +53,41 @@
     -moz-osx-font-smoothing: grayscale;
   }
 }
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Copy các class tùy chỉnh từ file HTML cũ vào đây */
+@layer components {
+  .glass-card {
+    background: rgba(26, 22, 37, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(157, 39, 241, 0.3);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+  }
+
+  .glass-card:hover {
+    border-color: rgba(157, 39, 241, 0.6);
+    box-shadow: 0 0 15px rgba(157, 39, 241, 0.2);
+  }
+
+  /* Fix lỗi Ant Design Radio Group để hiển thị giống mẫu */
+  .ant-radio-button-wrapper {
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    height: auto !important;
+  }
+
+  .ant-radio-button-wrapper::before {
+    display: none !important;
+  }
+}
+
+body {
+  @apply bg-[#0f0e17] text-white;
+  margin: 0;
+}
