@@ -77,3 +77,17 @@
     transform: translateX(-50%);
   }
 }
+
+@utility glass-panel {
+  background: rgba(15, 14, 23, 0.85);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(137, 90, 246, 0.3);
+  box-shadow: 0 0 40px rgba(137, 90, 246, 0.15);
+}
+
+@utility neon-border-focus {
+  &:focus-within {
+    border-color: #895af6;
+    box-shadow: 0 0 0 2px rgba(137, 90, 246, 0.2), 0 0 15px rgba(137, 90, 246, 0.4);
+  }
+}

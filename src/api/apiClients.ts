@@ -2,7 +2,16 @@
 import { API_BASE_URL, createApiClient, getStoredToken, handleUnauthorized } from '@/lib/axios'
 
 /**
- * Auth Client - Cho các API authentication
+ * Public Auth Client - Cho các API authentication không cần token (Login, Register...)
+ */
+export const publicAuthClient = createApiClient({
+  baseURL: `${API_BASE_URL}/auth`,
+  // Không truyền getToken để tránh gửi kèm token
+  // Không truyền onUnauthorized để tránh redirect loop nếu login thất bại
+})
+
+/**
+ * Auth Client - Cho các API authentication cần token
  */
 export const authClient = createApiClient({
   baseURL: `${API_BASE_URL}/auth`,
