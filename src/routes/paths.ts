@@ -14,3 +14,8 @@ export const PATHS = {
   },
   NOT_FOUND: '*'
 }
+
+export const PATH_MANAGER = {
+  root: '/manager',
+  createProject: '/manager/create-project',
+};
