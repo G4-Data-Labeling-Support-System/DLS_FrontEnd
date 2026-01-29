@@ -25,9 +25,18 @@
   --color-secondary-800: #86198f;
   --color-secondary-900: #701a75;
 
+  /* DLSS New Theme Colors */
+  --color-dlss-primary: #9d27f1;
+  --color-dlss-secondary: #d946ef;
+  --color-background-dark: #0f0e17;
+  --color-surface-dark: #1a1625;
+  --color-header-dark: #140e1d;
+  --color-glass-border: rgba(157, 39, 241, 0.3);
+
   /* Typography */
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-heading: 'Outfit', system-ui, sans-serif;
+  --font-display: 'Public Sans', sans-serif;
 
   /* Spacing */
   --spacing-18: 4.5rem;
@@ -48,9 +57,10 @@
   }
 
   body {
-    font-family: var(--font-sans);
+    font-family: var(--font-display);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    @apply bg-[#0f0e17] text-white;
   }
 }
 
@@ -60,6 +70,27 @@
 
 /* Copy các class tùy chỉnh từ file HTML cũ vào đây */
 @layer components {
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #0f0e17;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #322839;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #4a3b54;
+  }
+
+  /* Glass Card */
   .glass-card {
     background: rgba(26, 22, 37, 0.6);
     backdrop-filter: blur(12px);
@@ -74,7 +105,33 @@
     box-shadow: 0 0 15px rgba(157, 39, 241, 0.2);
   }
 
-  /* Fix lỗi Ant Design Radio Group để hiển thị giống mẫu */
+  /* Text Effects */
+  .neon-text {
+    text-shadow: 0 0 8px rgba(157, 39, 241, 0.6);
+  }
+
+  .fuchsia-text-glow {
+    text-shadow: 0 0 10px rgba(217, 70, 239, 0.6);
+  }
+
+  /* Backgrounds */
+  .bg-grid {
+    background-size: 40px 40px;
+    background-image: linear-gradient(rgba(157, 39, 241, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(157, 39, 241, 0.05) 1px, transparent 1px);
+  }
+
+  /* Components */
+  .connector-line-active {
+    height: 2px;
+    background: linear-gradient(90deg, #9d27f1 0%, rgba(157, 39, 241, 0.2) 100%);
+  }
+
+  .connector-line-inactive {
+    height: 2px;
+    background: rgba(157, 39, 241, 0.15);
+  }
+
+  /* Ant Design Overrides to match theme */
   .ant-radio-button-wrapper {
     border: none !important;
     background: transparent !important;
@@ -85,9 +142,23 @@
   .ant-radio-button-wrapper::before {
     display: none !important;
   }
+
+  /* Custom input styles for date picker indicator */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) brightness(0.8);
+    cursor: pointer;
+  }
 }
 
-body {
-  @apply bg-[#0f0e17] text-white;
-  margin: 0;
+/* Utilities for shadows that Tailwind v4 might not pick up automatically from theme if complex */
+@utility shadow-neon {
+  box-shadow: 0 0 10px rgba(157, 39, 241, 0.5), 0 0 20px rgba(157, 39, 241, 0.3);
+}
+
+@utility shadow-neon-sm {
+  box-shadow: 0 0 5px rgba(157, 39, 241, 0.5);
+}
+
+@utility shadow-fuchsia-glow {
+  box-shadow: 0 0 15px rgba(217, 70, 239, 0.4);
 }
