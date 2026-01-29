@@ -1,8 +1,11 @@
-export type ProjectDataType = 'image' | 'video' | 'text';
-
-export interface CreateProjectFormValues {
+export interface CreateProjectInput {
     projectName: string;
     description?: string;
-    deadline: any;
-    dataType: ProjectDataType;
+    deadline: string;
+    dataType: 'image' | 'video' | 'text';
+}
+
+export interface ProjectIdState {
+    id: string;
+    locked: boolean;
 }

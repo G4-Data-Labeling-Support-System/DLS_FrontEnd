@@ -1,144 +1,90 @@
-
 import React from 'react';
-import { Form, Input, DatePicker, Button } from 'antd';
-import {
-    CalendarOutlined,
-    LockOutlined,
-    ArrowRightOutlined,
-    FileImageOutlined,
-    VideoCameraOutlined,
-    FileTextOutlined,
-    CheckCircleOutlined
-} from '@ant-design/icons';
+import { Form, Input, Button, Select } from 'antd';
+import { LockOutlined } from '@ant-design/icons';
+import '@/features/manager/components/manager.css'; // Import CSS
+
+const PROJECT_STATUS = [
+    { label: 'Active', value: 'active' },
+    { label: 'Blocked', value: 'blocked' },
+    { label: 'Archived', value: 'archived' },
+];
 
 export const CreateProjectForm: React.FC = () => {
     const [form] = Form.useForm();
 
     return (
-        <Form form={form} layout="vertical" className="glass-card rounded-2xl p-6 lg:p-8 flex flex-col gap-8 relative overflow-hidden flex-1">
-            <div className="absolute -top-32 -right-32 size-96 bg-dlss-primary/10 rounded-full blur-[100px] pointer-events-none"></div>
+        <Form
+            form={form}
+            layout="vertical"
+            // Class này tạo khung kính rộng 70% màn hình
+            className="project-glass-card"
+            initialValues={{ status: 'active' }}
+        >
+            {/* WRAPPER QUAN TRỌNG: Gom nội dung vào giữa (max-width: 1000px) */}
+            <div className="form-content-wrapper">
 
-            <div className="relative z-10 flex flex-col gap-8">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div className="lg:col-span-2 space-y-6">
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-white ml-1 flex items-center gap-1">Project Name <span className="text-dlss-secondary">*</span></label>
-                            <div className="relative group">
-                                <div className="absolute inset-0 bg-gradient-to-r from-dlss-primary to-dlss-secondary rounded-xl opacity-0 group-focus-within:opacity-20 transition-opacity blur-md"></div>
-                                <Form.Item name="projectName" rules={[{ required: true, message: 'Please enter project name' }]} noStyle>
-                                    <Input
-                                        className="relative w-full bg-surface-dark border border-glass-border rounded-xl px-4 py-3 text-white placeholder:text-[#ad9cba]/50 focus:border-dlss-primary focus:ring-0 transition-all outline-none hover:border-dlss-primary hover:bg-surface-dark focus:bg-surface-dark"
-                                        placeholder="e.g. Autonomous Vehicle Perception Phase 2"
-                                    />
-                                </Form.Item>
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-white ml-1">Description</label>
-                            <Form.Item name="description" noStyle>
-                                <Input.TextArea
-                                    className="w-full bg-surface-dark border border-glass-border rounded-xl px-4 py-3 text-white placeholder:text-[#ad9cba]/50 focus:border-dlss-primary focus:ring-0 transition-all outline-none resize-none hover:border-dlss-primary hover:bg-surface-dark focus:bg-surface-dark"
-                                    placeholder="Briefly describe the dataset and labeling goals..."
-                                    rows={4}
-                                />
-                            </Form.Item>
-                        </div>
+                <div className="mb-8 border-b border-white/10 pb-4 text-center">
+                    <h2 className="text-2xl font-bold text-white tracking-wide">Project Details</h2>
+                    <p className="text-white/50 text-sm mt-1">Enter the essential information to start your new project.</p>
+                </div>
+
+                {/* Grid layout: Tên/Mô tả bên trái (2 phần), ID/Status bên phải (1 phần) */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+                    {/* --- CỘT TRÁI (Main Info) --- */}
+                    <div className="md:col-span-2 space-y-6">
+                        <Form.Item
+                            name="projectName"
+                            label="Project Name *"
+                            rules={[{ required: true }]}
+                        >
+                            <Input size="large" placeholder="e.g. Autonomous Vehicle Perception Phase 2" />
+                        </Form.Item>
+
+                        <Form.Item name="description" label="Description">
+                            <Input.TextArea
+                                rows={8}
+                                placeholder="Briefly describe the dataset, labeling goals..."
+                                className="resize-none"
+                            />
+                        </Form.Item>
                     </div>
 
+                    {/* --- CỘT PHẢI (Meta Info) --- */}
                     <div className="space-y-6">
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-white ml-1">Project ID</label>
-                            <div className="w-full bg-surface-dark/40 border border-glass-border/30 rounded-xl px-4 py-3 text-[#ad9cba] font-mono text-sm cursor-not-allowed select-none flex items-center justify-between">
-                                <span>PROJ-2024-X9Y2</span>
-                                <LockOutlined className="text-sm opacity-50" />
+                        <Form.Item label="Project ID">
+                            <div className="bg-[#1a1625] border border-white/10 py-3 px-4 rounded-xl flex justify-between items-center text-gray-400 font-mono shadow-inner">
+                                <span className="tracking-widest text-sm">PROJ-X9Y2</span>
+                                <LockOutlined className="text-white/20" />
                             </div>
+                        </Form.Item>
+
+                        <Form.Item name="status" label="Status *" rules={[{ required: true }]}>
+                            <Select size="large" options={PROJECT_STATUS} />
+                        </Form.Item>
+
+                        {/* Note nhỏ trang trí */}
+                        <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20 mt-4">
+                            <p className="text-purple-200 text-xs m-0 leading-relaxed">
+                                <strong>Note:</strong> Active projects will be immediately visible to the workforce.
+                            </p>
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-white ml-1 flex items-center gap-1">Deadline <span className="text-dlss-secondary">*</span></label>
-                            <div className="relative group">
-                                <Form.Item name="deadline" rules={[{ required: true, message: 'Please select a deadline' }]} noStyle>
-                                    <DatePicker
-                                        className="w-full bg-surface-dark border border-glass-border rounded-xl px-4 py-3 text-white placeholder:text-[#ad9cba]/50 focus:border-dlss-primary focus:ring-0 transition-all outline-none hover:border-dlss-primary hover:bg-surface-dark focus:bg-surface-dark"
-                                        suffixIcon={<CalendarOutlined className="text-[#ad9cba] group-focus-within:text-dlss-primary transition-colors" />}
-                                    />
-                                </Form.Item>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
-                <div className="h-px bg-glass-border w-full"></div>
-
-                <div className="space-y-4">
-                    <label className="text-sm font-bold text-white ml-1 flex items-center gap-1">Data Type <span className="text-dlss-secondary">*</span></label>
-
-                    {/* Custom Radio Group Wrapper */}
-                    <Form.Item name="dataType" rules={[{ required: true, message: 'Please select data type' }]} noStyle>
-                        <DataTypeRadioGroup />
-                    </Form.Item>
+                {/* --- FOOTER BUTTON --- */}
+                <div className="mt-12 pt-6 border-t border-white/10 flex justify-center md:justify-end">
+                    <Button
+                        htmlType="submit"
+                        type="primary"
+                        size="large"
+                        className="h-12 px-10 bg-gradient-to-r from-[#d946ef] to-[#9d27f1] border-none font-bold rounded-xl shadow-lg hover:scale-105 transition-transform"
+                    >
+                        CREATE PROJECT
+                    </Button>
                 </div>
-            </div>
 
-            <div className="flex justify-between items-center pt-8 mt-auto border-t border-glass-border/50">
-                <div className="flex flex-col">
-                    <div className="text-xs text-[#ad9cba]">
-                        <span className="text-dlss-secondary">*</span> Required fields
-                    </div>
-                    <div className="text-[10px] text-[#ad9cba]/60 mt-1 uppercase tracking-wider font-semibold">
-                        Step 1 of 4: Project Configuration
-                    </div>
-                </div>
-                <Button
-                    className="group relative px-10 py-6 h-auto rounded-xl overflow-hidden font-bold text-white shadow-neon transition-all hover:shadow-[0_0_20px_rgba(157,39,241,0.6)] hover:-translate-y-0.5 active:translate-y-0 border-none bg-transparent"
-                    type="primary"
-                    htmlType="button"
-                >
-                    <div className="absolute inset-0 bg-gradient-to-r from-dlss-primary to-dlss-secondary"></div>
-                    <div className="absolute inset-0 bg-white/0 group-hover:bg-white/20 transition-colors"></div>
-                    <span className="relative flex items-center gap-2 tracking-wide uppercase text-sm">
-                        Create Project & Continue to Dataset
-                        <ArrowRightOutlined className="text-xl group-hover:translate-x-1 transition-transform" />
-                    </span>
-                </Button>
             </div>
         </Form>
-    );
-};
-
-// Custom component to handle the radio group logic with custom UI
-const DataTypeRadioGroup: React.FC<{ value?: string; onChange?: (value: string) => void }> = ({ value, onChange }) => {
-    const options = [
-        { val: 'image', icon: <FileImageOutlined className="text-3xl" />, label: 'Image', desc: 'Bounding boxes, segmentation' },
-        { val: 'video', icon: <VideoCameraOutlined className="text-3xl" />, label: 'Video', desc: 'Object tracking, interpolation' },
-        { val: 'text', icon: <FileTextOutlined className="text-3xl" />, label: 'Text', desc: 'NER, sentiment analysis' }
-    ];
-
-    return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {options.map((opt) => (
-                <label key={opt.val} className="relative cursor-pointer group">
-                    <input
-                        type="radio"
-                        name="datatype"
-                        className="peer sr-only"
-                        checked={value === opt.val}
-                        onChange={() => onChange?.(opt.val)}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-r from-dlss-primary to-dlss-secondary opacity-0 peer-checked:opacity-20 rounded-xl blur-md transition-opacity"></div>
-                    <div className="relative h-full glass-card border-glass-border peer-checked:border-dlss-primary peer-checked:bg-dlss-primary/10 rounded-xl p-6 flex flex-col items-center justify-center gap-3 transition-all hover:border-dlss-primary/50 hover:bg-white/5">
-                        <div className="size-14 rounded-full bg-surface-dark border border-glass-border flex items-center justify-center text-[#ad9cba] peer-checked:text-white peer-checked:bg-dlss-primary peer-checked:border-dlss-primary peer-checked:shadow-neon-sm transition-all group-hover:scale-110">
-                            {opt.icon}
-                        </div>
-                        <div className="text-center">
-                            <span className="block text-white font-bold peer-checked:text-dlss-primary text-lg">{opt.label}</span>
-                            <span className="text-xs text-[#ad9cba] mt-1 block">{opt.desc}</span>
-                        </div>
-                        <div className="absolute top-4 right-4 opacity-0 peer-checked:opacity-100 transition-opacity scale-0 peer-checked:scale-100 duration-300">
-                            <CheckCircleOutlined className="text-dlss-primary drop-shadow-[0_0_8px_rgba(157,39,241,0.8)]" />
-                        </div>
-                    </div>
-                </label>
-            ))}
-        </div>
     );
 };
