@@ -3,6 +3,8 @@ import { Suspense, lazy } from 'react'
 import { createBrowserRouter } from 'react-router-dom'
 import { PATH_MANAGER } from './paths'
 import { CreateProjectPage } from '@/pages/manager'
+import DatasetSetupPage from '@/pages/manager/DatasetSetupPage'
+import ManagerLayout from '@/components/layout/ManagerLayout'
 
 // Lazy load pages for code splitting
 const HomePage = lazy(() => import('@/pages/customer/HomePage'))
@@ -45,22 +47,22 @@ export const router = createBrowserRouter([
       </LazyPage>
     ),
   },
+
   {
     path: PATH_MANAGER.root,
     element: (
       <LazyPage>
-        {/* <ManagerLayout /> */}
-        <CreateProjectPage />
+        <ManagerLayout /> {/* Sử dụng Layout ở đây */}
       </LazyPage>
     ),
     children: [
       {
         path: PATH_MANAGER.createProject,
-        element: (
-          <LazyPage>
-            <CreateProjectPage />
-          </LazyPage>
-        ),
+        element: <LazyPage><CreateProjectPage /></LazyPage>,
+      },
+      {
+        path: PATH_MANAGER.datasetSetup,
+        element: <LazyPage><DatasetSetupPage /></LazyPage>,
       },
     ],
   },

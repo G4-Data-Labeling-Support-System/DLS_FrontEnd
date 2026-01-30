@@ -1,34 +1,35 @@
-/* ==========================================================================
+/* /* ==========================================================================
    1. GLOBAL BACKGROUND (Nền trang phủ kín toàn bộ)
    ========================================================================== */
 body {
     background-color: #0f0e17;
     /* Màu nền tím đen */
 
-    /* Chuyển Background Image vào body để đảm bảo phủ kín 100% trang web bất kể chiều cao nội dung */
+    /* Chuyển Background Image vào body để đảm bảo phủ kín 100% trang web */
     background-image: linear-gradient(rgba(139, 92, 246, 0.05) 1px, transparent 1px),
         linear-gradient(90deg, rgba(139, 92, 246, 0.05) 1px, transparent 1px);
-    background-size: 40px 40px;
+    background-size: 1000px 100px;
     background-attachment: fixed;
     /* Giữ nền cố định khi cuộn */
 
-    min-height: 100vh;
+    min-height: 100%;
     margin: 0;
     overflow-x: hidden;
     /* Chặn thanh cuộn ngang thừa */
+    font-family: 'Public Sans', sans-serif;
 }
 
-/* Class này giờ chỉ đóng vai trò layout container */
+/* Class này đóng vai trò layout container */
 .manager-page-bg {
     width: 100%;
-    min-height: 100vh;
+    min-height: 100%;
     display: flex;
     flex-direction: column;
     position: relative;
 }
 
 /* ==========================================================================
-   2. GLASS CARD (Khung chính)
+   2. GLASS CARD (Khung chính chứa nội dung)
    ========================================================================== */
 .project-glass-card {
     /* Glass Effect (Hiệu ứng kính) */
@@ -38,47 +39,60 @@ body {
     border: 1px solid rgba(139, 92, 246, 0.2) !important;
     border-radius: 1.5rem !important;
 
-    /* Shadow tím nhẹ */
+    /* Shadow tím nhẹ tạo chiều sâu */
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 20px rgba(139, 92, 246, 0.1);
 
-    /* KÍCH THƯỚC: Chiếm 95% màn hình để tận dụng không gian */
+    /* KÍCH THƯỚC: */
     width: 95% !important;
-    max-width: 1200px !important;
-    /* Mở rộng tối đa cho màn hình 4K */
+    /* Chiếm 95% chiều ngang để tận dụng không gian */
+    max-width: 1600px !important;
+    /* Giới hạn tối đa trên màn hình cực lớn */
     margin: 0 auto;
+    /* Căn giữa */
 
-    /* PADDING: Tăng lên 3rem-4rem để chữ không bị sát viền */
-    padding: 1rem !important;
+    /* PADDING: Quan trọng - Để 3rem/4rem cho thoáng, tránh chữ sát viền */
+    padding: 3rem 4rem !important;
 
     position: relative;
     display: flex;
     flex-direction: column;
 
-    /* QUAN TRỌNG: Không dùng overflow: hidden để tránh mất nút Create Project ở dưới cùng */
-    height: 100% !important;
+    /* QUAN TRỌNG: Dùng auto để chiều cao tự giãn theo nội dung form */
+    /* Tránh dùng 100% cứng vì sẽ làm mất nút bấm nếu form dài */
+    height: auto !important;
 }
 
-/* Responsive: Trên màn hình laptop nhỏ/tablet thì giảm padding */
-@media (max-width: 1000px) {
+/* Responsive: Trên màn hình laptop nhỏ/tablet thì giảm padding và width */
+@media (max-width: 1200px) {
     .project-glass-card {
         padding: 2rem !important;
-        width: 90% !important;
+        width: 98% !important;
     }
 }
 
 /* ==========================================================================
-   3. CONTENT WRAPPER (Gom nội dung vào giữa)
+   3. CONTENT WRAPPER & UTILS
    ========================================================================== */
 .form-content-wrapper {
     width: 100%;
-    /* Giới hạn max-width 1100px để các ô input không bị kéo dài quá mức gây khó nhìn */
+    /* Giới hạn max-width để các ô input không bị quá dài khó đọc */
     max-width: 1100px !important;
     margin: 0 auto;
-    /* Căn giữa nội dung trong khung to */
+}
+
+/* Class mới: Dùng để reset style khi nhúng Form vào trong Glass Card đã có sẵn */
+/* Giúp tránh bị 2 lớp viền hoặc 2 lớp background chồng nhau */
+.form-transparent-override {
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
 }
 
 /* ==========================================================================
-   4. ANT DESIGN OVERRIDES (Theme Violet)
+   4. ANT DESIGN OVERRIDES (Theme Violet/Fuchsia)
    ========================================================================== */
 /* Label màu trắng sáng */
 .project-glass-card .ant-form-item-label>label {
@@ -132,4 +146,44 @@ body {
 /* Item khi di chuột vào (Hover) */
 .ant-select-item-option-active {
     background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Ẩn thanh cuộn cho Chrome, Safari, Opera */
+body::-webkit-scrollbar {
+    display: none;
+}
+
+/* Ẩn thanh cuộn cho IE, Edge và Firefox */
+body {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+/* ==========================================================================
+   5. CUSTOM SCROLLBAR (Tùy chỉnh thanh cuộn)
+   ========================================================================== */
+
+/* Độ rộng của thanh cuộn */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+    /* Cho thanh cuộn ngang nếu có */
+}
+
+/* Nền của rãnh cuộn (Track) - Để trùng màu nền web */
+::-webkit-scrollbar-track {
+    background: #0f0e17;
+}
+
+/* Thanh trượt (Thumb) - Màu xám tối bo tròn */
+::-webkit-scrollbar-thumb {
+    background: #2d2b3b;
+    border-radius: 0%;
+}
+
+/* Hiệu ứng khi di chuột vào thanh trượt - Đổi màu tím */
+::-webkit-scrollbar-thumb:hover {
+    background: #8b5cf6;
 }
