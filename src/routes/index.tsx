@@ -1,6 +1,8 @@
 import { LoadingOverlay, PageErrorBoundary } from '@/shared/components/ui'
 import { Suspense, lazy } from 'react'
 import { createBrowserRouter } from 'react-router-dom'
+import { PATH_MANAGER } from './paths'
+import { CreateProjectPage } from '@/pages/manager'
 
 // Lazy load pages for code splitting
 const HomePage = lazy(() => import('@/pages/customer/HomePage'))
@@ -42,6 +44,25 @@ export const router = createBrowserRouter([
         <NotFoundPage />
       </LazyPage>
     ),
+  },
+  {
+    path: PATH_MANAGER.root,
+    element: (
+      <LazyPage>
+        {/* <ManagerLayout /> */}
+        <CreateProjectPage />
+      </LazyPage>
+    ),
+    children: [
+      {
+        path: PATH_MANAGER.createProject,
+        element: (
+          <LazyPage>
+            <CreateProjectPage />
+          </LazyPage>
+        ),
+      },
+    ],
   },
 ])
 

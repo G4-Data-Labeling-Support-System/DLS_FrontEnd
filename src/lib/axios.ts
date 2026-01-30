@@ -1,54 +1,164 @@
-// API Client - Axios instance factory
-import type { ApiClientConfig } from '@/shared/types'
-import axios, { type AxiosInstance } from 'axios'
+import axios, {
+  type AxiosInstance,
+  type AxiosError,
+  type InternalAxiosRequestConfig
+} from 'axios';
 
-// ============ Config ============
-
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
-
-// ============ Auth Handlers ============
-
-export const getStoredToken = (): string | null => localStorage.getItem('accessToken')
-
-export const handleUnauthorized = (): void => {
-  localStorage.removeItem('accessToken')
-  localStorage.removeItem('refreshToken')
-  if (!window.location.pathname.includes('/login')) {
-    window.location.href = '/login'
-  }
+// ============ Types ============
+// Định nghĩa lại Config để không phụ thuộc file bên ngoài nếu chưa có
+export interface ApiClientConfig {
+  baseURL?: string;
+  timeout?: number;
+  headers?: Record<string, string>;
+  getToken?: () => string | null;
+  getRefreshToken?: () => string | null; // Thêm function lấy refresh token
+  onUnauthorized?: () => void;
+  onForbidden?: () => void;
 }
 
-// ============ Factory ============
+// Mở rộng type cho Request Config để thêm cờ _retry
+interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
 
+// ============ Config & State ============
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+
+// Biến trạng thái cho logic Refresh Token
+let isRefreshing = false;
+let failedQueue: any[] = [];
+
+// Hàm xử lý hàng đợi các request bị lỗi
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
+// ============ Auth Helpers (Mặc định) ============
+const defaultGetToken = () => localStorage.getItem('accessToken');
+const defaultGetRefreshToken = () => localStorage.getItem('refreshToken');
+
+const defaultHandleUnauthorized = () => {
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+  // Chỉ redirect nếu chưa ở trang login để tránh lặp vô tận
+  if (!window.location.pathname.includes('/login')) {
+    window.location.href = '/login';
+  }
+};
+
+// ============ Factory Function ============
 export function createApiClient({
-  baseURL,
+  baseURL = API_BASE_URL,
   timeout = 10000,
   headers = {},
-  getToken,
-  onUnauthorized,
+  getToken = defaultGetToken,
+  getRefreshToken = defaultGetRefreshToken,
+  onUnauthorized = defaultHandleUnauthorized,
   onForbidden
 }: ApiClientConfig): AxiosInstance {
+
   const client = axios.create({
     baseURL,
     timeout,
     headers: { 'Content-Type': 'application/json', ...headers }
-  })
+  });
 
-  client.interceptors.request.use((config) => {
-    const token = getToken?.()
-    if (token) config.headers.Authorization = `Bearer ${token}`
-    return config
-  })
+  // 1. Request Interceptor: Gắn Token
+  client.interceptors.request.use(
+    (config) => {
+      const token = getToken();
+      if (token && config.headers) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    },
+    (error) => Promise.reject(error)
+  );
 
+  // 2. Response Interceptor: Xử lý lỗi & Refresh Token
   client.interceptors.response.use(
     (res) => res,
-    (error) => {
-      const status = error.response?.status
-      if (status === 401) onUnauthorized?.()
-      if (status === 403) onForbidden?.()
-      return Promise.reject(error)
-    }
-  )
+    async (error: AxiosError) => {
+      const originalRequest = error.config as CustomAxiosRequestConfig;
+      const status = error.response?.status;
 
-  return client
+      // Xử lý lỗi 403 Forbidden
+      if (status === 403 && onForbidden) {
+        onForbidden();
+        return Promise.reject(error);
+      }
+
+      // Xử lý lỗi 401 Unauthorized (Token hết hạn)
+      if (status === 401 && originalRequest && !originalRequest._retry) {
+
+        // Nếu đang refresh thì đẩy request này vào hàng đợi
+        if (isRefreshing) {
+          return new Promise(function (resolve, reject) {
+            failedQueue.push({ resolve, reject });
+          })
+            .then((token) => {
+              if (originalRequest.headers) {
+                originalRequest.headers.Authorization = `Bearer ${token}`;
+              }
+              return client(originalRequest);
+            })
+            .catch((err) => Promise.reject(err));
+        }
+
+        originalRequest._retry = true;
+        isRefreshing = true;
+
+        try {
+          const refreshToken = getRefreshToken();
+          // Gọi API refresh token (Sử dụng instance axios mới để tránh loop interceptor)
+          const response = await axios.post(`${baseURL}/auth/refresh-token`, {
+            refreshToken
+          });
+
+          const { accessToken } = response.data;
+
+          // Lưu token mới
+          localStorage.setItem('accessToken', accessToken);
+
+          // Set lại header cho request gốc
+          if (originalRequest.headers) {
+            originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          }
+
+          // Xử lý hàng đợi đang chờ
+          processQueue(null, accessToken);
+
+          // Gọi lại request gốc
+          return client(originalRequest);
+
+        } catch (refreshError) {
+          // Nếu refresh fail thì force logout
+          processQueue(refreshError, null);
+          onUnauthorized();
+          return Promise.reject(refreshError);
+        } finally {
+          isRefreshing = false;
+        }
+      }
+
+      return Promise.reject(error);
+    }
+  );
+
+  return client;
 }
+
+// ============ Default Instance Export ============
+// Tạo sẵn một instance để dùng ngay trong app (Singleton)
+const axiosClient = createApiClient({
+  baseURL: API_BASE_URL,
+});
+
+export default axiosClient;
