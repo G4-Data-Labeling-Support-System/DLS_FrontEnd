@@ -1,17 +1,18 @@
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router-dom';
+import { themeClasses, commonPatterns } from '@/styles';
 
 export default function HomePage() {
   return (
-    <div className="relative min-h-screen bg-[#0f0e17] text-gray-100 font-sans overflow-x-hidden selection:bg-violet-500/30">
+    <div className={`relative min-h-screen ${themeClasses.backgrounds.deepDark} ${themeClasses.text.primary} font-sans overflow-x-hidden selection:bg-violet-500/30`}>
 
       {/* Navigation */}
       <nav className="absolute top-10 left-0 w-full z-50 px-10">
-        <div className="max-w-[1440px] mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <span className="material-symbols-outlined text-4xl text-violet-500 drop-shadow-[0_0_10px_rgba(139,92,246,0.8)]">
+        <div className={themeClasses.layouts.container}>
+          <div className={commonPatterns.logo.container}>
+            <span className={commonPatterns.logo.icon}>
               polyline
             </span>
-            <span className="font-space font-bold text-2xl tracking-tighter">
+            <span className={commonPatterns.logo.text}>
               DLSS
             </span>
           </div>
@@ -23,19 +24,19 @@ export default function HomePage() {
         {/* Background Effects */}
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(139,92,246,0.1)_0%,_rgba(15,14,23,1)_70%)]"></div>
-          <div className="absolute inset-0 grid-mesh opacity-20"></div>
+          <div className={`absolute inset-0 ${themeClasses.effects.gridMesh}`}></div>
           <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-violet-500 rounded-full blur-[2px] animate-pulse"></div>
           <div className="absolute top-1/3 right-1/4 w-3 h-3 bg-fuchsia-500 rounded-full blur-[3px] animate-bounce"></div>
           <div className="absolute bottom-1/4 left-1/3 w-1.5 h-1.5 bg-blue-400 rounded-full blur-[1px]"></div>
           <div className="absolute top-2/3 right-1/3 w-2.5 h-2.5 bg-violet-400 rounded-full blur-[2px]"></div>
         </div>
 
-        <div className="max-w-[1440px] mx-auto px-6 lg:px-10 relative z-10 text-center">
+        <div className={`${themeClasses.layouts.container} relative z-10 text-center`}>
           {/* Holographic Brain Visualization */}
           <div className="relative w-full max-w-2xl mx-auto mb-16 aspect-square flex items-center justify-center">
-            <div className="absolute inset-0 border border-violet-500/20 rounded-full scale-110"></div>
+            <div className={`absolute inset-0 border ${themeClasses.borders.violet20} rounded-full scale-110`}></div>
             <div className="absolute inset-0 border border-fuchsia-500/10 rounded-full scale-125 animate-[spin_20s_linear_infinite]"></div>
-            <div className="relative z-20 w-3/4 aspect-square overflow-hidden rounded-full border border-violet-500/40 p-1 bg-black/40 backdrop-blur-sm group shadow-[0_0_100px_rgba(139,92,246,0.2)]">
+            <div className={`relative z-20 w-3/4 aspect-square overflow-hidden rounded-full border ${themeClasses.borders.violet40} p-1 ${themeClasses.backgrounds.blackAlpha} backdrop-blur-sm group shadow-[0_0_100px_rgba(139,92,246,0.2)]`}>
               <div className="absolute inset-0 bg-gradient-to-b from-violet-500/20 via-transparent to-fuchsia-500/20 z-10 pointer-events-none"></div>
               <div className="absolute top-0 left-0 w-full h-[2px] bg-violet-400 shadow-[0_0_15px_rgba(139,92,246,1)] z-30 animate-[bounce_4s_ease-in-out_infinite]"></div>
               <img
@@ -46,23 +47,23 @@ export default function HomePage() {
             </div>
 
             {/* Floating Cards */}
-            <div className="absolute top-0 right-0 glass-card p-3 rounded-lg border-l-2 border-violet-500 flex items-center gap-3 scale-90 translate-x-12 -translate-y-4">
-              <span className="material-symbols-outlined text-violet-400">
+            <div className={`absolute top-0 right-0 ${themeClasses.cards.glass} border-l-2 border-violet-500 flex items-center gap-3 scale-90 translate-x-12 -translate-y-4`}>
+              <span className={`material-symbols-outlined ${themeClasses.text.violet}`}>
                 neurology
               </span>
               <div className="text-left">
-                <p className="text-[8px] uppercase tracking-widest text-gray-500">
+                <p className={`text-[8px] uppercase tracking-widest ${themeClasses.text.muted}`}>
                   Processing
                 </p>
                 <p className="text-xs font-bold text-violet-300">Neural Sync</p>
               </div>
             </div>
-            <div className="absolute bottom-10 left-0 glass-card p-3 rounded-lg border-l-2 border-fuchsia-500 flex items-center gap-3 scale-90 -translate-x-12">
-              <span className="material-symbols-outlined text-fuchsia-400">
+            <div className={`absolute bottom-10 left-0 ${themeClasses.cards.glass} border-l-2 border-fuchsia-500 flex items-center gap-3 scale-90 -translate-x-12`}>
+              <span className={`material-symbols-outlined ${themeClasses.text.fuchsia}`}>
                 precision_manufacturing
               </span>
               <div className="text-left">
-                <p className="text-[8px] uppercase tracking-widest text-gray-500">
+                <p className={`text-[8px] uppercase tracking-widest ${themeClasses.text.muted}`}>
                   Verification
                 </p>
                 <p className="text-xs font-bold text-fuchsia-300">99.9% Pure</p>
@@ -72,9 +73,9 @@ export default function HomePage() {
 
           <h1 className="font-space text-6xl lg:text-9xl font-bold leading-[0.9] tracking-tighter mb-8 max-w-4xl mx-auto">
             Redefining <br />
-            <span className="text-gradient">AI Precision</span>
+            <span className={themeClasses.text.gradient}>AI Precision</span>
           </h1>
-          <p className="text-lg text-gray-400 mb-12 max-w-2xl mx-auto font-light tracking-wide leading-relaxed">
+          <p className={`text-lg ${themeClasses.text.secondary} mb-12 max-w-2xl mx-auto font-light tracking-wide leading-relaxed`}>
             The next evolution of data annotation. Immersive architectures
             designed for quantum-level quality control and global scalability.
           </p>
@@ -90,24 +91,24 @@ export default function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-32 relative bg-black/40">
-        <div className="max-w-[1440px] mx-auto px-6 lg:px-10">
-          <div className="grid lg:grid-cols-3 gap-8">
-            <div className="glass-card p-10 rounded-[2rem] flex flex-col items-start gap-6 group cursor-pointer">
-              <div className="w-16 h-16 bg-violet-500/10 rounded-2xl flex items-center justify-center text-violet-500 border border-violet-500/20 group-hover:bg-violet-500 group-hover:text-white transition-all duration-500">
+      <section className={`${themeClasses.layouts.section} ${themeClasses.backgrounds.blackAlpha}`}>
+        <div className={themeClasses.layouts.container}>
+          <div className={themeClasses.layouts.gridCols3}>
+            <div className={`${themeClasses.cards.glass} p-10 rounded-[2rem] flex flex-col items-start gap-6 group cursor-pointer`}>
+              <div className={`w-16 h-16 ${themeClasses.backgrounds.violetAlpha10} rounded-2xl flex items-center justify-center ${themeClasses.text.violet} border ${themeClasses.borders.violet20} group-hover:bg-violet-500 group-hover:text-white transition-all duration-500`}>
                 <span className="material-symbols-outlined text-3xl">hub</span>
               </div>
               <div>
                 <h3 className="font-space text-2xl font-bold mb-4">
                   Automated AI Pipelines
                 </h3>
-                <p className="text-gray-400 font-light leading-relaxed group-hover:text-gray-300 transition-colors">
+                <p className={`${themeClasses.text.secondary} font-light leading-relaxed group-hover:text-gray-300 transition-colors`}>
                   Seamless end-to-end integration. Let our proprietary
                   algorithms pre-label data with hyper-precision before human
                   verification.
                 </p>
               </div>
-              <div className="mt-auto pt-8 flex items-center gap-2 text-violet-400 font-bold text-sm tracking-widest uppercase opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className={`mt-auto pt-8 flex items-center gap-2 ${themeClasses.text.violet} font-bold text-sm tracking-widest uppercase opacity-0 group-hover:opacity-100 transition-opacity`}>
                 Explore Pipeline{' '}
                 <span className="material-symbols-outlined text-sm">
                   arrow_forward
@@ -115,8 +116,8 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="glass-card p-10 rounded-[2rem] flex flex-col items-start gap-6 group cursor-pointer">
-              <div className="w-16 h-16 bg-fuchsia-500/10 rounded-2xl flex items-center justify-center text-fuchsia-500 border border-fuchsia-500/20 group-hover:bg-fuchsia-500 group-hover:text-white transition-all duration-500">
+            <div className={`${themeClasses.cards.glass} p-10 rounded-[2rem] flex flex-col items-start gap-6 group cursor-pointer`}>
+              <div className={`w-16 h-16 bg-fuchsia-500/10 rounded-2xl flex items-center justify-center ${themeClasses.text.fuchsia} border border-fuchsia-500/20 group-hover:bg-fuchsia-500 group-hover:text-white transition-all duration-500`}>
                 <span className="material-symbols-outlined text-3xl">
                   public
                 </span>
@@ -125,12 +126,12 @@ export default function HomePage() {
                 <h3 className="font-space text-2xl font-bold mb-4">
                   Global Workforce Scale
                 </h3>
-                <p className="text-gray-400 font-light leading-relaxed group-hover:text-gray-300 transition-colors">
+                <p className={`${themeClasses.text.secondary} font-light leading-relaxed group-hover:text-gray-300 transition-colors`}>
                   Distribute tasks across a decentralized network of over 50,000
                   certified annotators worldwide, managed via smart consensus.
                 </p>
               </div>
-              <div className="mt-auto pt-8 flex items-center gap-2 text-fuchsia-400 font-bold text-sm tracking-widest uppercase opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className={`mt-auto pt-8 flex items-center gap-2 ${themeClasses.text.fuchsia} font-bold text-sm tracking-widest uppercase opacity-0 group-hover:opacity-100 transition-opacity`}>
                 View Network{' '}
                 <span className="material-symbols-outlined text-sm">
                   arrow_forward
@@ -138,7 +139,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="glass-card p-10 rounded-[2rem] flex flex-col items-start gap-6 group cursor-pointer">
+            <div className={`${themeClasses.cards.glass} p-10 rounded-[2rem] flex flex-col items-start gap-6 group cursor-pointer`}>
               <div className="w-16 h-16 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-500 border border-blue-500/20 group-hover:bg-blue-500 group-hover:text-white transition-all duration-500">
                 <span className="material-symbols-outlined text-3xl">
                   security
@@ -148,7 +149,7 @@ export default function HomePage() {
                 <h3 className="font-space text-2xl font-bold mb-4">
                   Quantum-Level Quality
                 </h3>
-                <p className="text-gray-400 font-light leading-relaxed group-hover:text-gray-300 transition-colors">
+                <p className={`${themeClasses.text.secondary} font-light leading-relaxed group-hover:text-gray-300 transition-colors`}>
                   Zero-error tolerance via triple-blind verification and
                   real-time biometric identity tracking for ultimate data
                   security.
@@ -166,11 +167,11 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-20 border-t border-violet-500/10 relative overflow-hidden">
+      <footer className={`py-20 border-t ${themeClasses.borders.violet10} relative overflow-hidden`}>
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-violet-600/5 blur-[120px] rounded-full"></div>
-        <div className="max-w-[1440px] mx-auto px-6 lg:px-10">
+        <div className={themeClasses.layouts.container}>
           <div className="flex flex-col md:flex-row justify-between items-center gap-10">
-            <div className="flex items-center gap-4">
+            <div className={commonPatterns.logo.container}>
               <span className="material-symbols-outlined text-3xl text-violet-500">
                 polyline
               </span>
@@ -178,7 +179,7 @@ export default function HomePage() {
                 DLSS v2.4
               </span>
             </div>
-            <div className="flex gap-12 text-sm font-medium text-gray-500">
+            <div className={`flex gap-12 text-sm font-medium ${themeClasses.text.muted}`}>
               <a
                 className="hover:text-violet-400 transition-colors uppercase tracking-tighter"
                 href="#"

@@ -1,4 +1,5 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
+import { themeClasses, commonPatterns } from '@/styles';
 
 export default function AdminLayout() {
     const location = useLocation();
@@ -13,12 +14,12 @@ export default function AdminLayout() {
     const isActive = (path: string) => location.pathname === path;
 
     return (
-        <div className="min-h-screen bg-[#0f0e17] text-gray-100 flex">
+        <div className={`min-h-screen ${themeClasses.backgrounds.deepDark} ${themeClasses.text.primary} flex`}>
             {/* Sidebar */}
-            <aside className="w-64 bg-black/40 border-r border-violet-500/10 flex flex-col">
+            <aside className={`w-64 ${themeClasses.backgrounds.blackAlpha} border-r ${themeClasses.borders.violet10} flex flex-col`}>
                 {/* Logo */}
-                <div className="p-6 border-b border-violet-500/10">
-                    <div className="flex items-center gap-3">
+                <div className={`p-6 border-b ${themeClasses.borders.violet10}`}>
+                    <div className={commonPatterns.logo.container}>
                         <span className="material-symbols-outlined text-3xl text-violet-500">
                             polyline
                         </span>
@@ -36,9 +37,9 @@ export default function AdminLayout() {
                             <li key={item.path}>
                                 <Link
                                     to={item.path}
-                                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive(item.path)
-                                            ? 'bg-violet-500/20 text-violet-400 border border-violet-500/30'
-                                            : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                                    className={`${commonPatterns.nav.item} ${isActive(item.path)
+                                        ? commonPatterns.nav.itemActive
+                                        : commonPatterns.nav.itemInactive
                                         }`}
                                 >
                                     <span className="material-symbols-outlined text-xl">
@@ -52,7 +53,7 @@ export default function AdminLayout() {
                 </nav>
 
                 {/* User Info */}
-                <div className="p-4 border-t border-violet-500/10">
+                <div className={`p-4 border-t ${themeClasses.borders.violet10}`}>
                     <div className="flex items-center gap-3 px-4 py-3">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 flex items-center justify-center">
                             <span className="material-symbols-outlined text-white">
@@ -61,7 +62,7 @@ export default function AdminLayout() {
                         </div>
                         <div className="flex-1">
                             <p className="text-sm font-medium">Admin User</p>
-                            <p className="text-xs text-gray-500">admin@dlss.com</p>
+                            <p className={`text-xs ${themeClasses.text.tertiary}`}>admin@dlss.com</p>
                         </div>
                     </div>
                 </div>
@@ -89,3 +90,4 @@ export default function AdminLayout() {
         </div>
     );
 }
+
