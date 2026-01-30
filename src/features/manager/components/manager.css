@@ -1,76 +1,92 @@
 /* ==========================================================================
-   1. PAGE BACKGROUND
+   1. GLOBAL BACKGROUND (Nền trang phủ kín toàn bộ)
    ========================================================================== */
-.manager-page-bg {
-    min-height: 100vh;
-    width: 100%;
+body {
     background-color: #0f0e17;
-    /* Giữ nguyên nền tối */
+    /* Màu nền tím đen */
 
-    /* Cập nhật màu lưới grid sang tông Violet nhẹ */
+    /* Chuyển Background Image vào body để đảm bảo phủ kín 100% trang web bất kể chiều cao nội dung */
     background-image: linear-gradient(rgba(139, 92, 246, 0.05) 1px, transparent 1px),
         linear-gradient(90deg, rgba(139, 92, 246, 0.05) 1px, transparent 1px);
     background-size: 40px 40px;
     background-attachment: fixed;
+    /* Giữ nền cố định khi cuộn */
 
-    position: relative;
+    min-height: 100vh;
+    margin: 0;
+    overflow-x: hidden;
+    /* Chặn thanh cuộn ngang thừa */
+}
+
+/* Class này giờ chỉ đóng vai trò layout container */
+.manager-page-bg {
+    width: 100%;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
+    position: relative;
 }
 
 /* ==========================================================================
-   2. GLASS CARD
+   2. GLASS CARD (Khung chính)
    ========================================================================== */
 .project-glass-card {
+    /* Glass Effect (Hiệu ứng kính) */
     background: rgba(26, 22, 37, 0.7) !important;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    /* Đổi viền sang màu Violet */
     border: 1px solid rgba(139, 92, 246, 0.2) !important;
     border-radius: 1.5rem !important;
-    /* Đổi shadow sang tông Violet */
+
+    /* Shadow tím nhẹ */
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 20px rgba(139, 92, 246, 0.1);
 
-    width: 70%;
+    /* KÍCH THƯỚC: Chiếm 95% màn hình để tận dụng không gian */
+    width: 95% !important;
+    max-width: 1200px !important;
+    /* Mở rộng tối đa cho màn hình 4K */
     margin: 0 auto;
-    padding: 3rem;
+
+    /* PADDING: Tăng lên 3rem-4rem để chữ không bị sát viền */
+    padding: 1rem !important;
 
     position: relative;
     display: flex;
     flex-direction: column;
+
+    /* QUAN TRỌNG: Không dùng overflow: hidden để tránh mất nút Create Project ở dưới cùng */
+    height: 100% !important;
 }
 
-@media (max-width: 1200px) {
+/* Responsive: Trên màn hình laptop nhỏ/tablet thì giảm padding */
+@media (max-width: 1000px) {
     .project-glass-card {
-        width: 90%;
-        padding: 2rem;
-    }
-}
-
-@media (max-width: 768px) {
-    .project-glass-card {
-        width: 95%;
-        padding: 1.5rem;
+        padding: 2rem !important;
+        width: 90% !important;
     }
 }
 
 /* ==========================================================================
-   3. CONTENT WRAPPER
+   3. CONTENT WRAPPER (Gom nội dung vào giữa)
    ========================================================================== */
 .form-content-wrapper {
     width: 100%;
-    max-width: 1000px;
+    /* Giới hạn max-width 1100px để các ô input không bị kéo dài quá mức gây khó nhìn */
+    max-width: 1100px !important;
     margin: 0 auto;
+    /* Căn giữa nội dung trong khung to */
 }
 
 /* ==========================================================================
    4. ANT DESIGN OVERRIDES (Theme Violet)
    ========================================================================== */
+/* Label màu trắng sáng */
 .project-glass-card .ant-form-item-label>label {
     color: rgba(255, 255, 255, 0.9) !important;
     font-weight: 600;
 }
 
+/* Input & Select: Màu nền tối trong suốt */
 .project-glass-card .ant-input,
 .project-glass-card .ant-select-selector {
     background-color: rgba(15, 14, 23, 0.6) !important;
@@ -81,7 +97,7 @@
     padding-bottom: 8px;
 }
 
-/* Focus Effect: Đổi sang màu Violet (#8b5cf6) */
+/* Focus Effect: Đổi viền sang màu Violet (#8b5cf6) khi click vào */
 .project-glass-card .ant-input:focus,
 .project-glass-card .ant-select-selector:focus,
 .project-glass-card .ant-input-affix-wrapper:focus-within {
@@ -89,26 +105,31 @@
     box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2) !important;
 }
 
+/* Placeholder màu mờ */
 .project-glass-card .ant-input::placeholder {
     color: rgba(255, 255, 255, 0.3) !important;
 }
 
-/* Dropdown Menu */
+/* --- Dropdown Menu (Popup khi chọn Select) --- */
 .ant-select-dropdown {
     background-color: #1a1625 !important;
+    /* Nền tối */
     border: 1px solid rgba(139, 92, 246, 0.3);
+    /* Viền tím */
 }
 
 .ant-select-item {
     color: rgba(255, 255, 255, 0.8) !important;
 }
 
-/* Item active đổi sang Violet */
+/* Item đang được chọn */
 .ant-select-item-option-selected {
     background-color: rgba(139, 92, 246, 0.3) !important;
     color: white !important;
+    font-weight: bold;
 }
 
+/* Item khi di chuột vào (Hover) */
 .ant-select-item-option-active {
     background-color: rgba(255, 255, 255, 0.05) !important;
 }

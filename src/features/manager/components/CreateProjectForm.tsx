@@ -1,8 +1,10 @@
-import React from 'react';
-import { Form, Input, Select } from 'antd';
+import React, { useState } from 'react';
+import { Form, Input, Select, message } from 'antd';
 import { LockOutlined } from '@ant-design/icons';
+import axios from 'axios';
 import '@/features/manager/components/manager.css';
-import { FormFooter } from '@/features/manager/components/common/formfooter';
+import { FormFooter } from './common/FormFooter';
+import { useNavigate } from 'react-router-dom';
 
 const PROJECT_STATUS = [
     { label: 'Active', value: 'active' },
@@ -10,11 +12,51 @@ const PROJECT_STATUS = [
     { label: 'Archived', value: 'archived' },
 ];
 
-export const CreateProjectForm: React.FC = () => {
-    const [form] = Form.useForm();
+// Props giờ đơn giản hơn, chỉ cần callback khi thành công (để chuyển trang nếu muốn)
+interface CreateProjectFormProps {
+    onSuccess?: () => void;
+}
 
-    const onFinish = (values: any) => {
-        console.log('Success:', values);
+export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess }) => {
+    const [form] = Form.useForm();
+    // Quản lý loading ngay tại đây
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
+    // 3. Hàm xử lý khi bấm Cancel -> Về Dashboard
+    const handleCancel = () => {
+        // Thay đổi đường dẫn này thành đường dẫn Dashboard thực tế của bạn
+        navigate('/manager');
+    };
+    // --- LOGIC GỌI API NẰM HOÀN TOÀN Ở ĐÂY ---
+    const onFinish = async (values: any) => {
+        setLoading(true);
+        try {
+            // 1. Chuẩn bị dữ liệu
+            const payload = {
+                ...values,
+                createdAt: new Date().toISOString(),
+                projectId: 'PROJ-X9Y2' // Ví dụ ID
+            };
+
+            // 2. Gọi API
+            const response = await axios.post('https://697774545b9c0aed1e868772.mockapi.io/Cate', payload);
+            console.log('API Response:', response.data);
+
+            // 3. Thông báo & Reset form
+            message.success('Project created successfully!');
+            // form.resetFields(); // Bật dòng này nếu muốn xóa trắng form sau khi tạo
+
+            // 4. Báo cho trang cha biết là xong (để chuyển bước)
+            if (onSuccess) {
+                onSuccess();
+            }
+
+        } catch (error) {
+            console.error('API Error:', error);
+            message.error('Failed to create project. Please try again.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -23,7 +65,7 @@ export const CreateProjectForm: React.FC = () => {
             layout="vertical"
             className="project-glass-card"
             initialValues={{ status: 'active' }}
-            onFinish={onFinish}
+            onFinish={onFinish} // Gắn hàm xử lý nội bộ vào đây
         >
             <div className="form-content-wrapper">
                 <div className="mb-8 border-b border-white/10 pb-4 text-center">
@@ -54,22 +96,22 @@ export const CreateProjectForm: React.FC = () => {
                             <Select size="large" options={PROJECT_STATUS} />
                         </Form.Item>
 
-                        {/* Cập nhật màu hộp Note sang tông Violet */}
                         <div className="p-4 rounded-xl bg-violet-500/10 border border-violet-500/20 mt-4">
                             <p className="text-violet-200 text-xs m-0 text-center leading-relaxed">
-                                <strong>Note:</strong> Active projects are visible immediately to the workforce.
+                                <strong>Note:</strong> Active projects are visible immediately.
                             </p>
                         </div>
                     </div>
                 </div>
 
+                {/* 4. Truyền onCancel xuống Footer */}
                 <FormFooter
                     currentStep={1}
                     totalSteps={4}
                     submitLabel="CREATE PROJECT"
-                    hideBack={true}
+                    isLoading={loading}
+                    onCancel={handleCancel} // <-- Quan trọng
                 />
-
             </div>
         </Form>
     );
