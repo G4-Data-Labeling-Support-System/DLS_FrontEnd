@@ -1,14 +1,15 @@
 /* ==========================================================================
-   1. PAGE BACKGROUND (Nền trang & Grid)
+   1. PAGE BACKGROUND
    ========================================================================== */
 .manager-page-bg {
     min-height: 100vh;
     width: 100%;
     background-color: #0f0e17;
+    /* Giữ nguyên nền tối */
 
-    /* Hiệu ứng lưới Grid nền */
-    background-image: linear-gradient(rgba(157, 39, 241, 0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(157, 39, 241, 0.05) 1px, transparent 1px);
+    /* Cập nhật màu lưới grid sang tông Violet nhẹ */
+    background-image: linear-gradient(rgba(139, 92, 246, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(139, 92, 246, 0.05) 1px, transparent 1px);
     background-size: 40px 40px;
     background-attachment: fixed;
 
@@ -18,31 +19,27 @@
 }
 
 /* ==========================================================================
-   2. GLASS CARD (Khung chính - Chiếm 70% màn hình)
+   2. GLASS CARD
    ========================================================================== */
 .project-glass-card {
-    /* Glass Effect */
     background: rgba(26, 22, 37, 0.7) !important;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(157, 39, 241, 0.3) !important;
+    /* Đổi viền sang màu Violet */
+    border: 1px solid rgba(139, 92, 246, 0.2) !important;
     border-radius: 1.5rem !important;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+    /* Đổi shadow sang tông Violet */
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 20px rgba(139, 92, 246, 0.1);
 
-    /* Kích thước & Vị trí */
     width: 70%;
-    /* Chiếm khoảng 2/3 màn hình */
     margin: 0 auto;
-    /* Căn giữa card so với màn hình */
     padding: 3rem;
-    /* Padding lớn tạo cảm giác thoáng */
 
     position: relative;
     display: flex;
     flex-direction: column;
 }
 
-/* Mobile Responsive: Về lại full width trên màn hình nhỏ */
 @media (max-width: 1200px) {
     .project-glass-card {
         width: 90%;
@@ -58,63 +55,60 @@
 }
 
 /* ==========================================================================
-   3. CONTENT WRAPPER (Gom nội dung vào giữa khung to)
+   3. CONTENT WRAPPER
    ========================================================================== */
 .form-content-wrapper {
     width: 100%;
     max-width: 1000px;
-    /* Giới hạn chiều rộng nội dung để không bị kéo giãn quá mức */
     margin: 0 auto;
-    /* Căn giữa nội dung trong khung Card */
 }
 
 /* ==========================================================================
-   4. ANT DESIGN DARK THEME OVERRIDES (Chỉ áp dụng trong card)
+   4. ANT DESIGN OVERRIDES (Theme Violet)
    ========================================================================== */
 .project-glass-card .ant-form-item-label>label {
     color: rgba(255, 255, 255, 0.9) !important;
     font-weight: 600;
 }
 
-/* Styles cho Input, Select, Textarea */
 .project-glass-card .ant-input,
 .project-glass-card .ant-select-selector {
     background-color: rgba(15, 14, 23, 0.6) !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
     color: white !important;
     border-radius: 0.75rem !important;
     padding-top: 8px;
     padding-bottom: 8px;
 }
 
-/* Hiệu ứng Focus */
+/* Focus Effect: Đổi sang màu Violet (#8b5cf6) */
 .project-glass-card .ant-input:focus,
 .project-glass-card .ant-select-selector:focus,
 .project-glass-card .ant-input-affix-wrapper:focus-within {
-    border-color: #9d27f1 !important;
-    box-shadow: 0 0 0 2px rgba(157, 39, 241, 0.2) !important;
+    border-color: #8b5cf6 !important;
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2) !important;
 }
 
-/* Placeholder color */
 .project-glass-card .ant-input::placeholder {
     color: rgba(255, 255, 255, 0.3) !important;
 }
 
-/* Dropdown Menu (Style global) */
+/* Dropdown Menu */
 .ant-select-dropdown {
     background-color: #1a1625 !important;
-    border: 1px solid rgba(157, 39, 241, 0.3);
+    border: 1px solid rgba(139, 92, 246, 0.3);
 }
 
 .ant-select-item {
     color: rgba(255, 255, 255, 0.8) !important;
 }
 
+/* Item active đổi sang Violet */
 .ant-select-item-option-selected {
-    background-color: rgba(157, 39, 241, 0.3) !important;
+    background-color: rgba(139, 92, 246, 0.3) !important;
     color: white !important;
 }
 
 .ant-select-item-option-active {
-    background-color: rgba(255, 255, 255, 0.1) !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
 }
