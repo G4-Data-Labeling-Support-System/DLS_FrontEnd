@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { Form, Input, Select, message } from 'antd';
 import { LockOutlined } from '@ant-design/icons';
 import axios from 'axios';
-import '@/features/manager/components/manager.css';
-import { FormFooter } from './common/FormFooter';
 import { useNavigate } from 'react-router-dom';
+
+// Import Styles & Components
+import '@/features/manager/components/manager.css';
+import { FormFooter } from '@/features/manager/components/common/FormFooter';
 
 const PROJECT_STATUS = [
     { label: 'Active', value: 'active' },
@@ -12,22 +14,20 @@ const PROJECT_STATUS = [
     { label: 'Archived', value: 'archived' },
 ];
 
-// Props giờ đơn giản hơn, chỉ cần callback khi thành công (để chuyển trang nếu muốn)
 interface CreateProjectFormProps {
     onSuccess?: () => void;
 }
 
 export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess }) => {
     const [form] = Form.useForm();
-    // Quản lý loading ngay tại đây
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-    // 3. Hàm xử lý khi bấm Cancel -> Về Dashboard
+
+    // Xử lý Cancel: Quay về Dashboard
     const handleCancel = () => {
-        // Thay đổi đường dẫn này thành đường dẫn Dashboard thực tế của bạn
         navigate('/manager');
     };
-    // --- LOGIC GỌI API NẰM HOÀN TOÀN Ở ĐÂY ---
+
     const onFinish = async (values: any) => {
         setLoading(true);
         try {
@@ -35,18 +35,17 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
             const payload = {
                 ...values,
                 createdAt: new Date().toISOString(),
-                projectId: 'PROJ-X9Y2' // Ví dụ ID
+                projectId: 'PROJ-X9Y2' // ID giả lập
             };
 
             // 2. Gọi API
             const response = await axios.post('https://697774545b9c0aed1e868772.mockapi.io/Cate', payload);
             console.log('API Response:', response.data);
 
-            // 3. Thông báo & Reset form
+            // 3. Thông báo & Reset
             message.success('Project created successfully!');
-            // form.resetFields(); // Bật dòng này nếu muốn xóa trắng form sau khi tạo
 
-            // 4. Báo cho trang cha biết là xong (để chuyển bước)
+            // 4. Chuyển bước
             if (onSuccess) {
                 onSuccess();
             }
@@ -63,18 +62,22 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
         <Form
             form={form}
             layout="vertical"
+            // QUAN TRỌNG: Form này tự tạo khung kính cho chính nó
             className="project-glass-card"
             initialValues={{ status: 'active' }}
-            onFinish={onFinish} // Gắn hàm xử lý nội bộ vào đây
+            onFinish={onFinish}
         >
+            {/* Wrapper để gom nội dung vào giữa (max-width: 1100px) */}
             <div className="form-content-wrapper">
+
+                {/* Header bên trong Form */}
                 <div className="mb-8 border-b border-white/10 pb-4 text-center">
                     <h2 className="text-2xl font-bold text-white tracking-wide">Project Details</h2>
                     <p className="text-gray-400 text-sm mt-1">Enter the essential information to start your new project.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {/* CỘT TRÁI */}
+                    {/* CỘT TRÁI (Chiếm 2 phần) */}
                     <div className="md:col-span-2 space-y-6">
                         <Form.Item name="projectName" label="Project Name *" rules={[{ required: true }]}>
                             <Input size="large" placeholder="e.g. Autonomous Vehicle Perception Phase 2" />
@@ -84,7 +87,7 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
                         </Form.Item>
                     </div>
 
-                    {/* CỘT PHẢI */}
+                    {/* CỘT PHẢI (Chiếm 1 phần) */}
                     <div className="space-y-6">
                         <Form.Item label="Project ID">
                             <div className="bg-[#1a1625] border border-white/10 py-3 px-4 rounded-xl flex justify-between items-center text-gray-400 font-mono shadow-inner">
@@ -104,13 +107,13 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
                     </div>
                 </div>
 
-                {/* 4. Truyền onCancel xuống Footer */}
+                {/* Footer Component */}
                 <FormFooter
                     currentStep={1}
                     totalSteps={4}
                     submitLabel="CREATE PROJECT"
                     isLoading={loading}
-                    onCancel={handleCancel} // <-- Quan trọng
+                    onCancel={handleCancel}
                 />
             </div>
         </Form>
