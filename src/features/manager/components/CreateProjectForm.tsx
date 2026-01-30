@@ -4,7 +4,7 @@ import { LockOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import '@/features/manager/components/manager.css';
 import { FormFooter } from './common/FormFooter';
-
+import { useNavigate } from 'react-router-dom';
 
 const PROJECT_STATUS = [
     { label: 'Active', value: 'active' },
@@ -21,7 +21,12 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
     const [form] = Form.useForm();
     // Quản lý loading ngay tại đây
     const [loading, setLoading] = useState(false);
-
+    const navigate = useNavigate();
+    // 3. Hàm xử lý khi bấm Cancel -> Về Dashboard
+    const handleCancel = () => {
+        // Thay đổi đường dẫn này thành đường dẫn Dashboard thực tế của bạn
+        navigate('/manager');
+    };
     // --- LOGIC GỌI API NẰM HOÀN TOÀN Ở ĐÂY ---
     const onFinish = async (values: any) => {
         setLoading(true);
@@ -99,13 +104,13 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
                     </div>
                 </div>
 
-                {/* Footer dùng state loading nội bộ */}
+                {/* 4. Truyền onCancel xuống Footer */}
                 <FormFooter
                     currentStep={1}
                     totalSteps={4}
                     submitLabel="CREATE PROJECT"
-                    hideBack={true}
                     isLoading={loading}
+                    onCancel={handleCancel} // <-- Quan trọng
                 />
             </div>
         </Form>
