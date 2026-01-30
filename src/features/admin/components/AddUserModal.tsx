@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Button } from '@/shared/components/ui/Button';
 
 interface AddUserModalProps {
     isOpen: boolean;
@@ -147,19 +148,21 @@ export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
 
                         {/* Action Buttons */}
                         <div className="flex items-center gap-4 mt-4">
-                            <button
-                                className="flex-1 h-12 border border-white/10 hover:bg-white/5 text-white/70 hover:text-white rounded-lg font-medium transition-all duration-200"
+                            <Button
+                                variant="secondary"
+                                className="flex-1 h-12 border border-white/10 text-white/70 hover:text-white"
                                 type="button"
                                 onClick={onClose}
                             >
                                 Cancel
-                            </button>
-                            <button
-                                className="flex-[2] h-12 bg-gradient-to-r from-[#911DF3] to-[#FF0080] text-white rounded-lg font-bold shadow-[0_0_20px_rgba(145,29,243,0.4)] hover:shadow-[0_0_30px_rgba(145,29,243,0.6)] transition-all duration-300 active:scale-[0.98]"
+                            </Button>
+                            <Button
+                                variant="primary"
+                                className="flex-[2] h-12 bg-gradient-to-r from-[#911DF3] to-[#FF0080] font-bold active:scale-[0.98]"
                                 type="submit"
                             >
                                 Create Account
-                            </button>
+                            </Button>
                         </div>
                     </form>
 

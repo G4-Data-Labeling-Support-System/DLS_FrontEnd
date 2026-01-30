@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Button } from '@/shared/components/ui/Button';
 
 export default function ForgotPasswordPage() {
     return (
@@ -93,12 +94,13 @@ export default function ForgotPasswordPage() {
                                         />
                                     </div>
                                 </div>
-                                <button
-                                    className="w-full py-3.5 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-lg font-bold text-sm tracking-wider shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:shadow-[0_0_30px_rgba(217,70,239,0.5)] transition-all text-white flex items-center justify-center gap-2 group mt-4 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+                                <Button
                                     type="button"
+                                    variant="primary"
+                                    className="w-full py-3.5 mt-4 hover:scale-[1.01] active:scale-[0.99] font-bold text-sm tracking-wider"
                                 >
                                     SEND RESET LINK
-                                </button>
+                                </Button>
                             </form>
                         </div>
                     </div>

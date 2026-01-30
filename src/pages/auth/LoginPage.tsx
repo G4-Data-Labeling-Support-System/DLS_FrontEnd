@@ -2,6 +2,7 @@ import { useAuth } from '@/features/auth/hooks';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { themeClasses, commonPatterns } from '@/styles';
+import { Button } from '@/shared/components/ui/Button';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -173,10 +174,11 @@ export default function LoginPage() {
                     Forgot Password?
                   </Link>
                 </div>
-                <button
-                  disabled={isLoading}
-                  className={`w-full ${themeClasses.buttons.primary} flex items-center justify-center gap-2 group mt-2 hover:scale-[1.01] active:scale-[0.99] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm tracking-wider`}
+                <Button
                   type="submit"
+                  variant="primary"
+                  isLoading={isLoading}
+                  className="w-full flex items-center justify-center gap-2 group mt-2 hover:scale-[1.01] active:scale-[0.99] text-sm tracking-wider"
                 >
                   {isLoading ? 'SIGNING IN...' : 'SIGN IN'}
                   {!isLoading && (
@@ -184,7 +186,7 @@ export default function LoginPage() {
                       arrow_forward
                     </span>
                   )}
-                </button>
+                </Button>
               </form>
             </div>
           </div>

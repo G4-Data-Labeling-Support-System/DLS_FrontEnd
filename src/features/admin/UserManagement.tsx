@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import AddUserModal from './components/AddUserModal';
 import { themeClasses } from '@/styles';
+import { Button } from '@/shared/components/ui/Button';
 
 export default function UserManagement() {
     const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
@@ -17,14 +18,15 @@ export default function UserManagement() {
                         Manage users, permissions, and monitor backend performance.
                     </p>
                 </div>
-                <button
+                <Button
                     onClick={() => setIsAddUserModalOpen(true)}
-                    className={`group relative flex items-center gap-2 overflow-hidden ${themeClasses.buttons.primary} px-5 py-2.5 font-body`}
+                    variant="primary"
+                    className="group relative flex items-center gap-2 overflow-hidden px-5 py-2.5 font-body"
                 >
                     <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity group-hover:opacity-100"></div>
                     <span className="material-symbols-outlined text-lg">person_add</span>
                     <span>Add User</span>
-                </button>
+                </Button>
             </div>
 
             {/* Stats Cards */}
@@ -123,14 +125,15 @@ export default function UserManagement() {
                         </p>
                     </div>
                     <div className="flex gap-3">
-                        <button
+                        <Button
                             onClick={() => setIsAddUserModalOpen(true)}
-                            className={`group relative flex items-center gap-2 overflow-hidden rounded-lg bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-2 font-body text-sm font-semibold text-white shadow-lg shadow-violet-500/20 transition-all hover:shadow-violet-500/40`}
+                            variant="primary"
+                            className="group relative flex items-center gap-2 overflow-hidden px-4 py-2 font-body text-sm font-semibold"
                         >
                             <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity group-hover:opacity-100"></div>
                             <span className="material-symbols-outlined text-lg">add</span>
                             <span>Add User</span>
-                        </button>
+                        </Button>
                     </div>
                 </div>
                 <div className="overflow-x-auto">
@@ -182,11 +185,15 @@ export default function UserManagement() {
                                     <span className="font-bold text-white text-[15px]">0</span>
                                 </td>
                                 <td className="px-6 py-4 text-right">
-                                    <button className={`${themeClasses.text.tertiary} hover:text-white transition-colors`}>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className={`${themeClasses.text.tertiary} hover:text-white transition-colors`}
+                                    >
                                         <span className="material-symbols-outlined text-lg">
                                             more_horiz
                                         </span>
-                                    </button>
+                                    </Button>
                                 </td>
                             </tr>
 
@@ -227,11 +234,15 @@ export default function UserManagement() {
                                     <span className="font-bold text-white text-[15px]">45</span>
                                 </td>
                                 <td className="px-6 py-4 text-right">
-                                    <button className={`${themeClasses.text.tertiary} hover:text-white transition-colors`}>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className={`${themeClasses.text.tertiary} hover:text-white transition-colors`}
+                                    >
                                         <span className="material-symbols-outlined text-lg">
                                             more_horiz
                                         </span>
-                                    </button>
+                                    </Button>
                                 </td>
                             </tr>
 
@@ -272,11 +283,15 @@ export default function UserManagement() {
                                     <span className="font-bold text-white text-[15px]">320</span>
                                 </td>
                                 <td className="px-6 py-4 text-right">
-                                    <button className={`${themeClasses.text.tertiary} hover:text-white transition-colors`}>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className={`${themeClasses.text.tertiary} hover:text-white transition-colors`}
+                                    >
                                         <span className="material-symbols-outlined text-lg">
                                             more_horiz
                                         </span>
-                                    </button>
+                                    </Button>
                                 </td>
                             </tr>
 
@@ -317,11 +332,15 @@ export default function UserManagement() {
                                     <span className="font-bold text-white text-[15px]">1,250</span>
                                 </td>
                                 <td className="px-6 py-4 text-right">
-                                    <button className={`${themeClasses.text.tertiary} hover:text-white transition-colors`}>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className={`${themeClasses.text.tertiary} hover:text-white transition-colors`}
+                                    >
                                         <span className="material-symbols-outlined text-lg">
                                             more_horiz
                                         </span>
-                                    </button>
+                                    </Button>
                                 </td>
                             </tr>
                         </tbody>

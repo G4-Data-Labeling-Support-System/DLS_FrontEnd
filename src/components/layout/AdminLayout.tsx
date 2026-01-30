@@ -1,5 +1,6 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { themeClasses, commonPatterns } from '@/styles';
+import { Button } from '@/shared/components/ui/Button';
 
 export default function AdminLayout() {
     const location = useLocation();
@@ -76,9 +77,13 @@ export default function AdminLayout() {
                         <h2 className="text-xl font-bold">
                             {menuItems.find((item) => isActive(item.path))?.label || 'Admin'}
                         </h2>
-                        <button className="px-4 py-2 bg-violet-600 hover:bg-violet-700 rounded-lg text-sm font-medium transition-colors">
+                        <Button
+                            variant="primary"
+                            size="sm"
+                            className="bg-violet-600 hover:bg-violet-700 transition-colors"
+                        >
                             Logout
-                        </button>
+                        </Button>
                     </div>
                 </header>
 
