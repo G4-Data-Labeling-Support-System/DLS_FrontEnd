@@ -8,7 +8,7 @@ const DatasetSetupPage: React.FC = () => {
     const navigate = useNavigate();
 
     const handleNext = () => {
-        navigate('/manager/create-project/guidelines');
+        navigate('/manager/create-project/guidelines-setup');
     };
 
     const handleBack = () => {
