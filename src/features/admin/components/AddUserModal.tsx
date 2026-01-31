@@ -1,5 +1,8 @@
 import { useState } from 'react';
+import { Form, Input, Select } from 'antd';
+import { UserOutlined, MailOutlined, LockOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import { Button } from '@/shared/components/ui/Button';
+import { GlassModal } from '@/shared/components/ui/GlassModal';
 
 interface AddUserModalProps {
     isOpen: boolean;
@@ -7,179 +10,146 @@ interface AddUserModalProps {
 }
 
 export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
-    const [showPassword, setShowPassword] = useState(false);
-    const [formData, setFormData] = useState({
-        fullName: '',
-        email: '',
-        password: '',
-        role: 'annotator',
-    });
+    const [form] = Form.useForm();
+    const [loading, setLoading] = useState(false);
 
-    if (!isOpen) return null;
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        // TODO: Handle form submission
-        console.log('Form submitted:', formData);
-        onClose();
+    const handleSubmit = async (values: any) => {
+        setLoading(true);
+        try {
+            // TODO: Implement API call
+            console.log('Form values:', values);
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
+            onClose();
+            form.resetFields();
+        } catch (error) {
+            console.error('Failed to create user:', error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
-        <>
-            {/* Modal Overlay Backdrop */}
-            <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
-                {/* Modal Container */}
-                <div className="glass-panel w-full max-w-[560px] rounded-xl overflow-hidden flex flex-col relative">
-                    {/* Holographic Accent Line */}
-                    <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-primary to-transparent opacity-60"></div>
-
-                    {/* Header */}
-                    <div className="px-8 pt-10 pb-6">
-                        <h1 className="text-white text-3xl font-bold tracking-tight">
-                            Add New User
-                        </h1>
-                        <p className="text-white/50 text-sm mt-2">
-                            Provision a new account with specific access roles.
-                        </p>
-                    </div>
-
-                    {/* Form Content */}
-                    <form onSubmit={handleSubmit} className="px-8 pb-10 flex flex-col gap-6">
-                        {/* Full Name Field */}
-                        <div className="flex flex-col gap-2">
-                            <label className="text-white/80 text-sm font-medium ml-1">
-                                Full Name
-                            </label>
-                            <div className="relative group">
-                                <input
-                                    className="w-full h-14 bg-white/5 border border-white/10 rounded-lg px-4 text-white placeholder:text-white/20 focus:outline-none focus:ring-0 neon-border-focus transition-all duration-300"
-                                    placeholder="e.g. John Doe"
-                                    type="text"
-                                    value={formData.fullName}
-                                    onChange={(e) =>
-                                        setFormData({ ...formData, fullName: e.target.value })
-                                    }
-                                />
-                                <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-white/20 pointer-events-none group-focus-within:text-primary">
-                                    person
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Email Address Field */}
-                        <div className="flex flex-col gap-2">
-                            <label className="text-white/80 text-sm font-medium ml-1">
-                                Email Address
-                            </label>
-                            <div className="relative group">
-                                <input
-                                    className="w-full h-14 bg-white/5 border border-white/10 rounded-lg px-4 text-white placeholder:text-white/20 focus:outline-none focus:ring-0 neon-border-focus transition-all duration-300"
-                                    placeholder="name@company.com"
-                                    type="email"
-                                    value={formData.email}
-                                    onChange={(e) =>
-                                        setFormData({ ...formData, email: e.target.value })
-                                    }
-                                />
-                                <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-white/20 pointer-events-none group-focus-within:text-primary">
-                                    mail
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Initial Password Field */}
-                        <div className="flex flex-col gap-2">
-                            <label className="text-white/80 text-sm font-medium ml-1">
-                                Initial Password
-                            </label>
-                            <div className="relative group">
-                                <input
-                                    className="w-full h-14 bg-white/5 border border-white/10 rounded-lg px-4 text-white placeholder:text-white/20 focus:outline-none focus:ring-0 neon-border-focus transition-all duration-300"
-                                    placeholder="••••••••"
-                                    type={showPassword ? 'text' : 'password'}
-                                    value={formData.password}
-                                    onChange={(e) =>
-                                        setFormData({ ...formData, password: e.target.value })
-                                    }
-                                />
-                                <button
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white transition-colors"
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                >
-                                    <span className="material-symbols-outlined">
-                                        {showPassword ? 'visibility_off' : 'visibility'}
-                                    </span>
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Role Selection Dropdown */}
-                        <div className="flex flex-col gap-2">
-                            <label className="text-white/80 text-sm font-medium ml-1">
-                                Access Role
-                            </label>
-                            <div className="relative">
-                                <select
-                                    className="w-full h-14 bg-white/5 border border-white/10 rounded-lg px-4 text-white appearance-none focus:outline-none focus:ring-0 neon-border-focus transition-all duration-300 cursor-pointer"
-                                    value={formData.role}
-                                    onChange={(e) =>
-                                        setFormData({ ...formData, role: e.target.value })
-                                    }
-                                >
-                                    <option className="bg-[#0f0e17] text-white" value="annotator">
-                                        Annotator
-                                    </option>
-                                    <option className="bg-[#0f0e17] text-white" value="reviewer">
-                                        Reviewer
-                                    </option>
-                                    <option className="bg-[#0f0e17] text-white" value="manager">
-                                        Manager
-                                    </option>
-                                    <option className="bg-[#0f0e17] text-white" value="admin">
-                                        Administrator
-                                    </option>
-                                </select>
-                                <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none">
-                                    expand_more
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex items-center gap-4 mt-4">
-                            <Button
-                                variant="secondary"
-                                className="flex-1 h-12 border border-white/10 text-white/70 hover:text-white"
-                                type="button"
-                                onClick={onClose}
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                variant="primary"
-                                className="flex-[2] h-12 bg-gradient-to-r from-[#911DF3] to-[#FF0080] font-bold active:scale-[0.98]"
-                                type="submit"
-                            >
-                                Create Account
-                            </Button>
-                        </div>
-                    </form>
-
-                    {/* Bottom Detail Decorations */}
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1 opacity-20">
-                        <div className="size-1 rounded-full bg-primary"></div>
-                        <div className="size-1 rounded-full bg-primary"></div>
-                        <div className="size-1 rounded-full bg-primary"></div>
-                    </div>
-                </div>
+        <GlassModal
+            open={isOpen}
+            onCancel={onClose}
+            width={560}
+        >
+            {/* Header */}
+            <div className="px-8 pt-10 pb-6 text-center border-b border-white/5">
+                <h2 className="text-white text-3xl font-bold tracking-tight mb-2">
+                    Add New User
+                </h2>
+                <p className="text-white/50 text-sm">
+                    Provision a new account with specific access roles.
+                </p>
             </div>
 
-            {/* Background Decorative Elements */}
-            <div className="fixed top-0 left-0 w-full h-full pointer-events-none z-40 overflow-hidden">
-                <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-primary/10 blur-[120px]"></div>
-                <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[#FF0080]/5 blur-[120px]"></div>
+            {/* Form Content */}
+            <div className="px-8 py-8">
+                <Form
+                    form={form}
+                    layout="vertical"
+                    onFinish={handleSubmit}
+                    initialValues={{ role: 'annotator' }}
+                    className="flex flex-col gap-2"
+                    requiredMark={false}
+                >
+                    {/* Username Field - NEW */}
+                    <Form.Item
+                        name="username"
+                        label={<span className="text-gray-300 font-medium">Username</span>}
+                        rules={[{ required: true, message: 'Please enter a username' }]}
+                    >
+                        <Input
+                            size="large"
+                            prefix={<UserOutlined className="text-gray-500" />}
+                            placeholder="e.g. jdoe123"
+                        />
+                    </Form.Item>
+
+                    {/* Full Name Field */}
+                    <Form.Item
+                        name="fullName"
+                        label={<span className="text-gray-300 font-medium">Full Name</span>}
+                        rules={[{ required: true, message: 'Please enter full name' }]}
+                    >
+                        <Input
+                            size="large"
+                            prefix={<UserOutlined className="text-gray-500" />}
+                            placeholder="e.g. John Doe"
+                        />
+                    </Form.Item>
+
+                    {/* Email Address Field */}
+                    <Form.Item
+                        name="email"
+                        label={<span className="text-gray-300 font-medium">Email Address</span>}
+                        rules={[
+                            { required: true, message: 'Please enter email address' },
+                            { type: 'email', message: 'Please enter a valid email' }
+                        ]}
+                    >
+                        <Input
+                            size="large"
+                            prefix={<MailOutlined className="text-gray-500" />}
+                            placeholder="name@company.com"
+                        />
+                    </Form.Item>
+
+                    {/* Password Field */}
+                    <Form.Item
+                        name="password"
+                        label={<span className="text-gray-300 font-medium">Initial Password</span>}
+                        rules={[{ required: true, message: 'Please enter password' }]}
+                    >
+                        <Input.Password
+                            size="large"
+                            prefix={<LockOutlined className="text-gray-500" />}
+                            placeholder="••••••••"
+                        />
+                    </Form.Item>
+
+                    {/* Role Selection Dropdown */}
+                    <Form.Item
+                        name="role"
+                        label={<span className="text-gray-300 font-medium">Access Role</span>}
+                        rules={[{ required: true, message: 'Please select a role' }]}
+                    >
+                        <Select
+                            size="large"
+                            className="custom-select"
+                            suffixIcon={<SafetyCertificateOutlined className="text-gray-500" />}
+                            popupClassName="glass-dropdown"
+                            options={[
+                                { label: 'Annotator', value: 'annotator' },
+                                { label: 'Reviewer', value: 'reviewer' },
+                                { label: 'Manager', value: 'manager' },
+                            ]}
+                        />
+                    </Form.Item>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-4 mt-4 pt-4 border-t border-white/5">
+                        <Button
+                            variant="secondary"
+                            size="md"
+                            onClick={onClose}
+                            className="flex-1 h-11 border-white/10 bg-transparent text-gray-300 hover:text-white hover:border-white/30"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="primary"
+                            size="md"
+                            type="submit"
+                            isLoading={loading}
+                            className="flex-[2] h-11"
+                        >
+                            Create Account
+                        </Button>
+                    </div>
+                </Form>
             </div>
-        </>
+        </GlassModal>
     );
 }
