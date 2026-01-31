@@ -187,3 +187,122 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: #8b5cf6;
 }
+
+/* ... (Các phần cũ giữ nguyên) ... */
+
+/* ==========================================================================
+   6. TEAM ASSIGNMENT SPECIFIC STYLES
+   ========================================================================== */
+
+/* Panel chứa danh sách (Cột trái & phải) */
+.workforce-panel {
+    background: rgba(26, 22, 37, 0.8);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Card của từng User trong list */
+.user-list-item {
+    background: rgba(15, 14, 23, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    /* Viền mờ */
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.2s ease;
+}
+
+.user-list-item:hover {
+    border-color: rgba(139, 92, 246, 0.5);
+    /* Viền tím khi hover */
+    background: rgba(15, 14, 23, 0.6);
+}
+
+.user-list-item.selected-item {
+    border-left: 2px solid #d946ef;
+    /* Viền trái màu hồng cho cột Selected */
+    background: rgba(15, 14, 23, 0.6);
+}
+
+/* Input Search Override */
+.search-input-override {
+    background-color: rgba(15, 14, 23, 0.5) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: white !important;
+    border-radius: 0.75rem !important;
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+}
+
+.search-input-override:hover,
+.search-input-override:focus {
+    border-color: #8b5cf6 !important;
+}
+
+/* Ant Design Segmented Control Override */
+.custom-segmented {
+    background-color: rgba(15, 14, 23, 0.5) !important;
+    padding: 4px !important;
+    border-radius: 0.5rem !important;
+}
+
+.custom-segmented .ant-segmented-item {
+    color: #9ca3af;
+    /* Text gray */
+}
+
+.custom-segmented .ant-segmented-item-selected {
+    background-color: #7c3aed !important;
+    /* Violet background */
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.4) !important;
+}
+
+.custom-segmented .ant-segmented-item-hover {
+    color: #e5e7eb !important;
+}
+
+/* Animation: Fade In từ trái sang */
+@keyframes fadeInRight {
+    from {
+        opacity: 0;
+        transform: translateX(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.animate-fadeIn {
+    animation: fadeInRight 0.2s ease-out;
+}
+
+/* Custom Scrollbar cho vùng list */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #374151;
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+}

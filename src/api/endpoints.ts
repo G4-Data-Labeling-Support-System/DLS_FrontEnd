@@ -47,5 +47,15 @@ export const ENDPOINTS = {
     MOMO: '/payment/momo',
     VNPAY: '/payment/vnpay',
     STATUS: (transactionId: string) => `/payment/status/${transactionId}`
-  }
+  },
+
+  USERS: {
+    LIST: '/users',
+    DETAIL: (id: string) => `/users/${id}`,
+    CREATE: '/users',
+    UPDATE: (id: string) => `/users/update/${id}`,
+    UPDATE_PASS: (id: string) => `/users/update/password/${id}`,
+    DEACTIVATE: (id: string) => `/users/${id}/deactivate`,
+    ACTIVATE: (id: string) => `/users/${id}/activate`
+  },
 } as const

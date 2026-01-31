@@ -22,7 +22,7 @@ interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
 }
 
 // ============ Config & State ============
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://dls-beta.hikarimoon.pro/api/v1';
 
 // Biến trạng thái cho logic Refresh Token
 let isRefreshing = false;
@@ -41,10 +41,10 @@ const processQueue = (error: any, token: string | null = null) => {
 };
 
 // ============ Auth Helpers (Mặc định) ============
-const defaultGetToken = () => localStorage.getItem('accessToken');
+export const getStoredToken = () => localStorage.getItem('accessToken');
 const defaultGetRefreshToken = () => localStorage.getItem('refreshToken');
 
-const defaultHandleUnauthorized = () => {
+export const handleUnauthorized = () => {
   localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
   // Chỉ redirect nếu chưa ở trang login để tránh lặp vô tận
@@ -58,9 +58,9 @@ export function createApiClient({
   baseURL = API_BASE_URL,
   timeout = 10000,
   headers = {},
-  getToken = defaultGetToken,
+  getToken = getStoredToken,
   getRefreshToken = defaultGetRefreshToken,
-  onUnauthorized = defaultHandleUnauthorized,
+  onUnauthorized = handleUnauthorized,
   onForbidden
 }: ApiClientConfig): AxiosInstance {
 

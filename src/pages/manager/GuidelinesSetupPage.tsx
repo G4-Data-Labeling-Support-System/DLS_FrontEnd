@@ -8,7 +8,7 @@ const GuidelinesSetupPage: React.FC = () => {
     const navigate = useNavigate();
 
     const handleNext = () => {
-        navigate('/manager/create-project/team');
+        navigate('/manager/create-project/team-assignment');
     };
 
     const handleBack = () => {

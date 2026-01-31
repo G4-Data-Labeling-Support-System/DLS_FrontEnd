@@ -18,5 +18,18 @@ export default defineConfig({
       '@/pages': path.resolve(__dirname, './src/pages'),
       '@/components': path.resolve(__dirname, './src/components')
     }
-  }
+  },
+  // --- CẤU HÌNH PROXY ĐỂ SỬA LỖI CORS ---
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://dls-beta.hikarimoon.pro/api/v1', // Server backend
+        changeOrigin: true,
+        secure: false,
+        // Nếu backend của bạn đường dẫn là /api/v1, thì giữ nguyên.
+        // Nếu backend không có prefix /api mà bạn thêm vào ở frontend, dùng rewrite bên dưới:
+        // rewrite: (path) => path.replace(/^\/api/, ''), 
+      },
+    },
+  },
 })
