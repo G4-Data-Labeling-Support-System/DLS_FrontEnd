@@ -18,5 +18,6 @@ export const PATHS = {
 export const PATH_MANAGER = {
   root: '/manager',
   createProject: '/manager/create-project',
-  datasetSetup: '/manager/create-project/dataset-setup'
+  datasetSetup: '/manager/create-project/dataset-setup',
+  guidelinesSetup: '/manager/create-project/guidelines-setup'
 };

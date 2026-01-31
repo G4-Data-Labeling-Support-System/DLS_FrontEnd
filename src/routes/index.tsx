@@ -5,6 +5,7 @@ import { PATH_MANAGER } from './paths'
 import { CreateProjectPage } from '@/pages/manager'
 import DatasetSetupPage from '@/pages/manager/DatasetSetupPage'
 import ManagerLayout from '@/components/layout/ManagerLayout'
+import GuidelinesSetupPage from '@/pages/manager/GuidelinesSetupPage'
 
 // Lazy load pages for code splitting
 const HomePage = lazy(() => import('@/pages/customer/HomePage'))
@@ -63,6 +64,10 @@ export const router = createBrowserRouter([
       {
         path: PATH_MANAGER.datasetSetup,
         element: <LazyPage><DatasetSetupPage /></LazyPage>,
+      },
+      {
+        path: PATH_MANAGER.guidelinesSetup,
+        element: <LazyPage><GuidelinesSetupPage /></LazyPage>,
       },
     ],
   },
