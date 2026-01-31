@@ -24,7 +24,6 @@ interface TeamAssignmentContentProps {
 }
 
 export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({ onLaunch, onBack }) => {
-    // --- STATE ---
     const [availableUsers, setAvailableUsers] = useState<UserUI[]>([]);
     const [selectedUsers, setSelectedUsers] = useState<UserUI[]>([]);
     const [loading, setLoading] = useState(true);
@@ -38,12 +37,12 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({ on
             try {
                 setLoading(true);
                 const response = await mainClient.get(ENDPOINTS.USERS.LIST);
-                console.log("🔍 API User Response:", response);
+                console.log("API User Response:", response);
 
                 const rawList = response.data?.data || response.data?.content || response.data?.result || response.data;
 
                 if (!Array.isArray(rawList)) {
-                    console.error("❌ Data received is NOT an array:", rawList);
+                    console.error("Data received is NOT an array:", rawList);
                     setAvailableUsers([]);
                     return;
                 }
