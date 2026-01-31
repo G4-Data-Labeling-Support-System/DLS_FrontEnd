@@ -1,31 +1,44 @@
-import { useState } from 'react';
 import { Form, Input, Select } from 'antd';
 import { UserOutlined, MailOutlined, LockOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import { Button } from '@/shared/components/ui/Button';
 import { GlassModal } from '@/shared/components/ui/GlassModal';
+import { useCreateUser } from '@/features/admin/hooks/useUsers';
 
 interface AddUserModalProps {
     isOpen: boolean;
     onClose: () => void;
+    onSuccess?: (user: any) => void;
 }
 
-export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
+export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModalProps) {
     const [form] = Form.useForm();
-    const [loading, setLoading] = useState(false);
+    const createUserMutation = useCreateUser();
 
     const handleSubmit = async (values: any) => {
-        setLoading(true);
-        try {
-            // TODO: Implement API call
-            console.log('Form values:', values);
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
-            onClose();
-            form.resetFields();
-        } catch (error) {
-            console.error('Failed to create user:', error);
-        } finally {
-            setLoading(false);
-        }
+        // Combine form values with backend defaults
+        // Map 'role' to 'userRole' and ensure Title Case (annotator -> Annotator) to match backend conventions
+        const roleMapping: Record<string, string> = {
+            'annotator': 'Annotator',
+            'reviewer': 'Reviewer',
+            'manager': 'Manager'
+        };
+
+        const payload = {
+            ...values,
+            userRole: roleMapping[values.role] || values.role,
+            status: 'ACTIVE',
+            coverImage: 'https://placehold.co/400'
+        };
+
+        // Remove the original 'role' field to avoid confusion if backend is strict
+        delete payload.role;
+
+        createUserMutation.mutate(payload, {
+            onSuccess: (data) => {
+                form.resetFields();
+                onSuccess?.(data);
+            }
+        });
     };
 
     return (
@@ -142,7 +155,7 @@ export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
                             variant="primary"
                             size="md"
                             type="submit"
-                            isLoading={loading}
+                            isLoading={createUserMutation.isPending}
                             className="flex-[2] h-11"
                         >
                             Create Account

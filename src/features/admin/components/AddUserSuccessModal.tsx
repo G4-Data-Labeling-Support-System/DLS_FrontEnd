@@ -1,6 +1,5 @@
 import { Button } from '@/shared/components/ui/Button';
 import { GlassModal } from '@/shared/components/ui/GlassModal';
-import { themeClasses } from '@/styles';
 
 interface AddUserSuccessModalProps {
     isOpen: boolean;

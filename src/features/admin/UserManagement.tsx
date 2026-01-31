@@ -1,11 +1,18 @@
 import { useState } from 'react';
 import AddUserModal from './components/AddUserModal';
+import AddUserSuccessModal from './components/AddUserSuccessModal';
 import { themeClasses } from '@/styles';
 import { Button } from '@/shared/components/ui/Button';
 import { UserAddOutlined, PlusOutlined, MoreOutlined, TeamOutlined, DesktopOutlined, DatabaseOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 
 export default function UserManagement() {
     const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+    const [successModal, setSuccessModal] = useState<{ isOpen: boolean; data?: any }>({ isOpen: false });
+
+    const handleUserCreateSuccess = (data: any) => {
+        setIsAddUserModalOpen(false);
+        setSuccessModal({ isOpen: true, data });
+    };
 
     return (
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
@@ -351,6 +358,22 @@ export default function UserManagement() {
             <AddUserModal
                 isOpen={isAddUserModalOpen}
                 onClose={() => setIsAddUserModalOpen(false)}
+                onSuccess={handleUserCreateSuccess}
+            />
+
+            {/* Success Modal */}
+            <AddUserSuccessModal
+                isOpen={successModal.isOpen}
+                onClose={() => setSuccessModal({ ...successModal, isOpen: false })}
+                onAddAnother={() => {
+                    setSuccessModal({ ...successModal, isOpen: false });
+                    setIsAddUserModalOpen(true);
+                }}
+                userData={successModal.data ? {
+                    name: successModal.data.fullName,
+                    email: successModal.data.email,
+                    role: successModal.data.role
+                } : undefined}
             />
         </div>
     );
