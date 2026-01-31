@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Form, Input, Select, Button, ColorPicker, message } from 'antd';
+import { Form, Input, Select, Button, Tag, ColorPicker, message } from 'antd';
 import { PlusOutlined, CloseOutlined, BoldOutlined, ItalicOutlined, UnorderedListOutlined, LinkOutlined, UndoOutlined, RedoOutlined } from '@ant-design/icons';
 // Import CSS global chứa class override
 import '@/features/manager/components/manager.css';
@@ -12,17 +12,19 @@ interface GuidelinesSetupFormProps {
 
 const PARENT_LABELS = [
     { label: 'None (Root)', value: 'root' },
-    // Bạn có thể fetch danh sách này từ API thực tế sau này
 ];
 
 export const GuidelinesSetupForm: React.FC<GuidelinesSetupFormProps> = ({ onSuccess, onBack }) => {
     const [form] = Form.useForm();
-
-    // 1. State labels rỗng thay vì dữ liệu giả
     const [labels, setLabels] = useState<any[]>([]);
 
     const onFinish = (values: any) => {
-        // Gửi dữ liệu labels kèm theo values của form
+        // Kiểm tra logic labels nếu cần (ví dụ phải có ít nhất 1 label)
+        // if (labels.length === 0) {
+        //     message.error("Please add at least one label.");
+        //     return;
+        // }
+
         console.log('Guidelines Values:', { ...values, labels });
         if (onSuccess) onSuccess();
     };
@@ -37,14 +39,12 @@ export const GuidelinesSetupForm: React.FC<GuidelinesSetupFormProps> = ({ onSucc
         const newLabel = {
             id: Date.now(),
             name: name,
-            // Xử lý màu sắc từ ColorPicker của Antd
             color: typeof color === 'string' ? color : color?.toHexString() || '#1677ff',
             version: version || 'v1.0'
         };
 
         setLabels([...labels, newLabel]);
 
-        // Reset các trường nhập liệu sau khi thêm
         form.setFieldsValue({
             newLabelName: '',
             newLabelVersion: '',
@@ -62,11 +62,10 @@ export const GuidelinesSetupForm: React.FC<GuidelinesSetupFormProps> = ({ onSucc
         <Form
             form={form}
             layout="vertical"
-            // Dùng class này để form trong suốt, không đè nền Card (được định nghĩa trong manager.css)
             className="form-transparent-override"
-            // 2. InitialValues sạch, chỉ giữ lại cấu hình mặc định cần thiết
             initialValues={{
                 parentLabel: 'root',
+                // Đã xóa 'instructions' ở đây để validation hoạt động chuẩn
             }}
             onFinish={onFinish}
         >
@@ -79,6 +78,7 @@ export const GuidelinesSetupForm: React.FC<GuidelinesSetupFormProps> = ({ onSucc
                         Labels Management
                     </h3>
 
+                    {/* Form thêm Label (Giữ nguyên như cũ) */}
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4">
                         <div className="md:col-span-4">
                             <Form.Item label="Select Existing Label" className="mb-0">
@@ -126,7 +126,7 @@ export const GuidelinesSetupForm: React.FC<GuidelinesSetupFormProps> = ({ onSucc
                         </div>
                     </div>
 
-                    {/* Khu vực hiển thị Tags - Sẽ trống ban đầu */}
+                    {/* Danh sách Tags */}
                     {labels.length > 0 && (
                         <div className="flex flex-wrap gap-3 pt-4 border-t border-white/10">
                             {labels.map(label => (
@@ -149,16 +149,19 @@ export const GuidelinesSetupForm: React.FC<GuidelinesSetupFormProps> = ({ onSucc
                     )}
                 </div>
 
-                {/* --- BLOCK 2: LABELING INSTRUCTIONS --- */}
+                {/* --- BLOCK 2: LABELING INSTRUCTIONS (BẮT BUỘC) --- */}
                 <div className="bg-[#1a1625]/40 border border-white/5 rounded-2xl p-6">
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="text-white font-bold text-lg flex items-center gap-2">
                             <span className="material-symbols-outlined text-fuchsia-400">description</span>
                             Labeling Instructions
+                            {/* Thêm dấu sao đỏ báo hiệu bắt buộc */}
+                            <span className="text-red-500">*</span>
                         </h3>
                     </div>
 
                     <div className="border border-white/10 rounded-xl overflow-hidden bg-[#0f0e17]/50 focus-within:border-violet-500/50 transition-colors">
+                        {/* Toolbar giả lập */}
                         <div className="flex items-center gap-1 p-2 border-b border-white/10 bg-[#1a1625]/50">
                             <Button type="text" size="small" icon={<BoldOutlined />} className="text-gray-400 hover:text-white hover:bg-white/10" />
                             <Button type="text" size="small" icon={<ItalicOutlined />} className="text-gray-400 hover:text-white hover:bg-white/10" />
@@ -169,10 +172,15 @@ export const GuidelinesSetupForm: React.FC<GuidelinesSetupFormProps> = ({ onSucc
                             <Button type="text" size="small" icon={<RedoOutlined />} className="text-gray-400 hover:text-white hover:bg-white/10" />
                         </div>
 
-                        <Form.Item name="instructions" className="mb-0">
+                        {/* Form Item với Rule Required */}
+                        <Form.Item
+                            name="instructions"
+                            className="mb-0"
+                            rules={[{ required: true, message: 'Please enter labeling instructions for the team.' }]}
+                        >
                             <Input.TextArea
                                 rows={10}
-                                placeholder="Write your instructions here..."
+                                placeholder="Write your instructions here... (Required)"
                                 className="!bg-transparent !border-none !text-gray-300 !text-sm focus:!shadow-none !px-4 !py-3 !resize-none"
                                 style={{ lineHeight: '1.6' }}
                             />
