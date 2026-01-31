@@ -9,7 +9,7 @@ const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage'))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 
 // Admin pages
-const AdminLayout = lazy(() => import('@/components/layout/AdminLayout'))
+const AdminLayout = lazy(() => import('@/features/admin/components/layout/AdminLayout'))
 const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'))
 const UserManagement = lazy(() => import('@/features/admin/UserManagement'))
 const ProjectManagement = lazy(() => import('@/features/admin/ProjectManagement'))

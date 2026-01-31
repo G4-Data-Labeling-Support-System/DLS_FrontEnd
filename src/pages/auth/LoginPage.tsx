@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { themeClasses, commonPatterns } from '@/styles';
 import { Button } from '@/shared/components/ui/Button';
+import { ArrowRightOutlined } from '@ant-design/icons';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -182,9 +183,7 @@ export default function LoginPage() {
                 >
                   {isLoading ? 'SIGNING IN...' : 'SIGN IN'}
                   {!isLoading && (
-                    <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">
-                      arrow_forward
-                    </span>
+                    <ArrowRightOutlined className="group-hover:translate-x-1 transition-transform" />
                   )}
                 </Button>
               </form>

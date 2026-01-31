@@ -2,6 +2,7 @@ import { useState } from 'react';
 import AddUserModal from './components/AddUserModal';
 import { themeClasses } from '@/styles';
 import { Button } from '@/shared/components/ui/Button';
+import { UserAddOutlined, PlusOutlined, MoreOutlined, TeamOutlined, DesktopOutlined, DatabaseOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 
 export default function UserManagement() {
     const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
@@ -24,7 +25,7 @@ export default function UserManagement() {
                     className="group relative flex items-center gap-2 overflow-hidden px-5 py-2.5 font-body"
                 >
                     <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity group-hover:opacity-100"></div>
-                    <span className="material-symbols-outlined text-lg">person_add</span>
+                    <UserAddOutlined className="text-lg" />
                     <span>Add User</span>
                 </Button>
             </div>
@@ -41,7 +42,7 @@ export default function UserManagement() {
                             <p className="text-3xl font-bold tracking-tight text-white">-</p>
                         </div>
                         <div className={`h-10 w-10 rounded-lg ${themeClasses.backgrounds.violetAlpha10} flex items-center justify-center ${themeClasses.text.violet}`}>
-                            <span className="material-symbols-outlined">group</span>
+                            <TeamOutlined className="text-xl" />
                         </div>
                     </div>
                     <div className="mt-4 flex items-center gap-2">
@@ -62,7 +63,7 @@ export default function UserManagement() {
                             <p className="text-3xl font-bold tracking-tight text-white">-</p>
                         </div>
                         <div className="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-                            <span className="material-symbols-outlined">monitor_heart</span>
+                            <DesktopOutlined className="text-xl" />
                         </div>
                     </div>
                     <div className="mt-4">
@@ -90,7 +91,7 @@ export default function UserManagement() {
                             </div>
                         </div>
                         <div className={`h-10 w-10 rounded-lg bg-fuchsia-500/10 flex items-center justify-center ${themeClasses.text.fuchsia}`}>
-                            <span className="material-symbols-outlined">database</span>
+                            <DatabaseOutlined className="text-xl" />
                         </div>
                     </div>
                     <div className={`mt-4 h-2 w-full overflow-hidden rounded-full ${themeClasses.backgrounds.whiteAlpha5} flex`}>
@@ -131,7 +132,7 @@ export default function UserManagement() {
                             className="group relative flex items-center gap-2 overflow-hidden px-4 py-2 font-body text-sm font-semibold"
                         >
                             <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity group-hover:opacity-100"></div>
-                            <span className="material-symbols-outlined text-lg">add</span>
+                            <PlusOutlined className="text-lg" />
                             <span>Add User</span>
                         </Button>
                     </div>
@@ -167,9 +168,7 @@ export default function UserManagement() {
                                 </td>
                                 <td className="px-6 py-4">
                                     <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-xs font-semibold text-red-400">
-                                        <span className="material-symbols-outlined text-[14px]">
-                                            shield
-                                        </span>
+                                        <SafetyCertificateOutlined className="text-[14px]" />
                                         Admin
                                     </span>
                                 </td>

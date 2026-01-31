@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/shared/components/ui/Button';
+import { ArrowLeftOutlined } from '@ant-design/icons';
 
 export default function ForgotPasswordPage() {
     return (
@@ -65,9 +66,7 @@ export default function ForgotPasswordPage() {
                                 to="/login"
                                 className="inline-flex items-center text-gray-500 hover:text-violet-400 transition-colors mb-8 group w-fit"
                             >
-                                <span className="material-symbols-outlined text-lg mr-1 group-hover:-translate-x-1 transition-transform">
-                                    arrow_back
-                                </span>
+                                <ArrowLeftOutlined className="mr-2 group-hover:-translate-x-1 transition-transform" />
                                 <span className="text-sm font-medium">Back to Login</span>
                             </Link>
                             <div className="mb-8">
