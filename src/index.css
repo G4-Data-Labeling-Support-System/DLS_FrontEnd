@@ -3,7 +3,20 @@
 :root {
   --violet: #8b5cf6;
   --fuchsia: #d946ef;
+  --fuchsia: #d946ef;
   --deep-dark: #0f0e17;
+}
+
+/* Fix Autofill Background */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: #ffffff;
+  transition: background-color 5000s ease-in-out 0s;
+  box-shadow: inset 0 0 20px 20px rgba(30, 27, 41, 0.8);
+  /* Dark background match */
 }
 
 @theme {

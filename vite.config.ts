@@ -18,5 +18,14 @@ export default defineConfig({
       '@/pages': path.resolve(__dirname, './src/pages'),
       '@/components': path.resolve(__dirname, './src/components')
     }
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://dls-beta.hikarimoon.pro',
+        changeOrigin: true,
+        secure: false, // In case of self-signed certs
+      }
+    }
   }
 })

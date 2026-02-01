@@ -37,6 +37,16 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModa
             onSuccess: (data) => {
                 form.resetFields();
                 onSuccess?.(data);
+            },
+            onError: (error: any) => {
+                const errorData = error.response?.data;
+                console.error("Backend Error Details:", errorData);
+
+                // Show specific backend validation message if available
+                // Assuming standard error structure: { message: "Password must be at least 6 characters" }
+                // or { errors: { password: "Too short" } }
+                const messageStr = errorData?.message || JSON.stringify(errorData) || "Failed to create user";
+                alert(`Error: ${messageStr}`);
             }
         });
     };
@@ -132,7 +142,8 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModa
                             size="large"
                             className="custom-select"
                             suffixIcon={<SafetyCertificateOutlined className="text-gray-500" />}
-                            popupClassName="glass-dropdown"
+                            // @ts-ignore - Ant Design type definition might not be updated but this is the fix for warning
+                            classNames={{ popup: "glass-dropdown" }}
                             options={[
                                 { label: 'Annotator', value: 'annotator' },
                                 { label: 'Reviewer', value: 'reviewer' },

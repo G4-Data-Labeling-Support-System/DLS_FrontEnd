@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { userApi } from '@/features/admin/api/userApi';
 import type { CreateUserRequest } from '@/shared/types/api.types';
-import { message } from 'antd';
 
 export const useCreateUser = () => {
     const queryClient = useQueryClient();
@@ -15,8 +14,7 @@ export const useCreateUser = () => {
         },
         onError: (error: any) => {
             console.error('Create user error:', error);
-            const errorMessage = error.response?.data?.message || 'Failed to create user. Please try again.';
-            message.error(errorMessage);
+            // Error handling moved to component level to avoid static message context warning
         }
     });
 };
