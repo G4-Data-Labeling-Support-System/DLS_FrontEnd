@@ -1,6 +1,14 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { userApi } from '@/features/admin/api/userApi';
 import type { CreateUserRequest } from '@/shared/types/api.types';
+
+export const useUsers = () => {
+    return useQuery({
+        queryKey: ['users'],
+        queryFn: userApi.getUsers,
+        staleTime: 1000 * 60 * 5, // 5 minutes
+    });
+};
 
 export const useCreateUser = () => {
     const queryClient = useQueryClient();
@@ -10,11 +18,10 @@ export const useCreateUser = () => {
         onSuccess: () => {
             // Update the user list cache
             queryClient.invalidateQueries({ queryKey: ['users'] });
-            // Note: Success modal handling is done in the component
         },
         onError: (error: any) => {
             console.error('Create user error:', error);
-            // Error handling moved to component level to avoid static message context warning
+            // Error handling is managed by the component
         }
     });
 };

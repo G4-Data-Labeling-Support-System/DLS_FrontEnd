@@ -4,10 +4,16 @@ import AddUserSuccessModal from './components/AddUserSuccessModal';
 import { themeClasses } from '@/styles';
 import { Button } from '@/shared/components/ui/Button';
 import { UserAddOutlined, PlusOutlined, MoreOutlined, TeamOutlined, DesktopOutlined, DatabaseOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
+import { useUsers } from '@/features/admin/hooks/useUsers';
 
 export default function UserManagement() {
     const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
     const [successModal, setSuccessModal] = useState<{ isOpen: boolean; data?: any }>({ isOpen: false });
+    const { data: rawUsers, isLoading } = useUsers();
+
+    // Safety check for API response structure
+    const users = Array.isArray(rawUsers) ? rawUsers : (rawUsers as any)?.data || [];
+    console.log("Users API Response:", rawUsers, "Parsed Users:", users);
 
     const handleUserCreateSuccess = (data: any) => {
         setIsAddUserModalOpen(false);
@@ -46,7 +52,9 @@ export default function UserManagement() {
                             <p className={`font-body text-sm font-medium ${themeClasses.text.secondary} mb-1`}>
                                 Total Users
                             </p>
-                            <p className="text-3xl font-bold tracking-tight text-white">-</p>
+                            <p className="text-3xl font-bold tracking-tight text-white">
+                                {isLoading ? '-' : users?.length || 0}
+                            </p>
                         </div>
                         <div className={`h-10 w-10 rounded-lg ${themeClasses.backgrounds.violetAlpha10} flex items-center justify-center ${themeClasses.text.violet}`}>
                             <TeamOutlined className="text-xl" />
@@ -129,7 +137,7 @@ export default function UserManagement() {
                     <div className="flex flex-col gap-1">
                         <h3 className="text-lg font-bold text-white">User Management</h3>
                         <p className={`text-sm ${themeClasses.text.secondary} font-body`}>
-                            List of users in the system
+                            List of users in the system ({users?.length || 0})
                         </p>
                     </div>
                     <div className="flex gap-3">
@@ -156,199 +164,86 @@ export default function UserManagement() {
                             </tr>
                         </thead>
                         <tbody className={`divide-y ${themeClasses.borders.white5} font-body text-sm`}>
-                            {/* Admin User */}
-                            <tr className={`group transition-colors hover:${themeClasses.backgrounds.whiteAlpha5}`}>
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className={`h-10 w-10 overflow-hidden rounded-full ${themeClasses.backgrounds.card} ring-1 ring-white/10 transition-all group-hover:ring-violet-500/50 flex items-center justify-center`}>
-                                            <span className={`text-sm font-bold ${themeClasses.text.violet}`}>AD</span>
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="font-bold text-white text-[15px]">
-                                                Nguyen Van Admin
-                                            </span>
-                                            <span className={`text-sm ${themeClasses.text.tertiary}`}>
-                                                admin@labelflow.com
-                                            </span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-xs font-semibold text-red-400">
-                                        <SafetyCertificateOutlined className="text-[14px]" />
-                                        Admin
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-2">
-                                        <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.6)]"></span>
-                                        <span className="text-emerald-500 text-sm font-medium">
-                                            Active
-                                        </span>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <span className="font-bold text-white text-[15px]">0</span>
-                                </td>
-                                <td className="px-6 py-4 text-right">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className={`${themeClasses.text.tertiary} hover:text-white transition-colors`}
-                                    >
-                                        <span className="material-symbols-outlined text-lg">
-                                            more_horiz
-                                        </span>
-                                    </Button>
-                                </td>
-                            </tr>
+                            {isLoading ? (
+                                <tr>
+                                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                                        Loading users...
+                                    </td>
+                                </tr>
+                            ) : users?.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                                        No users found.
+                                    </td>
+                                </tr>
+                            ) : (
 
-                            {/* Manager User */}
-                            <tr className={`group transition-colors hover:${themeClasses.backgrounds.whiteAlpha5}`}>
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className={`h-10 w-10 overflow-hidden rounded-full ${themeClasses.backgrounds.card} ring-1 ring-white/10 transition-all group-hover:ring-violet-500/50 flex items-center justify-center`}>
-                                            <span className={`text-sm font-bold ${themeClasses.text.fuchsia}`}>TM</span>
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="font-bold text-white text-[15px]">
-                                                Tran Thi Manager
-                                            </span>
-                                            <span className={`text-sm ${themeClasses.text.tertiary}`}>
-                                                manager@labelflow.com
-                                            </span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <span className="inline-flex items-center gap-1.5 rounded-full border border-purple-500/20 bg-purple-500/10 px-3 py-1 text-xs font-semibold text-purple-400">
-                                        <span className="material-symbols-outlined text-[14px]">
-                                            person
-                                        </span>
-                                        Manager
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-2">
-                                        <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.6)]"></span>
-                                        <span className="text-emerald-500 text-sm font-medium">
-                                            Active
-                                        </span>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <span className="font-bold text-white text-[15px]">45</span>
-                                </td>
-                                <td className="px-6 py-4 text-right">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className={`${themeClasses.text.tertiary} hover:text-white transition-colors`}
-                                    >
-                                        <span className="material-symbols-outlined text-lg">
-                                            more_horiz
-                                        </span>
-                                    </Button>
-                                </td>
-                            </tr>
+                                users?.map((user: any) => {
+                                    // Handle backend field difference and normalize
+                                    const rawRole = user.userRole || user.role || 'Unknown';
+                                    const roleLower = rawRole.toLowerCase();
+                                    const displayRole = rawRole.charAt(0).toUpperCase() + rawRole.slice(1).toLowerCase();
 
-                            {/* Reviewer User */}
-                            <tr className={`group transition-colors hover:${themeClasses.backgrounds.whiteAlpha5}`}>
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className={`h-10 w-10 overflow-hidden rounded-full ${themeClasses.backgrounds.card} ring-1 ring-white/10 transition-all group-hover:ring-violet-500/50 flex items-center justify-center`}>
-                                            <span className="text-sm font-bold text-indigo-400">LR</span>
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="font-bold text-white text-[15px]">
-                                                Le Van Reviewer
-                                            </span>
-                                            <span className={`text-sm ${themeClasses.text.tertiary}`}>
-                                                reviewer@labelflow.com
-                                            </span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-400">
-                                        <span className="material-symbols-outlined text-[14px]">
-                                            visibility
-                                        </span>
-                                        Reviewer
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-2">
-                                        <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.6)]"></span>
-                                        <span className="text-emerald-500 text-sm font-medium">
-                                            Active
-                                        </span>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <span className="font-bold text-white text-[15px]">320</span>
-                                </td>
-                                <td className="px-6 py-4 text-right">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className={`${themeClasses.text.tertiary} hover:text-white transition-colors`}
-                                    >
-                                        <span className="material-symbols-outlined text-lg">
-                                            more_horiz
-                                        </span>
-                                    </Button>
-                                </td>
-                            </tr>
+                                    return (
+                                        <tr key={user.id} className={`group transition-colors hover:${themeClasses.backgrounds.whiteAlpha5}`}>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`h-10 w-10 overflow-hidden rounded-full ${themeClasses.backgrounds.card} ring-1 ring-white/10 transition-all group-hover:ring-violet-500/50 flex items-center justify-center`}>
+                                                        {user.avatar ? (
+                                                            <img src={user.avatar} alt={user.username} className="h-full w-full object-cover" />
+                                                        ) : (
+                                                            <span className={`text-sm font-bold ${themeClasses.text.violet}`}>
+                                                                {user.username?.substring(0, 2).toUpperCase()}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <span className="font-bold text-white text-[15px]">
+                                                            {user.fullName || user.username}
+                                                        </span>
+                                                        <span className={`text-sm ${themeClasses.text.tertiary}`}>
+                                                            {user.email}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold
+                                                ${roleLower === 'annotator' ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400' :
+                                                        roleLower === 'reviewer' ? 'border-amber-500/20 bg-amber-500/10 text-amber-400' :
+                                                            roleLower === 'manager' ? 'border-purple-500/20 bg-purple-500/10 text-purple-400' :
+                                                                'border-red-500/20 bg-red-500/10 text-red-400'
+                                                    }`}>
+                                                    {displayRole}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-2">
+                                                    <span className={`h-2 w-2 rounded-full ${user.status === 'ACTIVE' ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.6)]' : 'bg-gray-500'}`}></span>
+                                                    <span className={`${user.status === 'ACTIVE' ? 'text-emerald-500' : 'text-gray-400'} text-sm font-medium`}>
+                                                        {user.status || 'Active'}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className="font-bold text-white text-[15px]">0</span>
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className={`${themeClasses.text.tertiary} hover:text-white transition-colors`}
+                                                >
+                                                    <span className="material-symbols-outlined text-lg">
+                                                        more_horiz
+                                                    </span>
+                                                </Button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
 
-                            {/* Annotator User */}
-                            <tr className={`group transition-colors hover:${themeClasses.backgrounds.whiteAlpha5}`}>
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className={`h-10 w-10 overflow-hidden rounded-full ${themeClasses.backgrounds.card} ring-1 ring-white/10 transition-all group-hover:ring-violet-500/50 flex items-center justify-center`}>
-                                            <span className={`text-sm font-bold ${themeClasses.text.violet}`}>PA</span>
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="font-bold text-white text-[15px]">
-                                                Pham Annotator
-                                            </span>
-                                            <span className={`text-sm ${themeClasses.text.tertiary}`}>
-                                                annotator@labelflow.com
-                                            </span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400">
-                                        <span className="material-symbols-outlined text-[14px]">
-                                            edit
-                                        </span>
-                                        Annotator
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-2">
-                                        <span className="h-2 w-2 rounded-full bg-gray-500"></span>
-                                        <span className={`text-gray-400 text-sm font-medium`}>
-                                            Inactive
-                                        </span>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <span className="font-bold text-white text-[15px]">1,250</span>
-                                </td>
-                                <td className="px-6 py-4 text-right">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className={`${themeClasses.text.tertiary} hover:text-white transition-colors`}
-                                    >
-                                        <span className="material-symbols-outlined text-lg">
-                                            more_horiz
-                                        </span>
-                                    </Button>
-                                </td>
-                            </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
