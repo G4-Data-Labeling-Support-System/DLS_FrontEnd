@@ -9,9 +9,17 @@ import GuidelinesSetupPage from '@/pages/manager/GuidelinesSetupPage'
 import TeamAssignmentPage from '@/pages/manager/TeamAssignmentPage'
 
 // Lazy load pages for code splitting
-const HomePage = lazy(() => import('@/pages/customer/HomePage'))
+const HomePage = lazy(() => import('@/pages/homepage/HomePage'))
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
+const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage'))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
+
+// Admin pages
+const AdminLayout = lazy(() => import('@/features/admin/components/layout/AdminLayout'))
+const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'))
+const UserManagement = lazy(() => import('@/features/admin/UserManagement'))
+const ProjectManagement = lazy(() => import('@/features/admin/ProjectManagement'))
+const SystemSettings = lazy(() => import('@/features/admin/SystemSettings'))
 
 // Wrapper component for lazy loaded pages
 function LazyPage({ children }: { children: React.ReactNode }) {
@@ -40,6 +48,40 @@ export const router = createBrowserRouter([
         <LoginPage />
       </LazyPage>
     ),
+  },
+  {
+    path: '/forgot-password',
+    element: (
+      <LazyPage>
+        <ForgotPasswordPage />
+      </LazyPage>
+    ),
+  },
+  {
+    path: '/admin',
+    element: (
+      <LazyPage>
+        <AdminLayout />
+      </LazyPage>
+    ),
+    children: [
+      {
+        path: 'dashboard',
+        element: <AdminDashboard />,
+      },
+      {
+        path: 'users',
+        element: <UserManagement />,
+      },
+      {
+        path: 'projects',
+        element: <ProjectManagement />,
+      },
+      {
+        path: 'settings',
+        element: <SystemSettings />,
+      },
+    ],
   },
   {
     path: '*',
@@ -77,4 +119,3 @@ export const router = createBrowserRouter([
     ],
   },
 ])
-

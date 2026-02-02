@@ -1,12 +1,3 @@
-// EPIC 5: System Admin Features
-// RBAC, System Config, Master Data, Audit Logs
-
-// export * from './rbac'
-// export * from './system-config'
-// export * from './master-data'
-// export * from './audit-logs'
-
-export const AdminFeatures = {
-  name: 'Admin Features',
-  description: 'EPIC 5: System Admin features - RBAC, Config, Audit'
-}
+export { default as UserManagement } from './UserManagement'
+export { default as ProjectManagement } from './ProjectManagement'
+export { default as SystemSettings } from './SystemSettings'

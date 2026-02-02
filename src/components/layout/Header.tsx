@@ -1,11 +1,10 @@
 // src/components/layout/Header.tsx
-import { Button } from 'antd';
-import { SettingOutlined, UserOutlined, BellOutlined } from '@ant-design/icons';
+import { Button } from 'antd'
+import { SettingOutlined, UserOutlined, BellOutlined } from '@ant-design/icons'
 
 export function Header() {
   return (
     <header className="bg-transparent px-8 h-20 flex items-center justify-between z-10 border-b border-white/10 shrink-0 backdrop-blur-[2px]">
-
       {/* --- LOGO SECTION --- */}
       <div className="flex items-center gap-3">
         {/* Icon: Đổi sang màu Violet và thêm hiệu ứng đổ bóng nhẹ */}
@@ -15,7 +14,10 @@ export function Header() {
 
         {/* Text: "Data Labeling" màu trắng, "System" chạy gradient tím-hồng */}
         <span className="text-white font-bold text-xl tracking-wider font-sans">
-          Data Labeling <span className="font-light text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400">System</span>
+          Data Labeling{' '}
+          <span className="font-light text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400">
+            System
+          </span>
         </span>
       </div>
 

@@ -1,4 +1,6 @@
 // Layout Components - Barrel Export
-export { Footer } from './Footer'
-export { Header } from './Header'
+export * from './Header'
+export * from './Footer'
+export * from './Sidebar'
+export * from './MainLayout'
 
