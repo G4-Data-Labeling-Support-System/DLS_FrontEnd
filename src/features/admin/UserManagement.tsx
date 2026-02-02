@@ -3,7 +3,7 @@ import AddUserModal from './components/AddUserModal';
 import AddUserSuccessModal from './components/AddUserSuccessModal';
 import { themeClasses } from '@/styles';
 import { Button } from '@/shared/components/ui/Button';
-import { UserAddOutlined, PlusOutlined, MoreOutlined, TeamOutlined, DesktopOutlined, DatabaseOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
+import { UserAddOutlined, PlusOutlined, TeamOutlined, DesktopOutlined, DatabaseOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import { useUsers } from '@/features/admin/hooks/useUsers';
 
 export default function UserManagement() {
@@ -11,7 +11,8 @@ export default function UserManagement() {
     const [successModal, setSuccessModal] = useState<{ isOpen: boolean; data?: any }>({ isOpen: false });
     const { data: rawUsers, isLoading } = useUsers();
 
-    // Safety check for API response structure
+    // [Logic: Safety Check] Kiểm tra cấu trúc trả về từ API
+    // React Query có thể trả về array trực tiếp hoặc object chứa data (VD: response.data)
     const users = Array.isArray(rawUsers) ? rawUsers : (rawUsers as any)?.data || [];
     console.log("Users API Response:", rawUsers, "Parsed Users:", users);
 

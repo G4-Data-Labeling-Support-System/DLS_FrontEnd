@@ -15,8 +15,8 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModa
     const createUserMutation = useCreateUser();
 
     const handleSubmit = async (values: any) => {
-        // Combine form values with backend defaults
-        // Map 'role' to 'userRole' and ensure Title Case (annotator -> Annotator) to match backend conventions
+        // [Logic: Chuẩn bị dữ liệu] Kết hợp dữ liệu form với giá trị mặc định
+        // [Logic: Xử lý Role] Ánh xạ 'role' (frontend) sang 'userRole' (backend) và viết hoa chữ cái đầu
         const roleMapping: Record<string, string> = {
             'annotator': 'Annotator',
             'reviewer': 'Reviewer',
@@ -25,26 +25,27 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModa
 
         const payload = {
             ...values,
-            userRole: roleMapping[values.role] || values.role,
-            status: 'ACTIVE',
-            coverImage: 'https://placehold.co/400'
+            userRole: roleMapping[values.role] || values.role, // Gán role chuẩn vào userRole
+            status: 'ACTIVE', // Mặc định trạng thái là ACTIVE
+            coverImage: 'https://placehold.co/400' // Ảnh bìa mặc định
         };
 
-        // Remove the original 'role' field to avoid confusion if backend is strict
+        // [Logic: Cleanup] Xóa trường 'role' cũ để tránh gửi dữ liệu thừa lên API
         delete payload.role;
 
+        // [Logic: Gọi API] Thực hiện tạo user
         createUserMutation.mutate(payload, {
             onSuccess: (data) => {
+                // [Logic: Thành công] Reset form và gọi callback thông báo ra ngoài
                 form.resetFields();
                 onSuccess?.(data);
             },
             onError: (error: any) => {
+                // [Logic: Xử lý lỗi] Lấy thông báo lỗi chi tiết từ backend
                 const errorData = error.response?.data;
                 console.error("Backend Error Details:", errorData);
 
-                // Show specific backend validation message if available
-                // Assuming standard error structure: { message: "Password must be at least 6 characters" }
-                // or { errors: { password: "Too short" } }
+                // Hiển thị thông báo lỗi cho người dùng (ưu tiên message từ backend)
                 const messageStr = errorData?.message || JSON.stringify(errorData) || "Failed to create user";
                 alert(`Error: ${messageStr}`);
             }
