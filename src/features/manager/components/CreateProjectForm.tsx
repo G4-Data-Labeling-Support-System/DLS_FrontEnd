@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Form, Input, Select, message } from 'antd';
-import { LockOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
@@ -89,12 +88,6 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
 
                     {/* CỘT PHẢI (Chiếm 1 phần) */}
                     <div className="space-y-6">
-                        <Form.Item label="Project ID">
-                            <div className="bg-[#1a1625] border border-white/10 py-3 px-4 rounded-xl flex justify-between items-center text-gray-400 font-mono shadow-inner">
-                                <span className="tracking-widest text-sm">PROJ-X9Y2</span>
-                                <LockOutlined className="text-white/20" />
-                            </div>
-                        </Form.Item>
                         <Form.Item name="status" label="Status *" rules={[{ required: true }]}>
                             <Select size="large" options={PROJECT_STATUS} />
                         </Form.Item>

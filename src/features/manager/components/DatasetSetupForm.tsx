@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Form, Input, Upload, message } from 'antd';
 import { DeleteOutlined, PlusOutlined, InboxOutlined } from '@ant-design/icons';
 // Import CSS global (chứa class .form-transparent-override)
@@ -15,6 +15,19 @@ interface DatasetSetupFormProps {
 export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({ onSuccess, onBack }) => {
     const [form] = Form.useForm();
     const [fileList, setFileList] = useState<any[]>([]);
+
+    // --- LOGIC: Generate Current Date ---
+    // Using useMemo to calculate the date only once when the component mounts
+    const currentDate = useMemo(() => {
+        const date = new Date();
+        // Format the date as DD/MM/YYYY (Vietnamese locale is suitable for this)
+        return new Intl.DateTimeFormat('vi-VN', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        }).format(date);
+    }, []);
+    // ------------------------------------
 
     // Cleanup URL object khi component unmount để tránh leak memory
     useEffect(() => {
@@ -77,22 +90,22 @@ export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({ onSuccess, o
 
                 {/* --- Section 1: Thông tin định danh (Readonly) --- */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <Form.Item label="Dataset ID (UUID)">
-                        <Input
-                            className="font-mono text-sm !bg-[#1a1625] !border-white/10"
-                        />
-                    </Form.Item>
                     <Form.Item label="Project ID (UUID)">
-                        <Input className="font-mono text-sm !bg-[#1a1625] !border-white/10" placeholder="Inherited from Project" />
+                        <Input className="font-mono text-sm !bg-[#1a1625] !border-white/10" placeholder="Inherited from Project" disabled />
                     </Form.Item>
+
+                    {/* --- UPDATED: Created At Field --- */}
                     <Form.Item label="Created At">
                         <div className="relative">
                             <Input
+                                defaultValue={currentDate} // Set the default value to the generated date
+                                readOnly // Make it read-only
                                 className="font-mono text-sm !text-gray-500 !bg-[#1a1625]/50 !border-white/5 cursor-not-allowed"
-
                             />
                         </div>
                     </Form.Item>
+                    {/* ------------------------------- */}
+
                 </div>
 
                 {/* --- Section 2: Cấu hình Dataset --- */}
