@@ -32,8 +32,10 @@ const CreateProjectPage: React.FC = () => {
 
             {/* 3. Form */}
             {/* Form này đã có class 'project-glass-card' bên trong nên sẽ tự tạo khung kính */}
-            <CreateProjectForm onSuccess={handleProjectCreated} />
 
+            <div className="project-glass-card">
+                <CreateProjectForm onSuccess={handleProjectCreated} />
+            </div>
         </div>
     );
 };

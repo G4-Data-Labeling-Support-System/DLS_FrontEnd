@@ -34,14 +34,14 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
             const payload = {
                 ...values,
                 createdAt: new Date().toISOString(),
-                projectId: 'PROJ-X9Y2' // ID giả lập
+                projectId: `PROJ-${Math.floor(Math.random() * 10000)}` // Mock ID ngẫu nhiên
             };
 
-            // 2. Gọi API
+            // 2. Gọi API (Sử dụng API Mock của bạn)
             const response = await axios.post('https://697774545b9c0aed1e868772.mockapi.io/Cate', payload);
             console.log('API Response:', response.data);
 
-            // 3. Thông báo & Reset
+            // 3. Thông báo
             message.success('Project created successfully!');
 
             // 4. Chuyển bước
@@ -61,46 +61,70 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
         <Form
             form={form}
             layout="vertical"
-            // QUAN TRỌNG: Form này tự tạo khung kính cho chính nó
-            className="project-glass-card"
+            // Thay đổi quan trọng: Dùng class trong suốt để hòa trộn vào Glass Card của Page cha
+            className="form-transparent-override"
             initialValues={{ status: 'active' }}
             onFinish={onFinish}
         >
-            {/* Wrapper để gom nội dung vào giữa (max-width: 1100px) */}
-            <div className="form-content-wrapper">
+            <div className="flex flex-col gap-8">
 
-                {/* Header bên trong Form */}
-                <div className="mb-8 border-b border-white/10 pb-4 text-center">
-                    <h2 className="text-2xl font-bold text-white tracking-wide">Project Details</h2>
-                    <p className="text-gray-400 text-sm mt-1">Enter the essential information to start your new project.</p>
-                </div>
-
+                {/* --- Main Content Grid --- */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {/* CỘT TRÁI (Chiếm 2 phần) */}
+
+                    {/* CỘT TRÁI (Thông tin chính - Chiếm 2 phần) */}
                     <div className="md:col-span-2 space-y-6">
-                        <Form.Item name="projectName" label="Project Name *" rules={[{ required: true }]}>
-                            <Input size="large" placeholder="e.g. Autonomous Vehicle Perception Phase 2" />
+                        <Form.Item
+                            name="projectName"
+                            label="Project Name *"
+                            rules={[{ required: true, message: 'Please enter project name' }]}
+                        >
+                            <Input
+                                size="large"
+                                placeholder="e.g. Autonomous Vehicle Perception Phase 2"
+                                // Style input chuẩn theme tối
+                                className="!bg-[#1a1625] !border-white/10 !text-white placeholder:!text-gray-600 focus:!border-violet-500 hover:!border-violet-500/50"
+                            />
                         </Form.Item>
+
                         <Form.Item name="description" label="Description">
-                            <Input.TextArea rows={8} placeholder="Briefly describe..." className="resize-none" />
+                            <Input.TextArea
+                                rows={8}
+                                placeholder="Briefly describe the goals and scope of this project..."
+                                className="!bg-[#1a1625] !border-white/10 !text-white placeholder:!text-gray-600 resize-none focus:!border-violet-500 hover:!border-violet-500/50"
+                            />
                         </Form.Item>
                     </div>
 
-                    {/* CỘT PHẢI (Chiếm 1 phần) */}
+                    {/* CỘT PHẢI (Cấu hình phụ - Chiếm 1 phần) */}
                     <div className="space-y-6">
-                        <Form.Item name="status" label="Status *" rules={[{ required: true }]}>
-                            <Select size="large" options={PROJECT_STATUS} />
+                        <Form.Item
+                            name="status"
+                            label="Status *"
+                            rules={[{ required: true }]}
+                        >
+                            <Select
+                                size="large"
+                                options={PROJECT_STATUS}
+                                className="custom-select-override" // Cần đảm bảo manager.css có style cho select dropdown
+                                popupClassName="bg-[#1a1625] border border-white/10 text-white"
+                            />
                         </Form.Item>
 
-                        <div className="p-4 rounded-xl bg-violet-500/10 border border-violet-500/20 mt-4">
-                            <p className="text-violet-200 text-xs m-0 text-center leading-relaxed">
-                                <strong>Note:</strong> Active projects are visible immediately.
+                        {/* Note Box trang trí */}
+                        <div className="p-5 rounded-xl bg-gradient-to-br from-violet-500/10 to-fuchsia-500/5 border border-violet-500/20 mt-4">
+                            <h4 className="text-violet-300 font-bold text-xs uppercase tracking-wider mb-2">
+                                Manager Tip
+                            </h4>
+                            <p className="text-gray-400 text-xs leading-relaxed m-0">
+                                Active projects are visible immediately to the assigned workforce.
+                                Set to <strong>Blocked</strong> if you want to prepare data before launching.
                             </p>
                         </div>
                     </div>
                 </div>
 
-                {/* Footer Component */}
+                {/* --- Footer Component --- */}
+                {/* Sử dụng FormFooter chung để đồng bộ nút bấm */}
                 <FormFooter
                     currentStep={1}
                     totalSteps={4}
