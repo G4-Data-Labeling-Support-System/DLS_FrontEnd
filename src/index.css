@@ -104,3 +104,106 @@ input:-webkit-autofill:active {
     box-shadow: 0 0 0 2px rgba(137, 90, 246, 0.2), 0 0 15px rgba(137, 90, 246, 0.4);
   }
 }
+
+@theme {
+  /* Colors - Premium Eyewear Palette & DLSS Theme */
+  --color-primary-50: #f0f9ff;
+  --color-primary-100: #e0f2fe;
+  --color-primary-200: #bae6fd;
+  --color-primary-300: #7dd3fc;
+  --color-primary-400: #38bdf8;
+  --color-primary-500: #0ea5e9;
+  --color-primary-600: #0284c7;
+  --color-primary-700: #0369a1;
+  --color-primary-800: #075985;
+  --color-primary-900: #0c4a6e;
+
+  --color-secondary-50: #fdf4ff;
+  --color-secondary-100: #fae8ff;
+  --color-secondary-200: #f5d0fe;
+  --color-secondary-300: #f0abfc;
+  --color-secondary-400: #e879f9;
+  --color-secondary-500: #d946ef;
+  --color-secondary-600: #c026d3;
+  --color-secondary-700: #a21caf;
+  --color-secondary-800: #86198f;
+  --color-secondary-900: #701a75;
+
+  /* DLSS Specific Colors */
+  --color-primary: #9d27f1;
+  --color-secondary: #d946ef;
+  --color-background-dark: #0f0e17;
+  --color-surface-dark: #1a1625;
+  --color-header-dark: #140e1d;
+  --color-glass-border: rgba(157, 39, 241, 0.3);
+
+  /* Typography */
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-heading: 'Outfit', system-ui, sans-serif;
+  --font-display: 'Public Sans', sans-serif;
+
+  /* Shadows */
+  --shadow-neon: 0 0 10px rgba(157, 39, 241, 0.5), 0 0 20px rgba(157, 39, 241, 0.3);
+  --shadow-fuchsia-glow: 0 0 15px rgba(217, 70, 239, 0.4);
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  /* --- FIX LỖI NỀN BỊ CẮT --- */
+  html {
+    min-height: 100%;
+    /* Dùng min-height thay vì height cứng */
+  }
+
+  body {
+    /* Đảm bảo nền luôn phủ kín ít nhất 100% màn hình */
+    min-height: 100vh;
+    background-color: #0f0e17;
+    @apply text-white font-sans;
+
+    /* Grid Background - Dùng fixed để nền đứng yên khi cuộn, không bị hết nền */
+    background-image: linear-gradient(rgba(157, 39, 241, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(157, 39, 241, 0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
+    background-attachment: fixed;
+    /* QUAN TRỌNG: Giữ nền không bị trôi/cắt khi cuộn */
+
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #root {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+/* ... (Phần @tailwind giữ nguyên) ... */
+
+@layer base {
+
+  /* Reset quan trọng để Layout hoạt động đúng */
+  html,
+  body,
+  #root {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  body {
+    background-color: #0f0e17;
+    /* Màu nền dự phòng */
+    font-family: 'Public Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

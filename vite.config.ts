@@ -1,5 +1,5 @@
-import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import react from '@vitejs/plugin-react'
 import path from 'path'
 import { defineConfig } from 'vite'
 
@@ -19,13 +19,17 @@ export default defineConfig({
       '@/components': path.resolve(__dirname, './src/components')
     }
   },
+  // --- CẤU HÌNH PROXY ĐỂ SỬA LỖI CORS ---
   server: {
     proxy: {
       '/api': {
-        target: 'https://dls-beta.hikarimoon.pro',
+        target: 'https://dls-beta.hikarimoon.pro/api/v1', // Server backend
         changeOrigin: true,
-        secure: false, // In case of self-signed certs
-      }
-    }
-  }
+        secure: false,
+        // Nếu backend của bạn đường dẫn là /api/v1, thì giữ nguyên.
+        // Nếu backend không có prefix /api mà bạn thêm vào ở frontend, dùng rewrite bên dưới:
+        // rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
+  },
 })

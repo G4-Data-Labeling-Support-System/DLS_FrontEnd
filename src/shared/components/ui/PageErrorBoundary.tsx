@@ -1,4 +1,6 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react'
+import type { ErrorInfo, ReactNode } from 'react';
+// eslint-disable-next-line no-duplicate-imports
+import React, { Component } from 'react'
 
 interface Props {
   children: ReactNode
