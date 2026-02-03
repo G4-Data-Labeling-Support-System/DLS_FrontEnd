@@ -3,7 +3,7 @@ import { Input, Button, Avatar, Progress, Tag, message, Segmented, Spin, Form } 
 import { SearchOutlined, UserAddOutlined, CloseOutlined, StopOutlined, LoadingOutlined } from '@ant-design/icons';
 import { mainClient } from '@/api/apiClients';
 import { ENDPOINTS } from '@/api/endpoints';
-import '@/features/manager/components/manager.css';
+
 import { FormFooter } from '@/features/manager/components/common/FormFooter';
 
 interface UserUI {
@@ -137,7 +137,7 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({ on
                         <Input
                             prefix={<SearchOutlined className="text-gray-500" />}
                             placeholder="Search by name, skill..."
-                            className="search-input-override"
+                            className="!bg-[#0f0e17]/50 !border-white/10 !text-white !rounded-xl !py-2.5 hover:!border-violet-500 focus:!border-violet-500"
                             onChange={(e) => setSearchTerm(e.target.value)}
                             disabled={loading}
                         />
@@ -145,13 +145,13 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({ on
                             options={['All', 'Annotator', 'Reviewer']}
                             value={filterRole}
                             onChange={setFilterRole}
-                            className="custom-segmented"
+                            className="!bg-[#0f0e17]/50 !p-1 !rounded-lg [&_.ant-segmented-item]:text-gray-400 [&_.ant-segmented-item-selected]:!bg-violet-600 [&_.ant-segmented-item-selected]:!text-white [&_.ant-segmented-item-selected]:shadow-lg [&_.ant-segmented-item-hover]:!text-gray-200"
                             block
                             disabled={loading}
                         />
                     </div>
 
-                    <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar z-10">
+                    <div className="flex-1 overflow-y-auto pr-2 space-y-3 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-700 [&::-webkit-scrollbar-thumb]:rounded-md [&::-webkit-scrollbar-thumb]:hover:bg-gray-500 z-10">
                         {loading ? (
                             <div className="h-full flex flex-col items-center justify-center text-gray-500 gap-3">
                                 <Spin indicator={<LoadingOutlined style={{ fontSize: 32, color: '#8b5cf6' }} spin />} />
@@ -163,7 +163,7 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({ on
                             </div>
                         ) : (
                             filteredAvailableUsers.map(user => (
-                                <div key={user.id} className={`user-list-item group ${user.status !== 'ACTIVE' ? 'opacity-60 grayscale' : ''}`}>
+                                <div key={user.id} className={`bg-[#0f0e17]/40 border border-white/5 rounded-xl p-3 px-4 flex items-center justify-between transition-all duration-200 hover:border-violet-500/50 hover:bg-[#0f0e17]/60 group ${user.status !== 'ACTIVE' ? 'opacity-60 grayscale' : ''}`}>
                                     <div className="flex items-center gap-3">
                                         <Avatar src={user.avatar} size={40} className="border border-white/10 flex-shrink-0" />
                                         <div className="min-w-0">
@@ -238,7 +238,7 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({ on
                         />
                     </div>
 
-                    <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar z-10 mb-4 pr-2">
+                    <div className="flex-1 overflow-y-auto space-y-2 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-700 [&::-webkit-scrollbar-thumb]:rounded-md [&::-webkit-scrollbar-thumb]:hover:bg-gray-500 z-10 mb-4 pr-2">
                         {selectedUsers.length === 0 ? (
                             <div className="h-full flex flex-col items-center justify-center text-gray-500 border-2 border-dashed border-white/5 rounded-xl bg-[#0f0e17]/20">
                                 <p>No team members assigned.</p>
@@ -246,7 +246,7 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({ on
                             </div>
                         ) : (
                             selectedUsers.map(user => (
-                                <div key={user.id} className="user-list-item selected-item animate-fadeIn group">
+                                <div key={user.id} className="bg-[#0f0e17]/60 border border-white/5 rounded-xl p-3 px-4 flex items-center justify-between transition-all duration-200 border-l-2 !border-l-fuchsia-500 group">
                                     <div className="flex items-center gap-3">
                                         <Avatar src={user.avatar} size={36} />
                                         <div>

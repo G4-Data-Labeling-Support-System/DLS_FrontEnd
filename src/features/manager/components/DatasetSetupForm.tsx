@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Form, Input, Upload, message } from 'antd';
 import { DeleteOutlined, PlusOutlined, InboxOutlined } from '@ant-design/icons';
 // Import CSS global (chứa class .form-transparent-override)
-import '@/features/manager/components/manager.css';
+
 import { FormFooter } from '@/features/manager/components/common/FormFooter';
 
 const { Dragger } = Upload;
@@ -82,7 +82,7 @@ export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({ onSuccess, o
             form={form}
             layout="vertical"
             // Sử dụng class override từ manager.css để loại bỏ nền/viền trùng lặp
-            className="form-transparent-override"
+            className="!w-full !max-w-none !p-0 !bg-transparent !border-0 !shadow-none"
             initialValues={{ version: 1, storageType: 's3' }}
             onFinish={onFinish}
         >

@@ -43,7 +43,7 @@ const TeamAssignmentPage: React.FC = () => {
 
             {/* 3. Main Content Container */}
             {/* QUAN TRỌNG: Bọc toàn bộ vào .project-glass-card để giống trang Guidelines */}
-            <div className="project-glass-card !max-w-[1400px]">
+            <div className="w-[98%] xl:w-[95%] mx-auto p-8 xl:py-12 xl:px-16 !bg-[#1a1625]/70 !backdrop-blur-[20px] !border !border-violet-500/20 !rounded-[1.5rem] !shadow-[0_25px_50px_-12px_rgba(0,0,0,0.6),0_0_20px_rgba(139,92,246,0.1)] relative flex flex-col h-auto !max-w-[1400px]">
                 <TeamAssignmentContent onLaunch={handleLaunch} onBack={handleBack} />
             </div>
 
