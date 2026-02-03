@@ -6,7 +6,7 @@ import { ENDPOINTS } from '@/api/endpoints';
 
 import { FormFooter } from '@/features/manager/components/common/FormFooter';
 
-interface UserUI {
+export interface UserUI {
     id: string | number;
     name: string;
     username: string;
@@ -24,6 +24,7 @@ interface TeamAssignmentContentProps {
 }
 
 export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({ onLaunch, onBack }) => {
+    const [messageApi, contextHolder] = message.useMessage();
     const [availableUsers, setAvailableUsers] = useState<UserUI[]>([]);
     const [selectedUsers, setSelectedUsers] = useState<UserUI[]>([]);
     const [loading, setLoading] = useState(true);
@@ -37,7 +38,7 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({ on
             try {
                 setLoading(true);
                 const response = await mainClient.get(ENDPOINTS.USERS.LIST);
-                console.log("API User Response:", response);
+                // console.log("API User Response:", response.data);
 
                 const rawList = response.data?.data || response.data?.content || response.data?.result || response.data;
 
@@ -47,6 +48,7 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({ on
                     return;
                 }
 
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const formattedData: UserUI[] = rawList.map((user: any) => ({
                     id: user.id,
                     name: user.fullName || user.username || "Unknown User",
@@ -61,20 +63,33 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({ on
 
                 setAvailableUsers(formattedData);
 
-            } catch (error) {
-                console.error("❌ Error fetching users:", error);
-                message.error("Failed to load workforce list.");
+            } catch {
+                messageApi.warning("Backend unavailable. Using mock data.");
+
+                // --- MOCK DATA FALLBACK ---
+                const mockUsers: UserUI[] = Array.from({ length: 10 }, (_, i) => ({
+                    id: `mock_${i + 1}`,
+                    name: `Mock User ${i + 1}`,
+                    username: `user_${i + 1}`,
+                    role: i % 3 === 0 ? 'Manager' : i % 2 === 0 ? 'Reviewer' : 'Annotator',
+                    avatar: `https://ui-avatars.com/api/?name=User+${i + 1}&background=random`,
+                    email: `user${i + 1}@example.com`,
+                    status: 'ACTIVE',
+                    accuracy: Math.floor(Math.random() * (99 - 85) + 85),
+                    speed: Math.floor(Math.random() * (200 - 80) + 80),
+                }));
+                setAvailableUsers(mockUsers);
             } finally {
                 setLoading(false);
             }
         };
 
         fetchUsers();
-    }, []);
+    }, [messageApi]);
 
     // --- HANDLERS ---
     const handleAddUser = (user: UserUI) => {
-        if (user.status !== 'ACTIVE') return message.warning("User is not active.");
+        if (user.status !== 'ACTIVE') return messageApi.warning("User is not active.");
         setSelectedUsers([...selectedUsers, user]);
         setAvailableUsers(availableUsers.filter(u => u.id !== user.id));
     };
@@ -116,6 +131,7 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({ on
             className="flex flex-col gap-6"
             onFinish={handleFormFinish}
         >
+            {contextHolder}
 
             {/* GRID LAYOUT */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[600px] lg:h-[650px]">
@@ -189,7 +205,7 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({ on
                                                 size={{ height: 4 }}
                                                 showInfo={false}
                                                 strokeColor="#a855f7"
-                                                trailColor="rgba(255,255,255,0.05)"
+                                                railColor="rgba(255,255,255,0.05)"
                                             />
                                         </div>
                                         <Button
@@ -232,7 +248,7 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({ on
                         <Progress
                             percent={progressPercent}
                             strokeColor={{ '0%': '#8b5cf6', '100%': '#d946ef' }}
-                            trailColor="rgba(255,255,255,0.1)"
+                            railColor="rgba(255,255,255,0.1)"
                             size={{ height: 6 }}
                             showInfo={false}
                         />

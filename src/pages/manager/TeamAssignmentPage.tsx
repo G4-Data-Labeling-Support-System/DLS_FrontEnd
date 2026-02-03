@@ -2,7 +2,7 @@ import React from 'react';
 import { Breadcrumb } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { ProjectSteps } from '@/features/manager/components/common/ProjectSteps';
-import { TeamAssignmentContent } from '@/features/manager/components/TeamAssignmentContent';
+import { TeamAssignmentContent, type UserUI } from '@/features/manager/components/TeamAssignmentContent';
 
 
 const TeamAssignmentPage: React.FC = () => {
@@ -12,8 +12,11 @@ const TeamAssignmentPage: React.FC = () => {
         navigate('/manager/create-project/guidelines-setup');
     };
 
-    const handleLaunch = (selectedTeam: any[]) => {
-        console.log("🚀 Launching Project with Team:", selectedTeam);
+
+
+    const handleLaunch = (_selectedTeam: UserUI[]) => {
+        // console.log("Launching project with team:", selectedTeam);
+        // Logic launch project...
         navigate('/manager');
     };
 
