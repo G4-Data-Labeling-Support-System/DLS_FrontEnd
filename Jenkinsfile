@@ -61,7 +61,7 @@ pipeline {
                 withSonarQubeEnv('SonarQube') {
                     echo "#====================== Sonar Scan for (${env.BRANCH_NAME}) ======================#"
                     sh """
-                        mvn sonar:sonar \
+                        $SCANNER_HOME/bin/sonar-scanner \
                         -Dsonar.projectKey=${APP_NAME}-${env.BRANCH_NAME} \
                         -Dsonar.projectName="${APP_NAME} (${ENVIRONMENT})" \
                         -Dsonar.host.url=${SONAR_HOST_URL}
