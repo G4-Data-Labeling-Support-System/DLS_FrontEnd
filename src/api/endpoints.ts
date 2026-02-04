@@ -59,6 +59,10 @@ export const ENDPOINTS = {
     ACTIVATE: (id: string) => `/users/${id}/activate`
   },
 
+  DATASETS: {
+    CREATE: '/datasets',
+  },
+
   PROJECTS: {
     CREATE: '/projects',
     LIST: '/projects',

@@ -37,7 +37,12 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
             };
 
             // 2. Gọi API
-            await mainClient.post(ENDPOINTS.PROJECTS.CREATE, payload);
+            const response = await mainClient.post(ENDPOINTS.PROJECTS.CREATE, payload);
+
+            // Save Project ID for next steps
+            if (response?.data?.id) {
+                localStorage.setItem('currentProjectId', response.data.id);
+            }
 
             // 3. Thông báo
             message.success('Project created successfully!');
@@ -53,6 +58,9 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
 
             // Simulate API delay
             await new Promise(resolve => setTimeout(resolve, 800));
+
+            // Save Mock Project ID
+            localStorage.setItem('currentProjectId', `mock-project-${Date.now()}`);
 
             // Proceed as if successful
             if (onSuccess) {
