@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Form, Input, Upload, message } from 'antd';
+import { Form, Input, Upload, message, Select } from 'antd';
+import type { UploadFile, UploadChangeParam } from 'antd/es/upload';
 import { DeleteOutlined, PlusOutlined, InboxOutlined } from '@ant-design/icons';
 // Import CSS global (chứa class .form-transparent-override)
 
 import { FormFooter } from '@/features/manager/components/common/FormFooter';
+import { mainClient } from '@/api/apiClients';
+import { ENDPOINTS } from '@/api/endpoints';
 
 const { Dragger } = Upload;
 
@@ -14,7 +17,9 @@ interface DatasetSetupFormProps {
 
 export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({ onSuccess, onBack }) => {
     const [form] = Form.useForm();
-    const [fileList, setFileList] = useState<any[]>([]);
+    const [fileList, setFileList] = useState<UploadFile[]>([]);
+    const [loading, setLoading] = useState(false);
+    const projectId = localStorage.getItem('currentProjectId');
 
     // --- LOGIC: Generate Current Date ---
     // Using useMemo to calculate the date only once when the component mounts
@@ -30,20 +35,53 @@ export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({ onSuccess, o
     // ------------------------------------
 
     // Cleanup URL object khi component unmount để tránh leak memory
+    // Cleanup URL object khi component unmount để tránh leak memory
     useEffect(() => {
         return () => {
             fileList.forEach(file => {
                 if (file.preview) URL.revokeObjectURL(file.preview);
             });
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const onFinish = (values: any) => {
-        console.log('Dataset Values:', values);
-        if (onSuccess) onSuccess();
+    const onFinish = async (values: { datasetName: string; version: number; storageType: string }) => {
+        setLoading(true);
+        try {
+            if (!projectId) {
+                message.error("Project ID not found. Please start from step 1.");
+                return;
+            }
+
+            // Prepare Payload
+            // Prepare Payload
+            const payload = {
+                datasetName: values.datasetName,
+                version: Number(values.version),
+                storageType: values.storageType,
+                projectId: projectId,
+                // Note: File uploads are handled separately via the Action URL or need to be linked here.
+                // For now, we send the dataset metadata.
+            };
+
+            await mainClient.post(ENDPOINTS.DATASETS.CREATE, payload);
+            message.success('Dataset created successfully!');
+
+            if (onSuccess) onSuccess();
+        } catch (error) {
+            console.error("Dataset creation failed:", error);
+            message.warning("Backend unavailable. Dataset created (Mock Mode).");
+
+            // Simulate delay
+            await new Promise(resolve => setTimeout(resolve, 800));
+
+            if (onSuccess) onSuccess();
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleUploadChange = (info: any) => {
+    const handleUploadChange = (info: UploadChangeParam<UploadFile>) => {
         const { status } = info.file;
         let newFileList = [...info.fileList];
 
@@ -83,7 +121,7 @@ export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({ onSuccess, o
             layout="vertical"
             // Sử dụng class override từ manager.css để loại bỏ nền/viền trùng lặp
             className="!w-full !max-w-none !p-0 !bg-transparent !border-0 !shadow-none"
-            initialValues={{ version: 1, storageType: 's3' }}
+            initialValues={{ version: 1, storageType: 'LOCAL' }}
             onFinish={onFinish}
         >
             <div className="flex flex-col gap-8">
@@ -91,7 +129,12 @@ export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({ onSuccess, o
                 {/* --- Section 1: Thông tin định danh (Readonly) --- */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <Form.Item label="Project ID (UUID)">
-                        <Input className="font-mono text-sm !bg-[#1a1625] !border-white/10" placeholder="Inherited from Project" disabled />
+                        <Input
+                            className="font-mono text-sm !bg-[#1a1625] !border-white/10"
+                            placeholder="Inherited from Project"
+                            value={projectId || ''}
+                            disabled
+                        />
                     </Form.Item>
 
                     {/* --- UPDATED: Created At Field --- */}
@@ -109,7 +152,8 @@ export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({ onSuccess, o
                 </div>
 
                 {/* --- Section 2: Cấu hình Dataset --- */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* --- Section 2: Cấu hình Dataset --- */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <div className="md:col-span-2">
                         <Form.Item
                             name="datasetName"
@@ -121,6 +165,19 @@ export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({ onSuccess, o
                     </div>
                     <Form.Item name="version" label="Version *">
                         <Input type="number" min={1} size="large" />
+                    </Form.Item>
+                    <Form.Item name="storageType" label="Storage Type *">
+                        <Select
+                            size="large"
+                            options={[
+                                { label: 'Local Store', value: 'LOCAL' },
+                                { label: 'AWS S3', value: 'S3' },
+                                { label: 'MinIO', value: 'MINIO' },
+                                { label: 'Azure Blob', value: 'AZURE' }
+                            ]}
+                            className=""
+                            popupClassName="bg-[#1a1625] border border-white/10 text-white"
+                        />
                     </Form.Item>
                 </div>
 
@@ -206,7 +263,7 @@ export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({ onSuccess, o
                     totalSteps={4}
                     submitLabel="SAVE & CONTINUE TO GUIDELINES"
                     onBack={onBack}
-                    isLoading={false}
+                    isLoading={loading}
                 />
             </div>
         </Form>

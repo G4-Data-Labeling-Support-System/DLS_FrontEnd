@@ -58,4 +58,14 @@ export const ENDPOINTS = {
     DEACTIVATE: (id: string) => `/users/${id}/deactivate`,
     ACTIVATE: (id: string) => `/users/${id}/activate`
   },
+
+  DATASETS: {
+    CREATE: '/datasets',
+  },
+
+  PROJECTS: {
+    CREATE: '/projects',
+    LIST: '/projects',
+    DETAIL: (id: string) => `/projects/${id}`
+  },
 } as const

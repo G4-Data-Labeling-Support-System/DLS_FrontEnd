@@ -22,14 +22,21 @@ interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
 }
 
 // ============ Config & State ============
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://dls-beta.hikarimoon.pro/api/v1';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081/api/v1';
 
 // Biến trạng thái cho logic Refresh Token
 let isRefreshing = false;
-let failedQueue: any[] = [];
+// Queue item type
+interface FailedQueueItem {
+  resolve: (value: string | null) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  reject: (reason?: any) => void;
+}
+
+let failedQueue: FailedQueueItem[] = [];
 
 // Hàm xử lý hàng đợi các request bị lỗi
-const processQueue = (error: any, token: string | null = null) => {
+const processQueue = (error: Error | null, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
@@ -140,7 +147,7 @@ export function createApiClient({
 
         } catch (refreshError) {
           // Nếu refresh fail thì force logout
-          processQueue(refreshError, null);
+          processQueue(refreshError as Error, null);
           onUnauthorized();
           return Promise.reject(refreshError);
         } finally {
