@@ -61,6 +61,7 @@ export const ENDPOINTS = {
 
   DATASETS: {
     CREATE: '/datasets',
+    LIST: '/datasets',
   },
 
   PROJECTS: {
