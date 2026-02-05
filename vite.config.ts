@@ -28,7 +28,11 @@ export default defineConfig({
         secure: false,
         // Nếu backend của bạn đường dẫn là /api/v1, thì giữ nguyên.
         // Nếu backend không có prefix /api mà bạn thêm vào ở frontend, dùng rewrite bên dưới:
-        // rewrite: (path) => path.replace(/^\/api/, ''),
+        rewrite: (path) => path.replace(/^\/api/, ''),
+        headers: {
+          Origin: 'https://dls-beta.hikarimoon.pro',
+          Referer: 'https://dls-beta.hikarimoon.pro/',
+        },
       },
     },
   },

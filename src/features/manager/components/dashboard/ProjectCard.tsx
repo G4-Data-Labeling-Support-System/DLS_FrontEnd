@@ -40,13 +40,13 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
             </div>
 
             <div className="mb-6 flex items-center gap-4">
-                <Progress type="circle" percent={progress} size={45} strokeColor={color} trailColor="#374151" format={() => <span className="text-white text-xs font-bold">{progress}%</span>} />
+                <Progress type="circle" percent={progress} size={45} strokeColor={color} railColor="#374151" format={() => <span className="text-white text-xs font-bold">{progress}%</span>} />
                 <div className="flex-1">
                     <div className="flex justify-between text-xs mb-1">
                         <span className="text-gray-400">Progress</span>
                         <span className="text-gray-300">{completed} / {total}</span>
                     </div>
-                    <Progress percent={progress} size="small" showInfo={false} strokeColor={color} trailColor="#374151" />
+                    <Progress percent={progress} size="small" showInfo={false} strokeColor={color} railColor="#374151" />
                 </div>
             </div>
 

@@ -16,14 +16,16 @@ export const ActiveProjects = () => {
     useEffect(() => {
         const fetchProjects = async () => {
             try {
+                // Ensure managerApi is using the proxy-based client
                 const data = await managerApi.getActiveProjects();
                 if (Array.isArray(data)) {
                     setProjects(data);
                 } else {
+                    console.warn("API returned non-array data:", data);
                     setProjects([]);
                 }
             } catch (error) {
-                console.error("Failed to load projects", error);
+                console.error("Failed to load projects. Check network tab for 403/CORS details.", error);
             } finally {
                 setLoading(false);
             }
