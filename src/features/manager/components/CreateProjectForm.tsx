@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Form, Input, Select, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import { mainClient } from '@/api/apiClients';
-import { ENDPOINTS } from '@/api/endpoints';
+import { managerApi } from '@/api/manager';
 import { FormFooter } from '@/features/manager/components/common/FormFooter';
 
 const PROJECT_STATUS = [
@@ -37,11 +36,11 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
             };
 
             // 2. Gọi API
-            const response = await mainClient.post(ENDPOINTS.PROJECTS.CREATE, payload);
+            const data = await managerApi.createProject(payload);
 
             // Save Project ID for next steps
-            if (response?.data?.id) {
-                localStorage.setItem('currentProjectId', response.data.id);
+            if (data?.id) {
+                localStorage.setItem('currentProjectId', data.id);
             }
 
             // 3. Thông báo
@@ -52,23 +51,9 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
                 onSuccess();
             }
 
-        } catch {
-            // --- MOCK FALLBACK ---
-            message.warning("Backend unavailable. Project created (Mock Mode).");
-
-            // Simulate API delay
-            await new Promise(resolve => setTimeout(resolve, 800));
-
-            // Save Mock Project ID
-            localStorage.setItem('currentProjectId', `mock-project-${Date.now()}`);
-
-            // Proceed as if successful
-            if (onSuccess) {
-                onSuccess();
-            }
-
-            // Quietly log technical error for debugging if needed, or omit to satisfy linter
-            // console.warn('Project creation failed:', error); 
+        } catch (error: unknown) {
+            const errorMessage = (error as any)?.response?.data?.message || 'Failed to create project. Please try again.';
+            message.error(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -123,7 +108,7 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
                                 size="large"
                                 options={PROJECT_STATUS}
                                 className="" // Cần đảm bảo manager.css có style cho select dropdown
-                                popupClassName="bg-[#1a1625] border border-white/10 text-white"
+                                classNames={{ popup: { root: "bg-[#1A1625] border border-white/10 text-white" } }}
                             />
                         </Form.Item>
 
