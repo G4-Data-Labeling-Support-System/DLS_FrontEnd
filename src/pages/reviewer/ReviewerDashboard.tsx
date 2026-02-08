@@ -55,32 +55,12 @@ const ReviewerDashboard: React.FC = () => {
                     </div>
 
                     {/* Stats Grid - Matches ActiveProjects grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 gap-6">
                         <StatsCard
                             title="TOTAL SUBMISSIONS"
                             value={stats?.totalSubmissions || 0}
                             trend={stats?.totalSubmissionsTrend}
                             trendLabel="Last 7 days"
-                        />
-                        <StatsCard
-                            title="PENDING REVIEWS"
-                            value={stats?.pendingReviews || 0}
-                            tag="Busy Queue"
-                            subText="Requires immediate attention"
-                        />
-                        <StatsCard
-                            title="AVERAGE ACCURACY"
-                            value={`${stats?.averageAccuracy}%`}
-                            trend={stats?.averageAccuracyTrend || 0}
-                            trendLabel="Across all projects"
-                            isPercentage
-                        />
-                        <StatsCard
-                            title="TOP PERFORMER"
-                            value={stats?.topPerformer?.name || "N/A"}
-                            avatar={stats?.topPerformer?.avatar}
-                            subText={`${stats?.topPerformer?.precision || 0}% Precision`}
-                            isUser
                         />
                     </div>
                 </div>

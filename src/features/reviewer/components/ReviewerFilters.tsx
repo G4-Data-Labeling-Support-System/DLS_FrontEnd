@@ -21,8 +21,6 @@ export const ReviewerFilters: React.FC = () => {
                         size="large"
                         options={[
                             { value: 'all', label: 'All Active Projects' },
-                            { value: 'autonomous', label: 'Autonomous Vehicle L4' },
-                            { value: 'medical', label: 'Medical Imaging' },
                         ]}
                         popupClassName="bg-[#1a1625] border border-white/10 text-white"
                         dropdownStyle={{ backgroundColor: '#1a1625' }}

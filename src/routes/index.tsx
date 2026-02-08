@@ -89,7 +89,7 @@ export const router = createBrowserRouter([
     ),
     children: [
       {
-        path: PATH_MANAGER.dashboard,
+        index: true,
         element: <LazyPage><ManagerDashboardPage /></LazyPage>,
       },
       {
@@ -127,7 +127,7 @@ export const router = createBrowserRouter([
     ),
     children: [
       {
-        path: 'dashboard',
+        index: true,
         element: <LazyPage><ReviewerDashboard /></LazyPage>
       }
     ]
