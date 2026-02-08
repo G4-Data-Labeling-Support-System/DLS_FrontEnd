@@ -25,6 +25,10 @@ const UserManagement = lazy(() => import('@/features/admin/UserManagement'))
 const ProjectManagement = lazy(() => import('@/features/admin/ProjectManagement'))
 const SystemSettings = lazy(() => import('@/features/admin/SystemSettings'))
 
+// Reviewer Pages
+const ReviewerLayout = lazy(() => import('@/components/layout/ReviewerLayout'))
+const ReviewerDashboard = lazy(() => import('@/pages/reviewer/ReviewerDashboard'))
+
 export const router = createBrowserRouter([
   {
     path: '/',
@@ -108,7 +112,25 @@ export const router = createBrowserRouter([
         path: PATH_MANAGER.teamAssignment,
         element: <LazyPage><TeamAssignmentPage /></LazyPage>,
       },
+      {
+        path: PATH_MANAGER.teamAssignment,
+        element: <LazyPage><TeamAssignmentPage /></LazyPage>,
+      },
     ],
+  },
+  {
+    path: '/reviewer',
+    element: (
+      <LazyPage>
+        <ReviewerLayout />
+      </LazyPage>
+    ),
+    children: [
+      {
+        path: 'dashboard',
+        element: <LazyPage><ReviewerDashboard /></LazyPage>
+      }
+    ]
   },
   {
     path: '*',

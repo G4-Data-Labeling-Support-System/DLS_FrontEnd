@@ -69,4 +69,9 @@ export const ENDPOINTS = {
     LIST: '/projects',
     DETAIL: (id: string) => `/projects/${id}`
   },
+
+  REVIEWER: {
+    STATS: '/reviewer/stats',
+    ANNOTATORS: '/reviewer/annotators',
+  }
 } as const
