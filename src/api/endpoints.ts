@@ -73,5 +73,8 @@ export const ENDPOINTS = {
   REVIEWER: {
     STATS: '/reviewer/stats',
     ANNOTATORS: '/reviewer/annotators',
+    PROJECT_ITEMS: (projectId: string) => `/reviewer/projects/${projectId}/items`,
+    ITEM_DETAIL: (itemId: string) => `/reviewer/items/${itemId}`,
+    REVIEW_DECISION: (itemId: string) => `/reviewer/items/${itemId}/review`,
   }
 } as const
