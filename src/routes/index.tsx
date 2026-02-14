@@ -28,6 +28,7 @@ const SystemSettings = lazy(() => import('@/features/admin/SystemSettings'))
 // Reviewer Pages
 const ReviewerLayout = lazy(() => import('@/components/layout/ReviewerLayout'))
 const ReviewerDashboard = lazy(() => import('@/pages/reviewer/ReviewerDashboard'))
+const ReviewerWorkspacePage = lazy(() => import('@/pages/reviewer/ReviewerWorkspacePage')) // Added Import
 
 export const router = createBrowserRouter([
   {
@@ -129,6 +130,10 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <LazyPage><ReviewerDashboard /></LazyPage>
+      },
+      {
+        path: ':projectId',
+        element: <LazyPage><ReviewerWorkspacePage /></LazyPage>
       }
     ]
   },
