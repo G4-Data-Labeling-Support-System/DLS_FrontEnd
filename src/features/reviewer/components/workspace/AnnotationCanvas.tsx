@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Tooltip } from 'antd';
+import { Button, Tooltip, Card } from 'antd';
 import {
     ZoomInOutlined,
     ZoomOutOutlined,
@@ -36,9 +36,13 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({ imageUrl, an
     ];
 
     return (
-        <div className="flex-1 relative bg-[#0a0a0f] overflow-hidden flex flex-col items-center justify-center p-8">
+        <Card
+            className="flex-1 relative bg-[#1A1625] overflow-hidden flex flex-col items-center justify-center border-gray-800 rounded-2xl shadow-xl h-full"
+            styles={{ body: { padding: '2rem', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' } }}
+            bordered={true}
+        >
             {/* Toolbar */}
-            <div className="absolute top-6 left-1/2 -translate-x-1/2 z-20 bg-[#1a1924]/90 backdrop-blur-md border border-white/10 rounded-full px-4 py-2 flex items-center gap-2 shadow-2xl">
+            <div className="absolute top-6 left-1/2 -translate-x-1/2 z-20 bg-[#231e31]/90 backdrop-blur-md border border-gray-700 rounded-full px-4 py-2 flex items-center gap-2 shadow-2xl">
                 {tools.map((tool, idx) => (
                     <Tooltip key={idx} title={tool.label}>
                         <Button
@@ -58,15 +62,15 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({ imageUrl, an
             <div
                 className="relative shadow-2xl transition-transform duration-200 ease-out"
                 style={{
-                    width: '80%',
-                    aspectRatio: '16/9',
+                    width: '90%',
+                    height: '85%',
                     transform: `scale(${zoom / 100})`
                 }}
             >
                 <img
                     src={imageUrl}
                     alt="Canvas"
-                    className="w-full h-full object-contain bg-[#15141e] rounded-lg"
+                    className="w-full h-full object-contain bg-[#0f0e17] rounded-lg border border-gray-800/50 block mx-auto"
                     draggable={false}
                 />
 
@@ -100,6 +104,6 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({ imageUrl, an
                     </div>
                 ))}
             </div>
-        </div>
+        </Card>
     );
 };

@@ -43,25 +43,25 @@ const ReviewerDashboard: React.FC = () => {
     }
 
     return (
-        <div className="p-6">
+        <div>
             <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start relative">
                 {/* Main Content - Stats (3 cols) */}
                 <div className="xl:col-span-3 space-y-6">
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-start">
                         <div>
                             <Title level={4} className="!text-white !m-0 !font-display">Reviewer Dashboard</Title>
                             <Text className="text-gray-400 text-xs">Overview of current annotation progress and performance.</Text>
                         </div>
                     </div>
-
-                    {/* Stats Grid - Matches ActiveProjects grid */}
-                    <div className="grid grid-cols-1 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {/* Using a grid for stats cards to mimic ActiveProjects layout if more cards are added */}
                         <StatsCard
                             title="TOTAL SUBMISSIONS"
                             value={stats?.totalSubmissions || 0}
                             trend={stats?.totalSubmissionsTrend}
                             trendLabel="Last 7 days"
                         />
+                        {/* Placeholders for other stats to fill the grid if needed */}
                     </div>
                 </div>
 

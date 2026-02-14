@@ -130,16 +130,12 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <LazyPage><ReviewerDashboard /></LazyPage>
+      },
+      {
+        path: ':projectId',
+        element: <LazyPage><ReviewerWorkspacePage /></LazyPage>
       }
     ]
-  },
-  {
-    path: '/reviewer/:projectId',
-    element: (
-      <LazyPage>
-        <ReviewerWorkspacePage />
-      </LazyPage>
-    )
   },
   {
     path: '*',
