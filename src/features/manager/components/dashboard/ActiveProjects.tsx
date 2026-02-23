@@ -1,38 +1,73 @@
-
 import { useEffect, useState } from 'react';
-import { Button, Space, Typography, Spin } from 'antd';
+import { Button, Space, Typography, Spin, message, Modal } from 'antd';
 import { FilterOutlined, SortAscendingOutlined, PlusOutlined } from '@ant-design/icons';
 import { ProjectCard } from './ProjectCard';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { PATH_MANAGER } from '@/routes/paths';
-import { managerApi, type ProjectSummary } from '@/api';
 
+import projectApi, { type GetProjectsParams } from '@/api/project';
 const { Title } = Typography;
 
 export const ActiveProjects = () => {
-    const [projects, setProjects] = useState<ProjectSummary[]>([]);
-    const [loading, setLoading] = useState(true);
+    // Khai báo state sử dụng mảng của GetProjectsParams
+    const [projects, setProjects] = useState<GetProjectsParams[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const navigate = useNavigate();
+
+    const fetchProjects = async () => {
+        try {
+            setLoading(true);
+            const response = await projectApi.getProjects();
+
+            const data = response.data?.data || response.data || [];
+
+            if (Array.isArray(data)) {
+                setProjects(data);
+            } else {
+                console.warn("API returned non-array data:", data);
+                setProjects([]);
+            }
+        } catch (error) {
+            console.error("Failed to load projects.", error);
+            message.error("Không thể tải danh sách dự án.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchProjects = async () => {
-            try {
-                // Ensure managerApi is using the proxy-based client
-                const data = await managerApi.getActiveProjects();
-                if (Array.isArray(data)) {
-                    setProjects(data);
-                } else {
-                    console.warn("API returned non-array data:", data);
-                    setProjects([]);
-                }
-            } catch (error) {
-                console.error("Failed to load projects. Check network tab for 403/CORS details.", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchProjects();
     }, []);
+
+    const handleDelete = (id?: string) => {
+        if (!id) return;
+
+        Modal.confirm({
+            title: 'Xoá dự án',
+            content: 'Bạn có chắc chắn muốn xoá dự án này không?',
+            okText: 'Xoá',
+            okType: 'danger',
+            cancelText: 'Hủy',
+            centered: true,
+            onOk: async () => {
+                try {
+                    await projectApi.deleteProject(id);
+                    message.success('Đã xoá dự án thành công!');
+                    setProjects((prev) => prev.filter((p) => p.projectId !== id));
+                } catch (error) {
+                    console.error("Lỗi xóa dự án:", error);
+                    message.error('Có lỗi xảy ra khi xoá dự án.');
+                }
+            },
+        });
+    };
+
+    const handleEdit = (id?: string) => {
+        if (!id) return;
+        // Mở comment dòng dưới đây nếu bạn đã thiết lập route
+        navigate(`/manager/projects/edit/${id}`);
+        message.info(`Đang chuyển đến trang chỉnh sửa dự án ID: ${id}`);
+    };
 
     if (loading) {
         return (
@@ -52,10 +87,19 @@ export const ActiveProjects = () => {
                 </Space>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {projects.map((p) => (
-                    <ProjectCard key={p.id} {...p} />
-                ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
+                {projects.map((p) => {
+                    if (!p.projectId) return null; // Bỏ qua nếu data rác không có ID
+
+                    return (
+                        <ProjectCard
+                            key={p.projectId}
+                            {...p} // Spread toàn bộ thuộc tính chuẩn từ API vào Card
+                            onEdit={() => handleEdit(p.projectId)}
+                            onDelete={() => handleDelete(p.projectId)}
+                        />
+                    );
+                })}
 
                 {/* Start New Project Card */}
                 <Link to={PATH_MANAGER.createProject} className="block group">
