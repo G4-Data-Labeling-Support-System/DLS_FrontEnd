@@ -22,7 +22,7 @@ interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
 }
 
 // ============ Config & State ============
-export const API_BASE_URL = 'http://localhost:8081/api/v1';
+export const API_BASE_URL = 'https://dls-beta.hikarimoon.pro/api/v1';
 
 // Biến trạng thái cho logic Refresh Token
 let isRefreshing = false;
