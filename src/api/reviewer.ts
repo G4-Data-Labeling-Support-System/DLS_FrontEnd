@@ -22,15 +22,6 @@ export interface Annotation {
     bbox: { x: number; y: number; w: number; h: number };
 }
 
-export interface HistoryEvent {
-    id: string;
-    action: string;
-    user: string;
-    time: string;
-    details?: string;
-    type: 'info' | 'success' | 'warning' | 'error';
-}
-
 export interface ReviewerItem {
     id: string;
     filename: string;
@@ -41,7 +32,6 @@ export interface ReviewerItem {
 
 export interface ReviewerItemDetail extends ReviewerItem {
     annotations: Annotation[];
-    history: HistoryEvent[];
     annotator?: {
         name: string;
         role: string;

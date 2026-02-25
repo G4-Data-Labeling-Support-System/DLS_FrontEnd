@@ -59,17 +59,19 @@ export const ENDPOINTS = {
     ACTIVATE: (id: string) => `/users/${id}/activate`
   },
 
+  // Datasets
   DATASETS: {
     CREATE: '/datasets',
     LIST: '/datasets',
   },
-
+  // Projects
   PROJECTS: {
     CREATE: '/projects',
     LIST: '/projects',
     DETAIL: (id: string) => `/projects/${id}`
   },
 
+  // Reviewer
   REVIEWER: {
     STATS: '/reviewer/stats',
     ANNOTATORS: '/reviewer/annotators',

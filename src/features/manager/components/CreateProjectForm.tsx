@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Form, Input, Select, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import { managerApi } from '@/api/manager';
+import projectApi from '@/api/project';
 import { FormFooter } from '@/features/manager/components/common/FormFooter';
 import type { AxiosError } from 'axios';
 
@@ -36,13 +36,14 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
         try {
             // 1. Chuẩn bị dữ liệu
             const payload = {
-                name: values.projectName,
+                projectName: values.projectName,
                 description: values.description,
-                status: values.status,
+                projectStatus: values.status,
             };
 
             // 2. Gọi API
-            const data = await managerApi.createProject(payload);
+            const response = await projectApi.createProject(payload);
+            const data = response.data;
 
             // Save Project ID for next steps
             if (data?.id) {
