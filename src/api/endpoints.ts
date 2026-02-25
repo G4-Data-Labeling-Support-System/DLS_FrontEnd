@@ -63,6 +63,9 @@ export const ENDPOINTS = {
   DATASETS: {
     CREATE: '/datasets',
     LIST: '/datasets',
+    DETAIL: (id: string) => `/datasets/${id}`,
+    UPDATE: (id: string) => `/datasets/${id}`,
+    DELETE: (id: string) => `/datasets/${id}`
   },
   // Projects
   PROJECTS: {

@@ -1,21 +1,22 @@
 import React, { useEffect, useState } from 'react';
 
 import { message } from 'antd';
-import { datasetApi, type Dataset } from '@/api/dataset';
+import datasetApi, { type GetDatasetsParams } from '@/api/dataset';
 import DatasetHeader from '@/features/manager/components/dataset/DatasetHeader';
 import DatasetActionBar from '@/features/manager/components/dataset/DatasetActionBar';
 import DatasetList from '@/features/manager/components/dataset/DatasetList';
 
 
 const DatasetManagementPage: React.FC = () => {
-  const [datasets, setDatasets] = useState<Dataset[]>([]);
+  const [datasets, setDatasets] = useState<GetDatasetsParams[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchDatasets = async () => {
       setLoading(true);
       try {
-        const data = await datasetApi.getDatasets();
+        const response = await datasetApi.getDatasets();
+        const data = response.data?.data || response.data || [];
         setDatasets(data);
       } catch (error) {
         console.error('Error fetching datasets:', error);
