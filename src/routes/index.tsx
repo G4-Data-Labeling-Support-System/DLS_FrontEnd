@@ -1,7 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { lazy } from 'react'
 import { PATH_MANAGER } from './paths'
-import { CreateProjectPage } from '@/pages/manager'
+import { CreateProjectPage, DatasetManagementPage } from '@/pages/manager'
 import DatasetSetupPage from '@/pages/manager/DatasetSetupPage'
 import ManagerLayout from '@/components/layout/ManagerLayout'
 import GuidelinesSetupPage from '@/pages/manager/GuidelinesSetupPage'
@@ -100,6 +100,10 @@ export const router = createBrowserRouter([
       {
         path: PATH_MANAGER.createDataset,
         element: <LazyPage><CreateDatasetPage /></LazyPage>,
+      },
+      {
+        path: PATH_MANAGER.datasets,
+        element: <LazyPage><DatasetManagementPage /></LazyPage>,
       },
       {
         path: PATH_MANAGER.datasetSetup,

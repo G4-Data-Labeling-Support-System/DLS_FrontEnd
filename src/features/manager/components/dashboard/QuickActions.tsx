@@ -38,7 +38,7 @@ export const QuickActions = () => {
 
                 <Button
                     className="w-full h-12 flex items-center justify-between bg-[#231e31] border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 hover:bg-[#2d2640]"
-                // onClick={() => navigate(PATH_MANAGER.datasetList)} // TODO: Add route
+                    onClick={() => navigate(PATH_MANAGER.datasets)}
                 >
                     <div className="flex items-center">
                         <FileTextOutlined className="mr-3 text-lg text-fuchsia-400" />
