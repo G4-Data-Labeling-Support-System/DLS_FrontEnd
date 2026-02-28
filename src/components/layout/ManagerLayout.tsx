@@ -3,7 +3,7 @@ import { Layout, ConfigProvider } from 'antd';
 import { Outlet } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { managerTheme } from '@/styles/themeConfig';
-
+import '@/features/manager/components/manager.css';
 
 const { Content } = Layout;
 
@@ -14,8 +14,8 @@ const ManagerLayout: React.FC = () => {
 
                 {/* Background Glow Effects (Chỉ khai báo 1 lần dùng cho cả app) */}
                 <div className="fixed inset-0 w-full h-screen overflow-hidden pointer-events-none z-0">
-                    {/* Màu nền gốc phủ kín màn hình (để che đi màu trắng nếu có) + Grid Pattern */}
-                    <div className="absolute inset-0 bg-[#0f0e17] bg-[linear-gradient(rgba(139,92,246,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(139,92,246,0.05)_1px,transparent_1px)] bg-[size:1000px_100px] bg-fixed" />
+                    {/* Màu nền gốc phủ kín màn hình (để che đi màu trắng nếu có) */}
+                    <div className="absolute inset-0 bg-[#0f0e17]" />
 
                     {/* Các đốm sáng (Glow) */}
                     <div className="absolute top-[-20%] left-[-10%] w-[800px] h-[800px] bg-violet-600/10 rounded-full blur-[150px]" />

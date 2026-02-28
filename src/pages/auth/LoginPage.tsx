@@ -1,36 +1,43 @@
 import { useAuth } from '@/features/auth/hooks';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { themeClasses, commonPatterns } from '@/styles';
+import { themeClasses } from '@/styles';
 import { Button } from '@/shared/components/ui/Button';
-import { ArrowRightOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, MailOutlined, LockOutlined, ArrowRightOutlined } from '@ant-design/icons';
+import { Form, Input } from 'antd';
+import { BrandLogo } from '@/components/common/BrandLogo';
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const { login, isLoading, error } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onFinish = async (values: any) => {
     setErrorMessage(null);
-
-    if (!email || !password) {
-      setErrorMessage('Please enter both email and password');
-      return;
-    }
+    const { email, password } = values;
 
     try {
-      const success = await login({ email, password });
-      if (success) {
-        navigate('/'); // Redirect to home on success
+      console.log('Attempting login with:', { email, password });
+      const user = await login({ email, password });
+
+      if (user) {
+        // Redirection logic based on role
+        const role = (user.userRole || user.role || '').toLowerCase();
+
+        if (role === 'admin') {
+          navigate('/admin/dashboard');
+        } else if (role === 'manager') {
+          navigate('/manager');
+        } else {
+          navigate('/');
+        }
       } else {
-        setErrorMessage('Login failed. Please check your credentials.');
+        setErrorMessage('Invalid username or password. Please try again.');
       }
     } catch (err: any) {
-      setErrorMessage(err.message || 'An unexpected error occurred');
+      // Extract detailed message from backend if available
+      const detailMsg = err.response?.data?.message || err.message;
+      setErrorMessage(detailMsg || 'An unexpected error occurred');
     }
   };
 
@@ -38,16 +45,8 @@ export default function LoginPage() {
     <div className={`h-screen flex flex-col ${themeClasses.backgrounds.deepDark} ${themeClasses.text.primary} font-sans antialiased overflow-hidden`}>
       <main className="flex-1 flex overflow-hidden relative">
         {/* Logo */}
-        <div className="absolute top-8 left-8 z-50 flex items-center gap-3 pointer-events-none">
-          <span className={commonPatterns.logo.icon}>
-            polyline
-          </span>
-          <span className={commonPatterns.logo.text}>
-            DLSS{' '}
-            <span className={commonPatterns.logo.version}>
-              v2.4
-            </span>
-          </span>
+        <div className="absolute top-8 left-8 z-50 pointer-events-none">
+          <BrandLogo />
         </div>
 
         {/* Back to Home Button */}
@@ -55,12 +54,11 @@ export default function LoginPage() {
           to="/"
           className={`absolute top-8 right-8 z-50 flex items-center gap-2 ${themeClasses.buttons.secondary} pointer-events-auto group`}
         >
-          <span className="material-symbols-outlined text-lg group-hover:text-violet-400 transition-colors">
-            arrow_back
-          </span>
+          <ArrowLeftOutlined className="group-hover:-translate-x-1 transition-transform" />
           <span className="text-sm font-medium">Back to Home</span>
         </Link>
 
+        {/* Left Side - Visuals */}
         <div className={`hidden lg:flex w-1/2 relative items-center justify-center ${themeClasses.backgrounds.deepDark} border-r ${themeClasses.borders.violet10} overflow-hidden`}>
           <div className={`absolute inset-0 ${themeClasses.gradients.radialViolet}`}></div>
           <div className={`absolute inset-0 ${themeClasses.effects.gridMesh} opacity-30`}></div>
@@ -102,13 +100,15 @@ export default function LoginPage() {
             </div>
           </div>
         </div>
+
+        {/* Right Side - Login Form */}
         <div className={`w-full lg:w-1/2 flex items-center justify-center relative ${themeClasses.backgrounds.deepDark} p-6`}>
           <div className={`absolute inset-0 ${themeClasses.effects.gridMesh} opacity-10 pointer-events-none`}></div>
           <div className="w-full max-w-md relative z-10">
             <div className="login-card p-8 rounded-2xl border border-violet-500/20">
               <div className="text-center mb-8">
                 <div className="w-12 h-12 bg-gradient-to-tr from-violet-600 to-fuchsia-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-[0_0_20px_rgba(139,92,246,0.5)]">
-                  <span className="material-symbols-outlined text-white text-2xl">
+                  <span className="material-symbols-outlined text-white text-2xl drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">
                     lock
                   </span>
                 </div>
@@ -123,50 +123,41 @@ export default function LoginPage() {
                 </div>
               )}
 
-              <form onSubmit={handleLogin} className="space-y-6">
-                <div className="space-y-2">
-                  <label className={`block text-xs font-medium ${themeClasses.text.secondary} uppercase tracking-wider pl-1`}>
-                    Email Address
-                  </label>
-                  <div className="glass-input rounded-lg flex items-center px-4 transition-all group">
-                    <span className={`material-symbols-outlined ${themeClasses.text.tertiary} group-focus-within:text-violet-400 text-xl mr-3`}>
-                      mail
-                    </span>
-                    <input
-                      className="w-full bg-transparent border-none py-3 text-white placeholder-gray-600 focus:ring-0 text-sm font-medium focus:outline-none"
-                      placeholder="name@example.com"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className={`block text-xs font-medium ${themeClasses.text.secondary} uppercase tracking-wider pl-1`}>
-                    Password
-                  </label>
-                  <div className="glass-input rounded-lg flex items-center px-4 transition-all group">
-                    <span className={`material-symbols-outlined ${themeClasses.text.tertiary} group-focus-within:text-violet-400 text-xl mr-3`}>
-                      key
-                    </span>
-                    <input
-                      className="w-full bg-transparent border-none py-3 text-white placeholder-gray-600 focus:ring-0 text-sm font-medium focus:outline-none"
-                      placeholder="••••••••"
-                      type={showPassword ? 'text' : 'password'}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className={`ml-2 ${themeClasses.text.tertiary} hover:text-violet-400 transition-colors focus:outline-none`}
-                    >
-                      <span className="material-symbols-outlined text-xl">
-                        {showPassword ? 'visibility_off' : 'visibility'}
-                      </span>
-                    </button>
-                  </div>
-                </div>
+              <Form
+                onFinish={onFinish}
+                layout="vertical"
+                requiredMark={false}
+                className="space-y-4"
+              >
+                <Form.Item
+                  name="email"
+                  label={<span className={`text-xs font-medium ${themeClasses.text.secondary} uppercase tracking-wider pl-1`}>Email Address</span>}
+                  rules={[
+                    { required: true, message: 'Please enter your email' },
+                    { type: 'email', message: 'Please enter a valid email' }
+                  ]}
+                >
+                  <Input
+                    size="large"
+                    prefix={<MailOutlined className="text-white opacity-80 drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]" />}
+                    className="glass-input"
+                    placeholder="name@example.com"
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  name="password"
+                  label={<span className={`text-xs font-medium ${themeClasses.text.secondary} uppercase tracking-wider pl-1`}>Password</span>}
+                  rules={[{ required: true, message: 'Please enter your password' }]}
+                >
+                  <Input.Password
+                    size="large"
+                    prefix={<LockOutlined className="text-white opacity-80 drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]" />}
+                    className="glass-input"
+                    placeholder="••••••••"
+                  />
+                </Form.Item>
+
                 <div className="flex justify-end pt-1">
                   <Link
                     to="/forgot-password"
@@ -175,6 +166,7 @@ export default function LoginPage() {
                     Forgot Password?
                   </Link>
                 </div>
+
                 <Button
                   type="submit"
                   variant="primary"
@@ -186,7 +178,7 @@ export default function LoginPage() {
                     <ArrowRightOutlined className="group-hover:translate-x-1 transition-transform" />
                   )}
                 </Button>
-              </form>
+              </Form>
             </div>
           </div>
         </div>

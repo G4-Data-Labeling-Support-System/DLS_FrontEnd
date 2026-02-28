@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { themeClasses, commonPatterns } from '@/styles';
-import { DashboardOutlined, TeamOutlined, FolderOpenOutlined, SettingOutlined } from '@ant-design/icons';
+import { DashboardOutlined, TeamOutlined, FolderOpenOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons';
 
 interface SidebarProps {
     className?: string;
@@ -10,13 +10,11 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ className = '' }) => {
     const location = useLocation();
 
-    // Tùy biến menu cho manager
     const menuItems = [
-        { path: '/manager', label: 'Dashboard', icon: <DashboardOutlined /> },
-        { path: '/manager/datasets', label: 'Datasets', icon: <FolderOpenOutlined /> },
-        { path: '/manager/create-project', label: 'Projects', icon: <FolderOpenOutlined /> },
-        { path: '/manager/team', label: 'Team', icon: <TeamOutlined /> },
-        { path: '/manager/settings', label: 'Settings', icon: <SettingOutlined /> },
+        { path: '/admin/dashboard', label: 'Dashboard', icon: <DashboardOutlined /> },
+        { path: '/admin/users', label: 'Users', icon: <TeamOutlined /> },
+        { path: '/admin/projects', label: 'Projects', icon: <FolderOpenOutlined /> },
+        { path: '/admin/settings', label: 'Settings', icon: <SettingOutlined /> },
     ];
 
     const isActive = (path: string) => location.pathname === path;

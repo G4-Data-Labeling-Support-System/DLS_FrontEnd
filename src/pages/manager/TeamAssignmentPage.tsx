@@ -2,7 +2,7 @@ import React from 'react';
 import { Breadcrumb } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { ProjectSteps } from '@/features/manager/components/common/ProjectSteps';
-import { TeamAssignmentContent, type UserUI } from '@/features/manager/components/TeamAssignmentContent';
+import { TeamAssignmentContent } from '@/features/manager/components/TeamAssignmentContent';
 
 
 const TeamAssignmentPage: React.FC = () => {
@@ -12,11 +12,8 @@ const TeamAssignmentPage: React.FC = () => {
         navigate('/manager/create-project/guidelines-setup');
     };
 
-
-
-    const handleLaunch = (_selectedTeam: UserUI[]) => {
-        // console.log("Launching project with team:", selectedTeam);
-        // Logic launch project...
+    const handleLaunch = (selectedTeam: any[]) => {
+        console.log("🚀 Launching Project with Team:", selectedTeam);
         navigate('/manager');
     };
 
@@ -46,7 +43,7 @@ const TeamAssignmentPage: React.FC = () => {
 
             {/* 3. Main Content Container */}
             {/* QUAN TRỌNG: Bọc toàn bộ vào .project-glass-card để giống trang Guidelines */}
-            <div className="w-[98%] xl:w-[95%] mx-auto p-8 xl:py-12 xl:px-16 !bg-[#1a1625]/70 !backdrop-blur-[20px] !border !border-violet-500/20 !rounded-[1.5rem] !shadow-[0_25px_50px_-12px_rgba(0,0,0,0.6),0_0_20px_rgba(139,92,246,0.1)] relative flex flex-col h-auto !max-w-[1400px]">
+            <div className="project-glass-card !max-w-[1400px]">
                 <TeamAssignmentContent onLaunch={handleLaunch} onBack={handleBack} />
             </div>
 

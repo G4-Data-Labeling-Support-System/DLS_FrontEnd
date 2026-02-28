@@ -41,7 +41,7 @@ const DatasetSetupPage: React.FC = () => {
 
             {/* 3. Main Form Container */}
             {/* Class 'project-glass-card' sẽ tạo khung kính giống hệt trang trước */}
-            <div className="w-[98%] xl:w-[95%] max-w-[1600px] mx-auto p-8 xl:py-12 xl:px-16 !bg-[#1a1625]/70 !backdrop-blur-[20px] !border !border-violet-500/20 !rounded-[1.5rem] !shadow-[0_25px_50px_-12px_rgba(0,0,0,0.6),0_0_20px_rgba(139,92,246,0.1)] relative flex flex-col h-auto">
+            <div className="project-glass-card">
                 <DatasetSetupForm onSuccess={handleNext} onBack={handleBack} />
             </div>
 
