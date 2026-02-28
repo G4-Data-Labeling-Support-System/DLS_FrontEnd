@@ -3,10 +3,10 @@ import { Input, Button, Avatar, Progress, Tag, message, Segmented, Spin, Form } 
 import { SearchOutlined, UserAddOutlined, CloseOutlined, StopOutlined, LoadingOutlined } from '@ant-design/icons';
 import { mainClient } from '@/api/apiClients';
 import { ENDPOINTS } from '@/api/endpoints';
-
+import '@/features/manager/components/manager.css';
 import { FormFooter } from '@/features/manager/components/common/FormFooter';
 
-export interface UserUI {
+interface UserUI {
     id: string | number;
     name: string;
     username: string;
@@ -24,7 +24,6 @@ interface TeamAssignmentContentProps {
 }
 
 export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({ onLaunch, onBack }) => {
-    const [messageApi, contextHolder] = message.useMessage();
     const [availableUsers, setAvailableUsers] = useState<UserUI[]>([]);
     const [selectedUsers, setSelectedUsers] = useState<UserUI[]>([]);
     const [loading, setLoading] = useState(true);
@@ -38,7 +37,7 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({ on
             try {
                 setLoading(true);
                 const response = await mainClient.get(ENDPOINTS.USERS.LIST);
-                // console.log("API User Response:", response.data);
+                console.log("API User Response:", response);
 
                 const rawList = response.data?.data || response.data?.content || response.data?.result || response.data;
 
@@ -48,7 +47,6 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({ on
                     return;
                 }
 
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const formattedData: UserUI[] = rawList.map((user: any) => ({
                     id: user.id,
                     name: user.fullName || user.username || "Unknown User",
@@ -63,33 +61,20 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({ on
 
                 setAvailableUsers(formattedData);
 
-            } catch {
-                messageApi.warning("Backend unavailable. Using mock data.");
-
-                // --- MOCK DATA FALLBACK ---
-                const mockUsers: UserUI[] = Array.from({ length: 10 }, (_, i) => ({
-                    id: `mock_${i + 1}`,
-                    name: `Mock User ${i + 1}`,
-                    username: `user_${i + 1}`,
-                    role: i % 3 === 0 ? 'Manager' : i % 2 === 0 ? 'Reviewer' : 'Annotator',
-                    avatar: `https://ui-avatars.com/api/?name=User+${i + 1}&background=random`,
-                    email: `user${i + 1}@example.com`,
-                    status: 'ACTIVE',
-                    accuracy: Math.floor(Math.random() * (99 - 85) + 85),
-                    speed: Math.floor(Math.random() * (200 - 80) + 80),
-                }));
-                setAvailableUsers(mockUsers);
+            } catch (error) {
+                console.error("❌ Error fetching users:", error);
+                message.error("Failed to load workforce list.");
             } finally {
                 setLoading(false);
             }
         };
 
         fetchUsers();
-    }, [messageApi]);
+    }, []);
 
     // --- HANDLERS ---
     const handleAddUser = (user: UserUI) => {
-        if (user.status !== 'ACTIVE') return messageApi.warning("User is not active.");
+        if (user.status !== 'ACTIVE') return message.warning("User is not active.");
         setSelectedUsers([...selectedUsers, user]);
         setAvailableUsers(availableUsers.filter(u => u.id !== user.id));
     };
@@ -131,7 +116,6 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({ on
             className="flex flex-col gap-6"
             onFinish={handleFormFinish}
         >
-            {contextHolder}
 
             {/* GRID LAYOUT */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[600px] lg:h-[650px]">
@@ -153,7 +137,7 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({ on
                         <Input
                             prefix={<SearchOutlined className="text-gray-500" />}
                             placeholder="Search by name, skill..."
-                            className="!bg-[#0f0e17]/50 !border-white/10 !text-white !rounded-xl !py-2.5 hover:!border-violet-500 focus:!border-violet-500"
+                            className="search-input-override"
                             onChange={(e) => setSearchTerm(e.target.value)}
                             disabled={loading}
                         />
@@ -161,13 +145,13 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({ on
                             options={['All', 'Annotator', 'Reviewer']}
                             value={filterRole}
                             onChange={setFilterRole}
-                            className="!bg-[#0f0e17]/50 !p-1 !rounded-lg [&_.ant-segmented-item]:text-gray-400 [&_.ant-segmented-item-selected]:!bg-violet-600 [&_.ant-segmented-item-selected]:!text-white [&_.ant-segmented-item-selected]:shadow-lg [&_.ant-segmented-item-hover]:!text-gray-200"
+                            className="custom-segmented"
                             block
                             disabled={loading}
                         />
                     </div>
 
-                    <div className="flex-1 overflow-y-auto pr-2 space-y-3 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-700 [&::-webkit-scrollbar-thumb]:rounded-md [&::-webkit-scrollbar-thumb]:hover:bg-gray-500 z-10">
+                    <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar z-10">
                         {loading ? (
                             <div className="h-full flex flex-col items-center justify-center text-gray-500 gap-3">
                                 <Spin indicator={<LoadingOutlined style={{ fontSize: 32, color: '#8b5cf6' }} spin />} />
@@ -179,7 +163,7 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({ on
                             </div>
                         ) : (
                             filteredAvailableUsers.map(user => (
-                                <div key={user.id} className={`bg-[#0f0e17]/40 border border-white/5 rounded-xl p-3 px-4 flex items-center justify-between transition-all duration-200 hover:border-violet-500/50 hover:bg-[#0f0e17]/60 group ${user.status !== 'ACTIVE' ? 'opacity-60 grayscale' : ''}`}>
+                                <div key={user.id} className={`user-list-item group ${user.status !== 'ACTIVE' ? 'opacity-60 grayscale' : ''}`}>
                                     <div className="flex items-center gap-3">
                                         <Avatar src={user.avatar} size={40} className="border border-white/10 flex-shrink-0" />
                                         <div className="min-w-0">
@@ -205,7 +189,7 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({ on
                                                 size={{ height: 4 }}
                                                 showInfo={false}
                                                 strokeColor="#a855f7"
-                                                railColor="rgba(255,255,255,0.05)"
+                                                trailColor="rgba(255,255,255,0.05)"
                                             />
                                         </div>
                                         <Button
@@ -248,13 +232,13 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({ on
                         <Progress
                             percent={progressPercent}
                             strokeColor={{ '0%': '#8b5cf6', '100%': '#d946ef' }}
-                            railColor="rgba(255,255,255,0.1)"
+                            trailColor="rgba(255,255,255,0.1)"
                             size={{ height: 6 }}
                             showInfo={false}
                         />
                     </div>
 
-                    <div className="flex-1 overflow-y-auto space-y-2 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-700 [&::-webkit-scrollbar-thumb]:rounded-md [&::-webkit-scrollbar-thumb]:hover:bg-gray-500 z-10 mb-4 pr-2">
+                    <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar z-10 mb-4 pr-2">
                         {selectedUsers.length === 0 ? (
                             <div className="h-full flex flex-col items-center justify-center text-gray-500 border-2 border-dashed border-white/5 rounded-xl bg-[#0f0e17]/20">
                                 <p>No team members assigned.</p>
@@ -262,7 +246,7 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({ on
                             </div>
                         ) : (
                             selectedUsers.map(user => (
-                                <div key={user.id} className="bg-[#0f0e17]/60 border border-white/5 rounded-xl p-3 px-4 flex items-center justify-between transition-all duration-200 border-l-2 !border-l-fuchsia-500 group">
+                                <div key={user.id} className="user-list-item selected-item animate-fadeIn group">
                                     <div className="flex items-center gap-3">
                                         <Avatar src={user.avatar} size={36} />
                                         <div>

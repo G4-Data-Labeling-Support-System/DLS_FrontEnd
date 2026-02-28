@@ -23,16 +23,12 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://dls-beta.hikarimoon.pro/api/v1', // Server backend
+        target: 'https://dls-beta.hikarimoon.pro', // Server backend base URL
         changeOrigin: true,
         secure: false,
         // Nếu backend của bạn đường dẫn là /api/v1, thì giữ nguyên.
         // Nếu backend không có prefix /api mà bạn thêm vào ở frontend, dùng rewrite bên dưới:
-        rewrite: (path) => path.replace(/^\/api/, ''),
-        headers: {
-          Origin: 'https://dls-beta.hikarimoon.pro',
-          Referer: 'https://dls-beta.hikarimoon.pro/',
-        },
+        // rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },
   },

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { themeClasses, commonPatterns } from '@/styles';
+import { themeClasses } from '@/styles';
+import { BrandLogo } from '@/components/common/BrandLogo';
 import { DeploymentUnitOutlined, GlobalOutlined, SecurityScanOutlined, ArrowRightOutlined } from '@ant-design/icons';
 
 export default function HomePage() {
@@ -9,14 +10,7 @@ export default function HomePage() {
       {/* Navigation */}
       <nav className="absolute top-10 left-0 w-full z-50 px-10">
         <div className={themeClasses.layouts.container}>
-          <div className={commonPatterns.logo.container}>
-            <span className={commonPatterns.logo.icon}>
-              polyline
-            </span>
-            <span className={commonPatterns.logo.text}>
-              DLSS
-            </span>
-          </div>
+          <BrandLogo size="xl" />
         </div>
       </nav>
 
@@ -165,14 +159,7 @@ export default function HomePage() {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-violet-600/5 blur-[120px] rounded-full"></div>
         <div className={themeClasses.layouts.container}>
           <div className="flex flex-col md:flex-row justify-between items-center gap-10">
-            <div className={commonPatterns.logo.container}>
-              <span className="material-symbols-outlined text-3xl text-violet-500">
-                polyline
-              </span>
-              <span className="font-space font-bold text-xl uppercase tracking-widest">
-                DLSS v2.4
-              </span>
-            </div>
+            <BrandLogo />
             <div className={`flex gap-12 text-sm font-medium ${themeClasses.text.muted}`}>
               <a
                 className="hover:text-violet-400 transition-colors uppercase tracking-tighter"

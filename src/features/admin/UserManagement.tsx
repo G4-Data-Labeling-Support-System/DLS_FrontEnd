@@ -26,7 +26,7 @@ export default function UserManagement() {
             {/* Header */}
             <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
                 <div className="flex flex-col gap-1">
-                    <h2 className="text-2xl font-bold tracking-tight text-white md:text-3xl">
+                    <h2 className={`text-2xl font-bold tracking-tight ${themeClasses.text.violet} md:text-3xl`}>
                         System Administration
                     </h2>
                     <p className={`font-body text-sm ${themeClasses.text.secondary}`}>

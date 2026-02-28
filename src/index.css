@@ -52,13 +52,47 @@ input:-webkit-autofill:active {
 }
 
 @utility glass-input {
-  background: rgba(15, 14, 23, 0.6);
+  background: rgba(15, 14, 23, 0.6) !important;
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 8px;
 
   &:focus-within {
-    border-color: #8b5cf6;
+    border-color: #8b5cf6 !important;
     box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);
+  }
+
+  & .ant-input,
+  & input {
+    background-color: transparent !important;
+    background: transparent !important;
+    color: white !important;
+    border: none !important;
+    box-shadow: none !important;
+
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.4) !important;
+    }
+  }
+
+  /* Force icons and prefixes to be white */
+  & .anticon,
+  & .ant-input-prefix,
+  & .ant-input-suffix {
+    color: white !important;
+    opacity: 0.8;
+  }
+
+  /* Specifically for Ant Design placeholders */
+  & .ant-input::placeholder,
+  & .ant-input-password input::placeholder {
+    color: rgba(255, 255, 255, 0.4) !important;
+  }
+
+  /* Fix for affix wrapper (Password) */
+  &.ant-input-affix-wrapper {
+    background-color: rgba(15, 14, 23, 0.6) !important;
+    padding: 8px 12px;
   }
 }
 

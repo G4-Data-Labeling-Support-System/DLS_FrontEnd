@@ -1,15 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Form, Input, Select, message } from 'antd';
+import { Form, Input, Upload, message } from 'antd';
+import { DeleteOutlined, PlusOutlined, InboxOutlined } from '@ant-design/icons';
+// Import CSS global (chứa class .form-transparent-override)
+import '@/features/manager/components/manager.css';
 import { FormFooter } from '@/features/manager/components/common/FormFooter';
 
-// Mock Interface
-interface Dataset {
-    id: string;
-    name: string;
-    version: number;
-    storageType: string;
-    itemCount: number;
-}
+const { Dragger } = Upload;
 
 interface DatasetSetupFormProps {
     onSuccess?: () => void;
@@ -18,85 +14,76 @@ interface DatasetSetupFormProps {
 
 export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({ onSuccess, onBack }) => {
     const [form] = Form.useForm();
-    const [loading, setLoading] = useState(false);
-    const [datasets, setDatasets] = useState<Dataset[]>([]);
-    const [fetching, setFetching] = useState(false);
-    const projectId = localStorage.getItem('currentProjectId');
+    const [fileList, setFileList] = useState<any[]>([]);
 
     // --- LOGIC: Generate Current Date ---
+    // Using useMemo to calculate the date only once when the component mounts
     const currentDate = useMemo(() => {
         const date = new Date();
+        // Format the date as DD/MM/YYYY (Vietnamese locale is suitable for this)
         return new Intl.DateTimeFormat('vi-VN', {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric'
         }).format(date);
     }, []);
+    // ------------------------------------
 
-    // --- EFFECT: Fetch Available Datasets ---
+    // Cleanup URL object khi component unmount để tránh leak memory
     useEffect(() => {
-        const fetchDatasets = async () => {
-            setFetching(true);
-            try {
-                // TODO: Replace with real API call: mainClient.get(ENDPOINTS.DATASETS.LIST)
-                // Simulating API Fetch
-                await new Promise(resolve => setTimeout(resolve, 800));
-
-                const mockDatasets: Dataset[] = [
-                ];
-                setDatasets(mockDatasets);
-            } catch (error) {
-                console.error("Failed to fetch datasets", error);
-                message.error("Could not load datasets.");
-            } finally {
-                setFetching(false);
-            }
+        return () => {
+            fileList.forEach(file => {
+                if (file.preview) URL.revokeObjectURL(file.preview);
+            });
         };
-
-        fetchDatasets();
     }, []);
 
-    const onFinish = async (values: { datasetId: string }) => {
-        setLoading(true);
-        try {
-            if (!projectId) {
-                message.error("Project ID not found. Please start from step 1.");
-                return;
+    const onFinish = (values: any) => {
+        console.log('Dataset Values:', values);
+        if (onSuccess) onSuccess();
+    };
+
+    const handleUploadChange = (info: any) => {
+        const { status } = info.file;
+        let newFileList = [...info.fileList];
+
+        // Xử lý Preview: Tạo URL tạm thời nếu chưa có thumbUrl
+        newFileList = newFileList.map((file) => {
+            if (file.response) {
+                file.url = file.response.url; // URL từ server
             }
-
-            const selectedDataset = datasets.find(d => d.id === values.datasetId);
-            if (!selectedDataset) {
-                message.error("Selected dataset invalid.");
-                return; // Should not happen
+            if (!file.url && !file.thumbUrl && file.originFileObj) {
+                // Tạo preview local ngay lập tức
+                file.preview = URL.createObjectURL(file.originFileObj);
             }
+            return file;
+        });
 
-            // TODO: Call API to LINK dataset to project
-            // await mainClient.post(`${ENDPOINTS.PROJECTS.LIST}/${projectId}/datasets`, { datasetId: values.datasetId });
+        setFileList(newFileList);
 
-            // Simulate API Call
-            await new Promise(resolve => setTimeout(resolve, 600));
-
-            message.success(`Dataset "${selectedDataset.name}" linked successfully!`);
-
-            // Store selected dataset info if needed for next steps
-            localStorage.setItem('currentDatasetId', values.datasetId);
-
-            if (onSuccess) onSuccess();
-        } catch (error) {
-            console.error("Linking failed:", error);
-            // Fallback for demo
-            message.warning("Backend unavailable. Dataset linked (Mock Mode).");
-            if (onSuccess) onSuccess();
-        } finally {
-            setLoading(false);
+        if (status === 'done') {
+            message.success(`${info.file.name} uploaded successfully.`);
+        } else if (status === 'error') {
+            // Demo mode: Vẫn báo success để trải nghiệm UI (vì API mock thường lỗi)
+            message.success(`${info.file.name} uploaded (Demo mode).`);
         }
+    };
+
+    const handleRemoveFile = (uid: string) => {
+        setFileList((prev) => {
+            const newFile = prev.find(item => item.uid === uid);
+            if (newFile?.preview) URL.revokeObjectURL(newFile.preview); // Cleanup
+            return prev.filter((item) => item.uid !== uid);
+        });
     };
 
     return (
         <Form
             form={form}
             layout="vertical"
-            className="!w-full !max-w-none !p-0 !bg-transparent !border-0 !shadow-none"
+            // Sử dụng class override từ manager.css để loại bỏ nền/viền trùng lặp
+            className="form-transparent-override"
+            initialValues={{ version: 1, storageType: 's3' }}
             onFinish={onFinish}
         >
             <div className="flex flex-col gap-8">
@@ -104,99 +91,122 @@ export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({ onSuccess, o
                 {/* --- Section 1: Thông tin định danh (Readonly) --- */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <Form.Item label="Project ID (UUID)">
-                        <Input
-                            className="font-mono text-sm !bg-[#1a1625] !border-white/10"
-                            placeholder="Inherited from Project"
-                            value={projectId || ''}
-                            disabled
-                        />
+                        <Input className="font-mono text-sm !bg-[#1a1625] !border-white/10" placeholder="Inherited from Project" disabled />
                     </Form.Item>
 
+                    {/* --- UPDATED: Created At Field --- */}
                     <Form.Item label="Created At">
-                        <Input
-                            defaultValue={currentDate}
-                            readOnly
-                            className="font-mono text-sm !text-gray-500 !bg-[#1a1625]/50 !border-white/5 cursor-not-allowed"
-                        />
+                        <div className="relative">
+                            <Input
+                                defaultValue={currentDate} // Set the default value to the generated date
+                                readOnly // Make it read-only
+                                className="font-mono text-sm !text-gray-500 !bg-[#1a1625]/50 !border-white/5 cursor-not-allowed"
+                            />
+                        </div>
+                    </Form.Item>
+                    {/* ------------------------------- */}
+
+                </div>
+
+                {/* --- Section 2: Cấu hình Dataset --- */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="md:col-span-2">
+                        <Form.Item
+                            name="datasetName"
+                            label="Dataset Name *"
+                            rules={[{ required: true, message: 'Please enter dataset name' }]}
+                        >
+                            <Input placeholder="e.g. Image_Training_Set_Alpha" size="large" />
+                        </Form.Item>
+                    </div>
+                    <Form.Item name="version" label="Version *">
+                        <Input type="number" min={1} size="large" />
                     </Form.Item>
                 </div>
 
-                {/* --- Section 2: Chọn Dataset --- */}
-                <div className="bg-[#1a1625]/40 border border-white/10 rounded-xl p-6 md:p-8">
-                    <div className="mb-6">
-                        <h3 className="text-white text-lg font-bold flex items-center gap-2">
-                            <span className="material-symbols-outlined text-violet-500">database</span>
-                            Existing Datasets
-                        </h3>
-                        <p className="text-gray-400 text-sm mt-1">Select a pre-configured dataset to associate with this project.</p>
-                    </div>
+                {/* --- Section 3: Upload Area --- */}
+                <div className="space-y-3">
+                    <label className="text-white font-bold flex items-center gap-2 text-sm">
+                        <span className="material-symbols-outlined text-violet-500" style={{ fontSize: '18px' }}>photo_library</span>
+                        Data Item Source - Image Uploads
+                    </label>
 
-                    <Form.Item
-                        name="datasetId"
-                        label="Select Dataset Source"
-                        rules={[{ required: true, message: 'Please select a dataset' }]}
-                    >
-                        <Select
-                            size="large"
-                            placeholder="Searching for available datasets..."
-                            loading={fetching}
-                            disabled={fetching}
-                            className="!w-full"
-                            popupClassName="bg-[#1a1625] border border-white/10 text-white"
-                            optionFilterProp="label"
-                            options={datasets.map(ds => ({
-                                label: `${ds.name} (v${ds.version}) - ${ds.itemCount.toLocaleString()} items [${ds.storageType}]`,
-                                value: ds.id,
-                            }))}
-                            // Custom dropdown style helper (optional)
-                            listHeight={250}
-                        />
-                    </Form.Item>
-
-                    {/* Dataset Preview Box (Optional - shows details of selected item) */}
-                    <Form.Item shouldUpdate={(prev, curr) => prev.datasetId !== curr.datasetId}>
-                        {() => {
-                            const selectedId = form.getFieldValue('datasetId');
-                            const selectedDs = datasets.find(d => d.id === selectedId);
-
-                            if (!selectedDs) return null;
-
-                            return (
-                                <div className="mt-4 p-4 rounded-lg bg-violet-500/10 border border-violet-500/20 flex flex-col md:flex-row gap-4 md:items-center justify-between animate-fade-in">
-                                    <div>
-                                        <div className="text-violet-300 font-bold text-sm mb-1">SELECTED DATASET SUMMARY</div>
-                                        <div className="text-white font-medium">{selectedDs.name}</div>
-                                        <div className="text-gray-400 text-xs mt-1">
-                                            Storage: <span className="text-gray-300">{selectedDs.storageType}</span> •
-                                            Version: <span className="text-gray-300">{selectedDs.version}</span>
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <div className="text-2xl font-bold text-white">{selectedDs.itemCount.toLocaleString()}</div>
-                                        <div className="text-xs text-gray-400 uppercase tracking-wider">Data Items</div>
-                                    </div>
+                    <div className="rounded-2xl overflow-hidden bg-[#1a1625]/30 border border-dashed border-white/20 hover:border-violet-500/50 hover:bg-[#1a1625]/50 transition-all group">
+                        <Dragger
+                            multiple
+                            name="file"
+                            action="https://run.mocky.io/v3/435e224c-44fb-4773-9faf-380c5e6a2188"
+                            fileList={fileList}
+                            onChange={handleUploadChange}
+                            showUploadList={false} // Tắt list mặc định để dùng custom grid bên dưới
+                            className="!border-0 !bg-transparent p-8"
+                        >
+                            <div className="flex flex-col items-center justify-center gap-4 py-6">
+                                <div className="w-16 h-16 rounded-full bg-violet-500/10 flex items-center justify-center text-violet-500 text-3xl group-hover:scale-110 transition-transform duration-300">
+                                    <InboxOutlined />
                                 </div>
-                            );
-                        }}
-                    </Form.Item>
+                                <div>
+                                    <p className="text-white font-bold text-lg mb-1">Click or drag images to upload</p>
+                                    <p className="text-gray-400 text-sm">Support for a single or bulk upload.</p>
+                                </div>
+                            </div>
+                        </Dragger>
 
-                    {/* Tip Box */}
-                    <div className="mt-6 flex gap-3 text-xs text-gray-500 bg-black/20 p-3 rounded-lg">
-                        <span className="material-symbols-outlined text-base">info</span>
-                        <span>
-                            Don't see your dataset? Go to the
-                            <a href="/manager/datasets" className="text-violet-400 hover:text-violet-300 mx-1 underline">Dataset Manager</a>
-                            to create or import a new one.
-                        </span>
+                        {/* Custom Preview Grid */}
+                        <div className="px-6 pb-6 pt-2 border-t border-white/5">
+                            <div className="flex justify-between items-center mb-4">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                    Preview Items {fileList.length > 0 && `(${fileList.length})`}
+                                </span>
+                                {fileList.length > 0 && (
+                                    <span
+                                        className="text-xs text-violet-500 font-bold cursor-pointer hover:text-white transition-colors"
+                                        onClick={() => setFileList([])}
+                                    >
+                                        Clear all
+                                    </span>
+                                )}
+                            </div>
+
+                            <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
+                                {fileList.map((file) => (
+                                    <div key={file.uid} className="aspect-square rounded-xl bg-gray-800 border border-white/10 relative group/thumb overflow-hidden shadow-sm hover:border-violet-500 transition-colors">
+                                        {/* Nút xóa ảnh */}
+                                        <div
+                                            className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover/thumb:opacity-100 transition-opacity cursor-pointer z-10 backdrop-blur-[2px]"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleRemoveFile(file.uid);
+                                            }}
+                                        >
+                                            <DeleteOutlined className="text-red-400 text-lg hover:scale-125 transition-transform" />
+                                        </div>
+
+                                        {/* Hiển thị ảnh: Ưu tiên preview (blob) -> thumbUrl (base64) -> url -> placeholder */}
+                                        <div
+                                            className="w-full h-full bg-cover bg-center opacity-70"
+                                            style={{
+                                                backgroundImage: `url('${file.preview || file.thumbUrl || file.url || 'https://placehold.co/200x200?text=FILE'}')`
+                                            }}
+                                        />
+                                    </div>
+                                ))}
+
+                                {/* Nút thêm ảnh giả lập (chỉ để trang trí) */}
+                                <div className="aspect-square rounded-xl border border-dashed border-white/20 flex items-center justify-center text-gray-500 hover:text-violet-500 hover:border-violet-500 hover:bg-violet-500/10 transition-all cursor-pointer">
+                                    <PlusOutlined className="text-xl" />
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <FormFooter
                     currentStep={2}
                     totalSteps={4}
-                    submitLabel="LINK DATASET & CONTINUE"
+                    submitLabel="SAVE & CONTINUE TO GUIDELINES"
                     onBack={onBack}
-                    isLoading={loading}
+                    isLoading={false}
                 />
             </div>
         </Form>

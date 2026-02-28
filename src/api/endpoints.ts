@@ -10,44 +10,6 @@ export const ENDPOINTS = {
     PROFILE: '/auth/profile'
   },
 
-  // Products
-  PRODUCTS: {
-    LIST: '/products',
-    DETAIL: (id: string) => `/products/${id}`,
-    SEARCH: '/products/search',
-    CATEGORIES: '/products/categories'
-  },
-
-  // Cart
-  CART: {
-    GET: '/cart',
-    ADD: '/cart/items',
-    UPDATE: (itemId: string) => `/cart/items/${itemId}`,
-    REMOVE: (itemId: string) => `/cart/items/${itemId}`,
-    CLEAR: '/cart/clear'
-  },
-
-  // Orders
-  ORDERS: {
-    CREATE: '/orders',
-    LIST: '/orders',
-    DETAIL: (id: string) => `/orders/${id}`,
-    CANCEL: (id: string) => `/orders/${id}/cancel`,
-    TRACKING: (id: string) => `/orders/${id}/tracking`
-  },
-
-  // Prescription (Custom Lens)
-  PRESCRIPTION: {
-    VALIDATE: '/prescription/validate',
-    CALCULATE: '/prescription/calculate'
-  },
-
-  // Payment
-  PAYMENT: {
-    MOMO: '/payment/momo',
-    VNPAY: '/payment/vnpay',
-    STATUS: (transactionId: string) => `/payment/status/${transactionId}`
-  },
 
   USERS: {
     LIST: '/users',
@@ -58,28 +20,4 @@ export const ENDPOINTS = {
     DEACTIVATE: (id: string) => `/users/${id}/deactivate`,
     ACTIVATE: (id: string) => `/users/${id}/activate`
   },
-
-  // Datasets
-  DATASETS: {
-    CREATE: '/datasets',
-    LIST: '/datasets',
-    DETAIL: (id: string) => `/datasets/${id}`,
-    UPDATE: (id: string) => `/datasets/${id}`,
-    DELETE: (id: string) => `/datasets/${id}`
-  },
-  // Projects
-  PROJECTS: {
-    CREATE: '/projects',
-    LIST: '/projects',
-    DETAIL: (id: string) => `/projects/${id}`
-  },
-
-  // Reviewer
-  REVIEWER: {
-    STATS: '/reviewer/stats',
-    ANNOTATORS: '/reviewer/annotators',
-    PROJECT_ITEMS: (projectId: string) => `/reviewer/projects/${projectId}/items`,
-    ITEM_DETAIL: (itemId: string) => `/reviewer/items/${itemId}`,
-    REVIEW_DECISION: (itemId: string) => `/reviewer/items/${itemId}/review`,
-  }
 } as const

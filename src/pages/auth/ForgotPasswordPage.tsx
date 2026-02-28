@@ -1,21 +1,15 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/shared/components/ui/Button';
-import { ArrowLeftOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, MailOutlined } from '@ant-design/icons';
+import { Form, Input } from 'antd';
+import { BrandLogo } from '@/components/common/BrandLogo';
 
 export default function ForgotPasswordPage() {
     return (
         <div className="h-screen flex flex-col bg-[#0f0e17] text-gray-100 font-sans antialiased overflow-hidden">
             <main className="flex-1 flex overflow-hidden relative">
-                <div className="absolute top-8 left-8 z-50 flex items-center gap-3 pointer-events-none">
-                    <span className="material-symbols-outlined text-4xl text-violet-500 drop-shadow-[0_0_10px_rgba(139,92,246,0.8)]">
-                        polyline
-                    </span>
-                    <span className="font-space font-bold text-2xl tracking-tighter">
-                        DLSS{' '}
-                        <span className="text-xs font-mono text-violet-400 align-top opacity-70 ml-1">
-                            v2.4
-                        </span>
-                    </span>
+                <div className="absolute top-8 left-8 z-50 pointer-events-none">
+                    <BrandLogo />
                 </div>
                 <div className="hidden lg:flex w-1/2 relative items-center justify-center bg-[#0f0e17] border-r border-violet-500/10 overflow-hidden">
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(139,92,246,0.15)_0%,_rgba(15,14,23,1)_70%)]"></div>
@@ -77,30 +71,35 @@ export default function ForgotPasswordPage() {
                                     Enter your email to receive a password reset link.
                                 </p>
                             </div>
-                            <form className="space-y-6">
-                                <div className="space-y-2">
-                                    <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider pl-1">
-                                        Email Address
-                                    </label>
-                                    <div className="glass-input rounded-lg flex items-center px-4 transition-all group">
-                                        <span className="material-symbols-outlined text-gray-500 group-focus-within:text-violet-400 text-xl mr-3">
-                                            mail
-                                        </span>
-                                        <input
-                                            className="w-full bg-transparent border-none py-3 text-white placeholder-gray-600 focus:ring-0 text-sm font-medium focus:outline-none"
-                                            placeholder="name@example.com"
-                                            type="email"
-                                        />
-                                    </div>
-                                </div>
+                            <Form
+                                layout="vertical"
+                                requiredMark={false}
+                                className="space-y-4"
+                            >
+                                <Form.Item
+                                    name="email"
+                                    label={<span className="text-xs font-medium text-gray-400 uppercase tracking-wider pl-1">Email Address</span>}
+                                    rules={[
+                                        { required: true, message: 'Please enter your email' },
+                                        { type: 'email', message: 'Please enter a valid email' }
+                                    ]}
+                                >
+                                    <Input
+                                        size="large"
+                                        prefix={<MailOutlined className="text-white opacity-80 drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]" />}
+                                        className="glass-input"
+                                        placeholder="name@example.com"
+                                    />
+                                </Form.Item>
+
                                 <Button
-                                    type="button"
+                                    type="submit"
                                     variant="primary"
                                     className="w-full py-3.5 mt-4 hover:scale-[1.01] active:scale-[0.99] font-bold text-sm tracking-wider"
                                 >
                                     SEND RESET LINK
                                 </Button>
-                            </form>
+                            </Form>
                         </div>
                     </div>
                 </div>

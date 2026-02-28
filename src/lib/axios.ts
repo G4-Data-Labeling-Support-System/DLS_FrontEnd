@@ -22,21 +22,14 @@ interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
 }
 
 // ============ Config & State ============
-export const API_BASE_URL = 'https://dls-beta.hikarimoon.pro/api/v1';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
 
 // Biến trạng thái cho logic Refresh Token
 let isRefreshing = false;
-// Queue item type
-interface FailedQueueItem {
-  resolve: (value: string | null) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  reject: (reason?: any) => void;
-}
-
-let failedQueue: FailedQueueItem[] = [];
+let failedQueue: any[] = [];
 
 // Hàm xử lý hàng đợi các request bị lỗi
-const processQueue = (error: Error | null, token: string | null = null) => {
+const processQueue = (error: any, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
@@ -93,6 +86,11 @@ export function createApiClient({
   client.interceptors.response.use(
     (res) => res,
     async (error: AxiosError) => {
+      // Log lỗi detail từ server để debug (ví dụ lỗi validation 400)
+      if (error.response?.data) {
+        console.error('Backend Error Details:', error.response.data);
+      }
+
       const originalRequest = error.config as CustomAxiosRequestConfig;
       const status = error.response?.status;
 
@@ -147,7 +145,7 @@ export function createApiClient({
 
         } catch (refreshError) {
           // Nếu refresh fail thì force logout
-          processQueue(refreshError as Error, null);
+          processQueue(refreshError, null);
           onUnauthorized();
           return Promise.reject(refreshError);
         } finally {

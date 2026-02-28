@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Form, Input, Select, Button, ColorPicker, message } from 'antd';
 import { PlusOutlined, CloseOutlined, BoldOutlined, ItalicOutlined, UnorderedListOutlined, LinkOutlined, UndoOutlined, RedoOutlined } from '@ant-design/icons';
 // Import CSS global chứa class override
-
+import '@/features/manager/components/manager.css';
 import { FormFooter } from '@/features/manager/components/common/FormFooter';
 
 interface GuidelinesSetupFormProps {
@@ -62,7 +62,7 @@ export const GuidelinesSetupForm: React.FC<GuidelinesSetupFormProps> = ({ onSucc
         <Form
             form={form}
             layout="vertical"
-            className="!w-full !max-w-none !p-0 !bg-transparent !border-0 !shadow-none"
+            className="form-transparent-override"
             initialValues={{
                 parentLabel: 'root',
                 // Đã xóa 'instructions' ở đây để validation hoạt động chuẩn

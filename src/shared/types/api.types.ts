@@ -21,6 +21,7 @@ export interface User {
   fullName: string;
   email: string;
   role: string;
+  userRole?: string; // Some BE responses use this field
   status: 'ACTIVE' | 'INACTIVE';
   avatar?: string;
   createdAt?: string;
