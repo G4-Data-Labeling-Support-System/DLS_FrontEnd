@@ -1,11 +1,11 @@
 import { Card, Button, Typography } from 'antd';
-import { PlusCircleFilled, DownloadOutlined, FileTextOutlined, RightOutlined } from '@ant-design/icons';
+import { PlusCircleFilled, FolderOpenOutlined, RightOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { PATH_MANAGER } from '@/routes/paths';
 
 const { Title } = Typography;
 
-export const QuickActions = () => {
+export const DatasetQuickActions = () => {
     const navigate = useNavigate();
 
     return (
@@ -20,29 +20,20 @@ export const QuickActions = () => {
                     type="primary"
                     size="large"
                     className="w-full h-12 flex items-center justify-center bg-fuchsia-600 hover:bg-fuchsia-500 border-none shadow-[0_0_15px_rgba(192,38,211,0.4)]"
-                    onClick={() => navigate(PATH_MANAGER.createProject)}
+                    // Add routing for creating new dataset when implemented
+                    onClick={() => { }}
                 >
                     <PlusCircleFilled className="text-lg mr-2" />
-                    CREATE PROJECT
+                    CREATE NEW DATASET
                 </Button>
 
                 <Button
                     className="w-full h-12 flex items-center justify-between bg-[#231e31] border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 hover:bg-[#2d2640]"
+                    onClick={() => navigate(PATH_MANAGER.root)}
                 >
                     <div className="flex items-center">
-                        <DownloadOutlined className="mr-3 text-lg text-violet-400" />
-                        <span>Export Data</span>
-                    </div>
-                    <RightOutlined className="text-xs" />
-                </Button>
-
-                <Button
-                    className="w-full h-12 flex items-center justify-between bg-[#231e31] border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 hover:bg-[#2d2640]"
-                    onClick={() => navigate(PATH_MANAGER.datasetManagement)}
-                >
-                    <div className="flex items-center">
-                        <FileTextOutlined className="mr-3 text-lg text-fuchsia-400" />
-                        <span>DATASET LIST</span>
+                        <FolderOpenOutlined className="mr-3 text-lg text-fuchsia-400" />
+                        <span>PROJECT LIST</span>
                     </div>
                     <RightOutlined className="text-xs" />
                 </Button>

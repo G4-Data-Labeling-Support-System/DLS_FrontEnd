@@ -1,20 +1,21 @@
 import React from 'react';
-import { Card, Button, Typography, Dropdown, Tag, type MenuProps } from 'antd';
+import { Card, Button, Typography, Dropdown, type MenuProps } from 'antd';
 import { MoreOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
-import type { GetProjectsParams } from '@/api/project'; // Import type từ API của bạn
+import type { GetDatasetsParams } from '@/api/dataset';
 
 const { Title } = Typography;
 
-// Mở rộng thêm onEdit và onDelete
-interface ProjectCardProps extends GetProjectsParams {
+interface DatasetCardProps extends GetDatasetsParams {
     onEdit?: () => void;
     onDelete?: () => void;
     onClick?: () => void;
 }
 
-export const ProjectCard: React.FC<ProjectCardProps> = ({
-    projectName,
-    projectStatus,
+export const DatasetCard: React.FC<DatasetCardProps> = ({
+    name,
+    version,
+    storageType,
+    itemCount,
     createdAt,
     updatedAt,
     onEdit,
@@ -23,23 +24,11 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
 }) => {
     const items: MenuProps['items'] = [
         { key: '1', label: 'View Details', icon: <EyeOutlined />, onClick: onClick },
-        { key: '2', label: 'Edit Project', icon: <EditOutlined />, onClick: onEdit },
+        { key: '2', label: 'Edit Dataset', icon: <EditOutlined />, onClick: onEdit },
         { type: 'divider' },
-        { key: '4', label: <span className="text-red-500">Delete Project</span>, icon: <DeleteOutlined className="text-red-500" />, onClick: onDelete },
+        { key: '4', label: <span className="text-red-500">Delete Dataset</span>, icon: <DeleteOutlined className="text-red-500" />, onClick: onDelete },
     ];
 
-    // Hàm chọn màu cho Tag trạng thái
-    const getStatusColor = (status?: string) => {
-        switch (status?.toUpperCase()) {
-            case 'ACTIVE': return 'processing';
-            case 'COMPLETED': return 'success';
-            case 'PAUSED': return 'warning';
-            case 'ARCHIVE': return 'error';
-            default: return 'default';
-        }
-    };
-
-    // Format ngày tháng hiển thị
     const formatDate = (dateString?: string) => {
         if (!dateString) return 'N/A';
         return new Date(dateString).toLocaleDateString('vi-VN');
@@ -52,10 +41,10 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
         >
             <div className="flex justify-between items-start mb-2">
                 <div className="flex-1 pr-2">
-
-                    <Title level={5} className="!text-white !m-0 !text-sm leading-tight line-clamp-2" title={projectName}>
-                        {projectName || 'Dự án chưa có tên'}
+                    <Title level={5} className="!text-white !m-0 !text-sm leading-tight line-clamp-2" title={name}>
+                        {name || 'Dataset chưa có tên'}
                     </Title>
+                    <div className="text-gray-400 text-xs mt-1">v{version || 1}</div>
                 </div>
                 <div onClick={(e) => e.stopPropagation()}>
                     <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
@@ -65,12 +54,13 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
             </div>
 
             <div className="mb-4">
-                <Tag color={getStatusColor(projectStatus)} className="m-0 font-medium">
-                    {projectStatus || 'UNKNOWN'}
-                </Tag>
+                <div className="inline-block px-2 py-1 bg-violet-900/40 text-violet-300 text-[10px] font-bold rounded capitalize tracking-wide">
+                    {storageType || 'LOCAL'}
+                </div>
+                <div className="inline-block px-2 py-1 ml-2 bg-[#2d2640] text-gray-300 text-[10px] font-bold rounded tracking-wide">
+                    {itemCount || 0} Items
+                </div>
             </div>
-
-
 
             <div className="grid grid-cols-2 gap-2 bg-[#231e31] p-3 rounded-lg mt-auto">
                 <div>

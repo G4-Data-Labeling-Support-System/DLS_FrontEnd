@@ -38,8 +38,6 @@ const CreateDatasetPage: React.FC = () => {
                 dataType: values.dataType
             }));
 
-            console.log('Payload:', { ...values, dataItems });
-
             await new Promise(resolve => setTimeout(resolve, 1500));
             message.success(`Dataset "${values.datasetName}" created successfully with ${dataItems.length} items!`);
             navigate(-1);
@@ -126,7 +124,7 @@ const CreateDatasetPage: React.FC = () => {
                                 <Form.Item name="storageType" label="Storage Type *">
                                     <Select
                                         size="large"
-                                        popupClassName="bg-[#1a1625] border border-white/10 text-white"
+                                        dropdownStyle={{ backgroundColor: '#1a1625', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
                                         className="w-full"
                                         placeholder="Select storage"
                                     >
@@ -138,7 +136,7 @@ const CreateDatasetPage: React.FC = () => {
                                 <Form.Item name="dataType" label="Data Type *">
                                     <Select
                                         size="large"
-                                        popupClassName="bg-[#1a1625] border border-white/10 text-white"
+                                        dropdownStyle={{ backgroundColor: '#1a1625', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
                                         className="w-full"
                                         placeholder="Select data type"
                                     >

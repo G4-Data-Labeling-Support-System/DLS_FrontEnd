@@ -20,4 +20,17 @@ export const ENDPOINTS = {
     DEACTIVATE: (id: string) => `/users/${id}/deactivate`,
     ACTIVATE: (id: string) => `/users/${id}/activate`
   },
+
+  PROJECTS: {
+    LIST: '/projects',
+    DETAIL: (id: string) => `/projects/${id}`,
+    CREATE: '/projects',
+  },
+
+  DATASETS: {
+    LIST: '/datasets',
+    DETAIL: (id: string) => `/datasets/${id}`,
+    CREATE: '/datasets',
+  }
+
 } as const

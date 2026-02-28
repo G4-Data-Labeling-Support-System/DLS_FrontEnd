@@ -22,8 +22,7 @@ export const ReviewerFilters: React.FC = () => {
                         options={[
                             { value: 'all', label: 'All Active Projects' },
                         ]}
-                        popupClassName="bg-[#1a1625] border border-white/10 text-white"
-                        dropdownStyle={{ backgroundColor: '#1a1625' }}
+                        dropdownStyle={{ backgroundColor: '#1a1625', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
                     />
                 </div>
                 {/* Add more filters here easily */}
