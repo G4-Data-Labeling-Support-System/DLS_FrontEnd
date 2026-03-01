@@ -1,17 +1,13 @@
 import React, { useState } from 'react';
-import { Form, Input, Select, message } from 'antd';
-import axios from 'axios';
+import { Form, Input, message } from 'antd';
+import projectApi from '@/api/project';
 import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '@/store';
 
 // Import Styles & Components
-import '@/features/manager/components/manager.css';
 import { FormFooter } from '@/features/manager/components/common/FormFooter';
 
-const PROJECT_STATUS = [
-    { label: 'Active', value: 'active' },
-    { label: 'Blocked', value: 'blocked' },
-    { label: 'Archived', value: 'archived' },
-];
+
 
 interface CreateProjectFormProps {
     onSuccess?: () => void;
@@ -21,30 +17,26 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const user = useAuthStore(state => state.user);
 
     // Xử lý Cancel: Quay về Dashboard
     const handleCancel = () => {
         navigate('/manager');
     };
 
-    const onFinish = async (values: any) => {
+    const onFinish = async (values: { projectName: string; description: string }) => {
         setLoading(true);
         try {
-            // 1. Chuẩn bị dữ liệu
             const payload = {
-                ...values,
-                createdAt: new Date().toISOString(),
-                projectId: `PROJ-${Math.floor(Math.random() * 10000)}` // Mock ID ngẫu nhiên
+                projectName: values.projectName,
+                description: values.description,
+                user_id: user?.id
             };
 
-            // 2. Gọi API (Sử dụng API Mock của bạn)
-            const response = await axios.post('https://697774545b9c0aed1e868772.mockapi.io/Cate', payload);
-            console.log('API Response:', response.data);
+            await projectApi.createProject(payload);
 
-            // 3. Thông báo
             message.success('Project created successfully!');
 
-            // 4. Chuyển bước
             if (onSuccess) {
                 onSuccess();
             }
@@ -62,8 +54,7 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
             form={form}
             layout="vertical"
             // Thay đổi quan trọng: Dùng class trong suốt để hòa trộn vào Glass Card của Page cha
-            className="form-transparent-override"
-            initialValues={{ status: 'active' }}
+            className="!w-full !max-w-none !p-0 !bg-transparent !border-0 !shadow-none"
             onFinish={onFinish}
         >
             <div className="flex flex-col gap-8">
@@ -97,21 +88,8 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
 
                     {/* CỘT PHẢI (Cấu hình phụ - Chiếm 1 phần) */}
                     <div className="space-y-6">
-                        <Form.Item
-                            name="status"
-                            label="Status *"
-                            rules={[{ required: true }]}
-                        >
-                            <Select
-                                size="large"
-                                options={PROJECT_STATUS}
-                                className="custom-select-override" // Cần đảm bảo manager.css có style cho select dropdown
-                                popupClassName="bg-[#1a1625] border border-white/10 text-white"
-                            />
-                        </Form.Item>
-
                         {/* Note Box trang trí */}
-                        <div className="p-5 rounded-xl bg-gradient-to-br from-violet-500/10 to-fuchsia-500/5 border border-violet-500/20 mt-4">
+                        <div className="p-5 rounded-xl bg-gradient-to-br from-violet-500/10 to-fuchsia-500/5 border border-violet-500/20">
                             <h4 className="text-violet-300 font-bold text-xs uppercase tracking-wider mb-2">
                                 Manager Tip
                             </h4>

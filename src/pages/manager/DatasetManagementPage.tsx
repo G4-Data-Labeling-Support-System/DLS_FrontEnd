@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 
-import { message } from 'antd';
 import datasetApi, { type GetDatasetsParams } from '@/api/dataset';
 import DatasetHeader from '@/features/manager/components/dataset/DatasetHeader';
-import DatasetActionBar from '@/features/manager/components/dataset/DatasetActionBar';
 import DatasetList from '@/features/manager/components/dataset/DatasetList';
+import { DatasetQuickActions } from '@/features/manager/components/dataset/DatasetQuickActions';
+import { DatasetTabs, type DatasetTabType } from '@/features/manager/components/dataset/DatasetTabs';
 
 
 const DatasetManagementPage: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<DatasetTabType>('dataset');
   const [datasets, setDatasets] = useState<GetDatasetsParams[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -20,7 +21,6 @@ const DatasetManagementPage: React.FC = () => {
         setDatasets(data);
       } catch (error) {
         console.error('Error fetching datasets:', error);
-        message.error('Không thể tải danh sách dataset.');
       } finally {
         setLoading(false);
       }
@@ -29,10 +29,29 @@ const DatasetManagementPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex flex-col w-full items-center">
-      <DatasetHeader />
-      <DatasetActionBar />
-      <DatasetList datasets={datasets} loading={loading} />
+    <div className="p-6">
+      <DatasetTabs activeTab={activeTab} onTabChange={setActiveTab} />
+
+      {activeTab === 'dataset' && (
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start relative">
+          <div className="xl:col-span-3 flex flex-col w-full items-center">
+            <DatasetHeader />
+            <DatasetList datasets={datasets} loading={loading} />
+          </div>
+
+          <div className="xl:col-span-1 xl:sticky xl:top-6 space-y-6">
+            <DatasetQuickActions />
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'upload' && (
+        <div className="text-gray-400 py-10 text-center font-display border-2 border-dashed border-gray-800 rounded-xl bg-[#1A1625]/50 flex flex-col items-center justify-center min-h-[300px]">
+          <span className="material-symbols-outlined text-4xl mb-4 text-violet-500 opacity-50">cloud_upload</span>
+          <p>Upload functionality is currently under development.</p>
+        </div>
+      )}
+
     </div>
   );
 };

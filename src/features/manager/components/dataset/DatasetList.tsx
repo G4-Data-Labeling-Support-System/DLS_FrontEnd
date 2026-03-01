@@ -1,7 +1,8 @@
-import React from 'react';
-import { Button } from 'antd';
-import { useNavigate } from 'react-router-dom';
-import { type GetDatasetsParams } from '@/api/dataset';
+import { useNavigate, Link } from 'react-router-dom';
+import { Spin, Empty, message, Modal } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
+import datasetApi, { type GetDatasetsParams } from '@/api/dataset';
+import { DatasetCard } from './DatasetCard';
 
 interface DatasetListProps {
   datasets: GetDatasetsParams[];
@@ -11,40 +12,72 @@ interface DatasetListProps {
 
 const DatasetList: React.FC<DatasetListProps> = ({ datasets, loading }) => {
   const navigate = useNavigate();
+
+  const handleEdit = (id?: string) => {
+    // Mock navigation
+    if (id) navigate(`/manager/datasets/${id}`);
+  };
+
+  const handleDelete = (id?: string) => {
+    if (!id) return;
+    Modal.confirm({
+      title: 'Xoá Dataset',
+      content: 'Bạn có chắc chắn muốn xoá dataset này không?',
+      okText: 'Xoá',
+      okType: 'danger',
+      cancelText: 'Hủy',
+      centered: true,
+      onOk: async () => {
+        try {
+          await datasetApi.deleteDataset(id);
+          message.success('Đã xoá dataset thành công!');
+          // Here we could trigger a callback to re-fetch datasets from parent, but simplified for UI scope.
+          window.location.reload();
+        } catch {
+          message.error('Có lỗi xảy ra khi xoá dataset.');
+        }
+      }
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="w-full h-64 flex justify-center items-center">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full max-w-[1000px] bg-white/5 rounded-xl shadow p-6 flex flex-col gap-4">
-      {loading ? (
-        <div className="text-center text-gray-400">Loading...</div>
-      ) : datasets.length === 0 ? (
-        <div className="text-center text-gray-400">No datasets found.</div>
+    <div className="w-full">
+      {datasets.length === 0 ? (
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description={<span className="text-gray-500">Chưa có dataset nào được tạo.</span>}
+          className="my-10 p-10 bg-[#1A1625]/40 rounded-xl border border-dashed border-gray-700"
+        />
       ) : (
-        <table className="w-full text-left">
-          <thead>
-            <tr className="border-b border-gray-700">
-              <th className="py-2">Name</th>
-              <th className="py-2">Version</th>
-              <th className="py-2">Storage</th>
-              <th className="py-2">Items</th>
-              <th className="py-2">Created</th>
-              <th className="py-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {datasets.map(ds => (
-              <tr key={ds.id} className="border-b border-gray-800 hover:bg-violet-950/20 transition">
-                <td className="py-2 font-semibold">{ds.name}</td>
-                <td className="py-2">v{ds.version}</td>
-                <td className="py-2">{ds.storageType}</td>
-                <td className="py-2">{ds.itemCount}</td>
-                <td className="py-2">{ds.createdAt}</td>
-                <td className="py-2">
-                  <Button size="small" type="link" onClick={() => navigate(`/manager/datasets/${ds.id}`)}>View</Button>
-                  <Button size="small" type="link">Edit</Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch w-full">
+          {datasets.map(ds => (
+            <DatasetCard
+              key={ds.id}
+              {...ds}
+              onClick={() => handleEdit(ds.id)}
+              onEdit={() => handleEdit(ds.id)}
+              onDelete={() => handleDelete(ds.id)}
+            />
+          ))}
+
+          {/* Start New Dataset Card mapping */}
+          <Link to="/manager/datasets/create" className="block group">
+            <div className="h-full min-h-[160px] border-2 border-dashed border-gray-700 rounded-xl flex flex-col items-center justify-center gap-4 bg-[#1A1625]/30 hover:bg-[#1A1625] hover:border-violet-500 transition-all cursor-pointer">
+              <div className="w-12 h-12 rounded-full bg-[#231e31] group-hover:bg-violet-600 flex items-center justify-center transition-colors">
+                <PlusOutlined className="text-gray-400 group-hover:text-white text-xl" />
+              </div>
+              <span className="text-gray-400 group-hover:text-white font-medium font-display">Create Dataset</span>
+            </div>
+          </Link>
+        </div>
       )}
     </div>
   );

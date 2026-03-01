@@ -1,20 +1,20 @@
+
 import React from 'react';
 import { Card, Button, Typography, Dropdown, Tag, type MenuProps } from 'antd';
 import { MoreOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
-import type { GetProjectsParams } from '@/api/project'; // Import type từ API của bạn
+import type { GetAssignmentsParams } from '@/api/assignment';
 
 const { Title } = Typography;
 
-// Mở rộng thêm onEdit và onDelete
-interface ProjectCardProps extends GetProjectsParams {
+interface AssignmentCardProps extends GetAssignmentsParams {
     onEdit?: () => void;
     onDelete?: () => void;
     onClick?: () => void;
 }
 
-export const ProjectCard: React.FC<ProjectCardProps> = ({
-    projectName,
-    projectStatus,
+export const AssignmentCard: React.FC<AssignmentCardProps> = ({
+    assignmentName,
+    assignmentStatus,
     createdAt,
     updatedAt,
     onEdit,
@@ -23,12 +23,12 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
 }) => {
     const items: MenuProps['items'] = [
         { key: '1', label: 'View Details', icon: <EyeOutlined />, onClick: onClick },
-        { key: '2', label: 'Edit Project', icon: <EditOutlined />, onClick: onEdit },
+        { key: '2', label: 'Edit Assignment', icon: <EditOutlined />, onClick: onEdit },
         { type: 'divider' },
-        { key: '4', label: <span className="text-red-500">Delete Project</span>, icon: <DeleteOutlined className="text-red-500" />, onClick: onDelete },
+        { key: '4', label: <span className="text-red-500">Delete Assignment</span>, icon: <DeleteOutlined className="text-red-500" />, onClick: onDelete },
     ];
 
-    // Hàm chọn màu cho Tag trạng thái
+    // Status mapping using Assignment specific logic
     const getStatusColor = (status?: string) => {
         switch (status?.toUpperCase()) {
             case 'ACTIVE': return 'processing';
@@ -39,7 +39,6 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
         }
     };
 
-    // Format ngày tháng hiển thị
     const formatDate = (dateString?: string) => {
         if (!dateString) return 'N/A';
         return new Date(dateString).toLocaleDateString('vi-VN');
@@ -52,9 +51,8 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
         >
             <div className="flex justify-between items-start mb-2">
                 <div className="flex-1 pr-2">
-
-                    <Title level={5} className="!text-white !m-0 !text-sm leading-tight line-clamp-2" title={projectName}>
-                        {projectName || 'Dự án chưa có tên'}
+                    <Title level={5} className="!text-white !m-0 !text-sm leading-tight line-clamp-2" title={assignmentName}>
+                        {assignmentName || 'Assignment chưa có tên'}
                     </Title>
                 </div>
                 <div onClick={(e) => e.stopPropagation()}>
@@ -65,12 +63,10 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
             </div>
 
             <div className="mb-4">
-                <Tag color={getStatusColor(projectStatus)} className="m-0 font-medium">
-                    {projectStatus || 'UNKNOWN'}
+                <Tag color={getStatusColor(assignmentStatus)} className="m-0 font-medium">
+                    {assignmentStatus || 'UNKNOWN'}
                 </Tag>
             </div>
-
-
 
             <div className="grid grid-cols-2 gap-2 bg-[#231e31] p-3 rounded-lg mt-auto">
                 <div>
