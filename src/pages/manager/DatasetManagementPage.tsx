@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 
-import { message } from 'antd';
 import datasetApi, { type GetDatasetsParams } from '@/api/dataset';
 import DatasetHeader from '@/features/manager/components/dataset/DatasetHeader';
 import DatasetList from '@/features/manager/components/dataset/DatasetList';
@@ -22,7 +21,6 @@ const DatasetManagementPage: React.FC = () => {
         setDatasets(data);
       } catch (error) {
         console.error('Error fetching datasets:', error);
-        message.error('Không thể tải danh sách dataset.');
       } finally {
         setLoading(false);
       }

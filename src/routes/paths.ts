@@ -21,5 +21,6 @@ export const PATH_MANAGER = {
   datasetSetup: '/manager/create-project/dataset-setup',
   guidelinesSetup: '/manager/create-project/guidelines-setup',
   teamAssignment: '/manager/create-project/team-assignment',
-  datasetManagement: '/manager/datasets'
+  datasetManagement: '/manager/datasets',
+  createDataset: '/manager/datasets/create'
 };

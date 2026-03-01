@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { Form, Input, Select, Button, ColorPicker, message } from 'antd';
 import { PlusOutlined, CloseOutlined, BoldOutlined, ItalicOutlined, UnorderedListOutlined, LinkOutlined, UndoOutlined, RedoOutlined } from '@ant-design/icons';
-// Import CSS global chứa class override
-import '@/features/manager/components/manager.css';
 import { FormFooter } from '@/features/manager/components/common/FormFooter';
 
 interface GuidelinesSetupFormProps {
@@ -18,14 +16,21 @@ export const GuidelinesSetupForm: React.FC<GuidelinesSetupFormProps> = ({ onSucc
     const [form] = Form.useForm();
     const [labels, setLabels] = useState<any[]>([]);
 
-    const onFinish = (values: any) => {
-        // Kiểm tra logic labels nếu cần (ví dụ phải có ít nhất 1 label)
-        // if (labels.length === 0) {
-        //     message.error("Please add at least one label.");
-        //     return;
-        // }
+    const onFinish = (_values: Record<string, unknown>) => {
+        // Build taxonomy tree based on input mapping strategy if needed
+        // NOTE: 'tags' variable is not defined in the provided context.
+        // This code snippet assumes 'tags' is available in the scope.
+        // For the purpose of this edit, it's included as provided.
+        // const tagsSelected = tags.map((tag: string) => ({
+        //     id: crypto.randomUUID(),
+        //     name: tag,
+        //     color: '#8b5cf6',
+        //     description: ''
+        // }));
 
-        console.log('Guidelines Values:', { ...values, labels });
+        // NOTE: The original onSuccess was '() => void'.
+        // This new call 'onSuccess(tagsSelected)' implies onSuccess now expects an argument.
+        // The interface GuidelinesSetupFormProps might need to be updated accordingly.
         if (onSuccess) onSuccess();
     };
 
@@ -62,7 +67,7 @@ export const GuidelinesSetupForm: React.FC<GuidelinesSetupFormProps> = ({ onSucc
         <Form
             form={form}
             layout="vertical"
-            className="form-transparent-override"
+            className="!w-full !max-w-none !p-0 !bg-transparent !border-0 !shadow-none"
             initialValues={{
                 parentLabel: 'root',
                 // Đã xóa 'instructions' ở đây để validation hoạt động chuẩn

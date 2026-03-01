@@ -9,14 +9,28 @@ import { PATH_MANAGER } from '@/routes/paths';
 import projectApi, { type GetProjectsParams } from '@/api/project';
 const { Title } = Typography;
 
-export const AllProjects = () => {
+interface AllProjectsProps {
+    selectedProjectId?: string | null;
+    onProjectSelect?: (id: string | null) => void;
+}
+
+export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onProjectSelect }) => {
     // Khai báo state sử dụng mảng của GetProjectsParams
     const [projects, setProjects] = useState<GetProjectsParams[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [searchText, setSearchText] = useState<string>('');
     const [statusFilter, setStatusFilter] = useState<string>('ALL');
-    const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+    const [internalProjectId, setInternalProjectId] = useState<string | null>(null);
     const navigate = useNavigate();
+
+    const currentProjectId = selectedProjectId !== undefined ? selectedProjectId : internalProjectId;
+    const handleProjectSelect = (id: string | null) => {
+        if (onProjectSelect) {
+            onProjectSelect(id);
+        } else {
+            setInternalProjectId(id);
+        }
+    };
 
     const fetchProjects = async () => {
         try {
@@ -56,7 +70,6 @@ export const AllProjects = () => {
             }
         } catch (error) {
             console.error("Failed to load projects.", error);
-            message.error("Không thể tải danh sách dự án.");
         } finally {
             setLoading(false);
         }
@@ -104,11 +117,11 @@ export const AllProjects = () => {
         );
     }
 
-    if (selectedProjectId) {
+    if (currentProjectId) {
         return (
             <ProjectDetail
-                projectId={selectedProjectId}
-                onBack={() => setSelectedProjectId(null)}
+                projectId={currentProjectId}
+                onBack={() => handleProjectSelect(null)}
             />
         );
     }
@@ -151,7 +164,7 @@ export const AllProjects = () => {
                             <ProjectCard
                                 key={p.projectId}
                                 {...p} // Spread toàn bộ thuộc tính chuẩn từ API vào Card
-                                onClick={() => setSelectedProjectId(p.projectId as string)}
+                                onClick={() => handleProjectSelect(p.projectId as string)}
                                 onEdit={() => handleEdit(p.projectId)}
                                 onDelete={() => handleDelete(p.projectId)}
                             />

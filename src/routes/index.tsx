@@ -16,6 +16,7 @@ const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage'))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 const ManagerDashboardPage = lazy(() => import('@/pages/manager/ManagerDashboardPage'))
 const DatasetManagementPage = lazy(() => import('@/pages/manager/DatasetManagementPage'))
+const CreateDatasetPage = lazy(() => import('@/pages/manager/CreateDatasetPage'))
 
 // Admin pages
 const AdminLayout = lazy(() => import('@/features/admin/components/layout/AdminLayout'))
@@ -134,6 +135,10 @@ export const router = createBrowserRouter([
       {
         path: PATH_MANAGER.datasetManagement,
         element: <LazyPage><DatasetManagementPage /></LazyPage>,
+      },
+      {
+        path: PATH_MANAGER.createDataset,
+        element: <LazyPage><CreateDatasetPage /></LazyPage>,
       },
     ],
   },

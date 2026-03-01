@@ -47,7 +47,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
 
     return (
         <Card
-            className="bg-[#1A1625] border-gray-800 rounded-xl overflow-hidden hover:border-violet-500/50 transition-colors flex flex-col h-full cursor-pointer"
+            className="bg-[#1A1625] border border-violet-500/20 rounded-xl overflow-hidden hover:bg-violet-500/10 hover:border-fuchsia-500/50 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(139,92,246,0.15)] transition-all duration-500 flex flex-col h-full cursor-pointer"
             onClick={onClick}
         >
             <div className="flex justify-between items-start mb-2">

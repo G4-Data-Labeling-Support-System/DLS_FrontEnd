@@ -12,6 +12,7 @@ interface FormFooterProps {
     // --- MỚI THÊM ---
     onSubmit?: () => void; // Xử lý click nút chính (nếu không dùng Form)
     disabled?: boolean;    // Disable nút chính
+    hideSteps?: boolean;   // Ẩn hiển thị step
 }
 
 export const FormFooter: React.FC<FormFooterProps> = ({
@@ -23,6 +24,7 @@ export const FormFooter: React.FC<FormFooterProps> = ({
     isLoading = false,
     onSubmit,
     disabled = false,
+    hideSteps = false,
 }) => {
     return (
         <div className="mt-12 pt-6 border-t border-white/10 flex items-center justify-between">
@@ -48,9 +50,11 @@ export const FormFooter: React.FC<FormFooterProps> = ({
                     </Button>
                 )}
 
-                <span className="text-gray-600 uppercase text-xs tracking-widest hidden md:inline-block border-l border-white/10 pl-4 ml-2">
-                    Step {currentStep} of {totalSteps}
-                </span>
+                {!hideSteps && (
+                    <span className="text-gray-600 uppercase text-xs tracking-widest hidden md:inline-block border-l border-white/10 pl-4 ml-2">
+                        Step {currentStep} of {totalSteps}
+                    </span>
+                )}
             </div>
 
             {/* --- KHU VỰC PHẢI (ACTION) --- */}

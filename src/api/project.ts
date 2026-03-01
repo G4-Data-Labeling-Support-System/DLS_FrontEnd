@@ -3,6 +3,7 @@ import { ENDPOINTS } from "./endpoints";
 
 interface GetProjectsParams {
     projectId?: string;
+    user_id?: string;
     projectName?: string;
     description?: string;
     projectStatus?: string;
@@ -49,7 +50,7 @@ const projectApi = {
     },
     deleteProject(id: string) {
         try {
-            const url = ENDPOINTS.PROJECTS.DETAIL(id);
+            const url = ENDPOINTS.PROJECTS.DELETE(id);
             return axiosClient.delete(url);
         } catch (error) {
             console.error("Failed to delete project", error);

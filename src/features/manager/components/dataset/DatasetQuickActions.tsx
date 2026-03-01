@@ -20,8 +20,7 @@ export const DatasetQuickActions = () => {
                     type="primary"
                     size="large"
                     className="w-full h-12 flex items-center justify-center bg-fuchsia-600 hover:bg-fuchsia-500 border-none shadow-[0_0_15px_rgba(192,38,211,0.4)]"
-                    // Add routing for creating new dataset when implemented
-                    onClick={() => { }}
+                    onClick={() => navigate(PATH_MANAGER.createDataset)}
                 >
                     <PlusCircleFilled className="text-lg mr-2" />
                     CREATE NEW DATASET

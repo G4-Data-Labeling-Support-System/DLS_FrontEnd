@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Form, Input, message } from 'antd';
 import projectApi from '@/api/project';
 import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '@/store';
 
 // Import Styles & Components
-import '@/features/manager/components/manager.css';
 import { FormFooter } from '@/features/manager/components/common/FormFooter';
 
 
@@ -17,6 +17,7 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const user = useAuthStore(state => state.user);
 
     // Xử lý Cancel: Quay về Dashboard
     const handleCancel = () => {
@@ -28,7 +29,8 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
         try {
             const payload = {
                 projectName: values.projectName,
-                description: values.description
+                description: values.description,
+                user_id: user?.id
             };
 
             await projectApi.createProject(payload);
@@ -52,7 +54,7 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
             form={form}
             layout="vertical"
             // Thay đổi quan trọng: Dùng class trong suốt để hòa trộn vào Glass Card của Page cha
-            className="form-transparent-override"
+            className="!w-full !max-w-none !p-0 !bg-transparent !border-0 !shadow-none"
             onFinish={onFinish}
         >
             <div className="flex flex-col gap-8">

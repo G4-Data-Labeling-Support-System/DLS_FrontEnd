@@ -25,12 +25,20 @@ export const ENDPOINTS = {
     LIST: '/projects',
     DETAIL: (id: string) => `/projects/${id}`,
     CREATE: '/projects',
+    DELETE: (id: string) => `/projects/${id}/remove`
   },
 
   DATASETS: {
     LIST: '/datasets',
     DETAIL: (id: string) => `/datasets/${id}`,
     CREATE: '/datasets',
+  },
+
+  ASSIGNMENTS: {
+    LIST: '/assignments',
+    DETAIL: (id: string) => `/assignments/${id}`,
+    CREATE: '/assignments',
+    DELETE: (id: string) => `/assignments/${id}/remove`
   }
 
 } as const
