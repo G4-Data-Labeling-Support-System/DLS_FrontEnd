@@ -83,6 +83,12 @@ input:-webkit-autofill:active {
     opacity: 0.8;
   }
 
+  .ant-dropdown-menu {
+  background: rgba(20, 20, 40, 0.85) !important;
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
   /* Specifically for Ant Design placeholders */
   & .ant-input::placeholder,
   & .ant-input-password input::placeholder {
@@ -238,6 +244,6 @@ input:-webkit-autofill:active {
   }
 }
 
-@tailwind base;
-@tailwind components;
+/* @tailwind base;
+@tailwind components; */
 @tailwind utilities;
