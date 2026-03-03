@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import AddUserModal from './components/AddUserModal';
-import AddUserSuccessModal from './components/AddUserSuccessModal';
+import AddUserModal from '../../features/admin/components/AddUserModal';
+import AddUserSuccessModal from '../../features/admin/components/AddUserSuccessModal';
 import { themeClasses } from '@/styles';
 import { Button } from '@/shared/components/ui/Button';
 import { UserAddOutlined, PlusOutlined, TeamOutlined, DesktopOutlined, DatabaseOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
@@ -27,7 +27,7 @@ export default function UserManagement() {
             <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
                 <div className="flex flex-col gap-1">
                     <h2 className={`text-2xl font-bold tracking-tight ${themeClasses.text.violet} md:text-3xl`}>
-                        System Administration
+                        User Management
                     </h2>
                     <p className={`font-body text-sm ${themeClasses.text.secondary}`}>
                         Manage users, permissions, and monitor backend performance.
