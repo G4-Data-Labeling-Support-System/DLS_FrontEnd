@@ -16,6 +16,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className = '' }) => {
 
     const menuItems = [
         { path: '/admin/dashboard', label: 'Dashboard', icon: <DashboardOutlined /> },
+        { path: '/admin/system-administation', label: 'System Administration', icon: <FolderOpenOutlined /> },
         { path: '/admin/users', label: 'User Management', icon: <TeamOutlined />},
         { path: '/admin/projects', label: 'Projects', icon: <FolderOpenOutlined /> },
         { path: '/admin/settings', label: 'System Config', icon: <SettingOutlined /> }
