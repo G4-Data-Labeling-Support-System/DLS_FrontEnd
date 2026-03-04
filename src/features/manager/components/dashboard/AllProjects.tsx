@@ -137,10 +137,11 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
                         className="w-36"
                         options={[
                             { value: 'ALL', label: 'All Statuses' },
+                            { value: 'NOT_STARTED', label: 'Not Started' },
                             { value: 'ACTIVE', label: 'Active' },
-                            { value: 'PAUSED', label: 'Paused' },
+                            { value: 'INPROCESS', label: 'In Process' },
                             { value: 'COMPLETED', label: 'Completed' },
-                            { value: 'ARCHIVE', label: 'Archive' },
+                            { value: 'INACTIVE', label: 'Inactive' },
                         ]}
                     />
                     <Input

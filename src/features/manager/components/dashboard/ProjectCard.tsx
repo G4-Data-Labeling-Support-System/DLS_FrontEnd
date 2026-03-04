@@ -32,9 +32,12 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
     const getStatusColor = (status?: string) => {
         switch (status?.toUpperCase()) {
             case 'ACTIVE': return 'processing';
+            case 'INPROCESS': return 'gold';
             case 'COMPLETED': return 'success';
             case 'PAUSED': return 'warning';
             case 'ARCHIVE': return 'error';
+            case 'INACTIVE': return 'error';
+            case 'NOT_STARTED': return 'default';
             default: return 'default';
         }
     };

@@ -50,7 +50,7 @@ const projectApi = {
     deleteProject(id: string) {
         try {
             const url = ENDPOINTS.PROJECTS.DELETE(id);
-            return axiosClient.delete(url);
+            return axiosClient.patch(url);
         } catch (error) {
             console.error("Failed to delete project", error);
             throw error;

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { themeClasses, commonPatterns } from '@/styles';
-import { DashboardOutlined, TeamOutlined, FolderOpenOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons';
+import { DashboardOutlined, TeamOutlined, FolderOpenOutlined, SettingOutlined } from '@ant-design/icons';
 
 interface SidebarProps {
     className?: string;
