@@ -12,12 +12,9 @@ interface DatasetCardProps extends GetDatasetsParams {
 }
 
 export const DatasetCard: React.FC<DatasetCardProps> = ({
-    name,
-    version,
-    storageType,
-    itemCount,
+    datasetName,
+    totalItems,
     createdAt,
-    updatedAt,
     onEdit,
     onDelete,
     onClick
@@ -41,10 +38,10 @@ export const DatasetCard: React.FC<DatasetCardProps> = ({
         >
             <div className="flex justify-between items-start mb-2">
                 <div className="flex-1 pr-2">
-                    <Title level={5} className="!text-white !m-0 !text-sm leading-tight line-clamp-2" title={name}>
-                        {name || 'Dataset chưa có tên'}
+                    <Title level={5} className="!text-white !m-0 !text-sm leading-tight line-clamp-2" title={datasetName}>
+                        {datasetName || 'Dataset chưa có tên'}
                     </Title>
-                    <div className="text-gray-400 text-xs mt-1">v{version || 1}</div>
+                    <div className="text-gray-400 text-xs mt-1">v1</div>
                 </div>
                 <div onClick={(e) => e.stopPropagation()}>
                     <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
@@ -55,21 +52,17 @@ export const DatasetCard: React.FC<DatasetCardProps> = ({
 
             <div className="mb-4">
                 <div className="inline-block px-2 py-1 bg-violet-900/40 text-violet-300 text-[10px] font-bold rounded capitalize tracking-wide">
-                    {storageType || 'LOCAL'}
+                    LOCAL
                 </div>
                 <div className="inline-block px-2 py-1 ml-2 bg-[#2d2640] text-gray-300 text-[10px] font-bold rounded tracking-wide">
-                    {itemCount || 0} Items
+                    {totalItems || 0} Items
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 bg-[#231e31] p-3 rounded-lg mt-auto">
+            <div className="grid grid-cols-1 gap-2 bg-[#231e31] p-3 rounded-lg mt-auto">
                 <div>
                     <div className="text-[10px] text-gray-500 uppercase tracking-wider">Ngày tạo</div>
                     <div className="text-gray-300 text-xs font-semibold">{formatDate(createdAt)}</div>
-                </div>
-                <div className="border-l border-gray-700 pl-2">
-                    <div className="text-[10px] text-gray-500 uppercase tracking-wider">Cập nhật</div>
-                    <div className="text-gray-300 text-xs font-semibold">{formatDate(updatedAt)}</div>
                 </div>
             </div>
         </Card>

@@ -17,8 +17,22 @@ const DatasetManagementPage: React.FC = () => {
       setLoading(true);
       try {
         const response = await datasetApi.getDatasets();
-        const data = response.data?.data || response.data || [];
-        setDatasets(data);
+        const rawData = response.data?.data || response.data?.content || response.data || [];
+
+        if (Array.isArray(rawData)) {
+          const mappedDatasets: GetDatasetsParams[] = rawData.map((d: Record<string, unknown>) => ({
+            id: String(d.id || d.datasetId || ''),
+            name: String(d.name || d.datasetName || ''),
+            version: Number(d.version) || 1,
+            storageType: String(d.storageType || d.type || 'LOCAL'),
+            itemCount: Number(d.itemCount || d.totalItems) || 0,
+            createdAt: String(d.createdAt || ''),
+            updatedAt: String(d.updatedAt || '')
+          })).filter(d => d.id);
+          setDatasets(mappedDatasets);
+        } else {
+          setDatasets([]);
+        }
       } catch (error) {
         console.error('Error fetching datasets:', error);
       } finally {

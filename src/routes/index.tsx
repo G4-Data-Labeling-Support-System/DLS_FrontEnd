@@ -6,7 +6,6 @@ import { CreateProjectPage } from '@/pages/manager'
 import DatasetSetupPage from '@/pages/manager/DatasetSetupPage'
 import ManagerLayout from '@/components/layout/ManagerLayout'
 import GuidelinesSetupPage from '@/pages/manager/GuidelinesSetupPage'
-import TeamAssignmentPage from '@/pages/manager/TeamAssignmentPage'
 import { AuthGuard, GuestGuard } from './guards'
 
 // Lazy load pages for code splitting
@@ -127,10 +126,6 @@ export const router = createBrowserRouter([
       {
         path: PATH_MANAGER.guidelinesSetup,
         element: <LazyPage><GuidelinesSetupPage /></LazyPage>,
-      },
-      {
-        path: PATH_MANAGER.teamAssignment,
-        element: <LazyPage><TeamAssignmentPage /></LazyPage>,
       },
       {
         path: PATH_MANAGER.datasetManagement,

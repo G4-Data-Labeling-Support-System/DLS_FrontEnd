@@ -1,31 +1,33 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Form, Input, Upload, message } from 'antd';
+import { Form, Input, Select, message, Upload } from 'antd';
 import { DeleteOutlined, PlusOutlined, InboxOutlined } from '@ant-design/icons';
 import type { UploadFile } from 'antd/es/upload/interface';
 import type { UploadChangeParam } from 'antd/es/upload';
-import { FormFooter } from '@/features/manager/components/common/FormFooter';
 
 const { Dragger } = Upload;
+import datasetApi from '@/api/dataset';
+import projectApi, { type GetProjectsParams } from '@/api/project';
+import { useNavigate } from 'react-router-dom';
+import { FormFooter } from '@/features/manager/components/common/FormFooter';
 
-interface DatasetSetupFormProps {
-    onSuccess?: () => void;
+interface CreateDatasetFormProps {
+    onSuccess?: (datasetId?: string) => void;
     onBack?: () => void;
     submitLabel?: string;
 }
 
-export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({ onSuccess, onBack, submitLabel }) => {
+export const CreateDatasetForm: React.FC<CreateDatasetFormProps> = ({ onSuccess, onBack, submitLabel }) => {
     const [form] = Form.useForm();
+    const [loading, setLoading] = useState(false);
+    const [projects, setProjects] = useState<GetProjectsParams[]>([]);
     const [fileList, setFileList] = useState<(UploadFile & { preview?: string })[]>([]);
+    const navigate = useNavigate();
 
-    // Store latest fileList in ref to access inside unmount cleanup safely without triggering exhaustive-deps
     const fileListRef = useRef(fileList);
     useEffect(() => {
         fileListRef.current = fileList;
     }, [fileList]);
 
-
-
-    // Cleanup URL object khi component unmount để tránh leak memory
     useEffect(() => {
         return () => {
             fileListRef.current.forEach(file => {
@@ -34,21 +36,15 @@ export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({ onSuccess, o
         };
     }, []);
 
-    const onFinish = (_values: Record<string, unknown>) => {
-        if (onSuccess) onSuccess();
-    };
-
     const handleUploadChange = (info: UploadChangeParam<UploadFile & { preview?: string }>) => {
         const { status } = info.file;
         let newFileList = [...info.fileList];
 
-        // Xử lý Preview: Tạo URL tạm thời nếu chưa có thumbUrl
         newFileList = newFileList.map((file) => {
             if (file.response) {
-                file.url = file.response.url; // URL từ server
+                file.url = file.response.url;
             }
             if (!file.url && !file.thumbUrl && file.originFileObj) {
-                // Tạo preview local ngay lập tức
                 file.preview = URL.createObjectURL(file.originFileObj as Blob);
             }
             return file;
@@ -59,7 +55,6 @@ export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({ onSuccess, o
         if (status === 'done') {
             message.success(`${info.file.name} uploaded successfully.`);
         } else if (status === 'error') {
-            // Demo mode: Vẫn báo success để trải nghiệm UI (vì API mock thường lỗi)
             message.success(`${info.file.name} uploaded (Demo mode).`);
         }
     };
@@ -67,38 +62,125 @@ export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({ onSuccess, o
     const handleRemoveFile = (uid: string) => {
         setFileList((prev) => {
             const newFile = prev.find(item => item.uid === uid);
-            if (newFile?.preview) URL.revokeObjectURL(newFile.preview); // Cleanup
+            if (newFile?.preview) URL.revokeObjectURL(newFile.preview);
             return prev.filter((item) => item.uid !== uid);
         });
+    };
+
+    useEffect(() => {
+        const fetchProjects = async () => {
+            try {
+                const response = await projectApi.getProjects({ projectStatus: 'ACTIVE' }); // Optional: fetch active projects
+                const data = response.data?.data || response.data || [];
+                if (Array.isArray(data)) {
+                    setProjects(data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch projects:", error);
+                message.error("Failed to load projects list.");
+            }
+        };
+        fetchProjects();
+    }, []);
+
+    const handleCancel = () => {
+        if (onBack) {
+            onBack();
+        } else {
+            navigate('/manager/datasets');
+        }
+    };
+
+    const onFinish = async (values: { datasetName: string; description: string; projectId: string }) => {
+        setLoading(true);
+        try {
+            const payload = {
+                datasetName: values.datasetName,
+                description: values.description,
+                projectId: values.projectId
+            };
+
+            const response = await datasetApi.createDataset(payload);
+            message.success('Dataset created successfully!');
+
+            if (onSuccess) {
+                const createdDataset = response.data?.data || response.data;
+                const newDatasetId = createdDataset?.datasetId || createdDataset?.id;
+                onSuccess(newDatasetId);
+            }
+        } catch (error) {
+            console.error('API Error:', error);
+            message.error('Failed to create dataset. Please try again.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
         <Form
             form={form}
             layout="vertical"
-            // Sử dụng Tailwind override để loại bỏ nền/viền trùng lặp
             className="!w-full !max-w-none !p-0 !bg-transparent !border-0 !shadow-none"
-            initialValues={{ version: 1, storageType: 's3' }}
             onFinish={onFinish}
         >
             <div className="flex flex-col gap-8">
-
-
-
-                {/* --- Section 2: Cấu hình Dataset --- */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="md:col-span-2">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div className="md:col-span-2 space-y-6">
                         <Form.Item
                             name="datasetName"
                             label="Dataset Name *"
                             rules={[{ required: true, message: 'Please enter dataset name' }]}
                         >
-                            <Input placeholder="e.g. Image_Training_Set_Alpha" size="large" />
+                            <Input
+                                size="large"
+                                placeholder="e.g. Image_Training_Set_Alpha"
+                                className="!bg-[#1a1625] !border-white/10 !text-white placeholder:!text-gray-600 focus:!border-violet-500 hover:!border-violet-500/50"
+                            />
+                        </Form.Item>
+
+                        <Form.Item
+                            name="projectId"
+                            label="Select Project *"
+                            rules={[{ required: true, message: 'Please select a project' }]}
+                        >
+                            <Select
+                                size="large"
+                                placeholder="Select a project for this dataset"
+                                className="w-full"
+                                popupClassName="!bg-[#1a1625] !border !border-white/10 [&_.ant-select-item]:!text-gray-300 [&_.ant-select-item-option-active]:!bg-violet-500/20 [&_.ant-select-item-option-selected]:!bg-violet-500/40 [&_.ant-select-item-option-selected]:!text-white"
+                                loading={projects.length === 0}
+                                showSearch
+                                optionFilterProp="children"
+                                filterOption={(input, option) =>
+                                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                                }
+                                options={projects.map(p => ({
+                                    label: p.projectName || 'Unnamed Project',
+                                    value: p.projectId
+                                }))}
+                            />
+                        </Form.Item>
+
+                        <Form.Item name="description" label="Description">
+                            <Input.TextArea
+                                rows={6}
+                                placeholder="Briefly describe the purpose of this dataset..."
+                                className="!bg-[#1a1625] !border-white/10 !text-white placeholder:!text-gray-600 resize-none focus:!border-violet-500 hover:!border-violet-500/50"
+                            />
                         </Form.Item>
                     </div>
-                    <Form.Item name="version" label="Version *">
-                        <Input type="number" min={1} size="large" />
-                    </Form.Item>
+
+                    <div className="space-y-6">
+                        <div className="p-5 rounded-xl bg-gradient-to-br from-violet-500/10 to-fuchsia-500/5 border border-violet-500/20">
+                            <h4 className="text-violet-300 font-bold text-xs uppercase tracking-wider mb-2">
+                                Manager Tip
+                            </h4>
+                            <p className="text-gray-400 text-xs leading-relaxed m-0">
+                                A dataset must be associated with a <strong>Project</strong>.
+                                You can upload data items later in the dataset details page.
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
                 {/* --- Section 3: Upload Area --- */}
@@ -115,7 +197,7 @@ export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({ onSuccess, o
                             action="https://run.mocky.io/v3/435e224c-44fb-4773-9faf-380c5e6a2188"
                             fileList={fileList}
                             onChange={handleUploadChange}
-                            showUploadList={false} // Tắt list mặc định để dùng custom grid bên dưới
+                            showUploadList={false}
                             className="!border-0 !bg-transparent p-8"
                         >
                             <div className="flex flex-col items-center justify-center gap-4 py-6">
@@ -169,7 +251,7 @@ export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({ onSuccess, o
                                     </div>
                                 ))}
 
-                                {/* Nút thêm ảnh giả lập (chỉ để trang trí) */}
+                                {/* Nút thêm ảnh giả lập */}
                                 <div className="aspect-square rounded-xl border border-dashed border-white/20 flex items-center justify-center text-gray-500 hover:text-violet-500 hover:border-violet-500 hover:bg-violet-500/10 transition-all cursor-pointer">
                                     <PlusOutlined className="text-xl" />
                                 </div>
@@ -183,9 +265,9 @@ export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({ onSuccess, o
                     totalSteps={1}
                     hideSteps={true}
                     submitLabel={submitLabel || "CREATE DATASET"}
+                    isLoading={loading}
+                    onCancel={handleCancel}
                     onBack={onBack}
-                    onCancel={onBack}
-                    isLoading={false}
                 />
             </div>
         </Form>
