@@ -11,9 +11,10 @@ interface DatasetSetupFormProps {
     onSuccess?: () => void;
     onBack?: () => void;
     submitLabel?: string;
+    editId?: string;
 }
 
-export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({ onSuccess, onBack, submitLabel }) => {
+export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({ onSuccess, onBack, submitLabel, editId }) => {
     const [form] = Form.useForm();
     const [fileList, setFileList] = useState<(UploadFile & { preview?: string })[]>([]);
 
@@ -93,7 +94,7 @@ export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({ onSuccess, o
                             label="Dataset Name *"
                             rules={[{ required: true, message: 'Please enter dataset name' }]}
                         >
-                            <Input placeholder="e.g. Image_Training_Set_Alpha" size="large" />
+                            <Input placeholder="e.g. Image_Training_Set_Alpha" size="large" disabled={!!editId} className="!bg-[#1a1625] !border-white/10 !text-white placeholder:!text-gray-600 focus:!border-violet-500 hover:!border-violet-500/50 disabled:!opacity-60 disabled:!cursor-not-allowed" />
                         </Form.Item>
                     </div>
                     <Form.Item name="version" label="Version *">

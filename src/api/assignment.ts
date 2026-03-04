@@ -61,6 +61,15 @@ const assignmentApi = {
             console.error("Failed to delete assignment", error);
             throw error;
         }
+    },
+    getAssignmentsByProjectId(projectId: string) {
+        try {
+            const url = ENDPOINTS.ASSIGNMENTS.BY_PROJECT(projectId);
+            return axiosClient.get(url);
+        } catch (error) {
+            console.error("Failed to fetch assignments by project id", error);
+            throw error;
+        }
     }
 }
 

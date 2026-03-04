@@ -6,13 +6,14 @@ import { FormFooter } from '@/features/manager/components/common/FormFooter';
 interface GuidelinesSetupFormProps {
     onSuccess?: () => void;
     onBack?: () => void;
+    editId?: string;
 }
 
 const PARENT_LABELS = [
     { label: 'None (Root)', value: 'root' },
 ];
 
-export const GuidelinesSetupForm: React.FC<GuidelinesSetupFormProps> = ({ onSuccess, onBack }) => {
+export const GuidelinesSetupForm: React.FC<GuidelinesSetupFormProps> = ({ onSuccess, onBack, editId }) => {
     const [form] = Form.useForm();
     const [labels, setLabels] = useState<any[]>([]);
 
@@ -197,11 +198,12 @@ export const GuidelinesSetupForm: React.FC<GuidelinesSetupFormProps> = ({ onSucc
                 <FormFooter
                     currentStep={2}
                     totalSteps={2}
-                    submitLabel="COMPLETE PROJECT SETUP"
+                    submitLabel={editId ? "UPDATE GUIDELINES" : "COMPLETE PROJECT SETUP"}
                     onBack={onBack}
                     isLoading={false}
                 />
             </div>
         </Form>
+
     );
 };

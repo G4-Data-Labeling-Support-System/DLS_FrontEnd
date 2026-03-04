@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Space, Typography, Spin, message, Modal, Input, Select, Empty } from 'antd';
+import { Space, Typography, Spin, Input, Select, Empty, App } from 'antd';
 import { SearchOutlined, PlusOutlined } from '@ant-design/icons';
 import { ProjectCard } from './ProjectCard';
 import { ProjectDetail } from './ProjectDetail';
@@ -15,6 +15,7 @@ interface AllProjectsProps {
 }
 
 export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onProjectSelect }) => {
+    const { message: messageApi, modal } = App.useApp();
     // Khai báo state sử dụng mảng của GetProjectsParams
     const [projects, setProjects] = useState<GetProjectsParams[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
@@ -82,7 +83,7 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
     const handleDelete = (id?: string) => {
         if (!id) return;
 
-        Modal.confirm({
+        modal.confirm({
             title: 'Delete Project',
             content: 'Are you sure you want to delete this project?',
             okText: 'Delete',
@@ -92,11 +93,12 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
             onOk: async () => {
                 try {
                     await projectApi.deleteProject(id);
-                    message.success('Project deleted successfully!');
-                    setProjects((prev) => prev.filter((p) => p.projectId !== id));
+                    messageApi.success('Project deleted successfully!');
+                    // Tải lại list data từ server để sync được trạng thái hệ thống
+                    fetchProjects();
                 } catch (error) {
                     console.error("Delete project error:", error);
-                    message.error('An error occurred while deleting the project.');
+                    messageApi.error('An error occurred while deleting the project.');
                 }
             },
         });
@@ -104,9 +106,7 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
 
     const handleEdit = (id?: string) => {
         if (!id) return;
-        // Mở comment dòng dưới đây nếu bạn đã thiết lập route
         navigate(`/manager/projects/edit/${id}`);
-        message.info(`Redirecting to edit project ID: ${id}`);
     };
 
     if (loading) {

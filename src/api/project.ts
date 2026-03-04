@@ -41,7 +41,7 @@ const projectApi = {
     updateProject(id: string, projectData?: GetProjectsParams) {
         try {
             const url = ENDPOINTS.PROJECTS.DETAIL(id);
-            return axiosClient.patch(url, projectData);
+            return axiosClient.put(url, projectData);
         } catch (error) {
             console.error("Failed to update project", error);
             throw error;

@@ -51,9 +51,6 @@ export const DatasetCard: React.FC<DatasetCardProps> = ({
             </div>
 
             <div className="mb-4">
-                <div className="inline-block px-2 py-1 bg-violet-900/40 text-violet-300 text-[10px] font-bold rounded capitalize tracking-wide">
-                    LOCAL
-                </div>
                 <div className="inline-block px-2 py-1 ml-2 bg-[#2d2640] text-gray-300 text-[10px] font-bold rounded tracking-wide">
                     {totalItems || 0} Items
                 </div>
