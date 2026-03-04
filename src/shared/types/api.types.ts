@@ -35,3 +35,10 @@ export interface CreateUserRequest {
   role: string;
 }
 
+export interface UpdateUserRequest {
+  email?: string;
+  role?: string;
+  userRole?: string;
+  specialization?: string;
+}
+

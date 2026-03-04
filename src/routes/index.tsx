@@ -19,16 +19,16 @@ const CreateDatasetPage = lazy(() => import('@/pages/manager/CreateDatasetPage')
 
 // Admin pages
 const AdminLayout = lazy(() => import('@/features/admin/components/layout/AdminLayout'))
-const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'))
-const UserManagement = lazy(() => import('@/features/admin/UserManagement'))
-const ProjectManagement = lazy(() => import('@/features/admin/ProjectManagement'))
-const SystemSettings = lazy(() => import('@/features/admin/SystemSettings'))
+const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboardPage'))
+const UserManagement = lazy(() => import('@/pages/admin/UserManagementPage'))
+const ProjectManagement = lazy(() => import('@/pages/admin/ProjectManagementPage'))
+const SystemSettings = lazy(() => import('@/pages/admin/SystemSettingsPage'))
 
 // Wrapper component for lazy loaded pages
 function LazyPage({ children }: { children: React.ReactNode }) {
   return (
     <PageErrorBoundary>
-      <Suspense fallback={<LoadingOverlay message="Đang tải trang..." />}>
+      <Suspense fallback={<LoadingOverlay message="Loading..." />}>
         {children}
       </Suspense>
     </PageErrorBoundary>

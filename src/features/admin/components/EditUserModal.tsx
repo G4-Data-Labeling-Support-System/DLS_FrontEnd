@@ -1,22 +1,36 @@
-import { Form, Input, Select } from 'antd';
-import { UserOutlined, MailOutlined, LockOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
+import { Form, Input, Select, message } from 'antd';
+import { UserOutlined, MailOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import { Button } from '@/shared/components/ui/Button';
 import { GlassModal } from '@/shared/components/ui/GlassModal';
-import { useCreateUser } from '@/features/admin/hooks/useUsers';
+import { useEffect } from 'react';
+import { useUpdateUser } from '@/features/admin/hooks/useUsers';
 
-interface AddUserModalProps {
+interface EditUserModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess?: (user: any) => void;
+    userData?: any;
 }
 
-export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModalProps) {
+export default function EditUserModal({ isOpen, onClose, onSuccess, userData }: EditUserModalProps) {
     const [form] = Form.useForm();
-    const createUserMutation = useCreateUser();
+    const updateUserMutation = useUpdateUser();
+
+    useEffect(() => {
+        if (isOpen && userData) {
+            const rawRole = userData.userRole || userData.role || 'annotator';
+            const normalizedRole = rawRole.toLowerCase();
+
+            form.setFieldsValue({
+                username: userData.username,
+                email: userData.email,
+                role: normalizedRole,
+                specialization: userData.specialization || '',
+            });
+        }
+    }, [isOpen, userData, form]);
 
     const handleSubmit = async (values: any) => {
-        // [Logic: Chuẩn bị dữ liệu] Kết hợp dữ liệu form với giá trị mặc định
-        // [Logic: Xử lý Role] Ánh xạ 'role' (frontend) sang 'userRole' (backend) và viết hoa chữ cái đầu
         const roleMapping: Record<string, string> = {
             'annotator': 'Annotator',
             'reviewer': 'Reviewer',
@@ -25,26 +39,23 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModa
 
         const payload = {
             ...values,
-            role: roleMapping[values.role] || values.role, // Send as 'role' per API types
-            status: 'ACTIVE', // Default to ACTIVE
-            coverImage: 'https://placehold.co/400' // Default cover image
+            role: roleMapping[values.role] || values.role,
         };
 
-        // [Logic: Gọi API] Thực hiện tạo user
-        createUserMutation.mutate(payload, {
+        const userId = userData?.userId || userData?.id;
+
+        updateUserMutation.mutate({ userId, data: payload }, {
             onSuccess: (data) => {
-                // [Logic: Thành công] Reset form và gọi callback thông báo ra ngoài
+                message.success('User updated successfully');
                 form.resetFields();
                 onSuccess?.(data);
             },
             onError: (error: any) => {
-                // [Logic: Xử lý lỗi] Lấy thông báo lỗi chi tiết từ backend
                 const errorData = error.response?.data;
                 console.error("Backend Error Details:", errorData);
 
-                // Hiển thị thông báo lỗi cho người dùng (ưu tiên message từ backend)
-                const messageStr = errorData?.message || JSON.stringify(errorData) || "Failed to create user";
-                alert(`Error: ${messageStr}`);
+                const messageStr = errorData?.message || JSON.stringify(errorData) || "Failed to update user";
+                message.error(`Error: ${messageStr}`);
             }
         });
     };
@@ -58,10 +69,10 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModa
             {/* Header */}
             <div className="px-8 pt-10 pb-6 text-center border-b border-white/5">
                 <h2 className="text-white text-3xl font-bold tracking-tight mb-2">
-                    Add New User
+                    Edit User
                 </h2>
                 <p className="text-white/50 text-sm">
-                    Provision a new account with specific access roles.
+                    Modify account details and access roles.
                 </p>
             </div>
 
@@ -71,11 +82,10 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModa
                     form={form}
                     layout="vertical"
                     onFinish={handleSubmit}
-                    initialValues={{ role: 'annotator' }}
                     className="flex flex-col gap-2"
                     requiredMark={false}
                 >
-                    {/* Username Field - NEW */}
+                    {/* Username Field */}
                     <Form.Item
                         name="username"
                         label={<span className="text-gray-300 font-medium">Username</span>}
@@ -83,6 +93,7 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModa
                     >
                         <Input
                             size="large"
+                            disabled
                             prefix={<UserOutlined className="text-gray-500" />}
                             placeholder="e.g. jdoe123"
                         />
@@ -104,24 +115,11 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModa
                         />
                     </Form.Item>
 
-                    {/* Password Field */}
-                    <Form.Item
-                        name="password"
-                        label={<span className="text-gray-300 font-medium">Initial Password</span>}
-                        rules={[{ required: true, message: 'Please enter password' }]}
-                    >
-                        <Input.Password
-                            size="large"
-                            prefix={<LockOutlined className="text-gray-500" />}
-                            placeholder="••••••••"
-                        />
-                    </Form.Item>
-
                     {/* Specialization */}
                     <Form.Item
                         name="specialization"
                         label={<span className="text-gray-300 font-medium">Specialization</span>}
-                        rules={[{ required: true, message: 'Please enter a specialization' }]}
+                    // rules={[{ required: true, message: 'Please enter a specialization' }]}
                     >
                         <Input
                             size="large"
@@ -163,10 +161,10 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModa
                             variant="primary"
                             size="md"
                             type="submit"
-                            isLoading={createUserMutation.isPending}
+                            isLoading={updateUserMutation.isPending}
                             className="flex-[2] h-11"
                         >
-                            Create Account
+                            Save Changes
                         </Button>
                     </div>
                 </Form>
