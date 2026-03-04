@@ -39,10 +39,9 @@ export default function EditUserModal({ isOpen, onClose, onSuccess, userData }: 
 
         const payload = {
             ...values,
-            userRole: roleMapping[values.role] || values.role,
+            role: roleMapping[values.role] || values.role,
         };
 
-        delete payload.role;
         const userId = userData?.userId || userData?.id;
 
         updateUserMutation.mutate({ userId, data: payload }, {

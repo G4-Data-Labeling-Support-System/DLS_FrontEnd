@@ -4,7 +4,7 @@ import EditUserModal from '../../features/admin/components/EditUserModal';
 import AddUserSuccessModal from '../../features/admin/components/AddUserSuccessModal';
 import { themeClasses } from '@/styles';
 import { Button } from '@/shared/components/ui/Button';
-import { UserAddOutlined, PlusOutlined, TeamOutlined, DesktopOutlined, DatabaseOutlined, SafetyCertificateOutlined, EditOutlined, DeleteOutlined, MoreOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { UserAddOutlined, PlusOutlined, TeamOutlined, EditOutlined, DeleteOutlined, MoreOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { Dropdown, message } from 'antd';
 import type { MenuProps } from 'antd';
 import { useUsers, useDeleteUser, useActivateUser } from '@/features/admin/hooks/useUsers';
@@ -22,6 +22,9 @@ export default function UserManagement() {
     const users = Array.isArray(rawUsers) ? rawUsers : (rawUsers as any)?.data || [];
     console.log("Users API Response:", rawUsers, "Parsed Users:", users);
 
+    const activeUsersCount = users.filter((u: any) => (u.userStatus || u.status || '').toUpperCase() === 'ACTIVE').length;
+    const inactiveUsersCount = users.length - activeUsersCount;
+
     const handleUserCreateSuccess = (data: any) => {
         setIsAddUserModalOpen(false);
         setSuccessModal({ isOpen: true, data });
@@ -37,7 +40,6 @@ export default function UserManagement() {
                 label: 'Edit User',
                 icon: <EditOutlined />,
                 onClick: () => {
-                    const userId = user.userId || user.id;
                     setEditModal({ isOpen: true, data: user });
                 },
             },
@@ -128,64 +130,60 @@ export default function UserManagement() {
                     </div>
                 </div>
 
-                {/* System Status */}
+                {/* Active Users */}
                 <div className={`${themeClasses.cards.glass} relative flex flex-col justify-between h-full`}>
                     <div className="flex items-start justify-between">
                         <div>
                             <p className={`font-body text-sm font-medium ${themeClasses.text.secondary} mb-1`}>
-                                System Status
+                                Active Users
                             </p>
-                            <p className="text-3xl font-bold tracking-tight text-white">-</p>
+                            <p className="text-3xl font-bold tracking-tight text-white">
+                                {isLoading ? '-' : activeUsersCount}
+                            </p>
                         </div>
                         <div className="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-                            <DesktopOutlined className="text-xl" />
+                            <CheckCircleOutlined className="text-xl" />
                         </div>
                     </div>
                     <div className="mt-4">
                         <p className={`text-xs font-medium ${themeClasses.text.secondary}`}>
-                            All systems fully operational
+                            Users currently active
                         </p>
                         <div className={`mt-2 h-1.5 w-full overflow-hidden rounded-full ${themeClasses.backgrounds.whiteAlpha5}`}>
-                            <div className="h-full w-0 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]"></div>
+                            <div
+                                className="h-full rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]"
+                                style={{ width: users.length > 0 ? `${(activeUsersCount / users.length) * 100}%` : '0%' }}
+                            ></div>
                         </div>
                     </div>
                 </div>
 
-                {/* Storage */}
+                {/* Inactive Users */}
                 <div className={`${themeClasses.cards.glass} relative flex flex-col justify-between h-full`}>
                     <div className="flex items-start justify-between">
                         <div>
                             <p className={`font-body text-sm font-medium ${themeClasses.text.secondary} mb-1`}>
-                                Storage
+                                Inactive Users
                             </p>
                             <div className="flex items-baseline gap-1">
                                 <p className="text-3xl font-bold tracking-tight text-white">
-                                    -<span className={`text-lg ${themeClasses.text.tertiary} font-medium`}>TB</span>
+                                    {isLoading ? '-' : inactiveUsersCount}
                                 </p>
-                                <span className={`text-xs ${themeClasses.text.tertiary}`}>/ -TB</span>
                             </div>
                         </div>
-                        <div className={`h-10 w-10 rounded-lg bg-fuchsia-500/10 flex items-center justify-center ${themeClasses.text.fuchsia}`}>
-                            <DatabaseOutlined className="text-xl" />
+                        <div className={`h-10 w-10 rounded-lg bg-gray-500/10 flex items-center justify-center text-gray-400`}>
+                            <DeleteOutlined className="text-xl" />
                         </div>
                     </div>
-                    <div className={`mt-4 h-2 w-full overflow-hidden rounded-full ${themeClasses.backgrounds.whiteAlpha5} flex`}>
-                        <div className="h-full w-0 bg-gradient-to-r from-violet-500 to-fuchsia-500"></div>
-                        <div className="h-full w-0 bg-emerald-500"></div>
-                        <div className="h-full w-0 bg-amber-500"></div>
-                    </div>
-                    <div className={`mt-2 flex gap-4 text-[10px] ${themeClasses.text.secondary}`}>
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-1.5 h-1.5 rounded-full bg-violet-500"></div>
-                            Images
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                            Labels
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
-                            Others
+                    <div className="mt-4">
+                        <p className={`text-xs font-medium ${themeClasses.text.secondary}`}>
+                            Deactivated or pending
+                        </p>
+                        <div className={`mt-2 h-1.5 w-full overflow-hidden rounded-full ${themeClasses.backgrounds.whiteAlpha5}`}>
+                            <div
+                                className="h-full rounded-full bg-gray-400"
+                                style={{ width: users.length > 0 ? `${(inactiveUsersCount / users.length) * 100}%` : '0%' }}
+                            ></div>
                         </div>
                     </div>
                 </div>
