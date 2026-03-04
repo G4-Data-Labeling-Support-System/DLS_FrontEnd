@@ -25,13 +25,10 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModa
 
         const payload = {
             ...values,
-            userRole: roleMapping[values.role] || values.role, // Gán role chuẩn vào userRole
-            status: 'ACTIVE', // Mặc định trạng thái là ACTIVE
-            coverImage: 'https://placehold.co/400' // Ảnh bìa mặc định
+            role: roleMapping[values.role] || values.role, // Send as 'role' per API types
+            status: 'ACTIVE', // Default to ACTIVE
+            coverImage: 'https://placehold.co/400' // Default cover image
         };
-
-        // [Logic: Cleanup] Xóa trường 'role' cũ để tránh gửi dữ liệu thừa lên API
-        delete payload.role;
 
         // [Logic: Gọi API] Thực hiện tạo user
         createUserMutation.mutate(payload, {
@@ -91,19 +88,6 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModa
                         />
                     </Form.Item>
 
-                    {/* Full Name Field */}
-                    <Form.Item
-                        name="fullName"
-                        label={<span className="text-gray-300 font-medium">Full Name</span>}
-                        rules={[{ required: true, message: 'Please enter full name' }]}
-                    >
-                        <Input
-                            size="large"
-                            prefix={<UserOutlined className="text-gray-500" />}
-                            placeholder="e.g. John Doe"
-                        />
-                    </Form.Item>
-
                     {/* Email Address Field */}
                     <Form.Item
                         name="email"
@@ -130,6 +114,18 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModa
                             size="large"
                             prefix={<LockOutlined className="text-gray-500" />}
                             placeholder="••••••••"
+                        />
+                    </Form.Item>
+
+                    {/* Specialization */}
+                    <Form.Item
+                        name="specialization"
+                        label={<span className="text-gray-300 font-medium">Specialization</span>}
+                        rules={[{ required: true, message: 'Please enter a specialization' }]}
+                    >
+                        <Input
+                            size="large"
+                            placeholder="e.g. NLP"
                         />
                     </Form.Item>
 

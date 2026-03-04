@@ -1,12 +1,9 @@
 import React from 'react';
 import { Steps } from 'antd';
 
-// Định nghĩa danh sách các bước cố định ở ngoài để không phải khởi tạo lại mỗi lần render
 const STEP_ITEMS = [
-    { title: 'General Info', description: 'Step 1' },
-    { title: 'Dataset', description: 'Step 2' },
-    { title: 'Guidelines', description: 'Step 3' },
-    { title: 'Team', description: 'Step 4' },
+    { title: 'General Info', subTitle: 'Step 1' },
+    { title: 'Guidelines', subTitle: 'Step 2' },
 ];
 
 interface ProjectStepsProps {

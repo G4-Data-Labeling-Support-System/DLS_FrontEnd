@@ -22,7 +22,7 @@ interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
 }
 
 // ============ Config & State ============
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://dls-beta.hikarimoon.pro/api/v1';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
 
 // Biến trạng thái cho logic Refresh Token
 let isRefreshing = false;
@@ -86,6 +86,11 @@ export function createApiClient({
   client.interceptors.response.use(
     (res) => res,
     async (error: AxiosError) => {
+      // Log lỗi detail từ server để debug (ví dụ lỗi validation 400)
+      if (error.response?.data) {
+        console.error('Backend Error Details:', error.response.data);
+      }
+
       const originalRequest = error.config as CustomAxiosRequestConfig;
       const status = error.response?.status;
 

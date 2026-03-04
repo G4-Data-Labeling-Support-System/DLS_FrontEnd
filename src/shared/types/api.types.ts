@@ -21,6 +21,7 @@ export interface User {
   fullName: string;
   email: string;
   role: string;
+  userRole?: string; // Some BE responses use this field
   status: 'ACTIVE' | 'INACTIVE';
   avatar?: string;
   createdAt?: string;
@@ -32,5 +33,12 @@ export interface CreateUserRequest {
   email: string;
   password?: string; // Optional because UI might generate or backend generic
   role: string;
+}
+
+export interface UpdateUserRequest {
+  email?: string;
+  role?: string;
+  userRole?: string;
+  specialization?: string;
 }
 

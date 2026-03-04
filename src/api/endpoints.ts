@@ -10,44 +10,6 @@ export const ENDPOINTS = {
     PROFILE: '/auth/profile'
   },
 
-  // Products
-  PRODUCTS: {
-    LIST: '/products',
-    DETAIL: (id: string) => `/products/${id}`,
-    SEARCH: '/products/search',
-    CATEGORIES: '/products/categories'
-  },
-
-  // Cart
-  CART: {
-    GET: '/cart',
-    ADD: '/cart/items',
-    UPDATE: (itemId: string) => `/cart/items/${itemId}`,
-    REMOVE: (itemId: string) => `/cart/items/${itemId}`,
-    CLEAR: '/cart/clear'
-  },
-
-  // Orders
-  ORDERS: {
-    CREATE: '/orders',
-    LIST: '/orders',
-    DETAIL: (id: string) => `/orders/${id}`,
-    CANCEL: (id: string) => `/orders/${id}/cancel`,
-    TRACKING: (id: string) => `/orders/${id}/tracking`
-  },
-
-  // Prescription (Custom Lens)
-  PRESCRIPTION: {
-    VALIDATE: '/prescription/validate',
-    CALCULATE: '/prescription/calculate'
-  },
-
-  // Payment
-  PAYMENT: {
-    MOMO: '/payment/momo',
-    VNPAY: '/payment/vnpay',
-    STATUS: (transactionId: string) => `/payment/status/${transactionId}`
-  },
 
   USERS: {
     LIST: '/users',
@@ -58,4 +20,25 @@ export const ENDPOINTS = {
     DEACTIVATE: (id: string) => `/users/${id}/deactivate`,
     ACTIVATE: (id: string) => `/users/${id}/activate`
   },
+
+  PROJECTS: {
+    LIST: '/projects',
+    DETAIL: (id: string) => `/projects/${id}`,
+    CREATE: '/projects',
+    DELETE: (id: string) => `/projects/${id}/remove`
+  },
+
+  DATASETS: {
+    LIST: '/datasets',
+    DETAIL: (id: string) => `/datasets/${id}`,
+    CREATE: '/datasets',
+  },
+
+  ASSIGNMENTS: {
+    LIST: '/assignments',
+    DETAIL: (id: string) => `/assignments/${id}`,
+    CREATE: '/assignments',
+    DELETE: (id: string) => `/assignments/${id}/remove`
+  }
+
 } as const

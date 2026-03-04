@@ -6,26 +6,29 @@ import { CreateProjectPage } from '@/pages/manager'
 import DatasetSetupPage from '@/pages/manager/DatasetSetupPage'
 import ManagerLayout from '@/components/layout/ManagerLayout'
 import GuidelinesSetupPage from '@/pages/manager/GuidelinesSetupPage'
-import TeamAssignmentPage from '@/pages/manager/TeamAssignmentPage'
+import { AuthGuard, GuestGuard } from './guards'
 
 // Lazy load pages for code splitting
 const HomePage = lazy(() => import('@/pages/homepage/HomePage'))
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
 const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage'))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
+const ManagerDashboardPage = lazy(() => import('@/pages/manager/ManagerDashboardPage'))
+const DatasetManagementPage = lazy(() => import('@/pages/manager/DatasetManagementPage'))
+const CreateDatasetPage = lazy(() => import('@/pages/manager/CreateDatasetPage'))
 
 // Admin pages
 const AdminLayout = lazy(() => import('@/features/admin/components/layout/AdminLayout'))
-const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'))
-const UserManagement = lazy(() => import('@/features/admin/UserManagement'))
-const ProjectManagement = lazy(() => import('@/features/admin/ProjectManagement'))
-const SystemSettings = lazy(() => import('@/features/admin/SystemSettings'))
+const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboardPage'))
+const UserManagement = lazy(() => import('@/pages/admin/UserManagementPage'))
+const ProjectManagement = lazy(() => import('@/pages/admin/ProjectManagementPage'))
+const SystemSettings = lazy(() => import('@/pages/admin/SystemSettingsPage'))
 
 // Wrapper component for lazy loaded pages
 function LazyPage({ children }: { children: React.ReactNode }) {
   return (
     <PageErrorBoundary>
-      <Suspense fallback={<LoadingOverlay message="Đang tải trang..." />}>
+      <Suspense fallback={<LoadingOverlay message="Loading..." />}>
         {children}
       </Suspense>
     </PageErrorBoundary>
@@ -45,7 +48,9 @@ export const router = createBrowserRouter([
     path: '/login',
     element: (
       <LazyPage>
-        <LoginPage />
+        <GuestGuard>
+          <LoginPage />
+        </GuestGuard>
       </LazyPage>
     ),
   },
@@ -53,7 +58,9 @@ export const router = createBrowserRouter([
     path: '/forgot-password',
     element: (
       <LazyPage>
-        <ForgotPasswordPage />
+        <GuestGuard>
+          <ForgotPasswordPage />
+        </GuestGuard>
       </LazyPage>
     ),
   },
@@ -61,7 +68,9 @@ export const router = createBrowserRouter([
     path: '/admin',
     element: (
       <LazyPage>
-        <AdminLayout />
+        <AuthGuard>
+          <AdminLayout />
+        </AuthGuard>
       </LazyPage>
     ),
     children: [
@@ -96,10 +105,16 @@ export const router = createBrowserRouter([
     path: PATH_MANAGER.root,
     element: (
       <LazyPage>
-        <ManagerLayout /> {/* Sử dụng Layout ở đây */}
+        <AuthGuard>
+          <ManagerLayout /> {/* Sử dụng Layout ở đây */}
+        </AuthGuard>
       </LazyPage>
     ),
     children: [
+      {
+        index: true,
+        element: <LazyPage><ManagerDashboardPage /></LazyPage>,
+      },
       {
         path: PATH_MANAGER.createProject,
         element: <LazyPage><CreateProjectPage /></LazyPage>,
@@ -113,8 +128,12 @@ export const router = createBrowserRouter([
         element: <LazyPage><GuidelinesSetupPage /></LazyPage>,
       },
       {
-        path: PATH_MANAGER.teamAssignment,
-        element: <LazyPage><TeamAssignmentPage /></LazyPage>,
+        path: PATH_MANAGER.datasetManagement,
+        element: <LazyPage><DatasetManagementPage /></LazyPage>,
+      },
+      {
+        path: PATH_MANAGER.createDataset,
+        element: <LazyPage><CreateDatasetPage /></LazyPage>,
       },
     ],
   },

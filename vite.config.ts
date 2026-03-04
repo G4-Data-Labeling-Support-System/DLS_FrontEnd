@@ -23,7 +23,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://dls-beta.hikarimoon.pro/api/v1', // Server backend
+        target: 'https://dls-beta.hikarimoon.pro', // Server backend base URL
         changeOrigin: true,
         secure: false,
         // Nếu backend của bạn đường dẫn là /api/v1, thì giữ nguyên.

@@ -1,20 +1,14 @@
 import React, { useState } from 'react';
-import { Form, Input, Select, message } from 'antd';
-// import axios from 'axios';
+import { Form, Input, message } from 'antd';
+import projectApi from '@/api/project';
 import { useNavigate } from 'react-router-dom';
-
 // Import Styles & Components
-
 import { FormFooter } from '@/features/manager/components/common/FormFooter';
 
-const PROJECT_STATUS = [
-    { label: 'Active', value: 'active' },
-    { label: 'Blocked', value: 'blocked' },
-    { label: 'Archived', value: 'archived' },
-];
+
 
 interface CreateProjectFormProps {
-    onSuccess?: () => void;
+    onSuccess?: (projectId?: string) => void;
 }
 
 export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess }) => {
@@ -27,31 +21,58 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
         navigate('/manager');
     };
 
-    const onFinish = async () => {
+    const onFinish = async (values: { projectName: string; description: string }) => {
         setLoading(true);
         try {
-            // // 1. Chuẩn bị dữ liệu
-            // const payload = {
-            //     ...values,
-            //     createdAt: new Date().toISOString(),
-            //     projectId: `PROJ-${Math.floor(Math.random() * 10000)}` // Mock ID ngẫu nhiên
-            // };
+            const payload = {
+                projectName: values.projectName,
+                description: values.description
+            };
 
-            // // 2. Gọi API (Sử dụng API Mock của bạn)
-            // const response = await axios.post('https://697774545b9c0aed1e868772.mockapi.io/Cate', payload);
-            // console.log('API Response:', response.data);
+            const response = await projectApi.createProject(payload);
 
-            // // 3. Thông báo
-            // message.success('Project created successfully!');
+            message.success('Project created successfully!');
 
-            // 4. Chuyển bước
             if (onSuccess) {
-                onSuccess();
+                // Ensure we get the ID correctly from the response
+                const createdProject = response.data?.data || response.data;
+                const newProjectId = createdProject?.projectId || createdProject?.id;
+                onSuccess(newProjectId);
             }
 
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('API Error:', error);
-            message.error('Failed to create project. Please try again.');
+
+            // Default generic error
+            let errorMessage = 'System error. Please try again.';
+
+            if (error instanceof Error) {
+                // If it's a generic Axios message about status codes, keep our generic message
+                if (!error.message.includes('Request failed with status code')) {
+                    errorMessage = error.message;
+                }
+            }
+
+            // type narrowing for axios/api errors
+            if (typeof error === 'object' && error !== null && 'response' in error) {
+                const responseError = error as { response?: { status?: number, data?: { message?: string } } };
+                const status = responseError.response?.status;
+
+                // If we get an explicit message from the backend, use it
+                if (responseError.response?.data?.message) {
+                    errorMessage = responseError.response.data.message;
+                } else if (status === 401 || status === 403 || status === 500 || status === 502 || status === 503) {
+                    // Fallback to generic system error for known bad HTTP statuses
+                    errorMessage = 'System error. Please try again.';
+                }
+            }
+
+            form.setFields([
+                {
+                    name: 'projectName',
+                    errors: [errorMessage],
+                },
+            ]);
         } finally {
             setLoading(false);
         }
@@ -63,7 +84,6 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
             layout="vertical"
             // Thay đổi quan trọng: Dùng class trong suốt để hòa trộn vào Glass Card của Page cha
             className="!w-full !max-w-none !p-0 !bg-transparent !border-0 !shadow-none"
-            initialValues={{ status: 'active' }}
             onFinish={onFinish}
         >
             <div className="flex flex-col gap-8">
@@ -97,21 +117,8 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
 
                     {/* CỘT PHẢI (Cấu hình phụ - Chiếm 1 phần) */}
                     <div className="space-y-6">
-                        <Form.Item
-                            name="status"
-                            label="Status *"
-                            rules={[{ required: true }]}
-                        >
-                            <Select
-                                size="large"
-                                options={PROJECT_STATUS}
-                                className="" // Cần đảm bảo manager.css có style cho select dropdown
-                                popupClassName="bg-[#1a1625] border border-white/10 text-white"
-                            />
-                        </Form.Item>
-
                         {/* Note Box trang trí */}
-                        <div className="p-5 rounded-xl bg-gradient-to-br from-violet-500/10 to-fuchsia-500/5 border border-violet-500/20 mt-4">
+                        <div className="p-5 rounded-xl bg-gradient-to-br from-violet-500/10 to-fuchsia-500/5 border border-violet-500/20">
                             <h4 className="text-violet-300 font-bold text-xs uppercase tracking-wider mb-2">
                                 Manager Tip
                             </h4>
@@ -127,8 +134,8 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
                 {/* Sử dụng FormFooter chung để đồng bộ nút bấm */}
                 <FormFooter
                     currentStep={1}
-                    totalSteps={4}
-                    submitLabel="CREATE PROJECT"
+                    totalSteps={2}
+                    submitLabel="NEXT STEP"
                     isLoading={loading}
                     onCancel={handleCancel}
                 />

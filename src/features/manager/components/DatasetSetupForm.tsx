@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Form, Input, Upload, message } from 'antd';
 import { DeleteOutlined, PlusOutlined, InboxOutlined } from '@ant-design/icons';
-// Import CSS global (chứa class .form-transparent-override)
-
+import type { UploadFile } from 'antd/es/upload/interface';
+import type { UploadChangeParam } from 'antd/es/upload';
 import { FormFooter } from '@/features/manager/components/common/FormFooter';
 
 const { Dragger } = Upload;
@@ -10,40 +10,35 @@ const { Dragger } = Upload;
 interface DatasetSetupFormProps {
     onSuccess?: () => void;
     onBack?: () => void;
+    submitLabel?: string;
 }
 
-export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({ onSuccess, onBack }) => {
+export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({ onSuccess, onBack, submitLabel }) => {
     const [form] = Form.useForm();
-    const [fileList, setFileList] = useState<any[]>([]);
+    const [fileList, setFileList] = useState<(UploadFile & { preview?: string })[]>([]);
 
-    // --- LOGIC: Generate Current Date ---
-    // Using useMemo to calculate the date only once when the component mounts
-    const currentDate = useMemo(() => {
-        const date = new Date();
-        // Format the date as DD/MM/YYYY (Vietnamese locale is suitable for this)
-        return new Intl.DateTimeFormat('vi-VN', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-        }).format(date);
-    }, []);
-    // ------------------------------------
+    // Store latest fileList in ref to access inside unmount cleanup safely without triggering exhaustive-deps
+    const fileListRef = useRef(fileList);
+    useEffect(() => {
+        fileListRef.current = fileList;
+    }, [fileList]);
+
+
 
     // Cleanup URL object khi component unmount để tránh leak memory
     useEffect(() => {
         return () => {
-            fileList.forEach(file => {
+            fileListRef.current.forEach(file => {
                 if (file.preview) URL.revokeObjectURL(file.preview);
             });
         };
     }, []);
 
-    const onFinish = (values: any) => {
-        console.log('Dataset Values:', values);
+    const onFinish = (_values: Record<string, unknown>) => {
         if (onSuccess) onSuccess();
     };
 
-    const handleUploadChange = (info: any) => {
+    const handleUploadChange = (info: UploadChangeParam<UploadFile & { preview?: string }>) => {
         const { status } = info.file;
         let newFileList = [...info.fileList];
 
@@ -54,7 +49,7 @@ export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({ onSuccess, o
             }
             if (!file.url && !file.thumbUrl && file.originFileObj) {
                 // Tạo preview local ngay lập tức
-                file.preview = URL.createObjectURL(file.originFileObj);
+                file.preview = URL.createObjectURL(file.originFileObj as Blob);
             }
             return file;
         });
@@ -81,32 +76,14 @@ export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({ onSuccess, o
         <Form
             form={form}
             layout="vertical"
-            // Sử dụng class override từ manager.css để loại bỏ nền/viền trùng lặp
+            // Sử dụng Tailwind override để loại bỏ nền/viền trùng lặp
             className="!w-full !max-w-none !p-0 !bg-transparent !border-0 !shadow-none"
             initialValues={{ version: 1, storageType: 's3' }}
             onFinish={onFinish}
         >
             <div className="flex flex-col gap-8">
 
-                {/* --- Section 1: Thông tin định danh (Readonly) --- */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <Form.Item label="Project ID (UUID)">
-                        <Input className="font-mono text-sm !bg-[#1a1625] !border-white/10" placeholder="Inherited from Project" disabled />
-                    </Form.Item>
 
-                    {/* --- UPDATED: Created At Field --- */}
-                    <Form.Item label="Created At">
-                        <div className="relative">
-                            <Input
-                                defaultValue={currentDate} // Set the default value to the generated date
-                                readOnly // Make it read-only
-                                className="font-mono text-sm !text-gray-500 !bg-[#1a1625]/50 !border-white/5 cursor-not-allowed"
-                            />
-                        </div>
-                    </Form.Item>
-                    {/* ------------------------------- */}
-
-                </div>
 
                 {/* --- Section 2: Cấu hình Dataset --- */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -202,10 +179,12 @@ export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({ onSuccess, o
                 </div>
 
                 <FormFooter
-                    currentStep={2}
-                    totalSteps={4}
-                    submitLabel="SAVE & CONTINUE TO GUIDELINES"
+                    currentStep={1}
+                    totalSteps={1}
+                    hideSteps={true}
+                    submitLabel={submitLabel || "CREATE DATASET"}
                     onBack={onBack}
+                    onCancel={onBack}
                     isLoading={false}
                 />
             </div>

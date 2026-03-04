@@ -4,8 +4,6 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "build:dev": "vite build --mode development",
-    "build:prod": "vite build --mode production",
     "dev": "vite",
     "dev:check": "npm run validate && vite",
     "build": "npm run validate && tsc -b && vite build",

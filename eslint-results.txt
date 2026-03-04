@@ -1,0 +1,96 @@
+[0m[0m
+[0m[4mD:\SWP\DLS_FrontEnd\src\components\layout\Sidebar.tsx[24m[0m
+[0m  [2m4:80[22m  [31merror[39m  'UserOutlined' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mD:\SWP\DLS_FrontEnd\src\features\admin\UserManagement.tsx[24m[0m
+[0m    [2m6:90[22m  [31merror[39m    'SafetyCertificateOutlined' is defined but never used. Allowed unused vars must match /^_/u  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m11:80[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                     [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m16:69[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                     [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m17:5[22m   [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error            [2mno-console[22m[0m
+[0m   [2m19:44[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                     [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m182:51[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                     [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mD:\SWP\DLS_FrontEnd\src\features\admin\api\userApi.ts[24m[0m
+[0m  [2m16:9[22m  [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error  [2mno-console[22m[0m
+[0m  [2m18:9[22m  [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error  [2mno-console[22m[0m
+[0m[0m
+[0m[4mD:\SWP\DLS_FrontEnd\src\features\admin\components\AddUserModal.tsx[24m[0m
+[0m   [2m10:24[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                             [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m17:41[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                             [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m43:30[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                             [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m146:29[22m  [31merror[39m    Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  [2m@typescript-eslint/ban-ts-comment[22m[0m
+[0m[0m
+[0m[4mD:\SWP\DLS_FrontEnd\src\features\admin\hooks\useUsers.ts[24m[0m
+[0m  [2m22:26[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mD:\SWP\DLS_FrontEnd\src\features\auth\services\auth.service.ts[24m[0m
+[0m  [2m11:53[22m  [33mwarning[39m  Unexpected any. Specify a different type                                           [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m14:7[22m   [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error  [2mno-console[22m[0m
+[0m  [2m16:7[22m   [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error  [2mno-console[22m[0m
+[0m  [2m31:20[22m  [33mwarning[39m  Unexpected any. Specify a different type                                           [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m35:9[22m   [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error  [2mno-console[22m[0m
+[0m  [2m42:9[22m   [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error  [2mno-console[22m[0m
+[0m[0m
+[0m[4mD:\SWP\DLS_FrontEnd\src\features\manager\components\CreateProjectForm.tsx[24m[0m
+[0m  [2m30:37[22m  [33mwarning[39m  Unexpected any. Specify a different type                                           [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m42:13[22m  [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error  [2mno-console[22m[0m
+[0m[0m
+[0m[4mD:\SWP\DLS_FrontEnd\src\features\manager\components\DatasetSetupForm.tsx[24m[0m
+[0m  [2m17:46[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                     [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m39:8[22m   [33mwarning[39m  React Hook useEffect has a missing dependency: 'fileList'. Either include it or remove the dependency array  [2mreact-hooks/exhaustive-deps[22m[0m
+[0m  [2m41:31[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                     [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m42:9[22m   [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error                            [2mno-console[22m[0m
+[0m  [2m46:39[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                     [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mD:\SWP\DLS_FrontEnd\src\features\manager\components\GuidelinesSetupForm.tsx[24m[0m
+[0m  [2m19:42[22m  [33mwarning[39m  Unexpected any. Specify a different type                                           [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m21:31[22m  [33mwarning[39m  Unexpected any. Specify a different type                                           [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m28:9[22m   [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error  [2mno-console[22m[0m
+[0m[0m
+[0m[4mD:\SWP\DLS_FrontEnd\src\features\manager\components\TeamAssignmentContent.tsx[24m[0m
+[0m  [2m40:17[22m  [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error  [2mno-console[22m[0m
+[0m  [2m50:68[22m  [33mwarning[39m  Unexpected any. Specify a different type                                           [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mD:\SWP\DLS_FrontEnd\src\features\manager\components\dashboard\EditProjects.tsx[24m[0m
+[0m  [2m52:37[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mD:\SWP\DLS_FrontEnd\src\features\manager\components\dataset\DatasetHeader.tsx[24m[0m
+[0m  [2m4:11[22m  [31merror[39m  An empty interface declaration allows any non-nullish value, including literals like `0` and `""`.[0m
+[0m- If that's what you want, disable this lint rule with an inline comment or configure the 'allowInterfaces' rule option.[0m
+[0m- If you want a type meaning "any object", you probably want `object` instead.[0m
+[0m- If you want a type meaning "any value", you probably want `unknown` instead  [2m@typescript-eslint/no-empty-object-type[22m[0m
+[0m[0m
+[0m[4mD:\SWP\DLS_FrontEnd\src\features\reviewer\components\workspace\RejectModal.tsx[24m[0m
+[0m  [2m51:18[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mD:\SWP\DLS_FrontEnd\src\lib\axios.ts[24m[0m
+[0m  [2m29:18[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m32:30[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mD:\SWP\DLS_FrontEnd\src\pages\auth\LoginPage.tsx[24m[0m
+[0m  [2m15:35[22m  [33mwarning[39m  Unexpected any. Specify a different type                                           [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m20:7[22m   [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error  [2mno-console[22m[0m
+[0m  [2m37:19[22m  [33mwarning[39m  Unexpected any. Specify a different type                                           [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mD:\SWP\DLS_FrontEnd\src\pages\manager\CreateDatasetPage.tsx[24m[0m
+[0m  [2m41:13[22m  [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error  [2mno-console[22m[0m
+[0m[0m
+[0m[4mD:\SWP\DLS_FrontEnd\src\pages\manager\TeamAssignmentPage.tsx[24m[0m
+[0m  [2m15:41[22m  [33mwarning[39m  Unexpected any. Specify a different type                                           [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m16:9[22m   [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error  [2mno-console[22m[0m
+[0m[0m
+[0m[4mD:\SWP\DLS_FrontEnd\src\pages\reviewer\ReviewerWorkspacePage.tsx[24m[0m
+[0m   [2m75:25[22m  [33mwarning[39m  Unexpected any. Specify a different type                                           [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m78:17[22m  [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error  [2mno-console[22m[0m
+[0m  [2m140:29[22m  [33mwarning[39m  Unexpected any. Specify a different type                                           [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m167:13[22m  [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error  [2mno-console[22m[0m
+[0m  [2m178:13[22m  [33mwarning[39m  Unexpected console statement. Only these console methods are allowed: warn, error  [2mno-console[22m[0m
+[0m[0m
+[0m[4mD:\SWP\DLS_FrontEnd\src\routes\index.tsx[24m[0m
+[0m  [2m27:10[22m  [33mwarning[39m  Fast refresh only works when a file only exports components. Move your component(s) to a separate file  [2mreact-refresh/only-export-components[22m[0m
+[0m[0m
+[0m[4mD:\SWP\DLS_FrontEnd\src\styles\theme.ts[24m[0m
+[0m  [2m158:16[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[31m[1m✖ 50 problems (4 errors, 46 warnings)[22m[39m[0m
+[0m[31m[1m[22m[39m[0m

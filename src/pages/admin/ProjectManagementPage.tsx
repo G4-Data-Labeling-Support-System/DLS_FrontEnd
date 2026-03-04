@@ -1,24 +1,54 @@
 import { useState } from 'react';
-import AddUserModal from './components/AddUserModal';
-import AddUserSuccessModal from './components/AddUserSuccessModal';
 import { themeClasses } from '@/styles';
+import AddProjectModal from '../../features/admin/components/AddProjectModal';
+import EditProjectModal from '../../features/admin/components/EditProjectModal';
 import { Button } from '@/shared/components/ui/Button';
-import { UserAddOutlined, PlusOutlined, TeamOutlined, DesktopOutlined, DatabaseOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
-import { useUsers } from '@/features/admin/hooks/useUsers';
+import { FolderAddOutlined, PlusOutlined, DatabaseOutlined, DesktopOutlined, EditOutlined, DeleteOutlined, MoreOutlined, ProjectOutlined } from '@ant-design/icons';
+import { Dropdown, message } from 'antd';
+import type { MenuProps } from 'antd';
+import { useProjects, useDeleteProject } from '@/features/admin/hooks/useProjects';
 
-export default function UserManagement() {
-    const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
-    const [successModal, setSuccessModal] = useState<{ isOpen: boolean; data?: any }>({ isOpen: false });
-    const { data: rawUsers, isLoading } = useUsers();
+export default function ProjectManagement() {
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [editModal, setEditModal] = useState<{ isOpen: boolean; data?: any }>({ isOpen: false });
+
+    const { data: rawProjects, isLoading } = useProjects();
+    const deleteProjectMutation = useDeleteProject();
 
     // [Logic: Safety Check] Kiểm tra cấu trúc trả về từ API
-    // React Query có thể trả về array trực tiếp hoặc object chứa data (VD: response.data)
-    const users = Array.isArray(rawUsers) ? rawUsers : (rawUsers as any)?.data || [];
-    console.log("Users API Response:", rawUsers, "Parsed Users:", users);
+    const projects = Array.isArray(rawProjects) ? rawProjects : (rawProjects as any)?.data || [];
 
-    const handleUserCreateSuccess = (data: any) => {
-        setIsAddUserModalOpen(false);
-        setSuccessModal({ isOpen: true, data });
+    const getActionItems = (project: any): MenuProps['items'] => {
+
+        return [
+            {
+                key: 'edit',
+                label: 'Edit Project',
+                icon: <EditOutlined />,
+                onClick: () => {
+                    setEditModal({ isOpen: true, data: project });
+                },
+            },
+            {
+                key: 'delete',
+                label: 'Remove Project',
+                icon: <DeleteOutlined />,
+                danger: true,
+                onClick: () => {
+                    const projectId = project.projectId || project.id;
+                    if (window.confirm(`Are you sure you want to remove project ${project.projectName}?`)) {
+                        deleteProjectMutation.mutate(projectId, {
+                            onSuccess: () => {
+                                message.success(`Project ${project.projectName} has been removed.`);
+                            },
+                            onError: (error) => {
+                                message.error(`Failed to remove project: ${error.message || 'Unknown error'}`);
+                            }
+                        });
+                    }
+                },
+            }
+        ];
     };
 
     return (
@@ -26,50 +56,50 @@ export default function UserManagement() {
             {/* Header */}
             <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
                 <div className="flex flex-col gap-1">
-                    <h2 className="text-2xl font-bold tracking-tight text-white md:text-3xl">
-                        System Administration
+                    <h2 className={`text-2xl font-bold tracking-tight ${themeClasses.text.violet} md:text-3xl`}>
+                        Project Management
                     </h2>
                     <p className={`font-body text-sm ${themeClasses.text.secondary}`}>
-                        Manage users, permissions, and monitor backend performance.
+                        Manage active projects, monitor progress, and access related datasets.
                     </p>
                 </div>
                 <Button
-                    onClick={() => setIsAddUserModalOpen(true)}
+                    onClick={() => setIsAddModalOpen(true)}
                     variant="primary"
                     className="group relative flex items-center gap-2 overflow-hidden px-5 py-2.5 font-body"
                 >
                     <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity group-hover:opacity-100"></div>
-                    <UserAddOutlined className="text-lg" />
-                    <span>Add User</span>
+                    <FolderAddOutlined className="text-lg" />
+                    <span>Add Project</span>
                 </Button>
             </div>
 
             {/* Stats Cards */}
             <div className="grid gap-5 md:grid-cols-3">
-                {/* Total Users */}
+                {/* Total Projects */}
                 <div className={`${themeClasses.cards.glass} relative flex flex-col justify-between h-full`}>
                     <div className="flex items-start justify-between">
                         <div>
                             <p className={`font-body text-sm font-medium ${themeClasses.text.secondary} mb-1`}>
-                                Total Users
+                                Total Projects
                             </p>
                             <p className="text-3xl font-bold tracking-tight text-white">
-                                {isLoading ? '-' : users?.length || 0}
+                                {isLoading ? '-' : projects?.length || 0}
                             </p>
                         </div>
                         <div className={`h-10 w-10 rounded-lg ${themeClasses.backgrounds.violetAlpha10} flex items-center justify-center ${themeClasses.text.violet}`}>
-                            <TeamOutlined className="text-xl" />
+                            <ProjectOutlined className="text-xl" />
                         </div>
                     </div>
                     <div className="mt-4 flex items-center gap-2">
                         <span className="flex items-center text-xs font-bold text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded">
                             +0%
                         </span>
-                        <span className={`text-xs ${themeClasses.text.tertiary}`}>vs last week</span>
+                        <span className={`text-xs ${themeClasses.text.tertiary}`}>vs last month</span>
                     </div>
                 </div>
 
-                {/* System Status */}
+                {/* System Status placeholder */}
                 <div className={`${themeClasses.cards.glass} relative flex flex-col justify-between h-full`}>
                     <div className="flex items-start justify-between">
                         <div>
@@ -92,7 +122,7 @@ export default function UserManagement() {
                     </div>
                 </div>
 
-                {/* Storage */}
+                {/* Storage placeholder */}
                 <div className={`${themeClasses.cards.glass} relative flex flex-col justify-between h-full`}>
                     <div className="flex items-start justify-between">
                         <div>
@@ -132,24 +162,24 @@ export default function UserManagement() {
                 </div>
             </div>
 
-            {/* User Management Table */}
+            {/* Management Table */}
             <div className={`glass-card flex flex-col overflow-hidden rounded-xl`}>
                 <div className={`border-b ${themeClasses.borders.white5} px-6 py-5 flex justify-between items-center ${themeClasses.backgrounds.card}`}>
                     <div className="flex flex-col gap-1">
-                        <h3 className="text-lg font-bold text-white">User Management</h3>
+                        <h3 className="text-lg font-bold text-white">Project List</h3>
                         <p className={`text-sm ${themeClasses.text.secondary} font-body`}>
-                            List of users in the system ({users?.length || 0})
+                            All projects available in the system ({projects?.length || 0})
                         </p>
                     </div>
                     <div className="flex gap-3">
                         <Button
-                            onClick={() => setIsAddUserModalOpen(true)}
+                            onClick={() => setIsAddModalOpen(true)}
                             variant="primary"
                             className="group relative flex items-center gap-2 overflow-hidden px-4 py-2 font-body text-sm font-semibold"
                         >
                             <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity group-hover:opacity-100"></div>
                             <PlusOutlined className="text-lg" />
-                            <span>Add User</span>
+                            <span>Add Project</span>
                         </Button>
                     </div>
                 </div>
@@ -157,10 +187,10 @@ export default function UserManagement() {
                     <table className="w-full text-left">
                         <thead className={`text-[11px] uppercase ${themeClasses.text.tertiary} font-bold tracking-wider border-b ${themeClasses.borders.white5}`}>
                             <tr>
-                                <th className="px-6 py-4 font-semibold">User</th>
-                                <th className="px-6 py-4 font-semibold">Role</th>
+                                <th className="px-6 py-4 font-semibold">Project Name</th>
+                                <th className="px-6 py-4 font-semibold">Description</th>
                                 <th className="px-6 py-4 font-semibold">Status</th>
-                                <th className="px-6 py-4 font-semibold">Tasks</th>
+                                <th className="px-6 py-4 font-semibold">Created At</th>
                                 <th className="px-6 py-4 font-semibold text-right">Actions</th>
                             </tr>
                         </thead>
@@ -168,110 +198,100 @@ export default function UserManagement() {
                             {isLoading ? (
                                 <tr>
                                     <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                                        Loading users...
+                                        Loading projects...
                                     </td>
                                 </tr>
-                            ) : users?.length === 0 ? (
+                            ) : projects?.length === 0 ? (
                                 <tr>
                                     <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                                        No users found.
+                                        No projects found.
                                     </td>
                                 </tr>
                             ) : (
+                                projects?.map((project: any) => {
+                                    const rawStatus = project.projectStatus || project.status || 'Active';
+                                    const isProjectActive = rawStatus.toUpperCase() === 'ACTIVE' || rawStatus.toUpperCase() === 'ONGOING';
+                                    const displayStatus = rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1).toLowerCase();
 
-                                users?.map((user: any) => {
-                                    // Handle backend field difference and normalize
-                                    const rawRole = user.userRole || user.role || 'Unknown';
-                                    const roleLower = rawRole.toLowerCase();
-                                    const displayRole = rawRole.charAt(0).toUpperCase() + rawRole.slice(1).toLowerCase();
+                                    const projectId = project.projectId || project.id;
+
+                                    // Parse date if possible
+                                    const dateStr = project.createdAt ? new Date(project.createdAt).toLocaleDateString() : '-';
 
                                     return (
-                                        <tr key={user.id} className={`group transition-colors hover:${themeClasses.backgrounds.whiteAlpha5}`}>
+                                        <tr key={projectId} className={`group transition-colors hover:${themeClasses.backgrounds.whiteAlpha5}`}>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className={`h-10 w-10 overflow-hidden rounded-full ${themeClasses.backgrounds.card} ring-1 ring-white/10 transition-all group-hover:ring-violet-500/50 flex items-center justify-center`}>
-                                                        {user.avatar ? (
-                                                            <img src={user.avatar} alt={user.username} className="h-full w-full object-cover" />
+                                                    <div className={`h-10 w-10 overflow-hidden rounded-md ${themeClasses.backgrounds.card} ring-1 ring-white/10 transition-all group-hover:ring-violet-500/50 flex items-center justify-center`}>
+                                                        {project.coverImage ? (
+                                                            <img src={project.coverImage} alt={project.projectName} className="h-full w-full object-cover" />
                                                         ) : (
                                                             <span className={`text-sm font-bold ${themeClasses.text.violet}`}>
-                                                                {user.username?.substring(0, 2).toUpperCase()}
+                                                                {project.projectName?.substring(0, 2).toUpperCase()}
                                                             </span>
                                                         )}
                                                     </div>
                                                     <div className="flex flex-col">
                                                         <span className="font-bold text-white text-[15px]">
-                                                            {user.fullName || user.username}
+                                                            {project.projectName || `Project ${projectId}`}
                                                         </span>
-                                                        <span className={`text-sm ${themeClasses.text.tertiary}`}>
-                                                            {user.email}
+                                                        <span className={`text-xs ${themeClasses.text.tertiary}`}>
+                                                            ID: {projectId?.substring(0, 8)}...
                                                         </span>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold
-                                                ${roleLower === 'annotator' ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400' :
-                                                        roleLower === 'reviewer' ? 'border-amber-500/20 bg-amber-500/10 text-amber-400' :
-                                                            roleLower === 'manager' ? 'border-purple-500/20 bg-purple-500/10 text-purple-400' :
-                                                                'border-red-500/20 bg-red-500/10 text-red-400'
-                                                    }`}>
-                                                    {displayRole}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-2">
-                                                    <span className={`h-2 w-2 rounded-full ${user.status === 'ACTIVE' ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.6)]' : 'bg-gray-500'}`}></span>
-                                                    <span className={`${user.status === 'ACTIVE' ? 'text-emerald-500' : 'text-gray-400'} text-sm font-medium`}>
-                                                        {user.status || 'Active'}
-                                                    </span>
+                                                <div className="max-w-[200px] truncate text-gray-300">
+                                                    {project.description || '-'}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className="font-bold text-white text-[15px]">0</span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className={`h-2 w-2 rounded-full ${isProjectActive ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.6)]' : 'bg-amber-500'}`}></span>
+                                                    <span className={`${isProjectActive ? 'text-emerald-500' : 'text-amber-400'} text-sm font-medium`}>
+                                                        {displayStatus}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 text-gray-300">
+                                                {dateStr}
                                             </td>
                                             <td className="px-6 py-4 text-right">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className={`${themeClasses.text.tertiary} hover:text-white transition-colors`}
+                                                <Dropdown
+                                                    menu={{ items: getActionItems(project) }}
+                                                    trigger={['click']}
+                                                    placement="bottomRight"
+                                                    overlayClassName="dark-dropdown"
                                                 >
-                                                    <span className="material-symbols-outlined text-lg">
-                                                        more_horiz
-                                                    </span>
-                                                </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className={`${themeClasses.text.tertiary} hover:text-white transition-colors`}
+                                                    >
+                                                        <MoreOutlined className="text-lg" />
+                                                    </Button>
+                                                </Dropdown>
                                             </td>
                                         </tr>
                                     );
                                 })
-
                             )}
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            {/* Add User Modal */}
-            <AddUserModal
-                isOpen={isAddUserModalOpen}
-                onClose={() => setIsAddUserModalOpen(false)}
-                onSuccess={handleUserCreateSuccess}
+            {/* Modals */}
+            <AddProjectModal
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
             />
-
-            {/* Success Modal */}
-            <AddUserSuccessModal
-                isOpen={successModal.isOpen}
-                onClose={() => setSuccessModal({ ...successModal, isOpen: false })}
-                onAddAnother={() => {
-                    setSuccessModal({ ...successModal, isOpen: false });
-                    setIsAddUserModalOpen(true);
-                }}
-                userData={successModal.data ? {
-                    name: successModal.data.fullName,
-                    email: successModal.data.email,
-                    role: successModal.data.role
-                } : undefined}
+            <EditProjectModal
+                isOpen={editModal.isOpen}
+                onClose={() => setEditModal({ isOpen: false })}
+                projectData={editModal.data}
             />
         </div>
     );
 }
-
