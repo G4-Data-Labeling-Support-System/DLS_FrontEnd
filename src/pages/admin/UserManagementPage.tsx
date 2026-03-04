@@ -1,15 +1,21 @@
 import { useState } from 'react';
 import AddUserModal from '../../features/admin/components/AddUserModal';
+import EditUserModal from '../../features/admin/components/EditUserModal';
 import AddUserSuccessModal from '../../features/admin/components/AddUserSuccessModal';
 import { themeClasses } from '@/styles';
 import { Button } from '@/shared/components/ui/Button';
-import { UserAddOutlined, PlusOutlined, TeamOutlined, DesktopOutlined, DatabaseOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
-import { useUsers } from '@/features/admin/hooks/useUsers';
+import { UserAddOutlined, PlusOutlined, TeamOutlined, DesktopOutlined, DatabaseOutlined, SafetyCertificateOutlined, EditOutlined, DeleteOutlined, MoreOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { Dropdown, message } from 'antd';
+import type { MenuProps } from 'antd';
+import { useUsers, useDeleteUser, useActivateUser } from '@/features/admin/hooks/useUsers';
 
 export default function UserManagement() {
     const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+    const [editModal, setEditModal] = useState<{ isOpen: boolean; data?: any }>({ isOpen: false });
     const [successModal, setSuccessModal] = useState<{ isOpen: boolean; data?: any }>({ isOpen: false });
     const { data: rawUsers, isLoading } = useUsers();
+    const deleteUserMutation = useDeleteUser();
+    const activateUserMutation = useActivateUser();
 
     // [Logic: Safety Check] Kiểm tra cấu trúc trả về từ API
     // React Query có thể trả về array trực tiếp hoặc object chứa data (VD: response.data)
@@ -19,6 +25,59 @@ export default function UserManagement() {
     const handleUserCreateSuccess = (data: any) => {
         setIsAddUserModalOpen(false);
         setSuccessModal({ isOpen: true, data });
+    };
+
+    const getActionItems = (user: any): MenuProps['items'] => {
+        const rawStatus = user.userStatus || user.status || 'Active';
+        const isUserActive = rawStatus.toUpperCase() === 'ACTIVE';
+
+        return [
+            {
+                key: 'edit',
+                label: 'Edit User',
+                icon: <EditOutlined />,
+                onClick: () => {
+                    const userId = user.userId || user.id;
+                    setEditModal({ isOpen: true, data: user });
+                },
+            },
+            isUserActive ? {
+                key: 'delete',
+                label: 'Remove User',
+                icon: <DeleteOutlined />,
+                danger: true,
+                onClick: () => {
+                    const userId = user.userId || user.id;
+                    if (window.confirm(`Are you sure you want to deactivate ${user.username}?`)) {
+                        deleteUserMutation.mutate(userId, {
+                            onSuccess: () => {
+                                message.success(`User ${user.username} has been deactivated.`);
+                            },
+                            onError: (error) => {
+                                message.error(`Failed to deactivate user: ${error.message || 'Unknown error'}`);
+                            }
+                        });
+                    }
+                },
+            } : {
+                key: 'activate',
+                label: 'Activate User',
+                icon: <CheckCircleOutlined style={{ color: '#10b981' }} />,
+                onClick: () => {
+                    const userId = user.userId || user.id;
+                    if (window.confirm(`Are you sure you want to activate ${user.username}?`)) {
+                        activateUserMutation.mutate(userId, {
+                            onSuccess: () => {
+                                message.success(`User ${user.username} has been activated.`);
+                            },
+                            onError: (error) => {
+                                message.error(`Failed to activate user: ${error.message || 'Unknown error'}`);
+                            }
+                        });
+                    }
+                },
+            },
+        ];
     };
 
     return (
@@ -185,8 +244,14 @@ export default function UserManagement() {
                                     const roleLower = rawRole.toLowerCase();
                                     const displayRole = rawRole.charAt(0).toUpperCase() + rawRole.slice(1).toLowerCase();
 
+                                    const rawStatus = user.userStatus || user.status || 'Active';
+                                    const isUserActive = rawStatus.toUpperCase() === 'ACTIVE';
+                                    const displayStatus = rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1).toLowerCase();
+
+                                    const userId = user.userId || user.id;
+
                                     return (
-                                        <tr key={user.id} className={`group transition-colors hover:${themeClasses.backgrounds.whiteAlpha5}`}>
+                                        <tr key={userId} className={`group transition-colors hover:${themeClasses.backgrounds.whiteAlpha5}`}>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
                                                     <div className={`h-10 w-10 overflow-hidden rounded-full ${themeClasses.backgrounds.card} ring-1 ring-white/10 transition-all group-hover:ring-violet-500/50 flex items-center justify-center`}>
@@ -220,9 +285,9 @@ export default function UserManagement() {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-2">
-                                                    <span className={`h-2 w-2 rounded-full ${user.status === 'ACTIVE' ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.6)]' : 'bg-gray-500'}`}></span>
-                                                    <span className={`${user.status === 'ACTIVE' ? 'text-emerald-500' : 'text-gray-400'} text-sm font-medium`}>
-                                                        {user.status || 'Active'}
+                                                    <span className={`h-2 w-2 rounded-full ${isUserActive ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.6)]' : 'bg-gray-500'}`}></span>
+                                                    <span className={`${isUserActive ? 'text-emerald-500' : 'text-gray-400'} text-sm font-medium`}>
+                                                        {displayStatus}
                                                     </span>
                                                 </div>
                                             </td>
@@ -230,15 +295,20 @@ export default function UserManagement() {
                                                 <span className="font-bold text-white text-[15px]">0</span>
                                             </td>
                                             <td className="px-6 py-4 text-right">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className={`${themeClasses.text.tertiary} hover:text-white transition-colors`}
+                                                <Dropdown
+                                                    menu={{ items: getActionItems(user) }}
+                                                    trigger={['click']}
+                                                    placement="bottomRight"
+                                                    overlayClassName="dark-dropdown" // Optional: custom class for styling if needed
                                                 >
-                                                    <span className="material-symbols-outlined text-lg">
-                                                        more_horiz
-                                                    </span>
-                                                </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className={`${themeClasses.text.tertiary} hover:text-white transition-colors`}
+                                                    >
+                                                        <MoreOutlined className="text-lg" />
+                                                    </Button>
+                                                </Dropdown>
                                             </td>
                                         </tr>
                                     );
@@ -270,6 +340,15 @@ export default function UserManagement() {
                     email: successModal.data.email,
                     role: successModal.data.role
                 } : undefined}
+            />
+            {/* Edit User Modal */}
+            <EditUserModal
+                isOpen={editModal.isOpen}
+                onClose={() => setEditModal({ isOpen: false })}
+                userData={editModal.data}
+                onSuccess={() => {
+                    setEditModal({ isOpen: false });
+                }}
             />
         </div>
     );
