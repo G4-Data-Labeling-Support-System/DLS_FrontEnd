@@ -28,6 +28,8 @@ export default function LoginPage() {
           navigate('/admin/dashboard');
         } else if (role === 'manager') {
           navigate('/manager');
+        } else if (role === 'annotator') {
+          navigate('/annotator');
         } else {
           navigate('/');
         }

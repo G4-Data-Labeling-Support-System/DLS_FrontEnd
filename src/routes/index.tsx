@@ -1,12 +1,13 @@
 import { LoadingOverlay, PageErrorBoundary } from '@/shared/components/ui'
+import { UserRole } from '@/shared/constants/user_role'
 import { Suspense, lazy } from 'react'
 import { createBrowserRouter } from 'react-router-dom'
-import { PATH_MANAGER } from './paths'
+import { PATH_ANNOTATOR, PATH_MANAGER } from './paths'
 import { CreateProjectPage } from '@/pages/manager'
 import DatasetSetupPage from '@/pages/manager/DatasetSetupPage'
 import ManagerLayout from '@/components/layout/ManagerLayout'
 import GuidelinesSetupPage from '@/pages/manager/GuidelinesSetupPage'
-import { AuthGuard, GuestGuard } from './guards'
+import { GuestGuard, RoleGuard } from './guards'
 
 // Lazy load pages for code splitting
 const HomePage = lazy(() => import('@/pages/homepage/HomePage'))
@@ -23,6 +24,14 @@ const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboardPage'))
 const UserManagement = lazy(() => import('@/pages/admin/UserManagementPage'))
 const ProjectManagement = lazy(() => import('@/pages/admin/ProjectManagementPage'))
 const SystemSettings = lazy(() => import('@/pages/admin/SystemSettingsPage'))
+
+// Annotator pages
+const AnnotatorLayout = lazy(() => import('@/components/layout/AnnotatorLayout'))
+const AnnotatorDashboardPage = lazy(() => import('@/pages/annotator/AnnotatorDashboardPage'))
+
+// Reviewer pages
+const ReviewerDashboard = lazy(() => import('@/pages/reviewer/ReviewerDashboard'))
+const ReviewerWorkspacePage = lazy(() => import('@/pages/reviewer/ReviewerWorkspacePage'))
 
 // Wrapper component for lazy loaded pages
 function LazyPage({ children }: { children: React.ReactNode }) {
@@ -64,13 +73,15 @@ export const router = createBrowserRouter([
       </LazyPage>
     ),
   },
+
+  // ─── Admin routes (admin only) ────────────────────────────────────────────
   {
     path: '/admin',
     element: (
       <LazyPage>
-        <AuthGuard>
+        <RoleGuard allowedRoles={[UserRole.ADMIN]}>
           <AdminLayout />
-        </AuthGuard>
+        </RoleGuard>
       </LazyPage>
     ),
     children: [
@@ -92,22 +103,15 @@ export const router = createBrowserRouter([
       },
     ],
   },
-  {
-    path: '*',
-    element: (
-      <LazyPage>
-        <NotFoundPage />
-      </LazyPage>
-    ),
-  },
 
+  // ─── Manager routes (manager only) ────────────────────────────────────────
   {
     path: PATH_MANAGER.root,
     element: (
       <LazyPage>
-        <AuthGuard>
-          <ManagerLayout /> {/* Sử dụng Layout ở đây */}
-        </AuthGuard>
+        <RoleGuard allowedRoles={[UserRole.MANAGER]}>
+          <ManagerLayout />
+        </RoleGuard>
       </LazyPage>
     ),
     children: [
@@ -136,5 +140,56 @@ export const router = createBrowserRouter([
         element: <LazyPage><CreateDatasetPage /></LazyPage>,
       },
     ],
+  },
+
+  // ─── Annotator routes (annotator only) ────────────────────────────────────
+  {
+    path: PATH_ANNOTATOR.root,
+    element: (
+      <LazyPage>
+        <RoleGuard allowedRoles={[UserRole.ANNOTATOR]}>
+          <AnnotatorLayout />
+        </RoleGuard>
+      </LazyPage>
+    ),
+    children: [
+      {
+        index: true,
+        element: <LazyPage><AnnotatorDashboardPage /></LazyPage>,
+      },
+    ],
+  },
+
+  // ─── Reviewer routes (reviewer only) ──────────────────────────────────────
+  {
+    path: '/reviewer',
+    element: (
+      <LazyPage>
+        <RoleGuard allowedRoles={[UserRole.REVIEWER]}>
+          {/* Reviewer uses its own dashboard as the layout root */}
+          <ReviewerDashboard />
+        </RoleGuard>
+      </LazyPage>
+    ),
+  },
+  {
+    path: '/reviewer/workspace',
+    element: (
+      <LazyPage>
+        <RoleGuard allowedRoles={[UserRole.REVIEWER]}>
+          <ReviewerWorkspacePage />
+        </RoleGuard>
+      </LazyPage>
+    ),
+  },
+
+  // ─── 404 ──────────────────────────────────────────────────────────────────
+  {
+    path: '*',
+    element: (
+      <LazyPage>
+        <NotFoundPage />
+      </LazyPage>
+    ),
   },
 ])

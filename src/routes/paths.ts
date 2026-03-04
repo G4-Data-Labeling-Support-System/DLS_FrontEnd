@@ -24,3 +24,14 @@ export const PATH_MANAGER = {
   datasetManagement: '/manager/datasets',
   createDataset: '/manager/datasets/create'
 };
+
+export const PATH_ANNOTATOR = {
+  root: '/annotator',
+  dashboard: '/annotator',
+}
+
+export const PATH_REVIEWER = {
+  root: '/reviewer',
+  dashboard: '/reviewer',
+  workspace: '/reviewer/workspace',
+}
