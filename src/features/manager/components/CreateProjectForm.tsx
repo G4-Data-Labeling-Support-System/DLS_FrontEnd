@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import { Form, Input, message } from 'antd';
 import projectApi from '@/api/project';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '@/store';
-
 // Import Styles & Components
 import { FormFooter } from '@/features/manager/components/common/FormFooter';
 
@@ -17,7 +15,6 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-    const user = useAuthStore(state => state.user);
 
     // Xử lý Cancel: Quay về Dashboard
     const handleCancel = () => {
@@ -29,8 +26,7 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
         try {
             const payload = {
                 projectName: values.projectName,
-                description: values.description,
-                user_id: user?.id
+                description: values.description
             };
 
             const response = await projectApi.createProject(payload);
@@ -108,8 +104,8 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
                 {/* Sử dụng FormFooter chung để đồng bộ nút bấm */}
                 <FormFooter
                     currentStep={1}
-                    totalSteps={3}
-                    submitLabel="CREATE PROJECT"
+                    totalSteps={2}
+                    submitLabel="NEXT STEP"
                     isLoading={loading}
                     onCancel={handleCancel}
                 />

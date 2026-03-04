@@ -1,4 +1,3 @@
-
 import axiosClient from '@/lib/axios';
 import { ENDPOINTS } from './endpoints';
 
@@ -9,7 +8,6 @@ export interface GetDatasetsParams {
   description?: string;
   totalItems?: number;
   createdAt?: string;
-
 }
 
 const datasetApi = {

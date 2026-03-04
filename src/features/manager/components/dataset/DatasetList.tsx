@@ -60,11 +60,11 @@ const DatasetList: React.FC<DatasetListProps> = ({ datasets, loading }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch w-full">
           {datasets.map(ds => (
             <DatasetCard
-              key={ds.id}
+              key={ds.datasetId}
               {...ds}
-              onClick={() => handleEdit(ds.id)}
-              onEdit={() => handleEdit(ds.id)}
-              onDelete={() => handleDelete(ds.id)}
+              onClick={() => handleEdit(ds.datasetId)}
+              onEdit={() => handleEdit(ds.datasetId)}
+              onDelete={() => handleDelete(ds.datasetId)}
             />
           ))}
 

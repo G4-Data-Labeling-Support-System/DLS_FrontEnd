@@ -3,7 +3,6 @@ import { ENDPOINTS } from "./endpoints";
 
 interface GetProjectsParams {
     projectId?: string;
-    user_id?: string;
     projectName?: string;
     description?: string;
     projectStatus?: string;
