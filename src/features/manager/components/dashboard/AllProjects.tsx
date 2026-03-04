@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Space, Typography, Spin, message, Modal, Input, Select } from 'antd';
+import { Space, Typography, Spin, message, Modal, Input, Select, Empty } from 'antd';
 import { SearchOutlined, PlusOutlined } from '@ant-design/icons';
 import { ProjectCard } from './ProjectCard';
 import { ProjectDetail } from './ProjectDetail';
@@ -83,20 +83,20 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
         if (!id) return;
 
         Modal.confirm({
-            title: 'Xoá dự án',
-            content: 'Bạn có chắc chắn muốn xoá dự án này không?',
-            okText: 'Xoá',
+            title: 'Delete Project',
+            content: 'Are you sure you want to delete this project?',
+            okText: 'Delete',
             okType: 'danger',
-            cancelText: 'Hủy',
+            cancelText: 'Cancel',
             centered: true,
             onOk: async () => {
                 try {
                     await projectApi.deleteProject(id);
-                    message.success('Đã xoá dự án thành công!');
+                    message.success('Project deleted successfully!');
                     setProjects((prev) => prev.filter((p) => p.projectId !== id));
                 } catch (error) {
-                    console.error("Lỗi xóa dự án:", error);
-                    message.error('Có lỗi xảy ra khi xoá dự án.');
+                    console.error("Delete project error:", error);
+                    message.error('An error occurred while deleting the project.');
                 }
             },
         });
@@ -106,7 +106,7 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
         if (!id) return;
         // Mở comment dòng dưới đây nếu bạn đã thiết lập route
         navigate(`/manager/projects/edit/${id}`);
-        message.info(`Đang chuyển đến trang chỉnh sửa dự án ID: ${id}`);
+        message.info(`Redirecting to edit project ID: ${id}`);
     };
 
     if (loading) {
@@ -144,7 +144,7 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
                         ]}
                     />
                     <Input
-                        placeholder="Tìm kiếm dự án..."
+                        placeholder="Search projects..."
                         prefix={<SearchOutlined className="text-gray-400" />}
                         value={searchText}
                         onChange={(e) => setSearchText(e.target.value)}
@@ -153,34 +153,42 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
                 </Space>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
-                {projects
-                    .filter(p => !searchText || (p.projectName && p.projectName.toLowerCase().includes(searchText.toLowerCase())))
-                    .filter(p => statusFilter === 'ALL' || (p.projectStatus && p.projectStatus.toUpperCase() === statusFilter))
-                    .map((p) => {
-                        if (!p.projectId) return null; // Bỏ qua nếu data rác không có ID
+            {projects.length === 0 ? (
+                <Empty
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                    description={<span className="text-gray-500">No projects created yet.</span>}
+                    className="my-10 p-10 bg-[#1A1625]/40 rounded-xl border border-dashed border-gray-700"
+                />
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
+                    {projects
+                        .filter(p => !searchText || (p.projectName && p.projectName.toLowerCase().includes(searchText.toLowerCase())))
+                        .filter(p => statusFilter === 'ALL' || (p.projectStatus && p.projectStatus.toUpperCase() === statusFilter))
+                        .map((p) => {
+                            if (!p.projectId) return null; // Bỏ qua nếu data rác không có ID
 
-                        return (
-                            <ProjectCard
-                                key={p.projectId}
-                                {...p} // Spread toàn bộ thuộc tính chuẩn từ API vào Card
-                                onClick={() => handleProjectSelect(p.projectId as string)}
-                                onEdit={() => handleEdit(p.projectId)}
-                                onDelete={() => handleDelete(p.projectId)}
-                            />
-                        );
-                    })}
+                            return (
+                                <ProjectCard
+                                    key={p.projectId}
+                                    {...p} // Spread toàn bộ thuộc tính chuẩn từ API vào Card
+                                    onClick={() => handleProjectSelect(p.projectId as string)}
+                                    onEdit={() => handleEdit(p.projectId)}
+                                    onDelete={() => handleDelete(p.projectId)}
+                                />
+                            );
+                        })}
 
-                {/* Start New Project Card */}
-                <Link to={PATH_MANAGER.createProject} className="block group">
-                    <div className="h-full min-h-[180px] border-2 border-dashed border-gray-700 rounded-xl flex flex-col items-center justify-center gap-4 bg-[#1A1625]/30 hover:bg-[#1A1625] hover:border-violet-500 transition-all cursor-pointer">
-                        <div className="w-12 h-12 rounded-full bg-[#231e31] group-hover:bg-violet-600 flex items-center justify-center transition-colors">
-                            <PlusOutlined className="text-gray-400 group-hover:text-white text-xl" />
+                    {/* Start New Project Card */}
+                    <Link to={PATH_MANAGER.createProject} className="block group">
+                        <div className="h-full min-h-[180px] border-2 border-dashed border-gray-700 rounded-xl flex flex-col items-center justify-center gap-4 bg-[#1A1625]/30 hover:bg-[#1A1625] hover:border-violet-500 transition-all cursor-pointer">
+                            <div className="w-12 h-12 rounded-full bg-[#231e31] group-hover:bg-violet-600 flex items-center justify-center transition-colors">
+                                <PlusOutlined className="text-gray-400 group-hover:text-white text-xl" />
+                            </div>
+                            <span className="text-gray-400 group-hover:text-white font-medium font-display">Start New Project</span>
                         </div>
-                        <span className="text-gray-400 group-hover:text-white font-medium font-display">Start New Project</span>
-                    </div>
-                </Link>
-            </div>
+                    </Link>
+                </div>
+            )}
         </div>
     );
 };

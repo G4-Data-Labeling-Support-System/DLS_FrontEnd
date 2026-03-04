@@ -39,7 +39,7 @@ export const DatasetCard: React.FC<DatasetCardProps> = ({
             <div className="flex justify-between items-start mb-2">
                 <div className="flex-1 pr-2">
                     <Title level={5} className="!text-white !m-0 !text-sm leading-tight line-clamp-2" title={datasetName}>
-                        {datasetName || 'Dataset chưa có tên'}
+                        {datasetName || 'Unnamed Dataset'}
                     </Title>
                     <div className="text-gray-400 text-xs mt-1">v1</div>
                 </div>
@@ -61,7 +61,7 @@ export const DatasetCard: React.FC<DatasetCardProps> = ({
 
             <div className="grid grid-cols-1 gap-2 bg-[#231e31] p-3 rounded-lg mt-auto">
                 <div>
-                    <div className="text-[10px] text-gray-500 uppercase tracking-wider">Ngày tạo</div>
+                    <div className="text-[10px] text-gray-500 uppercase tracking-wider">Created At</div>
                     <div className="text-gray-300 text-xs font-semibold">{formatDate(createdAt)}</div>
                 </div>
             </div>
