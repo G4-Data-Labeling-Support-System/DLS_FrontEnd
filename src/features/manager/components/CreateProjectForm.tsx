@@ -10,7 +10,7 @@ import { FormFooter } from '@/features/manager/components/common/FormFooter';
 
 
 interface CreateProjectFormProps {
-    onSuccess?: () => void;
+    onSuccess?: (projectId?: string) => void;
 }
 
 export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess }) => {
@@ -33,12 +33,15 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
                 user_id: user?.id
             };
 
-            await projectApi.createProject(payload);
+            const response = await projectApi.createProject(payload);
 
             message.success('Project created successfully!');
 
             if (onSuccess) {
-                onSuccess();
+                // Ensure we get the ID correctly from the response
+                const createdProject = response.data?.data || response.data;
+                const newProjectId = createdProject?.projectId || createdProject?.id;
+                onSuccess(newProjectId);
             }
 
         } catch (error) {
@@ -105,7 +108,7 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
                 {/* Sử dụng FormFooter chung để đồng bộ nút bấm */}
                 <FormFooter
                     currentStep={1}
-                    totalSteps={4}
+                    totalSteps={3}
                     submitLabel="CREATE PROJECT"
                     isLoading={loading}
                     onCancel={handleCancel}

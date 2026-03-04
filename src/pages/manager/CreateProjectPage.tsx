@@ -6,9 +6,9 @@ import { ProjectSteps } from '@/features/manager/components/common/ProjectSteps'
 const CreateProjectPage: React.FC = () => {
     const navigate = useNavigate();
 
-    const handleProjectCreated = () => {
-        // Chuyển hướng đến Step 2
-        navigate('/manager/create-project/dataset-setup');
+    const handleProjectCreated = (projectId?: string) => {
+        // Chuyển hướng đến Step 2 và pass projectId qua state
+        navigate('/manager/create-project/guidelines-setup', { state: { projectId } });
     };
 
     return (

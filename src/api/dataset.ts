@@ -3,13 +3,13 @@ import axiosClient from '@/lib/axios';
 import { ENDPOINTS } from './endpoints';
 
 export interface GetDatasetsParams {
-  id?: string;
-  name?: string;
-  version?: number;
-  storageType?: string;
-  itemCount?: number;
+  datasetId?: string;
+  projectId?: string;
+  datasetName?: string;
+  description?: string;
+  totalItems?: number;
   createdAt?: string;
-  updatedAt?: string;
+
 }
 
 const datasetApi = {

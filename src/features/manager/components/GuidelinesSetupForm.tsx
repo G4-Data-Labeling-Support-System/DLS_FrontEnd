@@ -196,8 +196,8 @@ export const GuidelinesSetupForm: React.FC<GuidelinesSetupFormProps> = ({ onSucc
                 {/* Footer Component */}
                 <FormFooter
                     currentStep={3}
-                    totalSteps={4}
-                    submitLabel="Next: Team Assignment"
+                    totalSteps={3}
+                    submitLabel="COMPLETE PROJECT SETUP"
                     onBack={onBack}
                     isLoading={false}
                 />

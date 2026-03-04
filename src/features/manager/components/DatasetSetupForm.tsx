@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Form, Input, Upload, message } from 'antd';
 import { DeleteOutlined, PlusOutlined, InboxOutlined } from '@ant-design/icons';
 import type { UploadFile } from 'antd/es/upload/interface';
@@ -11,10 +11,9 @@ interface DatasetSetupFormProps {
     onSuccess?: () => void;
     onBack?: () => void;
     submitLabel?: string;
-    isStandalone?: boolean;
 }
 
-export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({ onSuccess, onBack, submitLabel, isStandalone = false }) => {
+export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({ onSuccess, onBack, submitLabel }) => {
     const [form] = Form.useForm();
     const [fileList, setFileList] = useState<(UploadFile & { preview?: string })[]>([]);
 
@@ -24,18 +23,7 @@ export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({ onSuccess, o
         fileListRef.current = fileList;
     }, [fileList]);
 
-    // --- LOGIC: Generate Current Date ---
-    // Using useMemo to calculate the date only once when the component mounts
-    const currentDate = useMemo(() => {
-        const date = new Date();
-        // Format the date as DD/MM/YYYY (Vietnamese locale is suitable for this)
-        return new Intl.DateTimeFormat('vi-VN', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-        }).format(date);
-    }, []);
-    // ------------------------------------
+
 
     // Cleanup URL object khi component unmount để tránh leak memory
     useEffect(() => {
@@ -95,26 +83,7 @@ export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({ onSuccess, o
         >
             <div className="flex flex-col gap-8">
 
-                {/* --- Section 1: Thông tin định danh (Readonly) --- */}
-                {!isStandalone && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <Form.Item label="Project ID (UUID)">
-                            <Input className="font-mono text-sm !bg-[#1a1625] !border-white/10" placeholder="Inherited from Project" disabled />
-                        </Form.Item>
 
-                        {/* --- UPDATED: Created At Field --- */}
-                        <Form.Item label="Created At">
-                            <div className="relative">
-                                <Input
-                                    defaultValue={currentDate} // Set the default value to the generated date
-                                    readOnly // Make it read-only
-                                    className="font-mono text-sm !text-gray-500 !bg-[#1a1625]/50 !border-white/5 cursor-not-allowed"
-                                />
-                            </div>
-                        </Form.Item>
-                        {/* ------------------------------- */}
-                    </div>
-                )}
 
                 {/* --- Section 2: Cấu hình Dataset --- */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -210,10 +179,10 @@ export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({ onSuccess, o
                 </div>
 
                 <FormFooter
-                    currentStep={isStandalone ? 1 : 2}
-                    totalSteps={4}
-                    hideSteps={isStandalone}
-                    submitLabel={submitLabel || "SAVE & CONTINUE TO GUIDELINES"}
+                    currentStep={1}
+                    totalSteps={1}
+                    hideSteps={true}
+                    submitLabel={submitLabel || "CREATE DATASET"}
                     onBack={onBack}
                     onCancel={onBack}
                     isLoading={false}
