@@ -40,9 +40,39 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
                 onSuccess(newProjectId);
             }
 
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('API Error:', error);
-            message.error('Failed to create project. Please try again.');
+
+            // Default generic error
+            let errorMessage = 'System error. Please try again.';
+
+            if (error instanceof Error) {
+                // If it's a generic Axios message about status codes, keep our generic message
+                if (!error.message.includes('Request failed with status code')) {
+                    errorMessage = error.message;
+                }
+            }
+
+            // type narrowing for axios/api errors
+            if (typeof error === 'object' && error !== null && 'response' in error) {
+                const responseError = error as { response?: { status?: number, data?: { message?: string } } };
+                const status = responseError.response?.status;
+
+                // If we get an explicit message from the backend, use it
+                if (responseError.response?.data?.message) {
+                    errorMessage = responseError.response.data.message;
+                } else if (status === 401 || status === 403 || status === 500 || status === 502 || status === 503) {
+                    // Fallback to generic system error for known bad HTTP statuses
+                    errorMessage = 'System error. Please try again.';
+                }
+            }
+
+            form.setFields([
+                {
+                    name: 'projectName',
+                    errors: [errorMessage],
+                },
+            ]);
         } finally {
             setLoading(false);
         }
