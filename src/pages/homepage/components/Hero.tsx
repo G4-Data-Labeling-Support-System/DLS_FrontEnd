@@ -1,4 +1,3 @@
-import { themeClasses } from "@/styles";
 import { ArrowRightOutlined, GithubFilled } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import Features from "./Features";
@@ -13,7 +12,7 @@ export default function Hero() {
                         <div className="">
                             <h1 className="font-inter text-6xl font-normal mb-10 max-w-3xl mx-auto">
                                 Redefining AI precision, <br></br>
-                                <span className={themeClasses.text.gradient}>with data labeling sytem</span>
+                                <span className="bg-gradient-to-r from-violet-300 via-violet-500 to-cyan-200 bg-clip-text text-transparent">with data labeling sytem</span>
                             </h1>
                             <p className={`text-lg text-white mb-12 max-w-2xl mx-auto font-normal tracking-wide leading-relaxed`}>
                                 The next evolution of data annotation. Immersive architectures
