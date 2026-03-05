@@ -1,24 +1,4 @@
-import { SettingOutlined } from '@ant-design/icons';
-
-
-interface BrandLogoProps {
-    className?: string;
-    iconClassName?: string;
-    textClassName?: string;
-    size?: 'sm' | 'md' | 'lg' | 'xl';
-}
-
 export const BrandLogo = ({ className = '', size = 'md' }: BrandLogoProps) => {
-    // Size mapping
-    const sizes = {
-        sm: { icon: 'text-xl', text: 'text-lg' },
-        md: { icon: 'text-2xl', text: 'text-xl' },
-        lg: { icon: 'text-3xl', text: 'text-2xl' },
-        xl: { icon: 'text-4xl', text: 'text-3xl' },
-    };
-
-    const currentSize = sizes[size];
-
     return (
         <div>
             {/* Icon: Violet with shadow */}
@@ -33,10 +13,11 @@ export const BrandLogo = ({ className = '', size = 'md' }: BrandLogoProps) => {
                     height={35}
                     className="cursor-pointer hover:animate-slowspin"
                 />
-                {/* Text: Data Labeling System */}
-            <span className={`text-white font-bold tracking-wider font-sans ${currentSize.text}`}>
+                
+            {/* Text: Data Labeling System */}
+            <span className={`text-white font-bold text-2xl font-inter`}>
                 Data Labeling{' '}
-                <span className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-cyan-400">
+                <span className="font-semibold bg-linear-to-r from-violet-300 via-violet-500 to-cyan-200 bg-clip-text text-transparent leading-none">
                     System
                 </span>
             </span>
