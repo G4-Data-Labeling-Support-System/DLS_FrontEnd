@@ -1,71 +1,11 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import assignmentApi from '@/api/assignment'
 import guidelineApi, { type Guideline } from '@/api/guideline'
+import projectApi from '@/api/project'
 import { themeClasses } from '@/styles'
-
-// ─── Mock Data ─────────────────────────────────────────────────────────────────
-
-interface Task {
-    id: number;
-    name: string;
-    batchLabel: string;
-    taskStatus: string;
-    annotationStatus: string;
-}
-
-interface Assignment {
-    id: string;
-    title: string;
-    project: string;
-    deadline: string;
-    totalTasks: number;
-    completedTasks: number;
-    description: string;
-    guideline: string;
-    tasks: Task[];
-}
-
-const ASSIGNMENT_DATA: Assignment = {
-    id: 'ASSIGN-001',
-    title: 'Assignment 1 Detail',
-    project: 'Object Detection — Urban Streets v3',
-    deadline: '2026-03-10',
-    totalTasks: 4,
-    completedTasks: 1,
-    description: 'You have been assigned a batch of images from the Urban Streets dataset. Each image requires bounding-box annotations around pedestrians, vehicles, and traffic signs. Please follow the annotation guidelines carefully to ensure consistent and high-quality labels.',
-    guideline: `1. Draw tight bounding boxes — do not include background padding unless an object is partially occluded.\n2. Label every visible instance of each class, even if occluded more than 50%.\n3. Use the "Crowd" tag when more than 5 pedestrians overlap and individual boxes are not feasible.\n4. Minimum box size is 10 × 10 pixels; ignore objects smaller than this threshold.\n5. If an image is blurry or corrupted, mark it as "Unqualified" and move to the next item.\n6. Submit your batch for review within 48 hours of acceptance.`,
-    tasks: [
-        {
-            id: 1,
-            name: 'Task 1',
-            batchLabel: 'Chờ review',
-            taskStatus: 'Pending',
-            annotationStatus: 'not_submitted',
-        },
-        {
-            id: 2,
-            name: 'Task 2',
-            batchLabel: 'Cần fix lại',
-            taskStatus: 'Pending',
-            annotationStatus: 'needs_editing',
-        },
-        {
-            id: 3,
-            name: 'Task 3',
-            batchLabel: 'Đã fix',
-            taskStatus: 'Completed',
-            annotationStatus: 'corrected',
-        },
-        {
-            id: 4,
-            name: 'Task 1',
-            batchLabel: 'Cần fix lại',
-            taskStatus: 'Pending',
-            annotationStatus: 'needs_editing',
-        },
-    ],
-};
+import { DashboardTabs, type DashboardTabType } from '@/features/manager/components/dashboard/DashboardTabs'
+import { useAuthStore } from '@/store/auth.store'
 
 // ─── Status helpers ───────────────────────────────────────────────────────────
 
@@ -127,12 +67,20 @@ function getAnnotationStatusStyle(status: string) {
 
 // ─── Sub-components ────────────────────────────────────────────────────────────
 
-function AssignmentHeader({ assignment }: { assignment: Assignment }) {
-    const progress = Math.round((assignment.completedTasks / assignment.totalTasks) * 100);
+function AssignmentHeader({ assignment }: { assignment: any }) {
+    const completed = assignment.completedTasks ?? 0;
+    const total = assignment.totalTasks ?? assignment.dataset?.totalItems ?? 1;
+    const progress = Math.round((completed / total) * 100);
 
+    const deadlineStr = assignment.dueDate || assignment.deadline || assignment.updatedAt || new Date().toISOString();
     const daysLeft = Math.ceil(
-        (new Date(assignment.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
+        (new Date(deadlineStr).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
     );
+
+    const title = assignment.assignmentName || assignment.title || 'Untitled Assignment';
+    const id = assignment.assignmentId || assignment.id || 'N/A';
+    const projectName = assignment.project?.projectName || assignment.project || 'Unknown Project';
+    const description = assignment.descriptionAssignment || assignment.description || 'No description provided.';
 
     return (
         <div className="glass-panel rounded-2xl p-7 relative overflow-hidden">
@@ -150,16 +98,16 @@ function AssignmentHeader({ assignment }: { assignment: Assignment }) {
                             <span className="text-xs font-mono text-violet-400 tracking-widest uppercase">Assignment</span>
                         </div>
                         <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-                            {assignment.title}
+                            {title}
                         </h1>
-                        <p className="text-sm text-gray-400 mt-1 font-mono">{assignment.id}</p>
+                        <p className="text-sm text-gray-400 mt-1 font-mono">{id}</p>
                     </div>
 
                     {/* Stats pills */}
                     <div className="flex flex-wrap gap-2 shrink-0">
                         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">
                             <span className="material-symbols-outlined text-[14px] text-violet-400">folder_special</span>
-                            {assignment.project}
+                            {projectName}
                         </div>
                         <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border text-xs font-bold ${daysLeft <= 2 ? 'border-red-500/30 text-red-400' : daysLeft <= 5 ? 'border-amber-500/30 text-amber-400' : 'border-emerald-500/30 text-emerald-400'}`}>
                             <span className="material-symbols-outlined text-[14px]">schedule</span>
@@ -170,7 +118,7 @@ function AssignmentHeader({ assignment }: { assignment: Assignment }) {
 
                 {/* Description */}
                 <p className="text-sm text-gray-300 leading-relaxed mb-6 max-w-3xl">
-                    {assignment.description}
+                    {description}
                 </p>
 
                 {/* Progress Bar */}
@@ -182,8 +130,75 @@ function AssignmentHeader({ assignment }: { assignment: Assignment }) {
                         />
                     </div>
                     <span className="text-xs font-mono text-violet-400 shrink-0">
-                        {assignment.completedTasks}/{assignment.totalTasks} tasks · {progress}%
+                        {completed}/{total === 1 && completed === 0 ? 0 : total} tasks · {progress}%
                     </span>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function AnnotatorProjectDetail({ project }: { project: any }) {
+    if (!project) return null;
+
+    const getStatusColor = (status?: string) => {
+        switch (status?.toUpperCase()) {
+            case 'ACTIVE': return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400';
+            case 'COMPLETED': return 'border-indigo-500/30 bg-indigo-500/10 text-indigo-400';
+            case 'PAUSED': return 'border-amber-500/30 bg-amber-500/10 text-amber-400';
+            case 'ARCHIVE': return 'border-red-500/30 bg-red-500/10 text-red-400';
+            default: return 'border-gray-500/30 bg-gray-500/10 text-gray-400';
+        }
+    };
+
+    const formatDate = (dateString?: string) => {
+        if (!dateString) return 'N/A';
+        return new Date(dateString).toLocaleDateString('vi-VN');
+    };
+
+    return (
+        <div className="glass-panel rounded-2xl p-7 relative overflow-hidden">
+            {/* Ambient glow */}
+            <div className="absolute -top-10 -right-10 w-56 h-56 rounded-full bg-violet-500/10 blur-[60px] pointer-events-none" />
+            <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-fuchsia-500/10 blur-[50px] pointer-events-none" />
+
+            <div className="relative z-10">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+                    <div>
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className="material-symbols-outlined text-[14px] text-violet-400">folder_special</span>
+                            <span className="text-xs font-mono text-violet-400 tracking-widest uppercase">Project</span>
+                        </div>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                            {project.projectName || project.name}
+                        </h1>
+                        <p className="text-sm text-gray-400 mt-1 font-mono">{project.projectId || project.id}</p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 shrink-0">
+                        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold ${getStatusColor(project.projectStatus || project.status)}`}>
+                            <span className="material-symbols-outlined text-[14px]">flag</span>
+                            {project.projectStatus || project.status || 'UNKNOWN'}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mb-6">
+                    <h3 className="text-sm font-semibold text-white mb-2">Description</h3>
+                    <p className="text-sm text-gray-300 leading-relaxed max-w-3xl">
+                        {project.description || <span className="text-gray-500 italic">No description provided for this project.</span>}
+                    </p>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 border-t border-white/10 pt-6">
+                    <div>
+                        <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Created At</p>
+                        <p className="text-sm font-semibold text-gray-300">{formatDate(project.createdAt)}</p>
+                    </div>
+                    <div>
+                        <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Last Updated</p>
+                        <p className="text-sm font-semibold text-gray-300">{formatDate(project.updatedAt)}</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -234,15 +249,15 @@ function GuidelineSection({ guideline }: { guideline: string }) {
 }
 
 /** Groups tasks by their batchLabel */
-function groupTasksByBatch(tasks: Task[]): Record<string, Task[]> {
-    return tasks.reduce<Record<string, Task[]>>((acc, task) => {
+function groupTasksByBatch(tasks: any[]): Record<string, any[]> {
+    return tasks.reduce<Record<string, any[]>>((acc, task) => {
         if (!acc[task.batchLabel]) acc[task.batchLabel] = [];
         acc[task.batchLabel].push(task);
         return acc;
     }, {});
 }
 
-function TaskCard({ task }: { task: Task }) {
+function TaskCard({ task }: { task: any }) {
     const statusStyle = getTaskStatusStyle(task.taskStatus);
     const annotationLabel = getAnnotationStatusLabel(task.annotationStatus);
     const annotationStyle = getAnnotationStatusStyle(task.annotationStatus);
@@ -288,7 +303,7 @@ function TaskCard({ task }: { task: Task }) {
     );
 }
 
-function TasksSection({ tasks }: { tasks: Task[] }) {
+function TasksSection({ tasks }: { tasks: any[] }) {
     const grouped = groupTasksByBatch(tasks);
 
     return (
@@ -330,105 +345,195 @@ function TasksSection({ tasks }: { tasks: Task[] }) {
     );
 }
 
+
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function AnnotatorDashboardPage() {
     // const assignment = ASSIGNMENT_DATA;
 
     const { assignmentId } = useParams<{ assignmentId: string }>()
+    const location = useLocation()
+    const navigate = useNavigate()
+
+    const activeTab: DashboardTabType = location.pathname.includes('/assignment') ? 'assignment' : 'project'
+
+    const handleTabChange = (tab: DashboardTabType) => {
+        if (tab === 'project') {
+            navigate(assignmentId ? `/annotator/project/${assignmentId}` : '/annotator/project')
+        } else {
+            navigate(assignmentId ? `/annotator/assignment/${assignmentId}` : '/annotator/assignment')
+        }
+    }
 
     const [assignment, setAssignment] = useState<any>(null)
+    const [projectDetail, setProjectDetail] = useState<any>(null)
     const [guideline, setGuideline] = useState<Guideline | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const { user } = useAuthStore()
 
     useEffect(() => {
-        if (!assignmentId) return
-
         const fetchData = async () => {
             try {
                 setLoading(true)
+                setError(null)
 
-                // 1️⃣ Get Assignment Detail
-                const assignmentRes = await assignmentApi.getAssignmentById(
-                    assignmentId
-                )
+                if (assignmentId) {
+                    // Fetch Assignment Data
+                    const assignmentRes = await assignmentApi.getAssignmentById(assignmentId)
+                    const assignmentData = assignmentRes.data?.data || assignmentRes.data
+                    setAssignment(assignmentData)
 
-                const assignmentData = assignmentRes.data.data
-                setAssignment(assignmentData)
+                    // Fetch associated Guideline
+                    const projectIdToFetch = assignmentData.projectId || assignmentData.project?.projectId;
+                    if (projectIdToFetch) {
+                        const guidelineRes = await guidelineApi.getByProject(projectIdToFetch)
+                        const activeGuide = guidelineRes.data?.find((g: any) => g.status === 'ACTIVE') ?? null
+                        setGuideline(activeGuide)
 
-                // 2️⃣ Get Guideline by projectId
-                if (assignmentData.projectId) {
-                    const guidelineRes = await guidelineApi.getByProject(
-                        assignmentData.projectId
-                    )
+                        // Also fetch the project details for the project tab
+                        const projectRes = await projectApi.getProjectById(projectIdToFetch)
+                        setProjectDetail(projectRes.data?.data || projectRes.data)
+                    }
+                } else {
+                    // No assignmentId (e.g., viewing normal dashboard screen)
+                    // Fetch the user's assignments
+                    if (user?.id) {
+                        let hasFetchedProject = false;
+                        try {
+                            const assignRes = await assignmentApi.getAssignmentsByAnnotator(user.id)
+                            const assignsList = assignRes.data?.data || assignRes.data || []
 
-                    const activeGuide =
-                        guidelineRes.data?.find(g => g.status === 'ACTIVE') ?? null
+                            if (assignsList.length > 0) {
+                                const firstAssign = assignsList[0]
+                                setAssignment(firstAssign)
 
-                    setGuideline(activeGuide)
+                                const projectIdToFetch = firstAssign.projectId || firstAssign.project?.projectId;
+                                if (projectIdToFetch) {
+                                    const guidelineRes = await guidelineApi.getByProject(projectIdToFetch)
+                                    const activeGuide = guidelineRes.data?.find((g: any) => g.status === 'ACTIVE') ?? null
+                                    setGuideline(activeGuide)
+
+                                    const projectRes = await projectApi.getProjectById(projectIdToFetch)
+                                    setProjectDetail(projectRes.data?.data || projectRes.data)
+                                    hasFetchedProject = true;
+                                }
+                            }
+                        } catch (err: any) {
+                            console.warn("Could not fetch assignments or user has no assignments", err)
+                        }
+
+                        // Fallback: If we couldn't fetch a project via assignments, fetch projects directly
+                        if (!hasFetchedProject) {
+                            try {
+                                const projectsRes = await projectApi.getProjects()
+                                const projectsList = projectsRes.data?.data || projectsRes.data || []
+
+                                if (projectsList.length > 0) {
+                                    const firstProjId = projectsList[0].projectId || projectsList[0].id
+                                    if (firstProjId) {
+                                        const detailRes = await projectApi.getProjectById(firstProjId)
+                                        setProjectDetail(detailRes.data?.data || detailRes.data)
+
+                                        const guidelineRes = await guidelineApi.getByProject(firstProjId)
+                                        const activeGuide = guidelineRes.data?.find((g: any) => g.status === 'ACTIVE') ?? null
+                                        setGuideline(activeGuide)
+                                        hasFetchedProject = true;
+                                    }
+                                }
+                            } catch (err) {
+                                console.error("Failed to fetch fallback projects", err)
+                            }
+                        }
+
+                        if (!hasFetchedProject) {
+                            // UI Display if totally empty
+                            setAssignment(null)
+                            // Guidelines should not be set
+                        }
+                    }
                 }
             } catch (err: any) {
                 console.error(err)
-                setError('Failed to load assignment')
+                setError('Failed to load data')
             } finally {
                 setLoading(false)
             }
         }
 
         fetchData()
-    }, [assignmentId])
+    }, [assignmentId, user?.id])
 
     // ───────────────────────────────────────────
 
-    if (loading) {
-        return (
-            <div className="text-center text-gray-400 py-20">
-                Loading assignment...
-            </div>
-        )
-    }
-
-    if (error || !assignment) {
-        return (
-            <div className="text-center text-red-400 py-20">
-                {error ?? 'Assignment not found'}
-            </div>
-        )
-    }
-
     return (
         <div className="flex flex-col gap-6 w-full max-w-4xl mx-auto pb-10">
+            <DashboardTabs activeTab={activeTab} onTabChange={handleTabChange} />
 
-            {/* Title */}
-            <div className="flex items-center gap-2 -mb-2">
-                <span className="material-symbols-outlined text-[14px] text-gray-500">
-                    arrow_downward
-                </span>
-                <span className="text-xs font-mono tracking-widest uppercase text-gray-500">
-                    Assignment
-                </span>
-            </div>
-
-            <div className="glass-panel rounded-2xl p-6 sm:p-8 flex flex-col gap-6">
-
-                {/* Assignment Header */}
-                <AssignmentHeader assignment={assignment} />
-
-                {/* Guideline Section */}
-                {guideline && (
-                    <GuidelineSection guideline={guideline.content} />
-                )}
-
-                {/* Tasks Section */}
-                {assignment.tasks && (
-                    <div
-                        className={`${themeClasses.backgrounds.card} border ${themeClasses.borders.violet10} rounded-2xl p-6`}
-                    >
-                        <TasksSection tasks={assignment.tasks} />
+            {activeTab === 'project' && (
+                loading ? (
+                    <div className="text-center text-gray-400 py-20">
+                        Loading project...
                     </div>
-                )}
-            </div>
+                ) : projectDetail ? (
+                    <>
+                        <AnnotatorProjectDetail project={projectDetail} />
+                        {guideline && (
+                            <div className="glass-panel border border-white/5 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                                <GuidelineSection guideline={guideline.content} />
+                            </div>
+                        )}
+                    </>
+                ) : (
+                    <div className="text-center text-gray-400 py-10 glass-panel rounded-2xl">
+                        No project found.
+                    </div>
+                )
+            )}
+
+            {activeTab === 'assignment' && (
+                loading ? (
+                    <div className="text-center text-gray-400 py-20">
+                        Loading assignment...
+                    </div>
+                ) : (error || !assignment) ? (
+                    <div className="text-center text-red-400 py-20">
+                        {error ?? 'Assignment not found'}
+                    </div>
+                ) : (
+                    <>
+                        {/* Title */}
+                        <div className="flex items-center gap-2 -mb-2">
+                            <span className="material-symbols-outlined text-[14px] text-gray-500">
+                                arrow_downward
+                            </span>
+                            <span className="text-xs font-mono tracking-widest uppercase text-gray-500">
+                                Assignment
+                            </span>
+                        </div>
+
+                        <div className="glass-panel rounded-2xl p-6 sm:p-8 flex flex-col gap-6">
+
+                            {/* Assignment Header */}
+                            <AssignmentHeader assignment={assignment} />
+
+                            {/* Guideline Section */}
+                            {guideline && (
+                                <GuidelineSection guideline={guideline.content} />
+                            )}
+
+                            {/* Tasks Section */}
+                            {assignment.tasks && (
+                                <div
+                                    className={`${themeClasses.backgrounds.card} border ${themeClasses.borders.violet10} rounded-2xl p-6`}
+                                >
+                                    <TasksSection tasks={assignment.tasks} />
+                                </div>
+                            )}
+                        </div>
+                    </>
+                )
+            )}
         </div>
     );
 }

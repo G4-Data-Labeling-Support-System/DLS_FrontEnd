@@ -34,6 +34,15 @@ const assignmentApi = {
             throw error;
         }
     },
+    getAssignmentsByAnnotator(annotatorId: string) {
+        try {
+            const url = ENDPOINTS.ASSIGNMENTS.BY_ANNOTATOR(annotatorId);
+            return axiosClient.get(url);
+        } catch (error) {
+            console.error("Failed to fetch assignments by annotator", error);
+            throw error;
+        }
+    },
     createAssignment(assignmentData?: GetAssignmentsParams) {
         try {
             const url = ENDPOINTS.ASSIGNMENTS.CREATE;
