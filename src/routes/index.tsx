@@ -142,11 +142,19 @@ export const router = createBrowserRouter([
         element: <LazyPage><CreateProjectPage /></LazyPage>,
       },
       {
+        path: PATH_MANAGER.editProject,
+        element: <LazyPage><CreateProjectPage /></LazyPage>,
+      },
+      {
         path: PATH_MANAGER.datasetSetup,
         element: <LazyPage><DatasetSetupPage /></LazyPage>,
       },
       {
         path: PATH_MANAGER.guidelinesSetup,
+        element: <LazyPage><GuidelinesSetupPage /></LazyPage>,
+      },
+      {
+        path: PATH_MANAGER.editGuidelines,
         element: <LazyPage><GuidelinesSetupPage /></LazyPage>,
       },
       {

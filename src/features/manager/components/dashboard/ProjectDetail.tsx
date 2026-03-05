@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Spin, message, Typography, Card, Button, Descriptions, Tag, Avatar, Empty, Modal } from 'antd';
+import { Spin, Typography, Card, Button, Descriptions, Tag, Avatar, Empty, message } from 'antd';
 import { EditOutlined, UserOutlined } from '@ant-design/icons';
 import projectApi, { type GetProjectsParams } from '@/api/project';
-import { mainClient } from '@/api/apiClients';
-import { ENDPOINTS } from '@/api/endpoints';
+import assignmentApi from '@/api/assignment';
 import { useNavigate } from 'react-router-dom';
 
 const { Title } = Typography;
@@ -19,6 +18,7 @@ interface ProjectDetailData extends GetProjectsParams {
 
 export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack }) => {
     const [project, setProject] = useState<ProjectDetailData | null>(null);
+    const [assignments, setAssignments] = useState<Record<string, unknown>[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const navigate = useNavigate();
 
@@ -42,50 +42,15 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
                         users: data.users || data.members || data.assignees || [] // Fallbacks cho dữ liệu mảng users
                     });
 
-                    // Check for assignments based on projectId globally
+                    // Fetch assignments for this project
                     try {
-                        const assignRes = await mainClient.get(ENDPOINTS.ASSIGNMENTS.LIST);
-                        const assignments = assignRes.data?.data || assignRes.data || [];
-
-                        let hasAssignment = false;
-                        if (Array.isArray(assignments)) {
-                            // Find any assignment that belongs to this project
-                            hasAssignment = assignments.some((a: Record<string, unknown>) =>
-                                String(a.projectId) === String(projectId) ||
-                                String(a.project_id) === String(projectId)
-                            );
-                        }
-
-                        if (!hasAssignment && isMounted) {
-                            Modal.warning({
-                                title: 'No Assignments Found',
-                                content: 'This project currently has no assignments created. Please create an assignment to proceed.',
-                                okText: 'Close',
-                                centered: true,
-                            });
+                        const assignRes = await assignmentApi.getAssignmentsByProjectId(projectId);
+                        const fetchedAssignments = assignRes.data?.data || assignRes.data || [];
+                        if (isMounted) {
+                            setAssignments(Array.isArray(fetchedAssignments) ? fetchedAssignments : []);
                         }
                     } catch (error) {
-                        const assignError = error as any;
-                        const isNotFoundError = assignError?.response?.data?.code === 404 || assignError?.response?.data?.message === 'Assignment not found';
-
-                        if (isNotFoundError && isMounted) {
-                            // Backend confirms 0 assignments system-wide
-                            Modal.warning({
-                                title: 'No Assignments Found',
-                                content: 'This project currently has no assignments created. Please create an assignment to proceed.',
-                                okText: 'Close',
-                                centered: true,
-                            });
-                        } else if (isMounted) {
-                            // Only warn if the API actually crashed or threw a 500
-                            console.warn("Global Assignment check failed:", assignError);
-                            Modal.warning({
-                                title: 'Error Checking Assignments',
-                                content: `Could not verify assignments status: ${assignError?.response?.data?.message || assignError.message}`,
-                                okText: 'Close',
-                                centered: true,
-                            });
-                        }
+                        console.error("Failed to fetch project assignments:", error);
                     }
                 }
             } catch (error) {
@@ -230,6 +195,50 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
                                             {((user.role as string) || (user.userRole as string)) || 'Member'}
                                         </span>
                                     </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </Card>
+
+            <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-6">
+                <div className="flex items-center justify-between mb-4">
+                    <span className="text-white text-lg font-display flex items-center gap-2">
+                        <span className="material-symbols-outlined text-blue-400">assignment</span>
+                        Project Assignments
+                    </span>
+                    <Tag color="#3b82f6" className="border-0 bg-blue-600/20 text-blue-300 font-bold px-3 rounded-full">
+                        {assignments.length} Assignments
+                    </Tag>
+                </div>
+
+                {assignments.length === 0 ? (
+                    <Empty
+                        image={Empty.PRESENTED_IMAGE_SIMPLE}
+                        description={<span className="text-gray-500">No assignments created yet</span>}
+                        className="my-8"
+                    />
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {assignments.map((assignment: Record<string, unknown>, index: number) => (
+                            <div key={(assignment.id as string) || index} className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-blue-500/30 transition-colors">
+                                <div className="flex justify-between items-start">
+                                    <h4 className="text-white font-bold text-sm truncate pr-2" title={(assignment.assignmentName as string) || (assignment.name as string)}>
+                                        {(assignment.assignmentName as string) || (assignment.name as string) || "Unnamed Assignment"}
+                                    </h4>
+                                    <Tag color={getStatusColor((assignment.status as string) || (assignment.assignmentStatus as string))} className="m-0 text-[10px] px-1.5 py-0 flex-shrink-0">
+                                        {(assignment.status as string) || (assignment.assignmentStatus as string) || 'UNKNOWN'}
+                                    </Tag>
+                                </div>
+                                <div className="text-gray-400 text-xs line-clamp-2 mt-1 min-h-[32px]">
+                                    {(assignment.description as string) || (assignment.descriptionAssignment as string) || "No description provided."}
+                                </div>
+                                <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/5">
+                                    <span className="text-gray-500 text-xs">{formatDate((assignment.createdAt as string))}</span>
+                                    <Button type="link" size="small" className="text-blue-400 p-0 h-auto" onClick={() => navigate(`/manager/assignments/${assignment.id || assignment.assignmentId}`)}>
+                                        View Details
+                                    </Button>
                                 </div>
                             </div>
                         ))}
