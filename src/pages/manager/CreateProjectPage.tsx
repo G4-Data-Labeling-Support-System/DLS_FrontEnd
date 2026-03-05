@@ -12,12 +12,12 @@ const CreateProjectPage: React.FC = () => {
     const editId = id || location.state?.projectId;
     const isEditMode = !!editId;
 
-    const handleProjectCreated = (projectId?: string) => {
-        // Chuyển hướng đến Step 2 và pass projectId qua state
+    const handleProjectCreated = (projectId?: string, projectData?: { projectName: string; description: string }) => {
+        // Chuyển hướng đến Step 2 và pass projectId/projectData qua state
         if (isEditMode) {
             navigate(`/manager/projects/edit/${projectId || editId}/guidelines`);
         } else {
-            navigate('/manager/create-project/guidelines-setup', { state: { projectId } });
+            navigate('/manager/create-project/guidelines-setup', { state: { projectData } });
         }
     };
 

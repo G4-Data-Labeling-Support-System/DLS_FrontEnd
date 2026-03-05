@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Spin, Typography, Card, Button, Descriptions, Tag, Avatar, Empty, message } from 'antd';
+import { Spin, Typography, Card, Button, Descriptions, Tag, Avatar, Empty, message, Modal, Form, Input, Select, DatePicker } from 'antd';
 import { EditOutlined, UserOutlined } from '@ant-design/icons';
 import projectApi, { type GetProjectsParams } from '@/api/project';
 import assignmentApi from '@/api/assignment';
+import guidelineApi from '@/api/guideline';
+import datasetApi from '@/api/dataset';
+import { userApi } from '@/api/userApi';
 import { useNavigate } from 'react-router-dom';
 
 const { Title } = Typography;
@@ -19,7 +22,14 @@ interface ProjectDetailData extends GetProjectsParams {
 export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack }) => {
     const [project, setProject] = useState<ProjectDetailData | null>(null);
     const [assignments, setAssignments] = useState<Record<string, unknown>[]>([]);
+    const [guidelines, setGuidelines] = useState<Record<string, unknown>[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
+    const [isFirstAssignmentModalVisible, setIsFirstAssignmentModalVisible] = useState(false);
+    const [firstAssignmentStep, setFirstAssignmentStep] = useState<'prompt' | 'form'>('prompt');
+    const [users, setUsers] = useState<Record<string, unknown>[]>([]);
+    const [datasets, setDatasets] = useState<Record<string, unknown>[]>([]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [form] = Form.useForm();
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -47,10 +57,31 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
                         const assignRes = await assignmentApi.getAssignmentsByProjectId(projectId);
                         const fetchedAssignments = assignRes.data?.data || assignRes.data || [];
                         if (isMounted) {
-                            setAssignments(Array.isArray(fetchedAssignments) ? fetchedAssignments : []);
+                            const arr = Array.isArray(fetchedAssignments) ? fetchedAssignments : [];
+                            setAssignments(arr);
+                            if (arr.length === 0) {
+                                setIsFirstAssignmentModalVisible(true);
+                                setFirstAssignmentStep('prompt');
+                            }
                         }
                     } catch (error) {
                         console.error("Failed to fetch project assignments:", error);
+                        if (isMounted) {
+                            setAssignments([]);
+                            setIsFirstAssignmentModalVisible(true);
+                            setFirstAssignmentStep('prompt');
+                        }
+                    }
+
+                    // Fetch guidelines for this project
+                    try {
+                        const guideRes = await guidelineApi.getGuidelines(projectId);
+                        const fetchedGuidelines = guideRes.data?.data || guideRes.data;
+                        if (isMounted) {
+                            setGuidelines(Array.isArray(fetchedGuidelines) ? fetchedGuidelines : fetchedGuidelines ? [fetchedGuidelines] : []);
+                        }
+                    } catch (error) {
+                        console.error("Failed to fetch project guidelines:", error);
                     }
                 }
             } catch (error) {
@@ -74,6 +105,57 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
             isMounted = false;
         };
     }, [projectId, onBack]);
+
+    const handleFirstAssignmentOk = async () => {
+        setFirstAssignmentStep('form');
+        try {
+            const userRes = await userApi.getUsers();
+            const userData = userRes as unknown as { data?: Record<string, unknown>[] };
+            setUsers((Array.isArray(userRes) ? userRes : userData?.data || []) as Record<string, unknown>[]);
+
+            const datasetRes = await datasetApi.getDatasetsByProjectId(projectId);
+            const datasetsData = datasetRes.data?.data || datasetRes.data;
+            setDatasets(Array.isArray(datasetsData) ? datasetsData : []);
+        } catch (error) {
+            console.error(error);
+            message.error("Failed to load users or datasets.");
+        }
+    };
+
+    const handleFirstAssignmentSubmit = async () => {
+        try {
+            const values = await form.validateFields();
+            setIsSubmitting(true);
+
+            const payload = {
+                assignmentName: values.assignmentName,
+                assignedTo: values.assignedTo,
+                assignedBy: values.assignedBy,
+                description: values.description,
+                dueDate: values.dueDate ? values.dueDate.toISOString() : undefined,
+                datasetId: values.datasetId,
+            };
+
+            await assignmentApi.createAssignmentForProject(projectId, payload);
+            message.success("First assignment created successfully!");
+            setIsFirstAssignmentModalVisible(false);
+            form.resetFields();
+
+            // Refresh assignments list
+            const assignRes = await assignmentApi.getAssignmentsByProjectId(projectId);
+            const fetchedAssignments = assignRes.data?.data || assignRes.data || [];
+            setAssignments(Array.isArray(fetchedAssignments) ? fetchedAssignments : []);
+        } catch (error) {
+            console.error("Failed to create first assignment", error);
+            if (error && typeof error === 'object' && 'errorFields' in error) {
+                // validation error, do nothing
+            } else {
+                message.error("Failed to create assignment");
+            }
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     const getStatusColor = (status?: string) => {
         switch (status?.toUpperCase()) {
@@ -127,124 +209,239 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
                 </Button>
             </div>
 
-            <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-6">
-                <Descriptions
-                    title={<span className="text-white text-lg font-display flex items-center gap-2"><span className="material-symbols-outlined text-violet-400">info</span>Project Information</span>}
-                    column={1}
-                    className="custom-descriptions"
-                    styles={{
-                        label: { color: '#9ca3af', fontWeight: 500, width: '150px' },
-                        content: { color: '#d1d5db' }
-                    }}
-                >
-                    <Descriptions.Item label="Project ID">
-                        <span className="font-mono text-violet-300 bg-violet-500/10 px-2 py-0.5 rounded border border-violet-500/20">
-                            {project.projectId}
-                        </span>
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Description">
-                        {project.description || <span className="text-gray-600 italic">No description</span>}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Created At">
-                        {formatDate(project.createdAt)}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Last Updated">
-                        {formatDate(project.updatedAt)}
-                    </Descriptions.Item>
-                </Descriptions>
+            <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-6 p-0 overflow-hidden">
+                <div className="flex flex-col lg:flex-row h-full w-full">
+                    <div className="flex-1 p-6 border-b lg:border-b-0 lg:border-r border-gray-800">
+                        <Descriptions
+                            title={<span className="text-white text-lg font-display flex items-center gap-2"><span className="material-symbols-outlined text-violet-400">info</span>Project Information</span>}
+                            column={1}
+                            className="custom-descriptions"
+                            styles={{
+                                label: { color: '#9ca3af', fontWeight: 500, width: '150px' },
+                                content: { color: '#d1d5db' }
+                            }}
+                        >
+                            <Descriptions.Item label="Project ID">
+                                <span className="font-mono text-violet-300 bg-violet-500/10 px-2 py-0.5 rounded border border-violet-500/20">
+                                    {project.projectId}
+                                </span>
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Description">
+                                {project.description || <span className="text-gray-600 italic">No description</span>}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Created At">
+                                {formatDate(project.createdAt)}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Last Updated">
+                                {formatDate(project.updatedAt)}
+                            </Descriptions.Item>
+                        </Descriptions>
+                    </div>
+
+                    <div className="flex-1 p-6 flex flex-col">
+                        <div className="flex items-center justify-between mb-4">
+                            <span className="text-white text-lg font-display flex items-center gap-2">
+                                <span className="material-symbols-outlined text-green-400">menu_book</span>
+                                Project Guidelines
+                            </span>
+                        </div>
+
+                        {guidelines.length === 0 ? (
+                            <div className="flex-1 flex flex-col items-center justify-center min-h-[150px]">
+                                <Empty
+                                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                                    description={<span className="text-gray-500">No guidelines created yet</span>}
+                                />
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 gap-4 overflow-y-auto pr-1" style={{ maxHeight: '300px' }}>
+                                {guidelines.map((guideline: Record<string, unknown>, index: number) => (
+                                    <div key={(guideline.guide_id as string) || (guideline.id as string) || index} className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-green-500/30 transition-colors">
+                                        <div className="flex justify-between items-start">
+                                            <h4 className="text-white font-bold text-sm truncate pr-2" title={(guideline.title as string) || "Unnamed Guideline"}>
+                                                {(guideline.title as string) || "Unnamed Guideline"}
+                                            </h4>
+                                        </div>
+                                        <div className="text-gray-400 text-sm mt-2 whitespace-pre-wrap">
+                                            {(guideline.content as string) || "No content provided."}
+                                        </div>
+                                        <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/5">
+                                            <span className="text-gray-500 text-xs">{formatDate((guideline.createdAt as string))}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
             </Card>
 
-            <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-6">
-                <div className="flex items-center justify-between mb-4">
-                    <span className="text-white text-lg font-display flex items-center gap-2">
-                        <span className="material-symbols-outlined text-fuchsia-400">group</span>
-                        Project Members
-                    </span>
-                    <Tag color="#8b5cf6" className="border-0 bg-violet-600/20 text-violet-300 font-bold px-3 rounded-full">
-                        {project.users?.length || 0} Members
-                    </Tag>
-                </div>
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-1 mb-6 mt-1">
+                <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
+                    <div className="flex items-center justify-between mb-4">
+                        <span className="text-white text-lg font-display flex items-center gap-2">
+                            <span className="material-symbols-outlined text-fuchsia-400">group</span>
+                            Project Members
+                        </span>
+                        <Tag color="#8b5cf6" className="border-0 bg-violet-600/20 text-violet-300 font-bold px-3 rounded-full">
+                            {project.users?.length || 0} Members
+                        </Tag>
+                    </div>
 
-                {(!project.users || project.users.length === 0) ? (
-                    <Empty
-                        image={Empty.PRESENTED_IMAGE_SIMPLE}
-                        description={<span className="text-gray-500">No members assigned yet</span>}
-                        className="my-8"
-                    />
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {project.users.map((user: Record<string, unknown>, index: number) => (
-                            <div key={user.id as string || index} className="flex items-center gap-3 bg-[#231e31] p-3 rounded-xl border border-white/5 hover:border-violet-500/30 transition-colors">
-                                <Avatar
-                                    src={user.avatar as string || user.coverImage as string || `https://ui-avatars.com/api/?name=${encodeURIComponent((user.fullName as string) || (user.username as string) || 'U')}&background=random`}
-                                    size={40}
-                                    icon={<UserOutlined />}
-                                    className="border border-white/10 flex-shrink-0"
-                                />
-                                <div className="min-w-0 flex-1">
-                                    <h4 className="text-white font-bold text-sm truncate">
-                                        {(user.fullName as string) || (user.name as string) || (user.username as string) || "Unknown User"}
-                                    </h4>
-                                    <div className="flex gap-2 items-center mt-1">
-                                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase ${String(user.role || user.userRole || '').toLowerCase().includes('manager')
-                                            ? 'bg-red-500/20 text-red-400'
-                                            : String(user.role || user.userRole || '').toLowerCase().includes('annotator')
-                                                ? 'bg-orange-500/20 text-orange-400'
-                                                : 'bg-cyan-500/20 text-cyan-400'
-                                            }`}>
-                                            {((user.role as string) || (user.userRole as string)) || 'Member'}
-                                        </span>
+                    {(!project.users || project.users.length === 0) ? (
+                        <Empty
+                            image={Empty.PRESENTED_IMAGE_SIMPLE}
+                            description={<span className="text-gray-500">No members assigned yet</span>}
+                            className="my-8"
+                        />
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {project.users.map((user: Record<string, unknown>, index: number) => (
+                                <div key={user.id as string || index} className="flex items-center gap-3 bg-[#231e31] p-3 rounded-xl border border-white/5 hover:border-violet-500/30 transition-colors">
+                                    <Avatar
+                                        src={user.avatar as string || user.coverImage as string || `https://ui-avatars.com/api/?name=${encodeURIComponent((user.fullName as string) || (user.username as string) || 'U')}&background=random`}
+                                        size={40}
+                                        icon={<UserOutlined />}
+                                        className="border border-white/10 flex-shrink-0"
+                                    />
+                                    <div className="min-w-0 flex-1">
+                                        <h4 className="text-white font-bold text-sm truncate">
+                                            {(user.fullName as string) || (user.name as string) || (user.username as string) || "Unknown User"}
+                                        </h4>
+                                        <div className="flex gap-2 items-center mt-1">
+                                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase ${String(user.role || user.userRole || '').toLowerCase().includes('manager')
+                                                ? 'bg-red-500/20 text-red-400'
+                                                : String(user.role || user.userRole || '').toLowerCase().includes('annotator')
+                                                    ? 'bg-orange-500/20 text-orange-400'
+                                                    : 'bg-cyan-500/20 text-cyan-400'
+                                                }`}>
+                                                {((user.role as string) || (user.userRole as string)) || 'Member'}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
+                    )}
+                </Card>
+
+                <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
+                    <div className="flex items-center justify-between mb-4">
+                        <span className="text-white text-lg font-display flex items-center gap-2">
+                            <span className="material-symbols-outlined text-blue-400">assignment</span>
+                            Project Assignments
+                        </span>
+                        <Tag color="#3b82f6" className="border-0 bg-blue-600/20 text-blue-300 font-bold px-3 rounded-full">
+                            {assignments.length} Assignments
+                        </Tag>
                     </div>
-                )}
-            </Card>
 
-            <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-6">
-                <div className="flex items-center justify-between mb-4">
-                    <span className="text-white text-lg font-display flex items-center gap-2">
-                        <span className="material-symbols-outlined text-blue-400">assignment</span>
-                        Project Assignments
-                    </span>
-                    <Tag color="#3b82f6" className="border-0 bg-blue-600/20 text-blue-300 font-bold px-3 rounded-full">
-                        {assignments.length} Assignments
-                    </Tag>
-                </div>
+                    {assignments.length === 0 ? (
+                        <Empty
+                            image={Empty.PRESENTED_IMAGE_SIMPLE}
+                            description={<span className="text-gray-500">No assignments created yet</span>}
+                            className="my-8"
+                        />
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {assignments.map((assignment: Record<string, unknown>, index: number) => (
+                                <div key={(assignment.id as string) || index} className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-blue-500/30 transition-colors">
+                                    <div className="flex justify-between items-start">
+                                        <h4 className="text-white font-bold text-sm truncate pr-2" title={(assignment.assignmentName as string) || (assignment.name as string)}>
+                                            {(assignment.assignmentName as string) || (assignment.name as string) || "Unnamed Assignment"}
+                                        </h4>
+                                        <Tag color={getStatusColor((assignment.status as string) || (assignment.assignmentStatus as string))} className="m-0 text-[10px] px-1.5 py-0 flex-shrink-0">
+                                            {(assignment.status as string) || (assignment.assignmentStatus as string) || 'UNKNOWN'}
+                                        </Tag>
+                                    </div>
+                                    <div className="text-gray-400 text-xs line-clamp-2 mt-1 min-h-[32px]">
+                                        {(assignment.description as string) || (assignment.descriptionAssignment as string) || "No description provided."}
+                                    </div>
+                                    <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/5">
+                                        <span className="text-gray-500 text-xs">{formatDate((assignment.createdAt as string))}</span>
+                                        <Button type="link" size="small" className="text-blue-400 p-0 h-auto" onClick={() => navigate(`/manager/assignments/${assignment.id || assignment.assignmentId}`)}>
+                                            View Details
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </Card>
+            </div>
 
-                {assignments.length === 0 ? (
-                    <Empty
-                        image={Empty.PRESENTED_IMAGE_SIMPLE}
-                        description={<span className="text-gray-500">No assignments created yet</span>}
-                        className="my-8"
-                    />
+            <Modal
+                title={<span className="font-display text-lg">{firstAssignmentStep === 'prompt' ? "No Assignments Found" : "Create First Assignment"}</span>}
+                open={isFirstAssignmentModalVisible}
+                onCancel={() => setIsFirstAssignmentModalVisible(false)}
+                destroyOnHidden
+                footer={
+                    firstAssignmentStep === 'prompt' ? [
+                        <Button key="cancel" onClick={() => setIsFirstAssignmentModalVisible(false)}>
+                            Cancel
+                        </Button>,
+                        <Button key="ok" type="primary" onClick={handleFirstAssignmentOk} className="bg-violet-600 hover:bg-violet-500 border-none">
+                            OK
+                        </Button>
+                    ] : [
+                        <Button key="back" onClick={() => setFirstAssignmentStep('prompt')}>
+                            Back
+                        </Button>,
+                        <Button key="submit" type="primary" loading={isSubmitting} onClick={handleFirstAssignmentSubmit} className="bg-violet-600 hover:bg-violet-500 border-none">
+                            Create Assignment
+                        </Button>
+                    ]
+                }
+            >
+                {firstAssignmentStep === 'prompt' ? (
+                    <div className="py-4 text-gray-600 dark:text-gray-300">
+                        <p>Dự án hiện đang chưa có assignment. Bạn hãy tạo assignment đầu tiên.</p>
+                    </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {assignments.map((assignment: Record<string, unknown>, index: number) => (
-                            <div key={(assignment.id as string) || index} className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-blue-500/30 transition-colors">
-                                <div className="flex justify-between items-start">
-                                    <h4 className="text-white font-bold text-sm truncate pr-2" title={(assignment.assignmentName as string) || (assignment.name as string)}>
-                                        {(assignment.assignmentName as string) || (assignment.name as string) || "Unnamed Assignment"}
-                                    </h4>
-                                    <Tag color={getStatusColor((assignment.status as string) || (assignment.assignmentStatus as string))} className="m-0 text-[10px] px-1.5 py-0 flex-shrink-0">
-                                        {(assignment.status as string) || (assignment.assignmentStatus as string) || 'UNKNOWN'}
-                                    </Tag>
-                                </div>
-                                <div className="text-gray-400 text-xs line-clamp-2 mt-1 min-h-[32px]">
-                                    {(assignment.description as string) || (assignment.descriptionAssignment as string) || "No description provided."}
-                                </div>
-                                <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/5">
-                                    <span className="text-gray-500 text-xs">{formatDate((assignment.createdAt as string))}</span>
-                                    <Button type="link" size="small" className="text-blue-400 p-0 h-auto" onClick={() => navigate(`/manager/assignments/${assignment.id || assignment.assignmentId}`)}>
-                                        View Details
-                                    </Button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                    <Form form={form} layout="vertical" className="mt-4">
+                        <Form.Item label="Assignment Name" name="assignmentName" rules={[{ required: true, message: 'Please enter assignment name' }]}>
+                            <Input placeholder="Enter assignment name" />
+                        </Form.Item>
+                        <div className="grid grid-cols-2 gap-4">
+                            <Form.Item label="Assigned To" name="assignedTo" rules={[{ required: true, message: 'Please select assigned to' }]}>
+                                <Select placeholder="Select user">
+                                    {users.map((u: Record<string, unknown>) => (
+                                        <Select.Option key={u.id as string} value={u.id as string}>
+                                            {(u.fullName as string) || (u.username as string) || (u.name as string)}
+                                        </Select.Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+                            <Form.Item label="Assigned By" name="assignedBy" rules={[{ required: true, message: 'Please select assigned by' }]}>
+                                <Select placeholder="Select user">
+                                    {users.map((u: Record<string, unknown>) => (
+                                        <Select.Option key={u.id as string} value={u.id as string}>
+                                            {(u.fullName as string) || (u.username as string) || (u.name as string)}
+                                        </Select.Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+                        </div>
+                        <Form.Item label="Dataset" name="datasetId" rules={[{ required: true, message: 'Please select a dataset' }]}>
+                            <Select placeholder="Select dataset">
+                                {datasets.map((d: Record<string, unknown>) => (
+                                    <Select.Option key={(d.id as string) || (d.datasetId as string)} value={(d.id as string) || (d.datasetId as string)}>
+                                        {(d.datasetName as string) || (d.name as string)}
+                                    </Select.Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                        <Form.Item label="Due Date" name="dueDate" rules={[{ required: true, message: 'Please select due date' }]}>
+                            <DatePicker className="w-full" style={{ width: '100%' }} />
+                        </Form.Item>
+                        <Form.Item label="Description" name="description">
+                            <Input.TextArea placeholder="Enter description" rows={4} />
+                        </Form.Item>
+                    </Form>
                 )}
-            </Card>
+            </Modal>
+
+
 
             <style>{`
                 .custom-descriptions .ant-descriptions-title {

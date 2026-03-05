@@ -8,7 +8,7 @@ import { FormFooter } from '@/features/manager/components/common/FormFooter';
 
 
 interface CreateProjectFormProps {
-    onSuccess?: (projectId?: string) => void;
+    onSuccess?: (projectId?: string, projectData?: { projectName: string; description: string }) => void;
     editId?: string;
 }
 
@@ -60,15 +60,11 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess,
             if (editId) {
                 await projectApi.updateProject(editId, payload);
                 message.success('Project updated successfully!');
-                if (onSuccess) onSuccess(editId);
+                if (onSuccess) onSuccess(editId, payload);
             } else {
-                const response = await projectApi.createProject(payload);
-                message.success('Project created successfully!');
-
+                // DO NOT CREATE project immediately. Wait until step 2.
                 if (onSuccess) {
-                    const createdProject = response.data?.data || response.data;
-                    const newProjectId = createdProject?.projectId || createdProject?.id;
-                    onSuccess(newProjectId);
+                    onSuccess(undefined, payload);
                 }
             }
 

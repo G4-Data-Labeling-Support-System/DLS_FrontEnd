@@ -39,6 +39,15 @@ const datasetApi = {
       throw error;
     }
   },
+  getDatasetsByProjectId(projectId: string) {
+    try {
+      const url = ENDPOINTS.DATASETS.BY_PROJECT(projectId);
+      return axiosClient.get(url);
+    } catch (error) {
+      console.error('Failed to fetch datasets by project id', error);
+      throw error;
+    }
+  },
   updateDataset(id: string, datasetData?: GetDatasetsParams) {
     try {
       const url = ENDPOINTS.DATASETS.DETAIL ? ENDPOINTS.DATASETS.DETAIL(id) : `${ENDPOINTS.DATASETS.LIST}/${id}`;

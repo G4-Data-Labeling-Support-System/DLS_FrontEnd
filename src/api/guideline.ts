@@ -1,43 +1,60 @@
-    import { mainClient } from './apiClients';
-    import { ENDPOINTS } from './endpoints';
+import axiosClient from "@/lib/axios";
+import { ENDPOINTS } from "./endpoints";
 
-    // ─── Types (matching API response schema) ─────────────────────────────────────
 
-    export interface GuidelineProject {
-        projectId: string;
-        projectName: string;
-        description: string;
-        status: 'ACTIVE' | string;
-        createdAt: string;
-        updatedAt: string;
-    }
+interface GetGuidelinesParams {
+    guide_id?: string;
+    content?: string;
+    createdAt?: string;
+    status?: string;
+    title?: string;
+    version?: string;
+    projectId?: string;
+    user_id?: string;
+}
 
-    export interface Guideline {
-        guideId: string;
-        projectId: string;
-        title: string;
-        content: string;
-        version: number;
-        status: 'ACTIVE' | string;
-        createdAt: string;
-        updatedAt: string;
-        project: GuidelineProject;
-    }
+const guidelineApi = {
+    getGuidelines(projectId: string) {
+        try {
+            const url = ENDPOINTS.GUIDELINES.LIST(projectId);
+            return axiosClient.get(url);
+        } catch (error) {
+            console.error("Failed to fetch guidelines", error);
+            throw error;
+        }
+    },
+    getProjectById(id: string) {
+        try {
+            const url = ENDPOINTS.PROJECTS.DETAIL(id);
+            return axiosClient.get(url);
+        } catch (error) {
+            console.error("Failed to fetch project by id", error);
+            throw error;
+        }
+    },
+    createGuideline(projectId: string, guidelineData?: GetGuidelinesParams) {
+        try {
+            const url = ENDPOINTS.GUIDELINES.CREATE(projectId);
+            return axiosClient.post(url, guidelineData, {
+                headers: {
+                    'user_id': guidelineData?.user_id
+                }
+            });
+        } catch (error) {
+            console.error("Failed to create project", error);
+            throw error;
+        }
+    },
+    updateGuideline(id: string, guidelineData?: GetGuidelinesParams) {
+        try {
+            const url = ENDPOINTS.GUIDELINES.UPDATE(id);
+            return axiosClient.put(url, guidelineData);
+        } catch (error) {
+            console.error("Failed to update project", error);
+            throw error;
+        }
+    },
+}
 
-    export interface GuidelineListResponse {
-        code: number;
-        message: string;
-        data: Guideline[];
-    }
-
-    // ─── API ───────────────────────────────────────────────────────────────────────
-
-    const guidelineApi = {
-        async getByProject(projectId: string): Promise<GuidelineListResponse> {
-            const url = ENDPOINTS.GUIDELINES.BY_PROJECT(projectId);
-            const response = await mainClient.get<GuidelineListResponse>(url);
-            return response.data;
-        },
-    };
-
-    export default guidelineApi;
+export default guidelineApi;
+export type { GetGuidelinesParams };
