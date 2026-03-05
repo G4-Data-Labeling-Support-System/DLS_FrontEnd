@@ -1,7 +1,7 @@
 import React from 'react';
 import { Layout, ConfigProvider } from 'antd';
 import { Outlet } from 'react-router-dom';
-import { Header } from '@/components/layout/Header';
+import { Header } from '@/components/common/Header';
 import { managerTheme } from '@/styles/themeConfig';
 
 const { Content } = Layout;

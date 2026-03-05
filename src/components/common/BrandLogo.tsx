@@ -20,19 +20,27 @@ export const BrandLogo = ({ className = '', size = 'md' }: BrandLogoProps) => {
     const currentSize = sizes[size];
 
     return (
-        <div className={`flex items-center gap-3 ${className}`}>
+        <div>
             {/* Icon: Violet with shadow */}
-            <div className={`text-violet-500 drop-shadow-[0_0_10px_rgba(139,92,246,0.5)] ${currentSize.icon}`}>
-                <SettingOutlined spin />
-            </div>
-
-            {/* Text: Data Labeling System */}
+            <a
+                href="/"
+                className="h-auto w-auto flex flex-row gap-3 items-center"
+            >
+                <img
+                    src="/black-hole.png"
+                    alt="logo"
+                    width={35}
+                    height={35}
+                    className="cursor-pointer hover:animate-slowspin"
+                />
+                {/* Text: Data Labeling System */}
             <span className={`text-white font-bold tracking-wider font-sans ${currentSize.text}`}>
                 Data Labeling{' '}
-                <span className="font-light text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400">
+                <span className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-cyan-400">
                     System
                 </span>
             </span>
+            </a>
         </div>
     );
 };

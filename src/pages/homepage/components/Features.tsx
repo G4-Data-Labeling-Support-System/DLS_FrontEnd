@@ -3,7 +3,7 @@ import { DeploymentUnitOutlined, GlobalOutlined, SecurityScanOutlined, ArrowRigh
 
 export default function Features() {
     return (
-        <section className={`${themeClasses.layouts.section} ${themeClasses.backgrounds.blackAlpha} z-30`}>
+        <section className={`relative z-2`}>
             <div className={themeClasses.layouts.container}>
                 <div className={themeClasses.layouts.gridCols3}>
                     <div className={`${themeClasses.cards.glass} p-10 rounded-[2rem] flex flex-col items-start gap-6 group cursor-pointer`}>

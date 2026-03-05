@@ -8,7 +8,7 @@ import DatasetSetupPage from '@/pages/manager/DatasetSetupPage'
 import ManagerLayout from '@/components/layout/ManagerLayout'
 import GuidelinesSetupPage from '@/pages/manager/GuidelinesSetupPage'
 import { GuestGuard, RoleGuard } from './guards'
-import { Header } from '@/components/layout/Header'
+import { Header } from '@/components/common/Header'
 import { Layout } from 'antd'
 
 // Lazy load pages for code splitting

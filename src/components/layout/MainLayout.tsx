@@ -1,7 +1,7 @@
 import { Outlet } from 'react-router-dom'
-import { Header } from './Header'
-import { Footer } from './Footer'
-import { Sidebar } from './Sidebar'
+import { Header } from '../common/Header'
+import { Footer } from '../common/Footer'
+import { Sidebar } from '../common/Sidebar'
 
 export function MainLayout() {
     return (
