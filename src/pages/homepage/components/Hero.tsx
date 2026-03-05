@@ -10,6 +10,14 @@ export default function Hero() {
                 <div className={`relative z-10 text-center`}>
                     <div className="relative w-full max-w-1xl mx-auto mt-40 mb-40 flex justify-center">
                         <div className="">
+                            <div className="inline-flex h-fit w-fit mb-10 cursor-pointer justify-center rounded-full border border-gray-400 bg-gray-400 px-3 py-1 text-xs font-medium leading-5 text-slate-600 backdrop-blur-xl dark:bg-black dark:text-slate-200">
+                                <img 
+                                    src="/black-hole.png" 
+                                    width={20} height={10} 
+                                    alt="logo" 
+                                    className="mr-2"/>
+                                Data Labeling System ⚡️
+                            </div>
                             <h1 className="font-inter text-white text-6xl font-normal mb-10 max-w-3xl mx-auto">
                                 Redefining AI precision, <br></br>
                                 <span className="bg-gradient-to-r from-violet-300 via-violet-500 to-cyan-200 bg-clip-text text-transparent">with data labeling sytem</span>
