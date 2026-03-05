@@ -32,6 +32,7 @@ export const ENDPOINTS = {
     LIST: '/datasets',
     DETAIL: (id: string) => `/datasets/${id}`,
     CREATE: '/datasets',
+    BY_PROJECT: (projectId: string) => `/datasets/project/${projectId}`,
   },
 
   ASSIGNMENTS: {
@@ -39,7 +40,8 @@ export const ENDPOINTS = {
     DETAIL: (id: string) => `/assignments/${id}`,
     CREATE: '/assignments',
     DELETE: (id: string) => `/assignments/${id}/remove`,
-    BY_PROJECT: (projectId: string) => `/assignments/project/${projectId}`,
+    BY_PROJECT: (projectId: string) => `/assignments/projects/${projectId}`,
+    CREATE_BY_PROJECT: (projectId: string) => `/assignments/projects/${projectId}`,
   },
 
   GUIDELINES: {
