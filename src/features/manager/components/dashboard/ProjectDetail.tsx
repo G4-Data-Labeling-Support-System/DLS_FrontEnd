@@ -131,9 +131,11 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
                 assignmentName: values.assignmentName,
                 assignedTo: values.assignedTo,
                 assignedBy: values.assignedBy,
+                reviewerId: values.reviewerId,
                 description: values.description,
                 dueDate: values.dueDate ? values.dueDate.toISOString() : undefined,
                 datasetId: values.datasetId,
+                projectId: projectId,
             };
 
             await assignmentApi.createAssignmentForProject(projectId, payload);
@@ -402,23 +404,41 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
                         <Form.Item label="Assignment Name" name="assignmentName" rules={[{ required: true, message: 'Please enter assignment name' }]}>
                             <Input placeholder="Enter assignment name" />
                         </Form.Item>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-3 gap-4">
                             <Form.Item label="Assigned To" name="assignedTo" rules={[{ required: true, message: 'Please select assigned to' }]}>
                                 <Select placeholder="Select user">
-                                    {users.map((u: Record<string, unknown>) => (
-                                        <Select.Option key={u.id as string} value={u.id as string}>
-                                            {(u.fullName as string) || (u.username as string) || (u.name as string)}
-                                        </Select.Option>
-                                    ))}
+                                    {users.map((u: Record<string, unknown>) => {
+                                        const userId = String(u.id || u.userId || u.account_id || u.username || '');
+                                        return (
+                                            <Select.Option key={userId} value={userId}>
+                                                {(u.fullName as string) || (u.username as string) || (u.name as string)}
+                                            </Select.Option>
+                                        );
+                                    })}
+                                </Select>
+                            </Form.Item>
+                            <Form.Item label="Reviewer" name="reviewerId" rules={[{ required: true, message: 'Please select reviewer' }]}>
+                                <Select placeholder="Select user">
+                                    {users.map((u: Record<string, unknown>) => {
+                                        const userId = String(u.id || u.userId || u.account_id || u.username || '');
+                                        return (
+                                            <Select.Option key={userId} value={userId}>
+                                                {(u.fullName as string) || (u.username as string) || (u.name as string)}
+                                            </Select.Option>
+                                        );
+                                    })}
                                 </Select>
                             </Form.Item>
                             <Form.Item label="Assigned By" name="assignedBy" rules={[{ required: true, message: 'Please select assigned by' }]}>
                                 <Select placeholder="Select user">
-                                    {users.map((u: Record<string, unknown>) => (
-                                        <Select.Option key={u.id as string} value={u.id as string}>
-                                            {(u.fullName as string) || (u.username as string) || (u.name as string)}
-                                        </Select.Option>
-                                    ))}
+                                    {users.map((u: Record<string, unknown>) => {
+                                        const userId = String(u.id || u.userId || u.account_id || u.username || '');
+                                        return (
+                                            <Select.Option key={userId} value={userId}>
+                                                {(u.fullName as string) || (u.username as string) || (u.name as string)}
+                                            </Select.Option>
+                                        );
+                                    })}
                                 </Select>
                             </Form.Item>
                         </div>
