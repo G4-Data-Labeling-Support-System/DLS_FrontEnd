@@ -38,11 +38,15 @@ export const ENDPOINTS = {
     LIST: '/assignments',
     DETAIL: (id: string) => `/assignments/${id}`,
     CREATE: '/assignments',
-    DELETE: (id: string) => `/assignments/${id}/remove`
+    DELETE: (id: string) => `/assignments/${id}/remove`,
+    BY_PROJECT: (projectId: string) => `/assignments/project/${projectId}`,
   },
 
   GUIDELINES: {
-    BY_PROJECT: (projectId: string) => `/guidelines/project/${projectId}`,
+    LIST: (projectId: string) => `/guidelines/project/${projectId}`,
+    DETAIL: (id: string) => `/guidelines/${id}`,
+    CREATE: (projectId: string) => `/guidelines/project/${projectId}`,
+    UPDATE: (id: string) => `/guidelines/${id}`,
   },
 
 } as const
