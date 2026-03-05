@@ -35,7 +35,11 @@ const guidelineApi = {
     createGuideline(projectId: string, guidelineData?: GetGuidelinesParams) {
         try {
             const url = ENDPOINTS.GUIDELINES.CREATE(projectId);
-            return axiosClient.post(url, guidelineData);
+            return axiosClient.post(url, guidelineData, {
+                headers: {
+                    'user_id': guidelineData?.user_id
+                }
+            });
         } catch (error) {
             console.error("Failed to create project", error);
             throw error;

@@ -40,20 +40,18 @@ const GuidelinesSetupPage: React.FC = () => {
                 }
             }
             // Step 2: Create guidelines
-            console.log("DEBUG: Full user object from store:", JSON.stringify(user, null, 2));
             const currentUserId = user?.id || (user as any)?.userId || '';
-            console.log("DEBUG: Determined userId:", currentUserId);
 
             const guidelinePayload = {
                 title: values.title,
                 content: values.content,
-                user_id: currentUserId,
+                userId: currentUserId,
+                projectId: currentProjectId
             };
-            console.log("DEBUG: Sending guideline payload:", guidelinePayload);
 
             await guidelineApi.createGuideline(currentProjectId, guidelinePayload);
             message.success(editId ? "Guidelines updated successfully" : "Project and guidelines created successfully");
-            navigate('/manager/create-project/team-assignment', { state: { projectId: currentProjectId } });
+            navigate('/manager');
         } catch (error) {
             console.error("Failed to save guidelines or project:", error);
             message.error("Failed to save guidelines or project");
