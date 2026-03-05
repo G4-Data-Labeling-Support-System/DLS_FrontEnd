@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { themeClasses } from '@/styles';
 import { Button } from '@/shared/components/ui/Button';
-import { ArrowLeftOutlined, MailOutlined, LockOutlined, ArrowRightOutlined } from '@ant-design/icons';
+import { MailOutlined, LockOutlined } from '@ant-design/icons';
 import { Form, Input } from 'antd';
 import { BrandLogo } from '@/components/common/BrandLogo';
 

@@ -10,7 +10,7 @@ export default function Hero() {
                 <div className={`relative z-10 text-center`}>
                     <div className="relative w-full max-w-1xl mx-auto mt-40 mb-40 flex justify-center">
                         <div className="">
-                            <h1 className="font-inter text-6xl font-normal mb-10 max-w-3xl mx-auto">
+                            <h1 className="font-inter text-white text-6xl font-normal mb-10 max-w-3xl mx-auto">
                                 Redefining AI precision, <br></br>
                                 <span className="bg-gradient-to-r from-violet-300 via-violet-500 to-cyan-200 bg-clip-text text-transparent">with data labeling sytem</span>
                             </h1>
