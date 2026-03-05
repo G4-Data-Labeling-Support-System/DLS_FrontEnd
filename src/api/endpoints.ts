@@ -38,8 +38,11 @@ export const ENDPOINTS = {
     LIST: '/assignments',
     DETAIL: (id: string) => `/assignments/${id}`,
     CREATE: '/assignments',
-    DELETE: (id: string) => `/assignments/${id}/remove`,
-    BY_PROJECT: (projectId: string) => `/assignments/projects/${projectId}`
-  }
+    DELETE: (id: string) => `/assignments/${id}/remove`
+  },
+
+  GUIDELINES: {
+    BY_PROJECT: (projectId: string) => `/guidelines/project/${projectId}`,
+  },
 
 } as const

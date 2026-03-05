@@ -26,3 +26,15 @@ export const PATH_MANAGER = {
   datasetManagement: '/manager/datasets',
   createDataset: '/manager/datasets/create'
 };
+
+export const PATH_ANNOTATOR = {
+  root: '/annotator',
+  project: '/annotator/project',
+  assignment: '/annotator/assignment'
+}
+
+export const PATH_REVIEWER = {
+  root: '/reviewer',
+  dashboard: '/reviewer',
+  workspace: '/reviewer/workspace',
+}
