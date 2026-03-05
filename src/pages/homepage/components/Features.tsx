@@ -11,7 +11,7 @@ export default function Features() {
                             <DeploymentUnitOutlined className="text-3xl" />
                         </div>
                         <div>
-                            <h3 className="font-space text-2xl font-bold mb-4">
+                            <h3 className="font-space text-2xl font-bold mb-4 text-amber-50">
                                 Automated AI Pipelines
                             </h3>
                             <p className={`${themeClasses.text.secondary} font-light leading-relaxed group-hover:text-gray-300 transition-colors`}>
@@ -30,7 +30,7 @@ export default function Features() {
                             <GlobalOutlined className="text-3xl" />
                         </div>
                         <div>
-                            <h3 className="font-space text-2xl font-bold mb-4">
+                            <h3 className="font-space text-2xl font-bold mb-4 text-amber-50">
                                 Global Workforce Scale
                             </h3>
                             <p className={`${themeClasses.text.secondary} font-light leading-relaxed group-hover:text-gray-300 transition-colors`}>
@@ -51,7 +51,7 @@ export default function Features() {
                             <SecurityScanOutlined className="text-3xl" />
                         </div>
                         <div>
-                            <h3 className="font-space text-2xl font-bold mb-4">
+                            <h3 className="font-space text-2xl font-bold mb-4 text-amber-50">
                                 Quantum-Level Quality
                             </h3>
                             <p className={`${themeClasses.text.secondary} font-light leading-relaxed group-hover:text-gray-300 transition-colors`}>
