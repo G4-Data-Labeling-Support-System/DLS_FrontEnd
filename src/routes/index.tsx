@@ -154,7 +154,11 @@ export const router = createBrowserRouter([
     ),
     children: [
       {
-        index: true,
+        path: PATH_ANNOTATOR.project,
+        element: <LazyPage><AnnotatorDashboardPage /></LazyPage>,
+      },
+      {
+        path: PATH_ANNOTATOR.assignment,
         element: <LazyPage><AnnotatorDashboardPage /></LazyPage>,
       },
     ],

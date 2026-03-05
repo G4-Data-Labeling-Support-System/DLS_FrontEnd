@@ -27,7 +27,8 @@ export const PATH_MANAGER = {
 
 export const PATH_ANNOTATOR = {
   root: '/annotator',
-  dashboard: '/annotator',
+  project: '/annotator/project',
+  assignment: '/annotator/assignment'
 }
 
 export const PATH_REVIEWER = {

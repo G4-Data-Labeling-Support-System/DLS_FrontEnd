@@ -7,21 +7,20 @@ import {
   LogoutOutlined,
   ProfileOutlined
 } from '@ant-design/icons'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { BrandLogo } from '@/components/common/BrandLogo'
 import { useAuthStore } from '@/store'
 
 export function Header() {
   const logout = useAuthStore((state) => state.logout)
+  const navigate = useNavigate()
 
   const items: MenuProps['items'] = [
     {
       key: 'profile',
       icon: <ProfileOutlined />,
       label: 'Profile',
-      onClick: () => {
-        console.log('Go to profile')
-        // navigate('/profile') if using react-router
-      }
+      onClick: () => navigate('/profile')
     },
     {
       type: 'divider'
@@ -33,15 +32,46 @@ export function Header() {
       label: 'Logout',
       onClick: () => {
         logout()
-        // navigate('/login')
+        navigate('/login')
       }
     }
   ]
+
+  const navClass = ({ isActive }: { isActive: boolean }) =>
+    `relative px-2 py-1 text-lg font-medium transition-colors duration-300
+     ${isActive ? 'text-white' : 'text-gray-400 hover:text-white'}`
+
+  const underlineClass = ({ isActive }: { isActive: boolean }) =>
+    isActive
+      ? 'absolute -bottom-1 left-0 w-full h-[2px] bg-white rounded-full'
+      : 'hidden'
 
   return (
     <header className="bg-transparent px-8 h-20 flex items-center justify-between z-10 border-b border-white/10 shrink-0 backdrop-blur-[2px]">
       <BrandLogo />
 
+      {/* 👇 NAV LINKS CENTER */}
+      <nav className="flex items-center gap-10">
+        <NavLink to="/annotator/project" className={navClass}>
+          {({ isActive }) => (
+            <div className="relative">
+              Project
+              <span className={underlineClass({ isActive })}></span>
+            </div>
+          )}
+        </NavLink>
+
+        <NavLink to="/annotator/assignment" className={navClass}>
+          {({ isActive }) => (
+            <div className="relative">
+              Assignment
+              <span className={underlineClass({ isActive })}></span>
+            </div>
+          )}
+        </NavLink>
+      </nav>
+
+      {/* Right side */}
       <div className="flex items-center gap-4">
         <Button
           type="text"
@@ -50,7 +80,6 @@ export function Header() {
           className="text-gray-400 hover:text-white hover:bg-white/10"
         />
 
-        {/* 👇 Dropdown wrapper */}
         <Dropdown
           menu={{ items }}
           trigger={['click']}
