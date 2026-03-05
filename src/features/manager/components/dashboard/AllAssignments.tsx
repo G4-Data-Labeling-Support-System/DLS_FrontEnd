@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Space, Typography, Spin, message, Modal, Input, Select, Empty } from 'antd';
+import { Space, Typography, Spin, App, Input, Select, Empty } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { AssignmentCard } from './AssignmentCard';
 import { AssignmentDetail } from './AssignmentDetail';
@@ -13,6 +13,7 @@ interface AllAssignmentsProps {
 }
 
 export const AllAssignments: React.FC<AllAssignmentsProps> = ({ selectedAssignmentId, onAssignmentSelect }) => {
+    const { message, modal } = App.useApp();
     const [assignments, setAssignments] = useState<GetAssignmentsParams[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [searchText, setSearchText] = useState<string>('');
@@ -96,7 +97,7 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({ selectedAssignme
     const handleDelete = (id?: string) => {
         if (!id) return;
 
-        Modal.confirm({
+        modal.confirm({
             title: 'Delete Assignment',
             content: 'Are you sure you want to delete this assignment?',
             okText: 'Delete',
@@ -172,7 +173,7 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({ selectedAssignme
                     className="my-10 p-10 bg-[#1A1625]/40 rounded-xl border border-dashed border-gray-700"
                 />
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 items-stretch">
                     {assignments
                         .filter(a => !searchText || (a.assignmentName && a.assignmentName.toLowerCase().includes(searchText.toLowerCase())))
                         .filter(a => statusFilter === 'ALL' || (a.status && a.status.toUpperCase() === statusFilter))

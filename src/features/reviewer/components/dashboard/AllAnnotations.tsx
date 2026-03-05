@@ -98,7 +98,7 @@ export const AllAnnotations: React.FC<AllAnnotationsProps> = ({ onAnnotationSele
                     className="my-10 p-10 bg-[#1A1625]/40 rounded-xl border border-dashed border-gray-700"
                 />
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 items-stretch">
                     {annotations
                         .filter(a => !searchText || (a.name && a.name.toLowerCase().includes(searchText.toLowerCase())) || (a.annotationId && a.annotationId.toLowerCase().includes(searchText.toLowerCase())))
                         .filter(a => statusFilter === 'ALL' || (a.status && a.status.toUpperCase() === statusFilter))
