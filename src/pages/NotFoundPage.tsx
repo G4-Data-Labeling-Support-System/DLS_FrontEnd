@@ -1,19 +1,10 @@
-
-// export default function NotFoundPage() {
-//   return (
-//     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-//       NotFoundPage
-//     </div>
-//   )
-// }
-
 import { useNavigate } from "react-router-dom";
 
 export default function NotFoundPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-screen bg-black text-white overflow-hidden">
+    <div className="relative flex flex-col items-center justify-center min-h-screen ${themeClasses.backgrounds.deepDark} text-white overflow-hidden">
 
       {/* Top Right Decoration */}
       <div className="absolute top-0 right-0">
