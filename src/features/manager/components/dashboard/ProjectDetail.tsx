@@ -227,12 +227,12 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
                                     <h4 className="text-white font-bold text-sm truncate pr-2" title={(assignment.assignmentName as string) || (assignment.name as string)}>
                                         {(assignment.assignmentName as string) || (assignment.name as string) || "Unnamed Assignment"}
                                     </h4>
-                                    <Tag color={getStatusColor((assignment.assignmentStatus as string) || (assignment.status as string))} className="m-0 text-[10px] px-1.5 py-0 flex-shrink-0">
-                                        {(assignment.assignmentStatus as string) || (assignment.status as string) || 'UNKNOWN'}
+                                    <Tag color={getStatusColor((assignment.status as string) || (assignment.assignmentStatus as string))} className="m-0 text-[10px] px-1.5 py-0 flex-shrink-0">
+                                        {(assignment.status as string) || (assignment.assignmentStatus as string) || 'UNKNOWN'}
                                     </Tag>
                                 </div>
                                 <div className="text-gray-400 text-xs line-clamp-2 mt-1 min-h-[32px]">
-                                    {(assignment.descriptionAssignment as string) || (assignment.description as string) || "No description provided."}
+                                    {(assignment.description as string) || (assignment.descriptionAssignment as string) || "No description provided."}
                                 </div>
                                 <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/5">
                                     <span className="text-gray-500 text-xs">{formatDate((assignment.createdAt as string))}</span>

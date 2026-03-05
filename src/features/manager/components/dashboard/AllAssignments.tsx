@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Space, Typography, Spin, message, Modal, Input, Select, Empty } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { AssignmentCard } from './AssignmentCard';
-// import { AssignmentDetail } from './AssignmentDetail'; // To be implemented later
+import { AssignmentDetail } from './AssignmentDetail';
 
 import assignmentApi, { type GetAssignmentsParams } from '@/api/assignment';
 const { Title } = Typography;
@@ -46,10 +46,10 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({ selectedAssignme
                         mapped.assignmentName = String(a.assignmentName || a.name);
                     }
                     if (a.assignmentStatus || a.status) {
-                        mapped.assignmentStatus = String(a.assignmentStatus || a.status);
+                        mapped.status = String(a.assignmentStatus || a.status);
                     }
                     if (a.descriptionAssignment || a.description) {
-                        mapped.descriptionAssignment = String(a.descriptionAssignment || a.description);
+                        mapped.description = String(a.descriptionAssignment || a.description);
                     }
                     if (a.projectId || a.project_id) {
                         mapped.projectId = String(a.projectId || a.project_id);
@@ -88,8 +88,10 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({ selectedAssignme
     };
 
     useEffect(() => {
-        fetchAssignments();
-    }, []);
+        if (!currentAssignmentId) {
+            fetchAssignments();
+        }
+    }, [currentAssignmentId]);
 
     const handleDelete = (id?: string) => {
         if (!id) return;
@@ -119,7 +121,7 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({ selectedAssignme
         message.info(`Editing assignment ID: ${id} is currently not supported.`);
     };
 
-    if (loading) {
+    if (loading && !currentAssignmentId) {
         return (
             <div className="w-full flex justify-center py-10">
                 <Spin size="large" />
@@ -128,13 +130,11 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({ selectedAssignme
     }
 
     if (currentAssignmentId) {
-        // Fallback placeholder logic for Detailed View injection later
         return (
-            <div className="w-full bg-[#1A1625] border-gray-800 rounded-xl p-6 text-center">
-                <h2 className="text-xl text-white font-bold mb-4">Assignment View (ID: {currentAssignmentId})</h2>
-                <p className="text-gray-400 mb-6">Assignment details are currently under development.</p>
-                <button onClick={() => handleAssignmentSelect(null)} className="px-4 py-2 bg-violet-600 hover:bg-violet-500 rounded text-white transition-colors">Go Back</button>
-            </div>
+            <AssignmentDetail
+                assignmentId={currentAssignmentId}
+                onBack={() => handleAssignmentSelect(null)}
+            />
         );
     }
 
@@ -175,7 +175,7 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({ selectedAssignme
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
                     {assignments
                         .filter(a => !searchText || (a.assignmentName && a.assignmentName.toLowerCase().includes(searchText.toLowerCase())))
-                        .filter(a => statusFilter === 'ALL' || (a.assignmentStatus && a.assignmentStatus.toUpperCase() === statusFilter))
+                        .filter(a => statusFilter === 'ALL' || (a.status && a.status.toUpperCase() === statusFilter))
                         .map((a, index) => {
                             const uniqueId = a.assignmentId || String(index);
                             return (

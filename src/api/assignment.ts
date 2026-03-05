@@ -2,16 +2,21 @@ import axiosClient from "@/lib/axios";
 import { ENDPOINTS } from "./endpoints";
 
 
+
 interface GetAssignmentsParams {
     assignmentId?: string;
-    assignmentName?: string;
-    descriptionAssignment?: string;
-    assignmentStatus?: string;
     projectId?: string;
     datasetId?: string;
+    assignmentName?: string;
+    assignedTo?: string;
+    assignedBy?: string;
+    totalItems?: number;
+    completedItems?: number;
+    description?: string;
+    status?: string;
+    dueDate?: string;
     createdAt?: string;
     updatedAt?: string;
-    status?: string;
 }
 
 
@@ -25,10 +30,19 @@ const assignmentApi = {
             throw error;
         }
     },
-    getAssignmentById(id: string) {
+    async getAssignmentById(id: string) {
         try {
-            const url = ENDPOINTS.ASSIGNMENTS.DETAIL(id);
-            return axiosClient.get(url);
+            // Temporary workaround for 500 error (Method Not Supported) on GET /assignments/{id}
+            const url = ENDPOINTS.ASSIGNMENTS.LIST;
+            const response = await axiosClient.get(url);
+            const data = response.data?.data || response.data || [];
+            if (Array.isArray(data)) {
+                const found = data.find((a: Record<string, unknown>) => String(a.assignmentId || a.id) === String(id));
+                if (found) {
+                    return { data: { data: found } };
+                }
+            }
+            throw new Error("Assignment not found in list");
         } catch (error) {
             console.error("Failed to fetch assignment by id", error);
             throw error;

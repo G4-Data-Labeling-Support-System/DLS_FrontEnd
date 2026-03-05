@@ -14,7 +14,7 @@ interface AssignmentCardProps extends GetAssignmentsParams {
 
 export const AssignmentCard: React.FC<AssignmentCardProps> = ({
     assignmentName,
-    assignmentStatus,
+    status,
     createdAt,
     updatedAt,
     onEdit,
@@ -63,8 +63,8 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
             </div>
 
             <div className="mb-4">
-                <Tag color={getStatusColor(assignmentStatus)} className="m-0 font-medium">
-                    {assignmentStatus || 'UNKNOWN'}
+                <Tag color={getStatusColor(status)} className="m-0 font-medium">
+                    {status || 'UNKNOWN'}
                 </Tag>
             </div>
 
