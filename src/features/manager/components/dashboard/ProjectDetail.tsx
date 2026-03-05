@@ -397,7 +397,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
             >
                 {firstAssignmentStep === 'prompt' ? (
                     <div className="py-4 text-gray-600 dark:text-gray-300">
-                        <p>Dự án hiện đang chưa có assignment. Bạn hãy tạo assignment đầu tiên.</p>
+                        <p>This project currently has no assignments. Would you like to create the first assignment?</p>
                     </div>
                 ) : (
                     <Form form={form} layout="vertical" className="mt-4">
@@ -405,37 +405,61 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
                             <Input placeholder="Enter assignment name" />
                         </Form.Item>
                         <div className="grid grid-cols-3 gap-4">
-                            <Form.Item label="Assigned To" name="assignedTo" rules={[{ required: true, message: 'Please select assigned to' }]}>
-                                <Select placeholder="Select user">
-                                    {users.map((u: Record<string, unknown>) => {
+                            <Form.Item label="Assign To" name="assignedTo" rules={[{ required: true, message: 'Please select annotator' }]}>
+                                <Select placeholder="Select annotator">
+                                    {users.filter(u => {
+                                        const role = String((u.role as string) || (u.userRole as string) || '').toUpperCase();
+                                        return role.includes('ANNOTATOR') || role === 'ANNOTATOR';
+                                    }).map((u: Record<string, unknown>) => {
                                         const userId = String(u.id || u.userId || u.account_id || u.username || '');
+                                        const name = (u.fullName as string) || (u.username as string) || (u.name as string);
+                                        const avatarSrc = u.avatar as string || u.coverImage as string || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
                                         return (
                                             <Select.Option key={userId} value={userId}>
-                                                {(u.fullName as string) || (u.username as string) || (u.name as string)}
+                                                <div className="flex items-center gap-2">
+                                                    <Avatar src={avatarSrc} size="small" />
+                                                    <span>{name}</span>
+                                                </div>
                                             </Select.Option>
                                         );
                                     })}
                                 </Select>
                             </Form.Item>
                             <Form.Item label="Reviewer" name="reviewerId" rules={[{ required: true, message: 'Please select reviewer' }]}>
-                                <Select placeholder="Select user">
-                                    {users.map((u: Record<string, unknown>) => {
+                                <Select placeholder="Select reviewer">
+                                    {users.filter(u => {
+                                        const role = String((u.role as string) || (u.userRole as string) || '').toUpperCase();
+                                        return role.includes('REVIEWER') || role === 'REVIEWER';
+                                    }).map((u: Record<string, unknown>) => {
                                         const userId = String(u.id || u.userId || u.account_id || u.username || '');
+                                        const name = (u.fullName as string) || (u.username as string) || (u.name as string);
+                                        const avatarSrc = u.avatar as string || u.coverImage as string || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
                                         return (
                                             <Select.Option key={userId} value={userId}>
-                                                {(u.fullName as string) || (u.username as string) || (u.name as string)}
+                                                <div className="flex items-center gap-2">
+                                                    <Avatar src={avatarSrc} size="small" />
+                                                    <span>{name}</span>
+                                                </div>
                                             </Select.Option>
                                         );
                                     })}
                                 </Select>
                             </Form.Item>
-                            <Form.Item label="Assigned By" name="assignedBy" rules={[{ required: true, message: 'Please select assigned by' }]}>
-                                <Select placeholder="Select user">
-                                    {users.map((u: Record<string, unknown>) => {
+                            <Form.Item label="Assigned By" name="assignedBy" rules={[{ required: true, message: 'Please select manager' }]}>
+                                <Select placeholder="Select manager">
+                                    {users.filter(u => {
+                                        const role = String((u.role as string) || (u.userRole as string) || '').toUpperCase();
+                                        return role.includes('MANAGER') || role === 'MANAGER';
+                                    }).map((u: Record<string, unknown>) => {
                                         const userId = String(u.id || u.userId || u.account_id || u.username || '');
+                                        const name = (u.fullName as string) || (u.username as string) || (u.name as string);
+                                        const avatarSrc = u.avatar as string || u.coverImage as string || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
                                         return (
                                             <Select.Option key={userId} value={userId}>
-                                                {(u.fullName as string) || (u.username as string) || (u.name as string)}
+                                                <div className="flex items-center gap-2">
+                                                    <Avatar src={avatarSrc} size="small" />
+                                                    <span>{name}</span>
+                                                </div>
                                             </Select.Option>
                                         );
                                     })}
