@@ -4,11 +4,7 @@ import { useUsers } from '@/features/admin/hooks/useUsers';
 
 export default function AdminDashboard() {
     const { data: rawUsers, isLoading } = useUsers();
-
-    // [Logic: Safety Check] Kiểm tra cấu trúc trả về từ API
-    // React Query có thể trả về array trực tiếp hoặc object chứa data (VD: response.data)
     const users = Array.isArray(rawUsers) ? rawUsers : (rawUsers as any)?.data || [];
-    // console.log("Users API Response:", rawUsers, "Parsed Users:", users);
 
     return (
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">

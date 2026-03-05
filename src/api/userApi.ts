@@ -19,7 +19,7 @@ export const userApi = {
 
     // [PUT] Update user
     updateUser: async (id: string, data: UpdateUserRequest): Promise<User> => {
-        const response = await mainClient.put(`/users/${id}`, data);
+        const response = await mainClient.put(`/users/update/${id}`, data);
         return response.data;
     },
 

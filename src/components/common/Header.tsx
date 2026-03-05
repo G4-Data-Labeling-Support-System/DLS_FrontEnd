@@ -4,8 +4,7 @@ import type { MenuProps } from 'antd'
 import {
   UserOutlined,
   BellOutlined,
-  LogoutOutlined,
-  ProfileOutlined
+  LogoutOutlined
 } from '@ant-design/icons'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { BrandLogo } from '@/components/common/BrandLogo'
@@ -18,12 +17,11 @@ export function Header() {
   const items: MenuProps['items'] = [
     {
       key: 'profile',
-      icon: <ProfileOutlined />,
+      icon: <UserOutlined />,
       label: 'Profile',
-      onClick: () => navigate('/profile')
-    },
-    {
-      type: 'divider'
+      onClick: () => {
+        navigate('/profile')
+      }
     },
     {
       key: 'logout',
@@ -49,27 +47,6 @@ export function Header() {
   return (
     <header className="bg-transparent px-8 h-20 flex items-center justify-between z-10 border-b border-white/10 shrink-0 backdrop-blur-[2px]">
       <BrandLogo />
-
-      {/* 👇 NAV LINKS CENTER */}
-      <nav className="flex items-center gap-10">
-        <NavLink to="/annotator/project" className={navClass}>
-          {({ isActive }) => (
-            <div className="relative">
-              Project
-              <span className={underlineClass({ isActive })}></span>
-            </div>
-          )}
-        </NavLink>
-
-        <NavLink to="/annotator/assignment" className={navClass}>
-          {({ isActive }) => (
-            <div className="relative">
-              Assignment
-              <span className={underlineClass({ isActive })}></span>
-            </div>
-          )}
-        </NavLink>
-      </nav>
 
       {/* Right side */}
       <div className="flex items-center gap-4">

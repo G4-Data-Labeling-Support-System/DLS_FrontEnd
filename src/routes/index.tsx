@@ -1,15 +1,18 @@
 import { LoadingOverlay, PageErrorBoundary } from '@/shared/components/ui'
 import { UserRole } from '@/shared/constants/user_role'
 import { Suspense, lazy } from 'react'
-import { createBrowserRouter } from 'react-router-dom'
+import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { PATH_ANNOTATOR, PATH_MANAGER } from './paths'
 import { CreateProjectPage } from '@/pages/manager'
 import DatasetSetupPage from '@/pages/manager/DatasetSetupPage'
 import ManagerLayout from '@/components/layout/ManagerLayout'
 import GuidelinesSetupPage from '@/pages/manager/GuidelinesSetupPage'
 import { GuestGuard, RoleGuard } from './guards'
+import { Header } from '@/components/common/Header'
+import { Layout } from 'antd'
 
 // Lazy load pages for code splitting
+const ProfilePage = lazy(() => import('@/pages/common/ProfilePage'))
 const HomePage = lazy(() => import('@/pages/homepage/HomePage'))
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
 const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage'))
@@ -70,6 +73,21 @@ export const router = createBrowserRouter([
         <GuestGuard>
           <ForgotPasswordPage />
         </GuestGuard>
+      </LazyPage>
+    ),
+  },
+  {
+    path: '/profile',
+    element: (
+      <LazyPage>
+        <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.MANAGER, UserRole.REVIEWER, UserRole.ANNOTATOR]}>
+          <Layout className={`min-h-screen bg-[#0f0e17]`} style={{ background: '#0f0e17' }}>
+            <Header />
+            <Layout.Content className="w-full max-w-[1600px] mx-auto p-6 overflow-auto bg-transparent">
+              <ProfilePage />
+            </Layout.Content>
+          </Layout>
+        </RoleGuard>
       </LazyPage>
     ),
   },
@@ -162,11 +180,23 @@ export const router = createBrowserRouter([
     ),
     children: [
       {
+        index: true,
+        element: <Navigate to={PATH_ANNOTATOR.project} replace />,
+      },
+      {
         path: PATH_ANNOTATOR.project,
         element: <LazyPage><AnnotatorDashboardPage /></LazyPage>,
       },
       {
+        path: `${PATH_ANNOTATOR.project}/:assignmentId`,
+        element: <LazyPage><AnnotatorDashboardPage /></LazyPage>,
+      },
+      {
         path: PATH_ANNOTATOR.assignment,
+        element: <LazyPage><AnnotatorDashboardPage /></LazyPage>,
+      },
+      {
+        path: `${PATH_ANNOTATOR.assignment}/:assignmentId`,
         element: <LazyPage><AnnotatorDashboardPage /></LazyPage>,
       },
     ],
