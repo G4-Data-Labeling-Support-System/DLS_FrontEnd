@@ -32,9 +32,12 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
     const getStatusColor = (status?: string) => {
         switch (status?.toUpperCase()) {
             case 'ACTIVE': return 'processing';
+            case 'INPROCESS': return 'gold';
             case 'COMPLETED': return 'success';
             case 'PAUSED': return 'warning';
             case 'ARCHIVE': return 'error';
+            case 'INACTIVE': return 'error';
+            case 'NOT_STARTED': return 'default';
             default: return 'default';
         }
     };
@@ -54,7 +57,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                 <div className="flex-1 pr-2">
 
                     <Title level={5} className="!text-white !m-0 !text-sm leading-tight line-clamp-2" title={projectName}>
-                        {projectName || 'Dự án chưa có tên'}
+                        {projectName || 'Unnamed Project'}
                     </Title>
                 </div>
                 <div onClick={(e) => e.stopPropagation()}>
@@ -74,11 +77,11 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
 
             <div className="grid grid-cols-2 gap-2 bg-[#231e31] p-3 rounded-lg mt-auto">
                 <div>
-                    <div className="text-[10px] text-gray-500 uppercase tracking-wider">Ngày tạo</div>
+                    <div className="text-[10px] text-gray-500 uppercase tracking-wider">Created At</div>
                     <div className="text-gray-300 text-xs font-semibold">{formatDate(createdAt)}</div>
                 </div>
                 <div className="border-l border-gray-700 pl-2">
-                    <div className="text-[10px] text-gray-500 uppercase tracking-wider">Cập nhật</div>
+                    <div className="text-[10px] text-gray-500 uppercase tracking-wider">Updated At</div>
                     <div className="text-gray-300 text-xs font-semibold">{formatDate(updatedAt)}</div>
                 </div>
             </div>

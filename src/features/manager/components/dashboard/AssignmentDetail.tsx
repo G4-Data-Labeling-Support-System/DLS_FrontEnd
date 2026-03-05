@@ -1,0 +1,232 @@
+import React, { useEffect, useState } from 'react';
+import { Spin, Typography, Card, Button, Descriptions, Tag, Empty, message } from 'antd';
+import { EditOutlined, FolderOutlined, DatabaseOutlined } from '@ant-design/icons';
+import assignmentApi, { type GetAssignmentsParams } from '@/api/assignment';
+import projectApi from '@/api/project';
+import { useNavigate } from 'react-router-dom';
+
+const { Title } = Typography;
+
+interface AssignmentDetailProps {
+    assignmentId: string;
+    onBack: () => void;
+}
+
+export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId, onBack }) => {
+    const [assignment, setAssignment] = useState<GetAssignmentsParams | null>(null);
+    const [projectName, setProjectName] = useState<string | null>(null);
+    const [loading, setLoading] = useState<boolean>(true);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const fetchDetail = async () => {
+            try {
+                setLoading(true);
+                const response = await assignmentApi.getAssignmentById(assignmentId);
+                const data = response.data?.data || response.data;
+
+                if (data && isMounted) {
+                    setAssignment({
+                        assignmentId: String(data.assignmentId || data.id),
+                        assignmentName: String(data.assignmentName || data.name),
+                        status: String(data.status || data.assignmentStatus),
+                        description: data.description ? String(data.description) : (data.descriptionAssignment ? String(data.descriptionAssignment) : undefined),
+                        projectId: data.projectId ? String(data.projectId) : undefined,
+                        datasetId: data.datasetId ? String(data.datasetId) : undefined,
+                        createdAt: data.createdAt ? String(data.createdAt) : undefined,
+                        updatedAt: data.updatedAt ? String(data.updatedAt) : undefined,
+                    });
+
+                    // Fetch associated project name if projectId exists
+                    if (data.projectId) {
+                        try {
+                            const projRes = await projectApi.getProjectById(data.projectId);
+                            const projData = projRes.data?.data || projRes.data;
+                            if (projData && isMounted) {
+                                setProjectName(String(projData.projectName || projData.name || data.projectId));
+                            }
+                        } catch (projErr) {
+                            console.error("Failed to fetch associated project details:", projErr);
+                        }
+                    }
+                }
+            } catch (error) {
+                if (isMounted) {
+                    console.error("Error fetching assignment details:", error);
+                    message.error("Cannot load assignment details.");
+                    onBack(); // Fallback to list if error
+                }
+            } finally {
+                if (isMounted) {
+                    setLoading(false);
+                }
+            }
+        };
+
+        if (assignmentId) {
+            fetchDetail();
+        }
+
+        return () => {
+            isMounted = false;
+        };
+    }, [assignmentId, onBack]);
+
+    const getStatusColor = (status?: string) => {
+        switch (status?.toUpperCase()) {
+            case 'ACTIVE': return 'processing';
+            case 'COMPLETED': return 'success';
+            case 'PAUSED': return 'warning';
+            case 'ARCHIVE': return 'error';
+            default: return 'default';
+        }
+    };
+
+    const formatDate = (dateString?: string) => {
+        if (!dateString) return 'N/A';
+        return new Date(dateString).toLocaleDateString('vi-VN');
+    };
+
+    if (loading) {
+        return (
+            <div className="w-full h-64 flex justify-center items-center">
+                <Spin size="large" />
+            </div>
+        );
+    }
+
+    if (!assignment) {
+        return (
+            <div className="w-full text-center py-10 text-gray-400">
+                Error loading assignment information.
+            </div>
+        );
+    }
+
+    return (
+        <div className="w-full animate-fade-in">
+            <div className="flex justify-between items-start mb-6">
+                <div>
+                    <Title level={3} className="!text-white !m-0 !font-display">{assignment.assignmentName}</Title>
+                    <div className="mt-2">
+                        <Tag color={getStatusColor(assignment.status)} className="m-0 font-medium text-sm px-3 py-1">
+                            {assignment.status || 'UNKNOWN'}
+                        </Tag>
+                    </div>
+                </div>
+                {/* 
+                  Quick Action removed specifically as requested by user.
+                  "không bao gồm quick action" could also mean omitting the Edit button if considered a quick action,
+                  but Edit is standard. If needed to remove edit, we can just comment it out. Let's keep the Edit button for now
+                  but omit features like "Add Subtask", etc. Actually, I will remove the edit button to be safe, since there is no edit endpoint connected safely in AllAssignments either yet.
+                  Wait, ProjectDetail has an Edit button. Let's include it but maybe it does a message.info for now.
+                */}
+                <Button
+                    type="primary"
+                    icon={<EditOutlined />}
+                    className="bg-violet-600 hover:bg-violet-500 border-none hidden"
+                    onClick={() => message.info('Edit mode not fully supported yet.')}
+                >
+                    Edit
+                </Button>
+            </div>
+
+            <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-6">
+                <Descriptions
+                    title={<span className="text-white text-lg font-display flex items-center gap-2"><span className="material-symbols-outlined text-violet-400">info</span>Assignment Information</span>}
+                    column={1}
+                    className="custom-descriptions"
+                    styles={{
+                        label: { color: '#9ca3af', fontWeight: 500, width: '150px' },
+                        content: { color: '#d1d5db' }
+                    }}
+                >
+                    <Descriptions.Item label="Assignment ID">
+                        <span className="font-mono text-violet-300 bg-violet-500/10 px-2 py-0.5 rounded border border-violet-500/20">
+                            {assignment.assignmentId}
+                        </span>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Description">
+                        {assignment.description || <span className="text-gray-600 italic">No description</span>}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Created At">
+                        {formatDate(assignment.createdAt)}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Last Updated">
+                        {formatDate(assignment.updatedAt)}
+                    </Descriptions.Item>
+                </Descriptions>
+            </Card>
+
+            <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 divide-y md:divide-y-0 md:divide-x divide-gray-800">
+                    <div className="md:pr-2 pb-6 md:pb-0">
+                        <div className="flex items-center justify-between mb-4">
+                            <span className="text-white text-lg font-display flex items-center gap-2">
+                                <FolderOutlined className="text-blue-400" />
+                                Associated Project
+                            </span>
+                        </div>
+                        {assignment.projectId ? (
+                            <div className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-blue-500/30 transition-colors cursor-pointer" onClick={() => navigate(`/manager/projects/${assignment.projectId}`)}>
+                                <h4 className="text-white font-bold text-sm truncate">
+                                    {projectName ? projectName : `Project ID: ${assignment.projectId}`}
+                                </h4>
+                                <div className="text-gray-400 text-xs mt-1">
+                                    Click to view project details
+                                </div>
+                            </div>
+                        ) : (
+                            <Empty
+                                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                                description={<span className="text-gray-500">No associated project</span>}
+                            />
+                        )}
+                    </div>
+
+                    <div className="md:pl-8 pt-6 md:pt-0">
+                        <div className="flex items-center justify-between mb-4">
+                            <span className="text-white text-lg font-display flex items-center gap-2">
+                                <DatabaseOutlined className="text-fuchsia-400" />
+                                Assigned Dataset
+                            </span>
+                        </div>
+                        {assignment.datasetId ? (
+                            <div className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-fuchsia-500/30 transition-colors cursor-pointer" onClick={() => navigate(`/manager/datasets/${assignment.datasetId}`)}>
+                                <h4 className="text-white font-bold text-sm truncate">
+                                    Dataset ID: {assignment.datasetId}
+                                </h4>
+                                <div className="text-gray-400 text-xs mt-1">
+                                    Click to view dataset details
+                                </div>
+                            </div>
+                        ) : (
+                            <Empty
+                                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                                description={<span className="text-gray-500">No assigned dataset</span>}
+                            />
+                        )}
+                    </div>
+                </div>
+            </Card>
+
+            <style>{`
+                .custom-descriptions .ant-descriptions-title {
+                    margin-bottom: 20px;
+                }
+                .custom-descriptions .ant-descriptions-item-container {
+                    border-bottom: 1px solid #2d263b;
+                    padding-bottom: 12px;
+                    margin-bottom: 12px;
+                }
+                .custom-descriptions .ant-descriptions-item-container:last-child {
+                    border-bottom: none;
+                    margin-bottom: 0;
+                    padding-bottom: 0;
+                }
+            `}</style>
+        </div>
+    );
+};
