@@ -1,4 +1,5 @@
 // Guest Guard - Only allow non-authenticated users
+import { UserRole } from '@/shared/constants/user_role'
 import { useAuthStore } from '@/store'
 import { Navigate } from 'react-router-dom'
 
@@ -7,21 +8,28 @@ interface GuestGuardProps {
 }
 
 /**
- * GuestGuard - Chỉ cho phép guest (chưa login)
- * Dùng cho login/register page - redirect về home nếu đã login
+ * GuestGuard – only allows unauthenticated users.
+ * Used for /login and /forgot-password.
+ * Redirects authenticated users to their role-specific dashboard.
  */
 export function GuestGuard({ children }: GuestGuardProps) {
   const { isAuthenticated, user } = useAuthStore()
 
   if (isAuthenticated) {
-    const role = (user?.userRole || user?.role || '').toLowerCase();
+    const role = (user?.role ?? '').toLowerCase()
 
-    if (role === 'admin') {
-      return <Navigate to="/admin/dashboard" replace />
-    } else if (role === 'manager') {
-      return <Navigate to="/manager" replace />
+    switch (role) {
+      case UserRole.ADMIN:
+        return <Navigate to="/admin/dashboard" replace />
+      case UserRole.MANAGER:
+        return <Navigate to="/manager" replace />
+      case UserRole.ANNOTATOR:
+        return <Navigate to="/annotator" replace />
+      case UserRole.REVIEWER:
+        return <Navigate to="/reviewer" replace />
+      default:
+        return <Navigate to="/" replace />
     }
-    return <Navigate to="/" replace />
   }
 
   return <>{children}</>
