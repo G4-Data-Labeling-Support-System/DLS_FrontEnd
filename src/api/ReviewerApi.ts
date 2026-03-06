@@ -1,4 +1,4 @@
-import { mainClient } from './apiClients';
+import { mainClient } from './ApiClients';
 import { ENDPOINTS } from './Endpoints';
 
 export interface ReviewerStats {
