@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Spin, Typography, Card, Button, Descriptions, Tag, Avatar, Empty, message, Modal, Form, Input, Select, DatePicker } from 'antd';
 import { EditOutlined, UserOutlined } from '@ant-design/icons';
-import projectApi, { type GetProjectsParams } from '@/api/project';
 import assignmentApi from '@/api/assignment';
-import guidelineApi from '@/api/guideline';
 import datasetApi from '@/api/dataset';
 import { userApi } from '@/api/userApi';
 import { useNavigate } from 'react-router-dom';
+import { useProjectById, useAssignmentsByProject, useGuidelinesByProject, useInvalidateProjectDetail } from '@/features/manager/hooks/useProjectDetail';
 
 const { Title } = Typography;
 
@@ -15,15 +14,14 @@ interface ProjectDetailProps {
     onBack: () => void;
 }
 
-interface ProjectDetailData extends GetProjectsParams {
-    users?: Record<string, unknown>[];
-}
-
 export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack }) => {
-    const [project, setProject] = useState<ProjectDetailData | null>(null);
-    const [assignments, setAssignments] = useState<Record<string, unknown>[]>([]);
-    const [guidelines, setGuidelines] = useState<Record<string, unknown>[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
+    const { data: project, isLoading: projectLoading, isError: projectError } = useProjectById(projectId);
+    const { data: assignments = [], isLoading: assignmentsLoading, isError: assignmentsError } = useAssignmentsByProject(projectId);
+    const { data: guidelines = [], isLoading: guidelinesLoading } = useGuidelinesByProject(projectId);
+    const invalidateProjectDetail = useInvalidateProjectDetail();
+
+    const loading = projectLoading || assignmentsLoading || guidelinesLoading;
+
     const [isFirstAssignmentModalVisible, setIsFirstAssignmentModalVisible] = useState(false);
     const [firstAssignmentStep, setFirstAssignmentStep] = useState<'prompt' | 'form'>('prompt');
     const [users, setUsers] = useState<Record<string, unknown>[]>([]);
@@ -33,78 +31,18 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
     const navigate = useNavigate();
 
     useEffect(() => {
-        let isMounted = true;
-
-        const fetchDetail = async () => {
-            try {
-                setLoading(true);
-                const response = await projectApi.getProjectById(projectId);
-                const data = response.data?.data || response.data;
-
-                if (data && isMounted) {
-                    setProject({
-                        projectId: String(data.projectId || data.id),
-                        projectName: String(data.projectName || data.name),
-                        projectStatus: String(data.projectStatus || data.status),
-                        description: data.description ? String(data.description) : undefined,
-                        createdAt: data.createdAt ? String(data.createdAt) : undefined,
-                        updatedAt: data.updatedAt ? String(data.updatedAt) : undefined,
-                        users: data.users || data.members || data.assignees || [] // Fallbacks cho dữ liệu mảng users
-                    });
-
-                    // Fetch assignments for this project
-                    try {
-                        const assignRes = await assignmentApi.getAssignmentsByProjectId(projectId);
-                        const fetchedAssignments = assignRes.data?.data || assignRes.data || [];
-                        if (isMounted) {
-                            const arr = Array.isArray(fetchedAssignments) ? fetchedAssignments : [];
-                            setAssignments(arr);
-                            if (arr.length === 0) {
-                                setIsFirstAssignmentModalVisible(true);
-                                setFirstAssignmentStep('prompt');
-                            }
-                        }
-                    } catch (error) {
-                        console.error("Failed to fetch project assignments:", error);
-                        if (isMounted) {
-                            setAssignments([]);
-                            setIsFirstAssignmentModalVisible(true);
-                            setFirstAssignmentStep('prompt');
-                        }
-                    }
-
-                    // Fetch guidelines for this project
-                    try {
-                        const guideRes = await guidelineApi.getGuidelines(projectId);
-                        const fetchedGuidelines = guideRes.data?.data || guideRes.data;
-                        if (isMounted) {
-                            setGuidelines(Array.isArray(fetchedGuidelines) ? fetchedGuidelines : fetchedGuidelines ? [fetchedGuidelines] : []);
-                        }
-                    } catch (error) {
-                        console.error("Failed to fetch project guidelines:", error);
-                    }
-                }
-            } catch (error) {
-                if (isMounted) {
-                    console.error("Error fetching project details:", error);
-                    message.error("Cannot load project details.");
-                    onBack(); // Fallback to list if error
-                }
-            } finally {
-                if (isMounted) {
-                    setLoading(false);
-                }
-            }
-        };
-
-        if (projectId) {
-            fetchDetail();
+        if (projectError) {
+            message.error("Cannot load project details.");
+            onBack();
         }
+    }, [projectError, onBack]);
 
-        return () => {
-            isMounted = false;
-        };
-    }, [projectId, onBack]);
+    useEffect(() => {
+        if (!assignmentsLoading && (assignments.length === 0 || assignmentsError)) {
+            setIsFirstAssignmentModalVisible(true);
+            setFirstAssignmentStep('prompt');
+        }
+    }, [assignments, assignmentsLoading, assignmentsError]);
 
     const handleFirstAssignmentOk = async () => {
         setFirstAssignmentStep('form');
@@ -143,10 +81,8 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
             setIsFirstAssignmentModalVisible(false);
             form.resetFields();
 
-            // Refresh assignments list
-            const assignRes = await assignmentApi.getAssignmentsByProjectId(projectId);
-            const fetchedAssignments = assignRes.data?.data || assignRes.data || [];
-            setAssignments(Array.isArray(fetchedAssignments) ? fetchedAssignments : []);
+            // Refresh assignments list via React Query cache invalidation
+            invalidateProjectDetail(projectId);
         } catch (error) {
             console.error("Failed to create first assignment", error);
             if (error && typeof error === 'object' && 'errorFields' in error) {
