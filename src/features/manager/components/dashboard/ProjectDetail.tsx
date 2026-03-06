@@ -38,7 +38,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
     }, [projectError, onBack]);
 
     useEffect(() => {
-        if (!assignmentsLoading && (assignments.length === 0 || assignmentsError)) {
+        if (!assignmentsLoading && !assignmentsError && assignments.length === 0) {
             setIsFirstAssignmentModalVisible(true);
             setFirstAssignmentStep('prompt');
         }
