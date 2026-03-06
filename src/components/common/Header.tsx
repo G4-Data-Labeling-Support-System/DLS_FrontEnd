@@ -93,7 +93,7 @@ export function Header() {
               <div className="relative group cursor-pointer p-[2px] rounded-full transition-transform active:scale-95 duration-200">
                 <div className="relative z-[2] w-10 h-10 rounded-full overflow-hidden flex items-center justify-center">
                   <img
-                    src={getAvatarUrl(user?.avatar || (user as any)?.coverImage)}
+                    src={getAvatarUrl(user?.coverImage || user?.avatar)}
                     alt="Avatar"
                     className="w-full h-full object-cover border border-gray-600 rounded-full"
                   />

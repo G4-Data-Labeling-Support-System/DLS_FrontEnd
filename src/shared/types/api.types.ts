@@ -24,6 +24,8 @@ export interface User {
   userRole?: string; // Some BE responses use this field
   status: 'ACTIVE' | 'INACTIVE';
   avatar?: string;
+  coverImage?: string;
+  specialization?: string;
   createdAt?: string;
 }
 
