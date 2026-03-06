@@ -1,7 +1,7 @@
 import React from 'react';
 import { Typography, Tabs, Timeline, Button, Progress, Avatar, Card } from 'antd';
 import { HistoryOutlined, UserOutlined, CheckOutlined, CloseOutlined, UnorderedListOutlined } from '@ant-design/icons';
-import type { Annotation, HistoryEvent } from '@/api/reviewer';
+import type { Annotation, HistoryEvent } from '@/api/ReviewerApi';
 
 const { Text } = Typography;
 

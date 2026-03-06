@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Spin, Typography, Card, Button, Descriptions, Tag, Empty, message } from 'antd';
 import { EditOutlined, FolderOutlined, DatabaseOutlined } from '@ant-design/icons';
-import assignmentApi, { type GetAssignmentsParams } from '@/api/assignment';
-import projectApi from '@/api/project';
+import assignmentApi, { type GetAssignmentsParams } from '@/api/AssignmentApi';
+import projectApi from '@/api/ProjectApi';
 import { useNavigate } from 'react-router-dom';
 
 const { Title } = Typography;
@@ -133,7 +133,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId
                 </Button>
             </div>
 
-            <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-6">
+            <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-6 mt-2">
                 <Descriptions
                     title={<span className="text-white text-lg font-display flex items-center gap-2"><span className="material-symbols-outlined text-violet-400">info</span>Assignment Information</span>}
                     column={1}
@@ -160,7 +160,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId
                 </Descriptions>
             </Card>
 
-            <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-6">
+            <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-6 mt-2">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 divide-y md:divide-y-0 md:divide-x divide-gray-800">
                     <div className="md:pr-2 pb-6 md:pb-0">
                         <div className="flex items-center justify-between mb-4">

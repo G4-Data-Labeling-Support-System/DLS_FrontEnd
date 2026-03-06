@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Input, Button, Avatar, Progress, Tag, message, Segmented, Spin, Form } from 'antd'; // 1. Import Form
 import { SearchOutlined, UserAddOutlined, CloseOutlined, StopOutlined, LoadingOutlined } from '@ant-design/icons';
-import { mainClient } from '@/api/apiClients';
-import { ENDPOINTS } from '@/api/endpoints';
+import { mainClient } from '@/api/ApiClients';
+import { ENDPOINTS } from '@/api/Endpoints';
 import { FormFooter } from '@/features/manager/components/common/FormFooter';
 
 interface UserUI {

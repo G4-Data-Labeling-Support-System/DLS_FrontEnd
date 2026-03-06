@@ -1,5 +1,5 @@
 import axiosClient from "@/lib/axios";
-import { ENDPOINTS } from "./endpoints";
+import { ENDPOINTS } from "./Endpoints";
 
 
 
@@ -91,6 +91,15 @@ const assignmentApi = {
             return axiosClient.get(url);
         } catch (error) {
             console.error("Failed to fetch assignments by project id", error);
+            throw error;
+        }
+    },
+    createAssignmentForProject(projectId: string, assignmentData?: GetAssignmentsParams) {
+        try {
+            const url = ENDPOINTS.ASSIGNMENTS.CREATE_BY_PROJECT(projectId);
+            return axiosClient.post(url, assignmentData);
+        } catch (error) {
+            console.error("Failed to create assignment for project", error);
             throw error;
         }
     }

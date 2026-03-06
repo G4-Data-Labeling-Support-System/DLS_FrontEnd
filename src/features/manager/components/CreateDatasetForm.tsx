@@ -5,8 +5,8 @@ import type { UploadFile } from 'antd/es/upload/interface';
 import type { UploadChangeParam } from 'antd/es/upload';
 
 const { Dragger } = Upload;
-import datasetApi from '@/api/dataset';
-import projectApi, { type GetProjectsParams } from '@/api/project';
+import datasetApi from '@/api/DatasetApi';
+import projectApi, { type GetProjectsParams } from '@/api/ProjectApi';
 import { useNavigate } from 'react-router-dom';
 import { FormFooter } from '@/features/manager/components/common/FormFooter';
 

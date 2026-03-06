@@ -1,4 +1,4 @@
-import { mainClient } from '@/api/apiClients';
+import { mainClient } from '@/api/ApiClients';
 import type { CreateUserRequest, UpdateUserRequest, User } from '@/shared/types/api.types';
 
 // ============ User API Service ============
