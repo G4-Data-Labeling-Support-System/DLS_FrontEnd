@@ -43,48 +43,52 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
                     });
 
                     // Check for assignments based on projectId globally
-                    try {
-                        const assignRes = await mainClient.get(ENDPOINTS.ASSIGNMENTS.LIST);
-                        const assignments = assignRes.data?.data || assignRes.data || [];
+                    // Only show the "no assignments" modal the first time the user visits this project detail page
+                    const modalShownKey = `project_no_assign_modal_${projectId}`;
+                    const modalAlreadyShown = sessionStorage.getItem(modalShownKey) === 'true';
 
-                        let hasAssignment = false;
-                        if (Array.isArray(assignments)) {
-                            // Find any assignment that belongs to this project
-                            hasAssignment = assignments.some((a: Record<string, unknown>) =>
-                                String(a.projectId) === String(projectId) ||
-                                String(a.project_id) === String(projectId)
-                            );
-                        }
+                    if (!modalAlreadyShown) {
+                        // Mark as shown before the async call to prevent showing the modal multiple times
+                        // if the user navigates away and back quickly before the check completes
+                        sessionStorage.setItem(modalShownKey, 'true');
 
-                        if (!hasAssignment && isMounted) {
-                            Modal.warning({
-                                title: 'No Assignments Found',
-                                content: 'This project currently has no assignments created. Please create an assignment to proceed.',
-                                okText: 'Close',
-                                centered: true,
-                            });
-                        }
-                    } catch (error) {
-                        const assignError = error as any;
-                        const isNotFoundError = assignError?.response?.data?.code === 404 || assignError?.response?.data?.message === 'Assignment not found';
+                        try {
+                            const assignRes = await mainClient.get(ENDPOINTS.ASSIGNMENTS.LIST);
+                            const assignments = assignRes.data?.data || assignRes.data || [];
 
-                        if (isNotFoundError && isMounted) {
-                            // Backend confirms 0 assignments system-wide
-                            Modal.warning({
-                                title: 'No Assignments Found',
-                                content: 'This project currently has no assignments created. Please create an assignment to proceed.',
-                                okText: 'Close',
-                                centered: true,
-                            });
-                        } else if (isMounted) {
-                            // Only warn if the API actually crashed or threw a 500
-                            console.warn("Global Assignment check failed:", assignError);
-                            Modal.warning({
-                                title: 'Error Checking Assignments',
-                                content: `Could not verify assignments status: ${assignError?.response?.data?.message || assignError.message}`,
-                                okText: 'Close',
-                                centered: true,
-                            });
+                            let hasAssignment = false;
+                            if (Array.isArray(assignments)) {
+                                // Find any assignment that belongs to this project
+                                hasAssignment = assignments.some((a: Record<string, unknown>) =>
+                                    String(a.projectId) === String(projectId) ||
+                                    String(a.project_id) === String(projectId)
+                                );
+                            }
+
+                            if (!hasAssignment && isMounted) {
+                                Modal.warning({
+                                    title: 'No Assignments Found',
+                                    content: 'This project currently has no assignments created. Please create an assignment to proceed.',
+                                    okText: 'Close',
+                                    centered: true,
+                                });
+                            }
+                        } catch (error) {
+                            const assignError = error as any;
+                            const isNotFoundError = assignError?.response?.data?.code === 404 || assignError?.response?.data?.message === 'Assignment not found';
+
+                            if (isNotFoundError && isMounted) {
+                                // Backend confirms 0 assignments system-wide
+                                Modal.warning({
+                                    title: 'No Assignments Found',
+                                    content: 'This project currently has no assignments created. Please create an assignment to proceed.',
+                                    okText: 'Close',
+                                    centered: true,
+                                });
+                            } else if (isMounted) {
+                                // Only warn if the API actually crashed or threw a 500
+                                console.warn("Global Assignment check failed:", assignError);
+                            }
                         }
                     }
                 }
