@@ -1,4 +1,4 @@
 // API Layer Exports
-export * from './apiClients'
-export * from './endpoints'
+export * from './ApiClients'
+export * from './Endpoints'
 

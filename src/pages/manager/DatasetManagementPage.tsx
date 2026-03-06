@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-import datasetApi, { type GetDatasetsParams } from '@/api/dataset';
+import datasetApi, { type GetDatasetsParams } from '@/api/DatasetApi';
 import DatasetHeader from '@/features/manager/components/dataset/DatasetHeader';
 import DatasetList from '@/features/manager/components/dataset/DatasetList';
 import { DatasetQuickActions } from '@/features/manager/components/dataset/DatasetQuickActions';

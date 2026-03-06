@@ -1,7 +1,7 @@
 import { useNavigate, Link } from 'react-router-dom';
 import { Spin, Empty, message, Modal } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
-import datasetApi, { type GetDatasetsParams } from '@/api/dataset';
+import datasetApi, { type GetDatasetsParams } from '@/api/DatasetApi';
 import { DatasetCard } from './DatasetCard';
 
 interface DatasetListProps {

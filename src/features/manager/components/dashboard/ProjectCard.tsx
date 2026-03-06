@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, Button, Typography, Dropdown, Tag, type MenuProps } from 'antd';
 import { MoreOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
-import type { GetProjectsParams } from '@/api/project'; // Import type từ API của bạn
+import type { GetProjectsParams } from '@/api/ProjectApi'; // Import type từ API của bạn
 
 const { Title } = Typography;
 

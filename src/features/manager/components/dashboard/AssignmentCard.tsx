@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, Button, Typography, Dropdown, Tag, type MenuProps } from 'antd';
 import { MoreOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
-import type { GetAssignmentsParams } from '@/api/assignment';
+import type { GetAssignmentsParams } from '@/api/AssignmentApi';
 
 const { Title } = Typography;
 

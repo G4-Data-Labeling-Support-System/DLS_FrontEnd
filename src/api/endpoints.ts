@@ -42,7 +42,6 @@ export const ENDPOINTS = {
     BY_ANNOTATOR: (annotatorId: string) => `/assignments/annotators/${annotatorId}`,
     CREATE: '/assignments',
     DELETE: (id: string) => `/assignments/${id}/remove`,
-    BY_PROJECT: (projectId: string) => `/assignments/projects/${projectId}`,
     CREATE_BY_PROJECT: (projectId: string) => `/assignments/projects/${projectId}`,
   },
 
