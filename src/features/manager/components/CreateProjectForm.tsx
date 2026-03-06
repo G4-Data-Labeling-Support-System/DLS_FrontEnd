@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Input, message, Spin } from 'antd';
-import projectApi from '@/api/project';
+import projectApi from '@/api/ProjectApi';
 import { useNavigate } from 'react-router-dom';
 // Import Styles & Components
 import { FormFooter } from '@/features/manager/components/common/FormFooter';

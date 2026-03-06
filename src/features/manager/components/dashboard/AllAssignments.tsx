@@ -4,7 +4,7 @@ import { SearchOutlined } from '@ant-design/icons';
 import { AssignmentCard } from './AssignmentCard';
 import { AssignmentDetail } from './AssignmentDetail';
 
-import assignmentApi, { type GetAssignmentsParams } from '@/api/assignment';
+import assignmentApi, { type GetAssignmentsParams } from '@/api/AssignmentApi';
 const { Title } = Typography;
 
 interface AllAssignmentsProps {

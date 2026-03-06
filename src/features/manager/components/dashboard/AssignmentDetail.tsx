@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Spin, Typography, Card, Button, Descriptions, Tag, Empty, message } from 'antd';
 import { EditOutlined, FolderOutlined, DatabaseOutlined } from '@ant-design/icons';
-import assignmentApi, { type GetAssignmentsParams } from '@/api/assignment';
-import projectApi from '@/api/project';
+import assignmentApi, { type GetAssignmentsParams } from '@/api/AssignmentApi';
+import projectApi from '@/api/ProjectApi';
 import { useNavigate } from 'react-router-dom';
 
 const { Title } = Typography;

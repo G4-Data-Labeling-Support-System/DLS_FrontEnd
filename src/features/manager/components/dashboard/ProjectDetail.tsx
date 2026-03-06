@@ -1,9 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { Spin, Typography, Card, Button, Descriptions, Tag, Avatar, Empty, message, Modal, Form, Input, Select, DatePicker } from 'antd';
 import { EditOutlined, UserOutlined } from '@ant-design/icons';
-import assignmentApi from '@/api/assignment';
-import datasetApi from '@/api/dataset';
+<<<<<<< Updated upstream
+import projectApi, { type GetProjectsParams } from '@/api/project';
+import assignmentApi from '@/api/AssignmentApi';
+import datasetApi from '@/api/DatasetApi';
 import { userApi } from '@/api/userApi';
+=======
+import projectApi, { type GetProjectsParams } from '@/api/ProjectApi';
+import assignmentApi from '@/api/AssignmentApi';
+>>>>>>> Stashed changes
 import { useNavigate } from 'react-router-dom';
 import { useProjectById, useAssignmentsByProject, useGuidelinesByProject, useInvalidateProjectDetail } from '@/features/manager/hooks/useProjectDetail';
 
