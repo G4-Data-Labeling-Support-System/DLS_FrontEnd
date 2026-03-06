@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Form, Input, notification } from 'antd';
 import { MailOutlined, UserOutlined, PhoneOutlined, LockOutlined } from '@ant-design/icons';
 import { useAuthStore } from '@/store/auth.store';
-import { userApi } from '@/api/UserApi';
+import { userApi } from '@/api/userApi';
 import { themeClasses } from '@/styles';
 import { Button } from '@/shared/components/ui/Button';
 

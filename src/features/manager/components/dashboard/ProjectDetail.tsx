@@ -6,7 +6,7 @@ import projectApi, { type GetProjectsParams } from '@/api/project';
 import assignmentApi from '@/api/assignment';
 import guidelineApi from '@/api/guideline';
 import datasetApi from '@/api/dataset';
-import { userApi } from '@/api/userApi';
+import { userApi } from '@/api/UserApi';
 =======
 import projectApi, { type GetProjectsParams } from '@/api/ProjectApi';
 import assignmentApi from '@/api/AssignmentApi';
