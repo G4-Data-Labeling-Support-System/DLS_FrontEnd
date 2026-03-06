@@ -9,7 +9,7 @@ import { ReviewerEmptyState } from '@/features/reviewer/components/workspace/Rev
 import { ReviewerLoadingState } from '@/features/reviewer/components/workspace/ReviewerLoadingState';
 import { ApproveModal } from '@/features/reviewer/components/workspace/ApproveModal';
 import { RejectModal } from '@/features/reviewer/components/workspace/RejectModal';
-import { reviewerApi, type ReviewerItem, type ReviewerItemDetail } from '@/api/reviewer';
+import { reviewerApi, type ReviewerItem, type ReviewerItemDetail } from '@/api/ReviewerApi';
 import { LoadingOutlined } from '@ant-design/icons';
 
 // ⚡ Cache for item details - prevents refetching

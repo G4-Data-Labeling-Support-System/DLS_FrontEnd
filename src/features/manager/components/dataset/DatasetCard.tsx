@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, Button, Typography, Dropdown, type MenuProps } from 'antd';
 import { MoreOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
-import type { GetDatasetsParams } from '@/api/dataset';
+import type { GetDatasetsParams } from '@/api/DatasetApi';
 
 const { Title } = Typography;
 

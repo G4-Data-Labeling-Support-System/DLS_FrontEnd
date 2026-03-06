@@ -6,7 +6,7 @@ import { ProjectDetail } from './ProjectDetail';
 import { Link, useNavigate } from 'react-router-dom';
 import { PATH_MANAGER } from '@/routes/paths';
 
-import projectApi, { type GetProjectsParams } from '@/api/project';
+import projectApi, { type GetProjectsParams } from '@/api/ProjectApi';
 const { Title } = Typography;
 
 interface AllProjectsProps {

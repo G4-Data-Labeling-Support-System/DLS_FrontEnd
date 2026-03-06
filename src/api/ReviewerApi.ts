@@ -1,5 +1,5 @@
 import { mainClient } from './apiClients';
-import { ENDPOINTS } from './endpoints';
+import { ENDPOINTS } from './Endpoints';
 
 export interface ReviewerStats {
     totalSubmissions: number;

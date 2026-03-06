@@ -1,5 +1,5 @@
 import axiosClient from "@/lib/axios";
-import { ENDPOINTS } from "./endpoints";
+import { ENDPOINTS } from "./Endpoints";
 
 
 
