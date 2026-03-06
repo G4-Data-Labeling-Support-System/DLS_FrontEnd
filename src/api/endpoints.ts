@@ -46,6 +46,11 @@ export const ENDPOINTS = {
     CREATE_BY_PROJECT: (projectId: string) => `/assignments/projects/${projectId}`,
   },
 
+  ANNOTATIONS: {
+    LIST: '/annotations',
+    DETAIL: (id: string) => `/annotations/${id}`,
+  },
+
   GUIDELINES: {
     LIST: (projectId: string) => `/guidelines/project/${projectId}`,
     DETAIL: (id: string) => `/guidelines/${id}`,

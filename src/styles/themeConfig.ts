@@ -19,3 +19,5 @@ export const managerTheme = {
         // Thêm các override khác nếu cần
     },
 };
+
+export const reviewerTheme = managerTheme;
