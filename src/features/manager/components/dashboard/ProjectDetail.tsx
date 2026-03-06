@@ -3,8 +3,8 @@ import { Spin, Typography, Card, Button, Descriptions, Tag, Avatar, Empty, messa
 import { EditOutlined, UserOutlined } from '@ant-design/icons';
 <<<<<<< Updated upstream
 import projectApi, { type GetProjectsParams } from '@/api/project';
-import assignmentApi from '@/api/assignment';
-import datasetApi from '@/api/dataset';
+import assignmentApi from '@/api/AssignmentApi';
+import datasetApi from '@/api/DatasetApi';
 import { userApi } from '@/api/userApi';
 =======
 import projectApi, { type GetProjectsParams } from '@/api/ProjectApi';
