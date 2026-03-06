@@ -133,7 +133,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId
                 </Button>
             </div>
 
-            <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-6 mt-2">
+            <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-6">
                 <Descriptions
                     title={<span className="text-white text-lg font-display flex items-center gap-2"><span className="material-symbols-outlined text-violet-400">info</span>Assignment Information</span>}
                     column={1}
@@ -160,57 +160,55 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId
                 </Descriptions>
             </Card>
 
-            <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-6 mt-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 divide-y md:divide-y-0 md:divide-x divide-gray-800">
-                    <div className="md:pr-2 pb-6 md:pb-0">
-                        <div className="flex items-center justify-between mb-4">
-                            <span className="text-white text-lg font-display flex items-center gap-2">
-                                <FolderOutlined className="text-blue-400" />
-                                Associated Project
-                            </span>
-                        </div>
-                        {assignment.projectId ? (
-                            <div className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-blue-500/30 transition-colors cursor-pointer" onClick={() => navigate(`/manager/projects/${assignment.projectId}`)}>
-                                <h4 className="text-white font-bold text-sm truncate">
-                                    {projectName ? projectName : `Project ID: ${assignment.projectId}`}
-                                </h4>
-                                <div className="text-gray-400 text-xs mt-1">
-                                    Click to view project details
-                                </div>
-                            </div>
-                        ) : (
-                            <Empty
-                                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                                description={<span className="text-gray-500">No associated project</span>}
-                            />
-                        )}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-1 mb-6 mt-1">
+                <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
+                    <div className="flex items-center justify-between mb-4">
+                        <span className="text-white text-lg font-display flex items-center gap-2">
+                            <FolderOutlined className="text-blue-400" />
+                            Associated Project
+                        </span>
                     </div>
+                    {assignment.projectId ? (
+                        <div className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-blue-500/30 transition-colors cursor-pointer" onClick={() => navigate(`/manager/projects/${assignment.projectId}`)}>
+                            <h4 className="text-white font-bold text-sm truncate">
+                                {projectName ? projectName : `Project ID: ${assignment.projectId}`}
+                            </h4>
+                            <div className="text-gray-400 text-xs mt-1">
+                                Click to view project details
+                            </div>
+                        </div>
+                    ) : (
+                        <Empty
+                            image={Empty.PRESENTED_IMAGE_SIMPLE}
+                            description={<span className="text-gray-500">No associated project</span>}
+                        />
+                    )}
+                </Card>
 
-                    <div className="md:pl-8 pt-6 md:pt-0">
-                        <div className="flex items-center justify-between mb-4">
-                            <span className="text-white text-lg font-display flex items-center gap-2">
-                                <DatabaseOutlined className="text-fuchsia-400" />
-                                Assigned Dataset
-                            </span>
-                        </div>
-                        {assignment.datasetId ? (
-                            <div className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-fuchsia-500/30 transition-colors cursor-pointer" onClick={() => navigate(`/manager/datasets/${assignment.datasetId}`)}>
-                                <h4 className="text-white font-bold text-sm truncate">
-                                    Dataset ID: {assignment.datasetId}
-                                </h4>
-                                <div className="text-gray-400 text-xs mt-1">
-                                    Click to view dataset details
-                                </div>
-                            </div>
-                        ) : (
-                            <Empty
-                                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                                description={<span className="text-gray-500">No assigned dataset</span>}
-                            />
-                        )}
+                <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
+                    <div className="flex items-center justify-between mb-4">
+                        <span className="text-white text-lg font-display flex items-center gap-2">
+                            <DatabaseOutlined className="text-fuchsia-400" />
+                            Assigned Dataset
+                        </span>
                     </div>
-                </div>
-            </Card>
+                    {assignment.datasetId ? (
+                        <div className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-fuchsia-500/30 transition-colors cursor-pointer" onClick={() => navigate(`/manager/datasets/${assignment.datasetId}`)}>
+                            <h4 className="text-white font-bold text-sm truncate">
+                                Dataset ID: {assignment.datasetId}
+                            </h4>
+                            <div className="text-gray-400 text-xs mt-1">
+                                Click to view dataset details
+                            </div>
+                        </div>
+                    ) : (
+                        <Empty
+                            image={Empty.PRESENTED_IMAGE_SIMPLE}
+                            description={<span className="text-gray-500">No assigned dataset</span>}
+                        />
+                    )}
+                </Card>
+            </div>
 
             <style>{`
                 .custom-descriptions .ant-descriptions-title {

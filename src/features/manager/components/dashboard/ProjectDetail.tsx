@@ -4,7 +4,6 @@ import { EditOutlined, UserOutlined } from '@ant-design/icons';
 <<<<<<< Updated upstream
 import projectApi, { type GetProjectsParams } from '@/api/project';
 import assignmentApi from '@/api/assignment';
-import guidelineApi from '@/api/guideline';
 import datasetApi from '@/api/dataset';
 import { userApi } from '@/api/userApi';
 =======
@@ -12,6 +11,7 @@ import projectApi, { type GetProjectsParams } from '@/api/ProjectApi';
 import assignmentApi from '@/api/AssignmentApi';
 >>>>>>> Stashed changes
 import { useNavigate } from 'react-router-dom';
+import { useProjectById, useAssignmentsByProject, useGuidelinesByProject, useInvalidateProjectDetail } from '@/features/manager/hooks/useProjectDetail';
 
 const { Title } = Typography;
 
@@ -20,15 +20,14 @@ interface ProjectDetailProps {
     onBack: () => void;
 }
 
-interface ProjectDetailData extends GetProjectsParams {
-    users?: Record<string, unknown>[];
-}
-
 export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack }) => {
-    const [project, setProject] = useState<ProjectDetailData | null>(null);
-    const [assignments, setAssignments] = useState<Record<string, unknown>[]>([]);
-    const [guidelines, setGuidelines] = useState<Record<string, unknown>[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
+    const { data: project, isLoading: projectLoading, isError: projectError } = useProjectById(projectId);
+    const { data: assignments = [], isLoading: assignmentsLoading, isError: assignmentsError } = useAssignmentsByProject(projectId);
+    const { data: guidelines = [], isLoading: guidelinesLoading } = useGuidelinesByProject(projectId);
+    const invalidateProjectDetail = useInvalidateProjectDetail();
+
+    const loading = projectLoading || assignmentsLoading || guidelinesLoading;
+
     const [isFirstAssignmentModalVisible, setIsFirstAssignmentModalVisible] = useState(false);
     const [firstAssignmentStep, setFirstAssignmentStep] = useState<'prompt' | 'form'>('prompt');
     const [users, setUsers] = useState<Record<string, unknown>[]>([]);
@@ -38,78 +37,18 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
     const navigate = useNavigate();
 
     useEffect(() => {
-        let isMounted = true;
-
-        const fetchDetail = async () => {
-            try {
-                setLoading(true);
-                const response = await projectApi.getProjectById(projectId);
-                const data = response.data?.data || response.data;
-
-                if (data && isMounted) {
-                    setProject({
-                        projectId: String(data.projectId || data.id),
-                        projectName: String(data.projectName || data.name),
-                        projectStatus: String(data.projectStatus || data.status),
-                        description: data.description ? String(data.description) : undefined,
-                        createdAt: data.createdAt ? String(data.createdAt) : undefined,
-                        updatedAt: data.updatedAt ? String(data.updatedAt) : undefined,
-                        users: data.users || data.members || data.assignees || [] // Fallbacks cho dữ liệu mảng users
-                    });
-
-                    // Fetch assignments for this project
-                    try {
-                        const assignRes = await assignmentApi.getAssignmentsByProjectId(projectId);
-                        const fetchedAssignments = assignRes.data?.data || assignRes.data || [];
-                        if (isMounted) {
-                            const arr = Array.isArray(fetchedAssignments) ? fetchedAssignments : [];
-                            setAssignments(arr);
-                            if (arr.length === 0) {
-                                setIsFirstAssignmentModalVisible(true);
-                                setFirstAssignmentStep('prompt');
-                            }
-                        }
-                    } catch (error) {
-                        console.error("Failed to fetch project assignments:", error);
-                        if (isMounted) {
-                            setAssignments([]);
-                            setIsFirstAssignmentModalVisible(true);
-                            setFirstAssignmentStep('prompt');
-                        }
-                    }
-
-                    // Fetch guidelines for this project
-                    try {
-                        const guideRes = await guidelineApi.getGuidelines(projectId);
-                        const fetchedGuidelines = guideRes.data?.data || guideRes.data;
-                        if (isMounted) {
-                            setGuidelines(Array.isArray(fetchedGuidelines) ? fetchedGuidelines : fetchedGuidelines ? [fetchedGuidelines] : []);
-                        }
-                    } catch (error) {
-                        console.error("Failed to fetch project guidelines:", error);
-                    }
-                }
-            } catch (error) {
-                if (isMounted) {
-                    console.error("Error fetching project details:", error);
-                    message.error("Cannot load project details.");
-                    onBack(); // Fallback to list if error
-                }
-            } finally {
-                if (isMounted) {
-                    setLoading(false);
-                }
-            }
-        };
-
-        if (projectId) {
-            fetchDetail();
+        if (projectError) {
+            message.error("Cannot load project details.");
+            onBack();
         }
+    }, [projectError, onBack]);
 
-        return () => {
-            isMounted = false;
-        };
-    }, [projectId, onBack]);
+    useEffect(() => {
+        if (!assignmentsLoading && !assignmentsError && assignments.length === 0) {
+            setIsFirstAssignmentModalVisible(true);
+            setFirstAssignmentStep('prompt');
+        }
+    }, [assignments, assignmentsLoading, assignmentsError]);
 
     const handleFirstAssignmentOk = async () => {
         setFirstAssignmentStep('form');
@@ -136,9 +75,11 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
                 assignmentName: values.assignmentName,
                 assignedTo: values.assignedTo,
                 assignedBy: values.assignedBy,
+                reviewerId: values.reviewerId,
                 description: values.description,
                 dueDate: values.dueDate ? values.dueDate.toISOString() : undefined,
                 datasetId: values.datasetId,
+                projectId: projectId,
             };
 
             await assignmentApi.createAssignmentForProject(projectId, payload);
@@ -146,10 +87,8 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
             setIsFirstAssignmentModalVisible(false);
             form.resetFields();
 
-            // Refresh assignments list
-            const assignRes = await assignmentApi.getAssignmentsByProjectId(projectId);
-            const fetchedAssignments = assignRes.data?.data || assignRes.data || [];
-            setAssignments(Array.isArray(fetchedAssignments) ? fetchedAssignments : []);
+            // Refresh assignments list via React Query cache invalidation
+            invalidateProjectDetail(projectId);
         } catch (error) {
             console.error("Failed to create first assignment", error);
             if (error && typeof error === 'object' && 'errorFields' in error) {
@@ -400,30 +339,72 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
             >
                 {firstAssignmentStep === 'prompt' ? (
                     <div className="py-4 text-gray-600 dark:text-gray-300">
-                        <p>Dự án hiện đang chưa có assignment. Bạn hãy tạo assignment đầu tiên.</p>
+                        <p>This project currently has no assignments. Would you like to create the first assignment?</p>
                     </div>
                 ) : (
                     <Form form={form} layout="vertical" className="mt-4">
                         <Form.Item label="Assignment Name" name="assignmentName" rules={[{ required: true, message: 'Please enter assignment name' }]}>
                             <Input placeholder="Enter assignment name" />
                         </Form.Item>
-                        <div className="grid grid-cols-2 gap-4">
-                            <Form.Item label="Assigned To" name="assignedTo" rules={[{ required: true, message: 'Please select assigned to' }]}>
-                                <Select placeholder="Select user">
-                                    {users.map((u: Record<string, unknown>) => (
-                                        <Select.Option key={u.id as string} value={u.id as string}>
-                                            {(u.fullName as string) || (u.username as string) || (u.name as string)}
-                                        </Select.Option>
-                                    ))}
+                        <div className="grid grid-cols-3 gap-4">
+                            <Form.Item label="Assign To" name="assignedTo" rules={[{ required: true, message: 'Please select annotator' }]}>
+                                <Select placeholder="Select annotator">
+                                    {users.filter(u => {
+                                        const role = String((u.role as string) || (u.userRole as string) || '').toUpperCase();
+                                        return role.includes('ANNOTATOR') || role === 'ANNOTATOR';
+                                    }).map((u: Record<string, unknown>) => {
+                                        const userId = String(u.id || u.userId || u.account_id || u.username || '');
+                                        const name = (u.fullName as string) || (u.username as string) || (u.name as string);
+                                        const avatarSrc = u.avatar as string || u.coverImage as string || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
+                                        return (
+                                            <Select.Option key={userId} value={userId}>
+                                                <div className="flex items-center gap-2">
+                                                    <Avatar src={avatarSrc} size="small" />
+                                                    <span>{name}</span>
+                                                </div>
+                                            </Select.Option>
+                                        );
+                                    })}
                                 </Select>
                             </Form.Item>
-                            <Form.Item label="Assigned By" name="assignedBy" rules={[{ required: true, message: 'Please select assigned by' }]}>
-                                <Select placeholder="Select user">
-                                    {users.map((u: Record<string, unknown>) => (
-                                        <Select.Option key={u.id as string} value={u.id as string}>
-                                            {(u.fullName as string) || (u.username as string) || (u.name as string)}
-                                        </Select.Option>
-                                    ))}
+                            <Form.Item label="Reviewer" name="reviewerId" rules={[{ required: true, message: 'Please select reviewer' }]}>
+                                <Select placeholder="Select reviewer">
+                                    {users.filter(u => {
+                                        const role = String((u.role as string) || (u.userRole as string) || '').toUpperCase();
+                                        return role.includes('REVIEWER') || role === 'REVIEWER';
+                                    }).map((u: Record<string, unknown>) => {
+                                        const userId = String(u.id || u.userId || u.account_id || u.username || '');
+                                        const name = (u.fullName as string) || (u.username as string) || (u.name as string);
+                                        const avatarSrc = u.avatar as string || u.coverImage as string || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
+                                        return (
+                                            <Select.Option key={userId} value={userId}>
+                                                <div className="flex items-center gap-2">
+                                                    <Avatar src={avatarSrc} size="small" />
+                                                    <span>{name}</span>
+                                                </div>
+                                            </Select.Option>
+                                        );
+                                    })}
+                                </Select>
+                            </Form.Item>
+                            <Form.Item label="Assigned By" name="assignedBy" rules={[{ required: true, message: 'Please select manager' }]}>
+                                <Select placeholder="Select manager">
+                                    {users.filter(u => {
+                                        const role = String((u.role as string) || (u.userRole as string) || '').toUpperCase();
+                                        return role.includes('MANAGER') || role === 'MANAGER';
+                                    }).map((u: Record<string, unknown>) => {
+                                        const userId = String(u.id || u.userId || u.account_id || u.username || '');
+                                        const name = (u.fullName as string) || (u.username as string) || (u.name as string);
+                                        const avatarSrc = u.avatar as string || u.coverImage as string || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
+                                        return (
+                                            <Select.Option key={userId} value={userId}>
+                                                <div className="flex items-center gap-2">
+                                                    <Avatar src={avatarSrc} size="small" />
+                                                    <span>{name}</span>
+                                                </div>
+                                            </Select.Option>
+                                        );
+                                    })}
                                 </Select>
                             </Form.Item>
                         </div>

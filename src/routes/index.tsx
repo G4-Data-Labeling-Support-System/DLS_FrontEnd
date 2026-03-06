@@ -10,6 +10,7 @@ import GuidelinesSetupPage from '@/pages/manager/GuidelinesSetupPage'
 import { GuestGuard, RoleGuard } from './guards'
 import { Header } from '@/components/common/Header'
 import { Layout } from 'antd'
+import ReviewerDashboardPage from '@/pages/reviewer/ReviewerDashboardPage'
 
 // Lazy load pages for code splitting
 const ProfilePage = lazy(() => import('@/pages/common/ProfilePage'))
@@ -33,7 +34,7 @@ const AnnotatorLayout = lazy(() => import('@/components/layout/AnnotatorLayout')
 const AnnotatorDashboardPage = lazy(() => import('@/pages/annotator/AnnotatorDashboardPage'))
 
 // Reviewer pages
-const ReviewerDashboard = lazy(() => import('@/pages/reviewer/ReviewerDashboard'))
+const ReviewerLayout = lazy(() => import('@/components/layout/ReviewerLayout'))
 const ReviewerWorkspacePage = lazy(() => import('@/pages/reviewer/ReviewerWorkspacePage'))
 
 // Wrapper component for lazy loaded pages
@@ -208,21 +209,20 @@ export const router = createBrowserRouter([
     element: (
       <LazyPage>
         <RoleGuard allowedRoles={[UserRole.REVIEWER]}>
-          {/* Reviewer uses its own dashboard as the layout root */}
-          <ReviewerDashboard />
+          <ReviewerLayout />
         </RoleGuard>
       </LazyPage>
     ),
-  },
-  {
-    path: '/reviewer/workspace',
-    element: (
-      <LazyPage>
-        <RoleGuard allowedRoles={[UserRole.REVIEWER]}>
-          <ReviewerWorkspacePage />
-        </RoleGuard>
-      </LazyPage>
-    ),
+    children: [
+      {
+        index: true,
+        element: <LazyPage><ReviewerDashboardPage /></LazyPage>,
+      },
+      {
+        path: 'workspace',
+        element: <LazyPage><ReviewerWorkspacePage /></LazyPage>,
+      },
+    ],
   },
 
   // ─── 404 ──────────────────────────────────────────────────────────────────
