@@ -224,7 +224,7 @@ export default function AnnotatorDashboardPage() {
     }, [assignmentId, user?.id])
 
     return (
-        <div className="flex flex-col gap-6 w-full max-w-4xl mx-auto pb-10">
+        <div className="p-6">
             <DashboardTabs activeTab={activeTab} onTabChange={handleTabChange} />
 
             {activeTab === 'project' && (
@@ -265,24 +265,6 @@ export default function AnnotatorDashboardPage() {
                     </div>
                 ) : (
                     <>
-                        {/* Title & Loading Status */}
-                        <div className="flex items-center justify-between -mb-2">
-                            <div className="flex items-center gap-2">
-                                <span className="material-symbols-outlined text-[14px] text-gray-500">
-                                    arrow_downward
-                                </span>
-                                <span className="text-xs font-mono tracking-widest uppercase text-gray-500">
-                                    Assignment
-                                </span>
-                            </div>
-                            {loading && (
-                                <div className="flex items-center gap-2 animate-pulse">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-violet-500"></div>
-                                    <span className="text-[10px] text-violet-400 font-mono uppercase tracking-tighter">Updating...</span>
-                                </div>
-                            )}
-                        </div>
-
                         <div className="glass-panel rounded-2xl p-6 sm:p-8 flex flex-col gap-6">
 
                             {/* Assignment Header */}

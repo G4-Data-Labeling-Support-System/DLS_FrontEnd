@@ -1,10 +1,22 @@
 import { themeClasses } from '@/styles';
 import { TeamOutlined, DesktopOutlined, DatabaseOutlined } from '@ant-design/icons';
 import { useUsers } from '@/features/admin/hooks/useUsers';
+import { useLabels } from '@/features/admin/hooks/useLabels';
 
 export default function AdminDashboard() {
     const { data: rawUsers, isLoading } = useUsers();
+    const { data: labelsResponse, isLoading: isLoadingLabels } = useLabels();
     const users = Array.isArray(rawUsers) ? rawUsers : (rawUsers as any)?.data || [];
+
+    // Extract label count robustly
+    const getLabelCount = () => {
+        if (!labelsResponse) return 0;
+        const data = labelsResponse.data ?? labelsResponse;
+        if (Array.isArray(data)) return data.length;
+        if (typeof data === 'number') return data;
+        return data.total ?? data.count ?? data.totalLabels ?? 0;
+    };
+    const labelCount = getLabelCount();
 
     return (
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
@@ -53,7 +65,9 @@ export default function AdminDashboard() {
                             <p className={`font-body text-sm font-medium ${themeClasses.text.secondary} mb-1`}>
                                 Labeled
                             </p>
-                            <p className="text-3xl font-bold tracking-tight text-white">-</p>
+                            <p className="text-3xl font-bold tracking-tight text-white">
+                                {isLoadingLabels ? '-' : labelCount}
+                            </p>
                         </div>
                         <div className="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
                             <DesktopOutlined className="text-xl" />
@@ -134,7 +148,7 @@ export default function AdminDashboard() {
 
             {/* User Management Table */}
             <div className={`glass-card flex flex-col overflow-hidden rounded-xl`}>
-                
+
             </div>
         </div>
     );
