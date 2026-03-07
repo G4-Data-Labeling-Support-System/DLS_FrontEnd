@@ -1,7 +1,10 @@
 import getTaskStatusStyle, { getAnnotationStatusLabel, getAnnotationStatusStyle } from "./StatusStyle";
 
 export default function TaskCard({ task }: { task: any }) {
-    const statusStyle = getTaskStatusStyle(task.taskStatus);
+    const taskStatus = task.taskStatus || task.status || 'PENDING';
+    const taskName = task.name || task.filename || 'Untitled Task';
+
+    const statusStyle = getTaskStatusStyle(taskStatus);
     const annotationLabel = getAnnotationStatusLabel(task.annotationStatus);
     const annotationStyle = getAnnotationStatusStyle(task.annotationStatus);
 
@@ -19,7 +22,7 @@ export default function TaskCard({ task }: { task: any }) {
                 <div className="flex items-center gap-1.5 text-[11px] text-gray-300 mb-0.5">
                     <span className="font-semibold text-gray-400">Task_Status:</span>
                     <span className={`font-semibold ${statusStyle.badge.includes('emerald') ? 'text-emerald-400' : statusStyle.badge.includes('amber') ? 'text-amber-400' : statusStyle.badge.includes('violet') ? 'text-violet-400' : 'text-gray-400'}`}>
-                        {task.taskStatus}
+                        {taskStatus}
                     </span>
                 </div>
                 <div className="flex items-center gap-1.5 text-[11px] text-gray-300">
@@ -33,7 +36,7 @@ export default function TaskCard({ task }: { task: any }) {
 
             {/* Task name + action */}
             <div className="flex items-center justify-between">
-                <h4 className="text-base font-bold text-white">{task.name}</h4>
+                <h4 className="text-base font-bold text-white">{taskName}</h4>
                 <button className="flex items-center gap-1 text-[10px] font-bold text-violet-300 hover:text-white transition-colors opacity-0 group-hover:opacity-100">
                     <span>Open</span>
                     <span className="material-symbols-outlined text-[13px]">arrow_forward</span>
