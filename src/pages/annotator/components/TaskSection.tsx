@@ -13,7 +13,7 @@ export default function TasksSection({ tasks }: { tasks: any[] }) {
     const grouped = groupTasksByBatch(tasks);
 
     return (
-        <div>
+        <div className="w-full">
             {/* Section Header */}
             <div className="flex items-center gap-3 mb-5">
                 <div className="w-8 h-8 rounded-lg bg-fuchsia-500/10 border border-fuchsia-500/20 flex items-center justify-center">
@@ -39,7 +39,7 @@ export default function TasksSection({ tasks }: { tasks: any[] }) {
                         </div>
 
                         {/* 2-column grid of cards */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
                             {batchTasks.map(task => (
                                 <TaskCard key={`${batchLabel}-${task.id}`} task={task} />
                             ))}
