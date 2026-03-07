@@ -106,8 +106,12 @@ export default function TaskDetailPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {task.dataItems.map((item) => (
-                                        <tr key={item.id} className="group">
+                                    {task.dataItems.map((item, index) => (
+                                        <tr
+                                            key={item.id}
+                                            className="group cursor-pointer"
+                                            onClick={() => navigate(`/annotator/task/${task.id}/annotate`, { state: { startIndex: index } })}
+                                        >
                                             <td className="px-4 py-3 bg-white/5 rounded-l-xl border-y border-l border-white/5 group-hover:bg-white/10 group-hover:border-white/10 transition-colors">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/10 shrink-0 shadow-lg">
