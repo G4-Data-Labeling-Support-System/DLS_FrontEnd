@@ -1,6 +1,8 @@
+import { useNavigate } from "react-router-dom";
 import getTaskStatusStyle, { getAnnotationStatusLabel, getAnnotationStatusStyle } from "./StatusStyle";
 
 export default function TaskCard({ task }: { task: any }) {
+    const navigate = useNavigate();
     const taskStatus = task.taskStatus || task.status || 'PENDING';
     const taskName = task.name || task.filename || 'Untitled Task';
 
@@ -10,6 +12,7 @@ export default function TaskCard({ task }: { task: any }) {
 
     return (
         <div
+            onClick={() => navigate(`/annotator/task/${task.id}`)}
             className={`
                 relative group rounded-xl p-4 cursor-pointer overflow-hidden
                 bg-[#1a3a5c] border border-[#2a5a8c]/60

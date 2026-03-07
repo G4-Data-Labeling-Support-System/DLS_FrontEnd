@@ -32,6 +32,7 @@ const SystemSettings = lazy(() => import('@/pages/admin/SystemSettingsPage'))
 // Annotator pages
 const AnnotatorLayout = lazy(() => import('@/components/layout/AnnotatorLayout'))
 const AnnotatorDashboardPage = lazy(() => import('@/pages/annotator/AnnotatorDashboardPage'))
+const TaskDetailPage = lazy(() => import('@/pages/annotator/TaskDetailPage'))
 
 // Reviewer pages
 const ReviewerLayout = lazy(() => import('@/components/layout/ReviewerLayout'))
@@ -199,6 +200,10 @@ export const router = createBrowserRouter([
       {
         path: `${PATH_ANNOTATOR.assignment}/:assignmentId`,
         element: <LazyPage><AnnotatorDashboardPage /></LazyPage>,
+      },
+      {
+        path: 'task/:taskId',
+        element: <LazyPage><TaskDetailPage /></LazyPage>,
       },
     ],
   },
