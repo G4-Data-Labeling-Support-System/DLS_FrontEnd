@@ -1,4 +1,9 @@
 export default function getTaskStatusStyle(status: string) {
+    if (!status) return {
+        badge: 'border-gray-500/20 bg-gray-500/10 text-gray-400',
+        dot: 'bg-gray-400',
+        icon: 'radio_button_unchecked',
+    };
     switch (status.toLowerCase()) {
         case 'completed':
         case 'done':

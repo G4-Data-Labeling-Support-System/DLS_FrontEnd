@@ -4,8 +4,8 @@ import Features from "./Features";
 
 export default function Hero() {
     return (
-        <div className="">
-            <div className="absolute top-0 z-[2] h-screen w-screen bg-[#000000] bg-[radial-gradient(#ffffff33_1px,#00091d_1px)] bg-[size:20px_20px]"></div>
+        <div className="mb-20">
+            <div className="absolute top-0 -z-2 overflow-auto h-screen w-screen bg-[#000000] bg-[radial-gradient(#ffffff33_1px,#00091d_1px)] bg-[size:20px_20px]"></div>
             <section className="flex items-center justify-center w-full">
                 <div className={`relative z-10 text-center`}>
                     <div className="relative w-full max-w-1xl mx-auto mt-40 mb-40 flex justify-center">
