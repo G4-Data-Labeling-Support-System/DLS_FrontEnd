@@ -17,6 +17,7 @@ export const ENDPOINTS = {
     CREATE: '/users',
     UPDATE: (id: string) => `/users/update/${id}`,
     UPDATE_PASS: (id: string) => `/users/update/password/${id}`,
+    UPDATE_AVATAR: (id: string) => `/users/${id}/avatar/edit`,
     DEACTIVATE: (id: string) => `/users/${id}/deactivate`,
     ACTIVATE: (id: string) => `/users/${id}/activate`
   },
@@ -43,6 +44,11 @@ export const ENDPOINTS = {
     CREATE: '/assignments',
     DELETE: (id: string) => `/assignments/${id}/remove`,
     CREATE_BY_PROJECT: (projectId: string) => `/assignments/projects/${projectId}`,
+  },
+
+  ANNOTATIONS: {
+    LIST: '/annotations',
+    DETAIL: (id: string) => `/annotations/${id}`,
   },
 
   GUIDELINES: {

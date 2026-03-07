@@ -10,6 +10,7 @@ interface GetAssignmentsParams {
     assignmentName?: string;
     assignedTo?: string;
     assignedBy?: string;
+    reviewerId?: string;
     totalItems?: number;
     completedItems?: number;
     description?: string;
