@@ -4,7 +4,6 @@ import { useMutation } from '@tanstack/react-query'
 import { authService } from '../services'
 import type { LoginInformation } from '../types'
 
-
 export function useAuth() {
   const { user, isAuthenticated } = useAuthStore()
 

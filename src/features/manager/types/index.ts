@@ -1,11 +1,11 @@
 export interface CreateProjectInput {
-    projectName: string;
-    description?: string;
-    deadline: string;
-    dataType: 'image' | 'video' | 'text';
+  projectName: string
+  description?: string
+  deadline: string
+  dataType: 'image' | 'video' | 'text'
 }
 
 export interface ProjectIdState {
-    id: string;
-    locked: boolean;
+  id: string
+  locked: boolean
 }

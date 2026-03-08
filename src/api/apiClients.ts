@@ -5,7 +5,7 @@ import { API_BASE_URL, createApiClient, getStoredToken, handleUnauthorized } fro
  * Public Auth Client - Cho các API authentication không cần token (Login, Register...)
  */
 export const publicAuthClient = createApiClient({
-  baseURL: API_BASE_URL,
+  baseURL: API_BASE_URL
   // Không truyền getToken để tránh gửi kèm token
   // Không truyền onUnauthorized để tránh redirect loop nếu login thất bại
 })

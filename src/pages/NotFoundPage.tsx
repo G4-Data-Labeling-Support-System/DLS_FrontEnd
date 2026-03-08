@@ -1,11 +1,10 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from 'react-router-dom'
 
 export default function NotFoundPage() {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
   return (
     <div className="relative flex flex-col items-center justify-center min-h-screen ${themeClasses.backgrounds.deepDark} text-white overflow-hidden">
-
       {/* Top Right Decoration */}
       <div className="absolute top-0 right-0">
         <div className="grid grid-cols-2">
@@ -32,13 +31,9 @@ export default function NotFoundPage() {
       </h1>
 
       {/* Message */}
-      <p className="text-3xl mt-4 text-gray-200">
-        Uh oh, this page doesn’t exist.
-      </p>
+      <p className="text-3xl mt-4 text-gray-200">Uh oh, this page doesn’t exist.</p>
 
-      <p className="text-sm text-gray-400 mt-6">
-        Here's a few things you can try:
-      </p>
+      <p className="text-sm text-gray-400 mt-6">Here's a few things you can try:</p>
 
       {/* Buttons */}
       <div className="flex gap-4 mt-6">
@@ -50,12 +45,12 @@ export default function NotFoundPage() {
         </button>
 
         <button
-          onClick={() => navigate("/")}
+          onClick={() => navigate('/')}
           className="px-6 py-3 bg-white text-black rounded-full flex items-center gap-2 hover:bg-gray-200 transition cursor-pointer"
         >
           Go to Home →
         </button>
       </div>
     </div>
-  );
+  )
 }
