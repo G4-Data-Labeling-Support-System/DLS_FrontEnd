@@ -17,6 +17,7 @@ export const ENDPOINTS = {
     CREATE: '/users',
     UPDATE: (id: string) => `/users/update/${id}`,
     UPDATE_PASS: (id: string) => `/users/update/password/${id}`,
+    UPDATE_AVATAR: (id: string) => `/users/${id}/avatar/edit`,
     DEACTIVATE: (id: string) => `/users/${id}/deactivate`,
     ACTIVATE: (id: string) => `/users/${id}/activate`
   },
@@ -57,4 +58,7 @@ export const ENDPOINTS = {
     UPDATE: (id: string) => `/guidelines/${id}`,
   },
 
+  LABELS: {
+    LIST: '/labels',
+  },
 } as const

@@ -12,7 +12,7 @@ export const DashboardTabs: React.FC<DashboardTabsProps> = ({ activeTab, onTabCh
         <div className="flex items-center gap-8 border-b border-gray-800 mb-6 pb-2">
             <button
                 onClick={() => onTabChange('project')}
-                className={`text-lg font-medium transition-colors relative pb-2 ${activeTab === 'project' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
+                className={`text-lg font-medium transition-colors cursor-pointer relative pb-2 ${activeTab === 'project' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
             >
                 Project
                 {activeTab === 'project' && (
@@ -21,7 +21,7 @@ export const DashboardTabs: React.FC<DashboardTabsProps> = ({ activeTab, onTabCh
             </button>
             <button
                 onClick={() => onTabChange('assignment')}
-                className={`text-lg font-medium transition-colors relative pb-2 ${activeTab === 'assignment' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
+                className={`text-lg font-medium transition-colors cursor-pointer relative pb-2 ${activeTab === 'assignment' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
             >
                 Assignment
                 {activeTab === 'assignment' && (

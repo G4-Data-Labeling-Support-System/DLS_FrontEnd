@@ -1,7 +1,7 @@
 import React from 'react';
 import { Layout } from 'antd';
 import { Outlet } from 'react-router-dom';
-import { Sidebar } from '@/components/common/Sidebar';
+import { Sidebar } from '@/pages/admin/components/Sidebar';
 import { Header } from '@/components/common/Header';
 import { themeClasses } from '@/styles';
 

@@ -3,6 +3,7 @@ import axios, {
   type AxiosError,
   type InternalAxiosRequestConfig
 } from 'axios';
+import { useAuthStore } from '@/store';
 
 // ============ Types ============
 // Định nghĩa lại Config để không phụ thuộc file bên ngoài nếu chưa có
@@ -47,6 +48,10 @@ const defaultGetRefreshToken = () => localStorage.getItem('refreshToken');
 export const handleUnauthorized = () => {
   localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
+
+  // Đồng bộ với Zustand Store
+  useAuthStore.getState().logout();
+
   // Chỉ redirect nếu chưa ở trang login để tránh lặp vô tận
   if (!window.location.pathname.includes('/login')) {
     window.location.href = '/login';
@@ -95,8 +100,13 @@ export function createApiClient({
       const status = error.response?.status;
 
       // Xử lý lỗi 403 Forbidden
-      if (status === 403 && onForbidden) {
-        onForbidden();
+      if (status === 403) {
+        if (onForbidden) {
+          onForbidden();
+        } else {
+          // Nếu không có handler riêng, coi như unauthorized (hết hạn session)
+          onUnauthorized();
+        }
         return Promise.reject(error);
       }
 
