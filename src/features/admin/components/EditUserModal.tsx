@@ -1,4 +1,4 @@
-import { Form, Input, Select, message } from 'antd'
+import { App, Form, Input, Select } from 'antd'
 import { UserOutlined, MailOutlined, SafetyCertificateOutlined } from '@ant-design/icons'
 import { Button } from '@/shared/components/ui/Button'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
@@ -18,6 +18,7 @@ export default function EditUserModal({
   onSuccess,
   userData
 }: EditUserModalProps) {
+  const { message } = App.useApp()
   const [form] = Form.useForm()
   const updateUserMutation = useUpdateUser()
 

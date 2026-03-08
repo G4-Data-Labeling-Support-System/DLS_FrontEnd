@@ -1,4 +1,4 @@
-import { Form, Input, Select, message } from 'antd'
+import { App, Form, Input, Select } from 'antd'
 import { ProjectOutlined, SafetyCertificateOutlined } from '@ant-design/icons'
 import { Button } from '@/shared/components/ui/Button'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
@@ -11,6 +11,7 @@ interface AddProjectModalProps {
 }
 
 export default function AddProjectModal({ isOpen, onClose, onSuccess }: AddProjectModalProps) {
+  const { message } = App.useApp()
   const [form] = Form.useForm()
   const createProjectMutation = useCreateProject()
 

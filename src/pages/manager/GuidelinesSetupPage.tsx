@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
-import { message } from 'antd'
+import { App } from 'antd'
 import { GuidelinesSetupForm } from '@/features/manager/components/GuidelinesSetupForm'
 import { ProjectSteps } from '@/features/manager/components/common/ProjectSteps'
 import guidelineApi from '@/api/GuidelineApi'
@@ -8,6 +8,7 @@ import projectApi from '@/api/ProjectApi'
 import { useAuthStore } from '@/store'
 
 const GuidelinesSetupPage: React.FC = () => {
+  const { message } = App.useApp()
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const location = useLocation()

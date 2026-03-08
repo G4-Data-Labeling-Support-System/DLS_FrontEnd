@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Spin, Typography, Card, Button, Descriptions, Tag, Empty, message } from 'antd'
+import { App, Spin, Typography, Card, Button, Descriptions, Tag, Empty } from 'antd'
 import { EditOutlined, FolderOutlined, DatabaseOutlined } from '@ant-design/icons'
 import assignmentApi, { type GetAssignmentsParams } from '@/api/AssignmentApi'
 import projectApi from '@/api/ProjectApi'
@@ -13,6 +13,7 @@ interface AssignmentDetailProps {
 }
 
 export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId, onBack }) => {
+  const { message } = App.useApp()
   const [assignment, setAssignment] = useState<GetAssignmentsParams | null>(null)
   const [projectName, setProjectName] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(true)

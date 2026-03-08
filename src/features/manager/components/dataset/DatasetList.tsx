@@ -1,5 +1,5 @@
 import { useNavigate, Link } from 'react-router-dom'
-import { Spin, Empty, message, Modal } from 'antd'
+import { App, Spin, Empty, Modal } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
 import datasetApi, { type GetDatasetsParams } from '@/api/DatasetApi'
 import { DatasetCard } from './DatasetCard'
@@ -10,6 +10,7 @@ interface DatasetListProps {
 }
 
 const DatasetList: React.FC<DatasetListProps> = ({ datasets, loading }) => {
+  const { message } = App.useApp()
   const navigate = useNavigate()
 
   const handleEdit = (id?: string) => {

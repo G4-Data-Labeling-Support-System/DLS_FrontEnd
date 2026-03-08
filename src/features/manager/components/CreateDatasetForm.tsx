@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Form, Input, Select, message, Upload } from 'antd'
+import { App, Form, Input, Select, Upload } from 'antd'
 import { DeleteOutlined, PlusOutlined, InboxOutlined } from '@ant-design/icons'
 import type { UploadFile } from 'antd/es/upload/interface'
 import type { UploadChangeParam } from 'antd/es/upload'
@@ -21,6 +21,7 @@ export const CreateDatasetForm: React.FC<CreateDatasetFormProps> = ({
   onBack,
   submitLabel
 }) => {
+  const { message } = App.useApp()
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
   const [projects, setProjects] = useState<GetProjectsParams[]>([])
@@ -155,7 +156,7 @@ export const CreateDatasetForm: React.FC<CreateDatasetFormProps> = ({
                 size="large"
                 placeholder="Select a project for this dataset"
                 className="w-full"
-                popupClassName="!bg-[#1a1625] !border !border-white/10 [&_.ant-select-item]:!text-gray-300 [&_.ant-select-item-option-active]:!bg-violet-500/20 [&_.ant-select-item-option-selected]:!bg-violet-500/40 [&_.ant-select-item-option-selected]:!text-white"
+                classNames={{ popup: { root: "!bg-[#1a1625] !border !border-white/10 [&_.ant-select-item]:!text-gray-300 [&_.ant-select-item-option-active]:!bg-violet-500/20 [&_.ant-select-item-option-selected]:!bg-violet-500/40 [&_.ant-select-item-option-selected]:!text-white" } }}
                 loading={projects.length === 0}
                 showSearch
                 optionFilterProp="children"

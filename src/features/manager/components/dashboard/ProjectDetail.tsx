@@ -8,7 +8,7 @@ import {
     Tag,
     Avatar,
     Empty,
-    message,
+    App,
     Modal,
     Form,
     Input,
@@ -35,6 +35,7 @@ interface ProjectDetailProps {
 }
 
 export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack }) => {
+    const { message } = App.useApp()
     const {
         data: project,
         isLoading: projectLoading,

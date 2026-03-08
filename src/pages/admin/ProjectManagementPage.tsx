@@ -12,10 +12,11 @@ import {
   MoreOutlined,
   ProjectOutlined
 } from '@ant-design/icons'
-import { Dropdown, message, type MenuProps } from 'antd'
+import { App, Dropdown, type MenuProps } from 'antd'
 import { useProjects, useDeleteProject } from '@/features/admin/hooks/useProjects'
 
 export default function ProjectManagement() {
+  const { message } = App.useApp()
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
 
   const { data: rawProjects, isLoading } = useProjects()

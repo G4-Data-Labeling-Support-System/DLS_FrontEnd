@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react'
-import { Input, Button, Avatar, Progress, Tag, message, Segmented, Spin, Form } from 'antd' // 1. Import Form
+import { App, Input, Button, Avatar, Progress, Tag, Segmented, Spin, Form } from 'antd' // 1. Import Form
 import {
     SearchOutlined,
     UserAddOutlined,
@@ -32,6 +32,7 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({
     onLaunch,
     onBack
 }) => {
+    const { message } = App.useApp()
     const [availableUsers, setAvailableUsers] = useState<UserUI[]>([])
     const [selectedUsers, setSelectedUsers] = useState<UserUI[]>([])
     const [loading, setLoading] = useState(true)
