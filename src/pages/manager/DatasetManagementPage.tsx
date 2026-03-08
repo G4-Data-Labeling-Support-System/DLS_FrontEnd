@@ -5,6 +5,7 @@ import DatasetHeader from '@/features/manager/components/dataset/DatasetHeader'
 import DatasetList from '@/features/manager/components/dataset/DatasetList'
 import { DatasetQuickActions } from '@/features/manager/components/dataset/DatasetQuickActions'
 import { DatasetTabs, type DatasetTabType } from '@/features/manager/components/dataset/DatasetTabs'
+import { AllLabels } from '@/features/manager/components/dashboard/AllLabels'
 
 const DatasetManagementPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<DatasetTabType>('dataset')
@@ -67,6 +68,18 @@ const DatasetManagementPage: React.FC = () => {
             cloud_upload
           </span>
           <p>Upload functionality is currently under development.</p>
+        </div>
+      )}
+
+      {activeTab === 'label' && (
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start relative">
+          <div className="xl:col-span-3">
+            <AllLabels />
+          </div>
+
+          <div className="xl:col-span-1 xl:sticky xl:top-6 space-y-6">
+            <DatasetQuickActions />
+          </div>
         </div>
       )}
     </div>

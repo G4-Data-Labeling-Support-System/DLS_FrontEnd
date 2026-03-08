@@ -59,7 +59,10 @@ export const ENDPOINTS = {
   },
 
   LABELS: {
-    LIST: '/labels'
+    LIST: '/labels',
+    DETAIL: (id: string) => `/labels/${id}`,
+    CREATE: '/labels',
+    DELETE: (id: string) => `/labels/${id}`
   },
 
   REVIEWER: {

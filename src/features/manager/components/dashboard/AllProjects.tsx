@@ -84,21 +84,21 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
     if (!id) return
 
     modal.confirm({
-      title: 'Delete Project',
-      content: 'Are you sure you want to delete this project?',
-      okText: 'Delete',
+      title: 'Deactivate Project',
+      content: 'Are you sure you want to deactivate this project?',
+      okText: 'DeActivate',
       okType: 'danger',
       cancelText: 'Cancel',
       centered: true,
       onOk: async () => {
         try {
           await projectApi.deleteProject(id)
-          messageApi.success('Project deleted successfully!')
+          messageApi.success('Project deactivated successfully!')
           // Tải lại list data từ server để sync được trạng thái hệ thống
           fetchProjects()
         } catch (error) {
-          console.error('Delete project error:', error)
-          messageApi.error('An error occurred while deleting the project.')
+          console.error('Deactivate project error:', error)
+          messageApi.error('An error occurred while deactivating the project.')
         }
       }
     })
