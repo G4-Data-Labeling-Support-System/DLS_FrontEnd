@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        // Project infof
+        // Project info
         APP_NAME = 'data-labeling-fe'
         RELEASE = '1.1'
         GITHUB_URL = 'https://github.com/G4-Data-Labeling-Support-System/DLS_FrontEnd.git'
@@ -14,8 +14,14 @@ pipeline {
 
         // Docker info
         DOCKER_USER = 'fleeforezz'
-        DOCKER_IMAGE_NAME = "${DOCKER_USER}" + '/' + "${APP_NAME}"
-        DOCKER_IMAGE_VERSION = "${RELEASE}.${env.BUILD_NUMBER}"
+        DOCKER_IMAGE_NAME = "${DOCKER_USER}" + '/' + "${APP_NAME}" // Docker Image Name: fleeforezz/data-labeling-fe
+        DOCKER_IMAGE_VERSION = "${RELEASE}.${env.BUILD_NUMBER}" // Docker Image Version: 1.1.23
+        DOCKER_CONTAINER = "${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}-beta"
+
+        // Server info
+        SERVER_USERNAME = "jso"
+        SERVER_IP = "10.0.1.74"
+        SERVER_CONNECTION = "${SERVER_USERNAME}" + " " + "${SERVER_IP}" // SSH Connection:jso 10.0.1.74
 
         // Environment-specific variable
         ENVIRONMENT = "${env.BRANCH_NAME == 'main' ? 'production' : 'development'}"
@@ -98,7 +104,7 @@ pipeline {
                         sh "npm run build:prod"
                     } else {
                         sh "npm install"
-                        sh "npm run build:dev"
+                        sh "npm run build"
                     }
                 }
             }
@@ -245,6 +251,15 @@ pipeline {
                             image.push('dev-latest')
                         }
                     }
+                }
+            }
+        }
+
+        stage('Deploy to server') {
+            steps {
+                sshagent(['development-srv']) {
+                    sh "ssh -o StrictHostKeyChecking=no -l ${SERVER_CONNECTION}  'sudo docker stop ${APP_NAME} || true && sudo docker rm ${APP_NAME} || true'"
+                    sh "ssh -o StrictHostKeyChecking=no -l ${SERVER_CONNECTION} 'sudo docker run -p 9463:9463 -d --name ${APP_NAME} --restart unless-stopped ${DOCKER_CONTAINER}'"
                 }
             }
         }

@@ -1,7 +1,7 @@
 import { useNavigate, Link } from 'react-router-dom';
 import { Spin, Empty, message, Modal } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
-import datasetApi, { type GetDatasetsParams } from '@/api/dataset';
+import datasetApi, { type GetDatasetsParams } from '@/api/DatasetApi';
 import { DatasetCard } from './DatasetCard';
 
 interface DatasetListProps {
@@ -21,20 +21,20 @@ const DatasetList: React.FC<DatasetListProps> = ({ datasets, loading }) => {
   const handleDelete = (id?: string) => {
     if (!id) return;
     Modal.confirm({
-      title: 'Xoá Dataset',
-      content: 'Bạn có chắc chắn muốn xoá dataset này không?',
-      okText: 'Xoá',
+      title: 'Delete Dataset',
+      content: 'Are you sure you want to delete this dataset?',
+      okText: 'Delete',
       okType: 'danger',
-      cancelText: 'Hủy',
+      cancelText: 'Cancel',
       centered: true,
       onOk: async () => {
         try {
           await datasetApi.deleteDataset(id);
-          message.success('Đã xoá dataset thành công!');
+          message.success('Dataset deleted successfully!');
           // Here we could trigger a callback to re-fetch datasets from parent, but simplified for UI scope.
           window.location.reload();
         } catch {
-          message.error('Có lỗi xảy ra khi xoá dataset.');
+          message.error('An error occurred while deleting the dataset.');
         }
       }
     });
@@ -53,7 +53,7 @@ const DatasetList: React.FC<DatasetListProps> = ({ datasets, loading }) => {
       {datasets.length === 0 ? (
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
-          description={<span className="text-gray-500">Chưa có dataset nào được tạo.</span>}
+          description={<span className="text-gray-500">No datasets created yet.</span>}
           className="my-10 p-10 bg-[#1A1625]/40 rounded-xl border border-dashed border-gray-700"
         />
       ) : (

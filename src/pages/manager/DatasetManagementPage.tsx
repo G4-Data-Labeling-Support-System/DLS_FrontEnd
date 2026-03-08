@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-import datasetApi, { type GetDatasetsParams } from '@/api/dataset';
+import datasetApi, { type GetDatasetsParams } from '@/api/DatasetApi';
 import DatasetHeader from '@/features/manager/components/dataset/DatasetHeader';
 import DatasetList from '@/features/manager/components/dataset/DatasetList';
 import { DatasetQuickActions } from '@/features/manager/components/dataset/DatasetQuickActions';
@@ -21,14 +21,12 @@ const DatasetManagementPage: React.FC = () => {
 
         if (Array.isArray(rawData)) {
           const mappedDatasets: GetDatasetsParams[] = rawData.map((d: Record<string, unknown>) => ({
-            id: String(d.id || d.datasetId || ''),
-            name: String(d.name || d.datasetName || ''),
-            version: Number(d.version) || 1,
-            storageType: String(d.storageType || d.type || 'LOCAL'),
-            itemCount: Number(d.itemCount || d.totalItems) || 0,
+            datasetId: String(d.id || d.datasetId || ''),
+            datasetName: String(d.name || d.datasetName || ''),
+            totalItems: Number(d.itemCount || d.totalItems) || 0,
             createdAt: String(d.createdAt || ''),
-            updatedAt: String(d.updatedAt || '')
-          })).filter(d => d.id);
+            description: String(d.description || ''),
+          } as unknown as GetDatasetsParams)).filter(d => d.datasetId && d.datasetId !== 'undefined' && d.datasetId !== 'null');
           setDatasets(mappedDatasets);
         } else {
           setDatasets([]);

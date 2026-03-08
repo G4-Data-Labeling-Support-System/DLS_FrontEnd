@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, Button, Typography, Dropdown, Tag, type MenuProps } from 'antd';
 import { MoreOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
-import type { GetAssignmentsParams } from '@/api/assignment';
+import type { GetAssignmentsParams } from '@/api/AssignmentApi';
 
 const { Title } = Typography;
 
@@ -14,7 +14,7 @@ interface AssignmentCardProps extends GetAssignmentsParams {
 
 export const AssignmentCard: React.FC<AssignmentCardProps> = ({
     assignmentName,
-    assignmentStatus,
+    status,
     createdAt,
     updatedAt,
     onEdit,
@@ -52,7 +52,7 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
             <div className="flex justify-between items-start mb-2">
                 <div className="flex-1 pr-2">
                     <Title level={5} className="!text-white !m-0 !text-sm leading-tight line-clamp-2" title={assignmentName}>
-                        {assignmentName || 'Assignment chưa có tên'}
+                        {assignmentName || 'Unnamed Assignment'}
                     </Title>
                 </div>
                 <div onClick={(e) => e.stopPropagation()}>
@@ -63,18 +63,18 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
             </div>
 
             <div className="mb-4">
-                <Tag color={getStatusColor(assignmentStatus)} className="m-0 font-medium">
-                    {assignmentStatus || 'UNKNOWN'}
+                <Tag color={getStatusColor(status)} className="m-0 font-medium">
+                    {status || 'UNKNOWN'}
                 </Tag>
             </div>
 
             <div className="grid grid-cols-2 gap-2 bg-[#231e31] p-3 rounded-lg mt-auto">
                 <div>
-                    <div className="text-[10px] text-gray-500 uppercase tracking-wider">Ngày tạo</div>
+                    <div className="text-[10px] text-gray-500 uppercase tracking-wider">Created At</div>
                     <div className="text-gray-300 text-xs font-semibold">{formatDate(createdAt)}</div>
                 </div>
                 <div className="border-l border-gray-700 pl-2">
-                    <div className="text-[10px] text-gray-500 uppercase tracking-wider">Cập nhật</div>
+                    <div className="text-[10px] text-gray-500 uppercase tracking-wider">Updated At</div>
                     <div className="text-gray-300 text-xs font-semibold">{formatDate(updatedAt)}</div>
                 </div>
             </div>

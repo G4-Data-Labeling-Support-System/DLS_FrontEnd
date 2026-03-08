@@ -1,5 +1,5 @@
 import axiosClient from '@/lib/axios';
-import { ENDPOINTS } from './endpoints';
+import { ENDPOINTS } from './Endpoints';
 
 export interface GetDatasetsParams {
   datasetId?: string;
@@ -36,6 +36,15 @@ const datasetApi = {
       return axiosClient.post(url, datasetData);
     } catch (error) {
       console.error('Failed to create dataset', error);
+      throw error;
+    }
+  },
+  getDatasetsByProjectId(projectId: string) {
+    try {
+      const url = ENDPOINTS.DATASETS.BY_PROJECT(projectId);
+      return axiosClient.get(url);
+    } catch (error) {
+      console.error('Failed to fetch datasets by project id', error);
       throw error;
     }
   },

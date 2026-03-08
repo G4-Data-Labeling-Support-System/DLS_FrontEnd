@@ -5,7 +5,6 @@ import { AllAssignments } from '@/features/manager/components/dashboard/AllAssig
 import { QuickActions } from '@/features/manager/components/dashboard/QuickActions';
 import { DashboardTabs, type DashboardTabType } from '@/features/manager/components/dashboard/DashboardTabs';
 
-
 const ManagerDashboardPage: React.FC = () => {
     const [searchParams, setSearchParams] = useSearchParams();
 

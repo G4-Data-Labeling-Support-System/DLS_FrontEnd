@@ -1,5 +1,5 @@
 import axiosClient from "@/lib/axios";
-import { ENDPOINTS } from "./endpoints";
+import { ENDPOINTS } from "./Endpoints";
 
 interface GetProjectsParams {
     projectId?: string;
@@ -41,7 +41,7 @@ const projectApi = {
     updateProject(id: string, projectData?: GetProjectsParams) {
         try {
             const url = ENDPOINTS.PROJECTS.DETAIL(id);
-            return axiosClient.patch(url, projectData);
+            return axiosClient.put(url, projectData);
         } catch (error) {
             console.error("Failed to update project", error);
             throw error;
@@ -50,7 +50,7 @@ const projectApi = {
     deleteProject(id: string) {
         try {
             const url = ENDPOINTS.PROJECTS.DELETE(id);
-            return axiosClient.delete(url);
+            return axiosClient.patch(url);
         } catch (error) {
             console.error("Failed to delete project", error);
             throw error;

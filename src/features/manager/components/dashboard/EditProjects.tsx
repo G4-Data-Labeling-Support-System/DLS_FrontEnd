@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Form, Input, Select, Button, message, Spin, Typography, Card, Space } from 'antd';
 import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
-import projectApi from '@/api/project';
+import projectApi from '@/api/ProjectApi';
 import { PATH_MANAGER } from '@/routes/paths';
 
 const { Title } = Typography;

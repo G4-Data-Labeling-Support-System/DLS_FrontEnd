@@ -1,6 +1,6 @@
 // Auth Service - Business Logic
-import { publicAuthClient } from '@/api/apiClients'
-import { ENDPOINTS } from '@/api/endpoints'
+import { publicAuthClient } from '@/api/ApiClients'
+import { ENDPOINTS } from '@/api/Endpoints'
 import { useAuthStore } from '@/store'
 import type { LoginInformation } from '../types/auth.types'
 
@@ -44,21 +44,23 @@ export class AuthService {
         console.error('Failed to decode JWT:', jwtErr);
       }
 
-      // 4. Thử gọi API profile nếu có (BE chưa hỗ trợ thì bỏ qua)
-      // Nếu BE cung cấp endpoint profile trong tương lai, uncomment dòng dưới
-      // try {
-      //   const profileResponse = await authClient.get(ENDPOINTS.AUTH.PROFILE)
-      //   const user = profileResponse.data.data || profileResponse.data
-      //   useAuthStore.getState().setUser(user)
-      //   return user
-      // } catch (profileErr) {
-      //   console.warn('Profile endpoint not available, using JWT data:', profileErr);
-      // }
+      // 4. Gọi API profile (Sử dụng authClient vì đã có token trong localStorage)
+      try {
+        const { authClient } = await import('@/api/ApiClients');
+        const profileResponse = await authClient.get(ENDPOINTS.AUTH.PROFILE);
+        const user = profileResponse.data.data || profileResponse.data;
 
-      // 5. Dùng data từ JWT (vì hiện tại BE chưa có /auth/profile)
-      if (jwtUser) {
-        useAuthStore.getState().setUser(jwtUser);
-        return jwtUser;
+        // Merge JWT info with API Profile (API profile is more detailed)
+        const finalUser = { ...jwtUser, ...user };
+        useAuthStore.getState().setUser(finalUser);
+        console.log('Final User from API:', finalUser);
+        return finalUser;
+      } catch (profileErr) {
+        console.warn('Profile endpoint error, falling back to JWT data:', profileErr);
+        if (jwtUser) {
+          useAuthStore.getState().setUser(jwtUser);
+          return jwtUser;
+        }
       }
 
       return { userRole: 'USER' }; // Last resort

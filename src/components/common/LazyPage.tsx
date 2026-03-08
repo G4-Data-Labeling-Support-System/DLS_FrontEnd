@@ -8,7 +8,7 @@ interface LazyPageProps {
 export function LazyPage({ children }: LazyPageProps) {
     return (
         <PageErrorBoundary>
-            <Suspense fallback={<LoadingOverlay message="Đang tải trang..." />}>
+            <Suspense fallback={<LoadingOverlay message="Loading ..." />}>
                 {children}
             </Suspense>
         </PageErrorBoundary>

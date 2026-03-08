@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Typography, Spin, Alert } from 'antd';
 import { StatsCard } from '@/features/reviewer/components/StatsCard';
 import { ReviewerFilters } from '@/features/reviewer/components/ReviewerFilters';
-import { reviewerApi, type ReviewerStats } from '@/api/reviewer';
+import { reviewerApi, type ReviewerStats } from '@/api/ReviewerApi';
 
 
 const { Title, Text } = Typography;

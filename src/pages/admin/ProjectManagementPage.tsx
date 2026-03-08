@@ -1,55 +1,13 @@
-import { useState } from 'react';
 import { themeClasses } from '@/styles';
-import AddProjectModal from '../../features/admin/components/AddProjectModal';
-import EditProjectModal from '../../features/admin/components/EditProjectModal';
-import { Button } from '@/shared/components/ui/Button';
-import { FolderAddOutlined, PlusOutlined, DatabaseOutlined, DesktopOutlined, EditOutlined, DeleteOutlined, MoreOutlined, ProjectOutlined } from '@ant-design/icons';
-import { Dropdown, message } from 'antd';
-import type { MenuProps } from 'antd';
-import { useProjects, useDeleteProject } from '@/features/admin/hooks/useProjects';
+import { DatabaseOutlined, DesktopOutlined, ProjectOutlined } from '@ant-design/icons';
+import { useProjects } from '@/features/admin/hooks/useProjects';
 
 export default function ProjectManagement() {
-    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [editModal, setEditModal] = useState<{ isOpen: boolean; data?: any }>({ isOpen: false });
 
     const { data: rawProjects, isLoading } = useProjects();
-    const deleteProjectMutation = useDeleteProject();
 
     // [Logic: Safety Check] Kiểm tra cấu trúc trả về từ API
     const projects = Array.isArray(rawProjects) ? rawProjects : (rawProjects as any)?.data || [];
-
-    const getActionItems = (project: any): MenuProps['items'] => {
-
-        return [
-            {
-                key: 'edit',
-                label: 'Edit Project',
-                icon: <EditOutlined />,
-                onClick: () => {
-                    setEditModal({ isOpen: true, data: project });
-                },
-            },
-            {
-                key: 'delete',
-                label: 'Remove Project',
-                icon: <DeleteOutlined />,
-                danger: true,
-                onClick: () => {
-                    const projectId = project.projectId || project.id;
-                    if (window.confirm(`Are you sure you want to remove project ${project.projectName}?`)) {
-                        deleteProjectMutation.mutate(projectId, {
-                            onSuccess: () => {
-                                message.success(`Project ${project.projectName} has been removed.`);
-                            },
-                            onError: (error) => {
-                                message.error(`Failed to remove project: ${error.message || 'Unknown error'}`);
-                            }
-                        });
-                    }
-                },
-            }
-        ];
-    };
 
     return (
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
@@ -63,15 +21,6 @@ export default function ProjectManagement() {
                         Manage active projects, monitor progress, and access related datasets.
                     </p>
                 </div>
-                <Button
-                    onClick={() => setIsAddModalOpen(true)}
-                    variant="primary"
-                    className="group relative flex items-center gap-2 overflow-hidden px-5 py-2.5 font-body"
-                >
-                    <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity group-hover:opacity-100"></div>
-                    <FolderAddOutlined className="text-lg" />
-                    <span>Add Project</span>
-                </Button>
             </div>
 
             {/* Stats Cards */}
@@ -171,17 +120,6 @@ export default function ProjectManagement() {
                             All projects available in the system ({projects?.length || 0})
                         </p>
                     </div>
-                    <div className="flex gap-3">
-                        <Button
-                            onClick={() => setIsAddModalOpen(true)}
-                            variant="primary"
-                            className="group relative flex items-center gap-2 overflow-hidden px-4 py-2 font-body text-sm font-semibold"
-                        >
-                            <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity group-hover:opacity-100"></div>
-                            <PlusOutlined className="text-lg" />
-                            <span>Add Project</span>
-                        </Button>
-                    </div>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
@@ -191,7 +129,6 @@ export default function ProjectManagement() {
                                 <th className="px-6 py-4 font-semibold">Description</th>
                                 <th className="px-6 py-4 font-semibold">Status</th>
                                 <th className="px-6 py-4 font-semibold">Created At</th>
-                                <th className="px-6 py-4 font-semibold text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className={`divide-y ${themeClasses.borders.white5} font-body text-sm`}>
@@ -257,22 +194,6 @@ export default function ProjectManagement() {
                                             <td className="px-6 py-4 text-gray-300">
                                                 {dateStr}
                                             </td>
-                                            <td className="px-6 py-4 text-right">
-                                                <Dropdown
-                                                    menu={{ items: getActionItems(project) }}
-                                                    trigger={['click']}
-                                                    placement="bottomRight"
-                                                    overlayClassName="dark-dropdown"
-                                                >
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className={`${themeClasses.text.tertiary} hover:text-white transition-colors`}
-                                                    >
-                                                        <MoreOutlined className="text-lg" />
-                                                    </Button>
-                                                </Dropdown>
-                                            </td>
                                         </tr>
                                     );
                                 })
@@ -281,17 +202,6 @@ export default function ProjectManagement() {
                     </table>
                 </div>
             </div>
-
-            {/* Modals */}
-            <AddProjectModal
-                isOpen={isAddModalOpen}
-                onClose={() => setIsAddModalOpen(false)}
-            />
-            <EditProjectModal
-                isOpen={editModal.isOpen}
-                onClose={() => setEditModal({ isOpen: false })}
-                projectData={editModal.data}
-            />
         </div>
     );
 }

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Form, Input, message } from 'antd';
-import projectApi from '@/api/project';
+import React, { useState, useEffect } from 'react';
+import { Form, Input, message, Spin } from 'antd';
+import projectApi from '@/api/ProjectApi';
 import { useNavigate } from 'react-router-dom';
 // Import Styles & Components
 import { FormFooter } from '@/features/manager/components/common/FormFooter';
@@ -8,13 +8,39 @@ import { FormFooter } from '@/features/manager/components/common/FormFooter';
 
 
 interface CreateProjectFormProps {
-    onSuccess?: (projectId?: string) => void;
+    onSuccess?: (projectId?: string, projectData?: { projectName: string; description: string }) => void;
+    editId?: string;
 }
 
-export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess }) => {
+export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess, editId }) => {
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
+    const [fetching, setFetching] = useState(false);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const fetchProjectDetail = async () => {
+            if (!editId) return;
+            try {
+                setFetching(true);
+                const response = await projectApi.getProjectById(editId);
+                const projectData = response.data?.data || response.data;
+                if (projectData) {
+                    form.setFieldsValue({
+                        projectName: projectData.projectName || projectData.name,
+                        description: projectData.description,
+                    });
+                }
+            } catch (error) {
+                console.error("Lỗi khi lấy thông tin dự án:", error);
+                message.error("Không thể tải dữ liệu dự án.");
+            } finally {
+                setFetching(false);
+            }
+        };
+
+        fetchProjectDetail();
+    }, [editId, form]);
 
     // Xử lý Cancel: Quay về Dashboard
     const handleCancel = () => {
@@ -24,20 +50,22 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
     const onFinish = async (values: { projectName: string; description: string }) => {
         setLoading(true);
         try {
+            // Add projectId/id into the payload explicitly as requested
             const payload = {
-                projectName: values.projectName,
+                ...(editId ? { id: editId, projectId: editId } : {}),
+                projectName: editId ? form.getFieldValue('projectName') : values.projectName,
                 description: values.description
             };
 
-            const response = await projectApi.createProject(payload);
-
-            message.success('Project created successfully!');
-
-            if (onSuccess) {
-                // Ensure we get the ID correctly from the response
-                const createdProject = response.data?.data || response.data;
-                const newProjectId = createdProject?.projectId || createdProject?.id;
-                onSuccess(newProjectId);
+            if (editId) {
+                await projectApi.updateProject(editId, payload);
+                message.success('Project updated successfully!');
+                if (onSuccess) onSuccess(editId, payload);
+            } else {
+                // DO NOT CREATE project immediately. Wait until step 2.
+                if (onSuccess) {
+                    onSuccess(undefined, payload);
+                }
             }
 
         } catch (error: unknown) {
@@ -78,6 +106,14 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
         }
     };
 
+    if (fetching) {
+        return (
+            <div className="w-full h-64 flex justify-center items-center">
+                <Spin size="large" />
+            </div>
+        );
+    }
+
     return (
         <Form
             form={form}
@@ -101,8 +137,8 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess 
                             <Input
                                 size="large"
                                 placeholder="e.g. Autonomous Vehicle Perception Phase 2"
-                                // Style input chuẩn theme tối
-                                className="!bg-[#1a1625] !border-white/10 !text-white placeholder:!text-gray-600 focus:!border-violet-500 hover:!border-violet-500/50"
+                                disabled={!!editId}
+                                className="!bg-[#1a1625] !border-white/10 !text-white placeholder:!text-gray-600 focus:!border-violet-500 hover:!border-violet-500/50 disabled:!opacity-60 disabled:!cursor-not-allowed"
                             />
                         </Form.Item>
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { message, Spin } from 'antd';
+import { App, Spin } from 'antd';
 
 import { DatasetItemList, type DatasetItem } from '@/features/reviewer/components/workspace/DatasetItemList';
 import { AnnotationCanvas } from '@/features/reviewer/components/workspace/AnnotationCanvas';
@@ -9,13 +9,14 @@ import { ReviewerEmptyState } from '@/features/reviewer/components/workspace/Rev
 import { ReviewerLoadingState } from '@/features/reviewer/components/workspace/ReviewerLoadingState';
 import { ApproveModal } from '@/features/reviewer/components/workspace/ApproveModal';
 import { RejectModal } from '@/features/reviewer/components/workspace/RejectModal';
-import { reviewerApi, type ReviewerItem, type ReviewerItemDetail } from '@/api/reviewer';
+import { reviewerApi, type ReviewerItem, type ReviewerItemDetail } from '@/api/ReviewerApi';
 import { LoadingOutlined } from '@ant-design/icons';
 
 // ⚡ Cache for item details - prevents refetching
 const detailCache = new Map<string, ReviewerItemDetail>();
 
 const ReviewerWorkspacePage: React.FC = () => {
+    const { message } = App.useApp();
     const { projectId } = useParams();
     const navigate = useNavigate();
 

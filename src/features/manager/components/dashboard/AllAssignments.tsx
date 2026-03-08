@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Space, Typography, Spin, message, Modal, Input, Select } from 'antd';
+import { Space, Typography, Spin, App, Input, Select, Empty } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { AssignmentCard } from './AssignmentCard';
-// import { AssignmentDetail } from './AssignmentDetail'; // To be implemented later
+import { AssignmentDetail } from './AssignmentDetail';
 
-import assignmentApi, { type GetAssignmentsParams } from '@/api/assignment';
+import assignmentApi, { type GetAssignmentsParams } from '@/api/AssignmentApi';
 const { Title } = Typography;
 
 interface AllAssignmentsProps {
@@ -13,6 +13,7 @@ interface AllAssignmentsProps {
 }
 
 export const AllAssignments: React.FC<AllAssignmentsProps> = ({ selectedAssignmentId, onAssignmentSelect }) => {
+    const { message, modal } = App.useApp();
     const [assignments, setAssignments] = useState<GetAssignmentsParams[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [searchText, setSearchText] = useState<string>('');
@@ -46,10 +47,10 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({ selectedAssignme
                         mapped.assignmentName = String(a.assignmentName || a.name);
                     }
                     if (a.assignmentStatus || a.status) {
-                        mapped.assignmentStatus = String(a.assignmentStatus || a.status);
+                        mapped.status = String(a.assignmentStatus || a.status);
                     }
                     if (a.descriptionAssignment || a.description) {
-                        mapped.descriptionAssignment = String(a.descriptionAssignment || a.description);
+                        mapped.description = String(a.descriptionAssignment || a.description);
                     }
                     if (a.projectId || a.project_id) {
                         mapped.projectId = String(a.projectId || a.project_id);
@@ -88,27 +89,29 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({ selectedAssignme
     };
 
     useEffect(() => {
-        fetchAssignments();
-    }, []);
+        if (!currentAssignmentId) {
+            fetchAssignments();
+        }
+    }, [currentAssignmentId]);
 
     const handleDelete = (id?: string) => {
         if (!id) return;
 
-        Modal.confirm({
-            title: 'Xoá Assignment',
-            content: 'Bạn có chắc chắn muốn xoá assignment này không?',
-            okText: 'Xoá',
+        modal.confirm({
+            title: 'Delete Assignment',
+            content: 'Are you sure you want to delete this assignment?',
+            okText: 'Delete',
             okType: 'danger',
-            cancelText: 'Hủy',
+            cancelText: 'Cancel',
             centered: true,
             onOk: async () => {
                 try {
                     await assignmentApi.deleteAssignment(id);
-                    message.success('Đã xoá assignment thành công!');
+                    message.success('Assignment deleted successfully!');
                     setAssignments((prev) => prev.filter((a) => a.assignmentId !== id));
                 } catch (error) {
-                    console.error("Lỗi xóa assignment:", error);
-                    message.error('Có lỗi xảy ra khi xoá assignment.');
+                    console.error("Delete assignment error:", error);
+                    message.error('An error occurred while deleting the assignment.');
                 }
             },
         });
@@ -116,10 +119,10 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({ selectedAssignme
 
     const handleEdit = (id?: string) => {
         if (!id) return;
-        message.info(`Chỉnh sửa assignment ID: ${id} chưa được hỗ trợ router hiện tại.`);
+        message.info(`Editing assignment ID: ${id} is currently not supported.`);
     };
 
-    if (loading) {
+    if (loading && !currentAssignmentId) {
         return (
             <div className="w-full flex justify-center py-10">
                 <Spin size="large" />
@@ -128,13 +131,11 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({ selectedAssignme
     }
 
     if (currentAssignmentId) {
-        // Fallback placeholder logic for Detailed View injection later
         return (
-            <div className="w-full bg-[#1A1625] border-gray-800 rounded-xl p-6 text-center">
-                <h2 className="text-xl text-white font-bold mb-4">Assignment View (ID: {currentAssignmentId})</h2>
-                <p className="text-gray-400 mb-6">Chi tiết Assignment đang được phát triển.</p>
-                <button onClick={() => handleAssignmentSelect(null)} className="px-4 py-2 bg-violet-600 hover:bg-violet-500 rounded text-white transition-colors">Go Back</button>
-            </div>
+            <AssignmentDetail
+                assignmentId={currentAssignmentId}
+                onBack={() => handleAssignmentSelect(null)}
+            />
         );
     }
 
@@ -156,7 +157,7 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({ selectedAssignme
                         ]}
                     />
                     <Input
-                        placeholder="Tìm kiếm assignment..."
+                        placeholder="Search assignments..."
                         prefix={<SearchOutlined className="text-gray-400" />}
                         value={searchText}
                         onChange={(e) => setSearchText(e.target.value)}
@@ -165,23 +166,31 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({ selectedAssignme
                 </Space>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
-                {assignments
-                    .filter(a => !searchText || (a.assignmentName && a.assignmentName.toLowerCase().includes(searchText.toLowerCase())))
-                    .filter(a => statusFilter === 'ALL' || (a.assignmentStatus && a.assignmentStatus.toUpperCase() === statusFilter))
-                    .map((a, index) => {
-                        const uniqueId = a.assignmentId || String(index);
-                        return (
-                            <AssignmentCard
-                                key={uniqueId}
-                                {...a}
-                                onClick={() => handleAssignmentSelect(uniqueId)}
-                                onEdit={() => handleEdit(uniqueId)}
-                                onDelete={() => handleDelete(uniqueId)}
-                            />
-                        );
-                    })}
-            </div>
+            {assignments.length === 0 ? (
+                <Empty
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                    description={<span className="text-gray-500">No assignments created yet.</span>}
+                    className="my-10 p-10 bg-[#1A1625]/40 rounded-xl border border-dashed border-gray-700"
+                />
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 items-stretch">
+                    {assignments
+                        .filter(a => !searchText || (a.assignmentName && a.assignmentName.toLowerCase().includes(searchText.toLowerCase())))
+                        .filter(a => statusFilter === 'ALL' || (a.status && a.status.toUpperCase() === statusFilter))
+                        .map((a, index) => {
+                            const uniqueId = a.assignmentId || String(index);
+                            return (
+                                <AssignmentCard
+                                    key={uniqueId}
+                                    {...a}
+                                    onClick={() => handleAssignmentSelect(uniqueId)}
+                                    onEdit={() => handleEdit(uniqueId)}
+                                    onDelete={() => handleDelete(uniqueId)}
+                                />
+                            );
+                        })}
+                </div>
+            )}
         </div>
     );
 };
