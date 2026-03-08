@@ -18,7 +18,6 @@ export default function AnnotatorProjectDetail({ project }: { project: any }) {
 
     return (
         <div className="glass-panel rounded-2xl p-7 relative overflow-hidden">
-            {/* Ambient glow */}
             <div className="absolute -top-10 -right-10 w-56 h-56 rounded-full bg-violet-500/10 blur-[60px] pointer-events-none" />
             <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-fuchsia-500/10 blur-[50px] pointer-events-none" />
 

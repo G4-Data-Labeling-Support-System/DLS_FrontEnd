@@ -58,4 +58,7 @@ export const ENDPOINTS = {
     UPDATE: (id: string) => `/guidelines/${id}`,
   },
 
+  LABELS: {
+    LIST: '/labels',
+  },
 } as const

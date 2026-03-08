@@ -224,7 +224,7 @@ export default function AnnotatorDashboardPage() {
     }, [assignmentId, user?.id])
 
     return (
-        <div className="flex flex-col gap-6 w-full max-w-4xl mx-auto pb-10">
+        <div className="p-6">
             <DashboardTabs activeTab={activeTab} onTabChange={handleTabChange} />
 
             {activeTab === 'project' && (
@@ -240,12 +240,14 @@ export default function AnnotatorDashboardPage() {
                                 <span className="text-xs text-violet-400 font-mono">Syncing with server...</span>
                             </div>
                         )}
-                        <AnnotatorProjectDetail project={projectDetail} />
-                        {guideline && (
-                            <div className="glass-panel border border-white/5 rounded-2xl p-6 shadow-xl relative overflow-hidden">
-                                <GuidelineSection guideline={guideline.content} />
-                            </div>
-                        )}
+                        <div className="grid grid-cols-2 gap-6">
+                            <AnnotatorProjectDetail project={projectDetail} />
+                            {guideline && (
+                                <div className="glass-panel border border-white/5 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                                    <GuidelineSection guideline={guideline.content} />
+                                </div>
+                            )}
+                        </div>
                     </>
                 ) : (
                     <div className="text-center text-gray-400 py-10 glass-panel rounded-2xl">
@@ -265,25 +267,7 @@ export default function AnnotatorDashboardPage() {
                     </div>
                 ) : (
                     <>
-                        {/* Title & Loading Status */}
-                        <div className="flex items-center justify-between -mb-2">
-                            <div className="flex items-center gap-2">
-                                <span className="material-symbols-outlined text-[14px] text-gray-500">
-                                    arrow_downward
-                                </span>
-                                <span className="text-xs font-mono tracking-widest uppercase text-gray-500">
-                                    Assignment
-                                </span>
-                            </div>
-                            {loading && (
-                                <div className="flex items-center gap-2 animate-pulse">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-violet-500"></div>
-                                    <span className="text-[10px] text-violet-400 font-mono uppercase tracking-tighter">Updating...</span>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="glass-panel rounded-2xl p-6 sm:p-8 flex flex-col gap-6">
+                        <div className="rounded-2xl grid md:grid-cols-2 sm:grid-cols-1 gap-6">
 
                             {/* Assignment Header */}
                             <AssignmentHeader assignment={assignment} />
@@ -296,7 +280,7 @@ export default function AnnotatorDashboardPage() {
                             {/* Tasks Section */}
                             {assignment.tasks && (
                                 <div
-                                    className={`${themeClasses.backgrounds.card} border ${themeClasses.borders.violet10} rounded-2xl p-6`}
+                                    className={`${themeClasses.backgrounds.card} border ${themeClasses.borders.violet10} rounded-2xl p-6 md:col-span-2`}
                                 >
                                     <TasksSection tasks={assignment.tasks} />
                                 </div>

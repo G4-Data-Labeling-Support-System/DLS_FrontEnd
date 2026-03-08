@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { Tooltip } from 'antd';
 
 const MOCK_DATA_ITEMS = [
     {
@@ -34,7 +35,14 @@ const MOCK_DATA_ITEMS = [
     }
 ];
 
-const AVAILABLE_LABELS = ['Car', 'People', 'Tree', 'Sign', 'Building', 'Road'];
+const AVAILABLE_LABELS = [
+    { name: 'Car', color: '#8b5cf6' },
+    { name: 'People', color: '#f43f5e' },
+    { name: 'Tree', color: '#10b981' },
+    { name: 'Sign', color: '#f59e0b' },
+    { name: 'Building', color: '#3b82f6' },
+    { name: 'Road', color: '#6366f1' },
+];
 
 export default function AnnotationPage() {
     const { taskId } = useParams<{ taskId: string }>();
@@ -44,11 +52,15 @@ export default function AnnotationPage() {
     // Get starting index from state if passed, otherwise 0
     const startIdx = (location.state as any)?.startIndex || 0;
     const [currentIndex, setCurrentIndex] = useState(startIdx);
-    const [selectedLabels, setSelectedLabels] = useState<string[]>(['Car']);
+    const [selectedLabels, setSelectedLabels] = useState<string[]>([AVAILABLE_LABELS[0].name]);
+    const [currentLabel, setCurrentLabel] = useState(AVAILABLE_LABELS[0]);
     const [comment, setComment] = useState('This is a preliminary scan observation.');
 
     // Zoom and Tool States
     const [zoom, setZoom] = useState(1);
+    const [offset, setOffset] = useState({ x: 0, y: 0 });
+    const [isPanning, setIsPanning] = useState(false);
+    const [panStart, setPanStart] = useState({ x: 0, y: 0 });
     const [tool, setTool] = useState<'pan' | 'box' | 'polygon'>('pan');
     const [isDrawing, setIsDrawing] = useState(false);
     const [currentShape, setCurrentShape] = useState<any>(null);
@@ -60,17 +72,30 @@ export default function AnnotationPage() {
     // Reset zoom and tools when changing image
     useEffect(() => {
         setZoom(1);
+        setOffset({ x: 0, y: 0 });
         setShapes([]);
         setIsDrawing(false);
         setCurrentShape(null);
     }, [currentIndex]);
 
-    const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.2, 5));
+    const handleWheel = (e: React.WheelEvent) => {
+        const delta = e.deltaY > 0 ? -0.1 : 0.1;
+        setZoom(prev => Math.min(Math.max(prev + delta, 0.5), 10));
+    };
+
+    const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.2, 10));
     const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.2, 0.5));
-    const handleZoomReset = () => setZoom(1);
+    const handleZoomReset = () => {
+        setZoom(1);
+        setOffset({ x: 0, y: 0 });
+    };
 
     const handleMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
-        if (tool === 'pan') return;
+        if (tool === 'pan') {
+            setIsPanning(true);
+            setPanStart({ x: e.clientX - offset.x, y: e.clientY - offset.y });
+            return;
+        }
 
         const rect = e.currentTarget.getBoundingClientRect();
         const x = (e.clientX - rect.left) / zoom;
@@ -79,21 +104,43 @@ export default function AnnotationPage() {
         if (tool === 'polygon') {
             if (!isDrawing) {
                 setIsDrawing(true);
-                setCurrentShape({ type: 'polygon', points: [[x, y]] });
+                setCurrentShape({
+                    type: 'polygon',
+                    points: [[x, y]],
+                    label: currentLabel.name,
+                    color: currentLabel.color
+                });
             } else {
-                // Add more points
-                setCurrentShape({ ...currentShape, points: [...currentShape.points, [x, y]] });
+                // Add more points - strip preview if exists
+                const points = currentShape.isPreview
+                    ? currentShape.points.slice(0, -1)
+                    : currentShape.points;
+                setCurrentShape({ ...currentShape, points: [...points, [x, y]], isPreview: false });
             }
             return;
         }
 
         setIsDrawing(true);
         if (tool === 'box') {
-            setCurrentShape({ type: 'bounding_box', x, y, width: 0, height: 0, startX: x, startY: y });
+            setCurrentShape({
+                type: 'bounding_box',
+                x, y, width: 0, height: 0,
+                startX: x, startY: y,
+                label: currentLabel.name,
+                color: currentLabel.color
+            });
         }
     };
 
     const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+        if (isPanning) {
+            setOffset({
+                x: e.clientX - panStart.x,
+                y: e.clientY - panStart.y
+            });
+            return;
+        }
+
         if (!isDrawing || !currentShape) return;
 
         const rect = e.currentTarget.getBoundingClientRect();
@@ -109,9 +156,24 @@ export default function AnnotationPage() {
                 height: Math.abs(y - currentShape.startY)
             });
         }
+
+        if (tool === 'polygon' && currentShape && currentShape.points) {
+            const points = [...currentShape.points];
+            // If already has a preview point (from previous mouse move), replace it
+            if (points.length > 1 && currentShape.isPreview) {
+                points[points.length - 1] = [x, y];
+            } else {
+                points.push([x, y]);
+            }
+            setCurrentShape({ ...currentShape, points, isPreview: true });
+        }
     };
 
     const handleMouseUp = () => {
+        if (isPanning) {
+            setIsPanning(false);
+            return;
+        }
         if (!isDrawing || tool === 'polygon') return;
         setIsDrawing(false);
         if (currentShape) {
@@ -122,36 +184,57 @@ export default function AnnotationPage() {
 
     // Close polygon or handle double click simulation
     const finishPolygon = () => {
-        if (tool === 'polygon' && currentShape) {
-            setShapes([...shapes, currentShape]);
+        if (tool === 'polygon' && currentShape && currentShape.points) {
+            // Remove preview point if exists
+            const finalPoints = currentShape.isPreview
+                ? currentShape.points.slice(0, -1)
+                : currentShape.points;
+
+            if (finalPoints.length >= 2) {
+                setShapes([...shapes, { ...currentShape, points: finalPoints, isPreview: false }]);
+            }
             setCurrentShape(null);
             setIsDrawing(false);
         }
+    };
+
+    const handleClearAll = () => {
+        setShapes([]);
+        setCurrentShape(null);
+        setIsDrawing(false);
     };
 
     const handleNext = () => {
         if (currentIndex < totalItems - 1) {
             setCurrentIndex(currentIndex + 1);
         } else {
-            // Loop back or show completion
             setCurrentIndex(0);
         }
     };
 
-    const toggleLabel = (label: string) => {
+    const handlePrevious = () => {
+        if (currentIndex > 0) {
+            setCurrentIndex(currentIndex - 1);
+        } else {
+            setCurrentIndex(totalItems - 1);
+        }
+    };
+
+    const toggleLabel = (labelObj: any) => {
+        setCurrentLabel(labelObj);
         setSelectedLabels(prev =>
-            prev.includes(label) ? prev.filter(l => l !== label) : [...prev, label]
+            prev.includes(labelObj.name) ? prev.filter(l => l !== labelObj.name) : [...prev, labelObj.name]
         );
     };
 
     return (
-        <div className="flex flex-col h-[calc(100vh-64px)] overflow-hidden bg-[#0f0e17]">
+        <div className="fixed inset-0 z-[100] flex flex-col h-screen overflow-hidden bg-[#0f0e17]">
             {/* Top Navigation / Breadcrumb */}
             <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-[#16161a]">
                 <div className="flex items-center gap-4">
                     <button
                         onClick={() => navigate(-1)}
-                        className="p-1.5 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors"
+                        className="p-1.5 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors cursor-pointer"
                     >
                         <span className="material-symbols-outlined text-[20px]">arrow_back</span>
                     </button>
@@ -167,7 +250,7 @@ export default function AnnotationPage() {
                         <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Task ID</span>
                         <span className="text-xs font-mono text-gray-300">{taskId}</span>
                     </div>
-                    <button className="bg-violet-600 hover:bg-violet-500 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow-lg shadow-violet-900/20 transition-all">
+                    <button className="bg-violet-600 hover:bg-violet-500 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow-lg shadow-violet-900/20 transition-all cursor-pointer">
                         Submit Task
                     </button>
                 </div>
@@ -176,10 +259,13 @@ export default function AnnotationPage() {
             {/* Main Content Area */}
             <div className="flex flex-1 overflow-hidden">
                 {/* Left: Image Viewer */}
-                <div className="flex-1 relative bg-black/40 flex items-center justify-center p-8 group overflow-hidden">
+                <div
+                    className="flex-1 relative bg-black/40 flex items-center justify-center p-8 group overflow-hidden"
+                    onWheel={handleWheel}
+                >
                     <div
-                        className="relative shadow-2xl rounded-lg border border-white/5 transition-transform duration-200 ease-out"
-                        style={{ transform: `scale(${zoom})` }}
+                        className="relative shadow-2xl rounded-lg border border-white/5 transition-transform duration-200 ease-out will-change-transform"
+                        style={{ transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})` }}
                     >
                         <img
                             src={currentItem.url}
@@ -187,9 +273,8 @@ export default function AnnotationPage() {
                             className="max-w-full max-h-[70vh] object-contain select-none pointer-events-none"
                         />
 
-                        {/* Annotation Layer */}
                         <svg
-                            className="absolute inset-0 w-full h-full cursor-crosshair"
+                            className={`absolute inset-0 w-full h-full ${tool === 'pan' ? 'cursor-pointer' : 'cursor-crosshair'}`}
                             onMouseDown={handleMouseDown}
                             onMouseMove={handleMouseMove}
                             onMouseUp={handleMouseUp}
@@ -204,15 +289,15 @@ export default function AnnotationPage() {
                                             y={shape.y}
                                             width={shape.width}
                                             height={shape.height}
-                                            fill="rgba(139, 92, 246, 0.2)"
-                                            stroke="#8b5cf6"
+                                            fill={`${shape.color}33`}
+                                            stroke={shape.color}
                                             strokeWidth={2 / zoom}
                                         />
                                     ) : (
                                         <polyline
                                             points={shape.points.map((p: any) => p.join(',')).join(' ')}
-                                            fill="rgba(244, 63, 94, 0.2)"
-                                            stroke="#f43f5e"
+                                            fill={`${shape.color}33`}
+                                            stroke={shape.color}
                                             strokeWidth={2 / zoom}
                                         />
                                     )}
@@ -227,15 +312,15 @@ export default function AnnotationPage() {
                                             y={currentShape.y}
                                             width={currentShape.width}
                                             height={currentShape.height}
-                                            fill="rgba(139, 92, 246, 0.4)"
-                                            stroke="#8b5cf6"
+                                            fill={`${currentShape.color}66`}
+                                            stroke={currentShape.color}
                                             strokeWidth={2 / zoom}
                                         />
                                     ) : (
                                         <polyline
                                             points={currentShape.points.map((p: any) => p.join(',')).join(' ')}
-                                            fill="rgba(244, 63, 94, 0.4)"
-                                            stroke="#f43f5e"
+                                            fill={`${currentShape.color}66`}
+                                            stroke={currentShape.color}
                                             strokeWidth={2 / zoom}
                                         />
                                     )}
@@ -243,19 +328,20 @@ export default function AnnotationPage() {
                             )}
                         </svg>
 
-                        {/* Tools Overlay */}
-                        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/80 backdrop-blur-md rounded-2xl border border-white/10 flex items-center gap-4 shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 scale-75 lg:scale-100">
-                            <ToolbarButton icon="pan_tool" active={tool === 'pan'} onClick={() => setTool('pan')} />
-                            <ToolbarButton icon="zoom_in" onClick={handleZoomIn} />
-                            <ToolbarButton icon="zoom_out" onClick={handleZoomOut} />
-                            <ToolbarButton icon="restart_alt" onClick={handleZoomReset} />
-                            <div className="w-[1px] h-4 bg-white/20 mx-1" />
-                            <ToolbarButton icon="crop_free" active={tool === 'box'} onClick={() => setTool('box')} />
-                            <ToolbarButton icon="polyline" active={tool === 'polygon'} onClick={() => setTool('polygon')} />
-                            <div className="w-[1px] h-4 bg-white/20 mx-1" />
-                            <ToolbarButton icon="undo" onClick={() => setShapes(shapes.slice(0, -1))} />
-                            <ToolbarButton icon="delete" onClick={() => setShapes([])} />
-                        </div>
+                    </div>
+
+                    {/* Tools Overlay - Moved outside scaling container to keep size fixed */}
+                    <div className="absolute bottom-10 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/80 backdrop-blur-md rounded-2xl border border-white/10 flex items-center gap-2 shadow-2xl z-20">
+                        <ToolbarButton icon="pan_tool" title="Pan Tool" active={tool === 'pan'} onClick={() => setTool('pan')} />
+                        <ToolbarButton icon="zoom_in" title="Zoom In" onClick={handleZoomIn} />
+                        <ToolbarButton icon="zoom_out" title="Zoom Out" onClick={handleZoomOut} />
+                        <ToolbarButton icon="restart_alt" title="Reset Zoom" onClick={handleZoomReset} />
+                        <div className="w-[1px] h-4 bg-white/20 mx-1" />
+                        <ToolbarButton icon="crop_free" title="Bounding Box" active={tool === 'box'} onClick={() => setTool('box')} />
+                        <ToolbarButton icon="polyline" title="Polygon Tool" active={tool === 'polygon'} onClick={() => setTool('polygon')} />
+                        <div className="w-[1px] h-4 bg-white/20 mx-1" />
+                        <ToolbarButton icon="undo" title="Undo" onClick={() => setShapes(shapes.slice(0, -1))} />
+                        <ToolbarButton icon="delete" title="Clear All" onClick={handleClearAll} />
                     </div>
 
                     {/* Zoom Indicator */}
@@ -270,8 +356,11 @@ export default function AnnotationPage() {
                     </div>
 
                     {/* Pagination Indicator */}
-                    <div className="absolute bottom-6 left-6 text-sm font-mono text-gray-500">
-                        <span className="text-white font-bold">{currentIndex + 1}</span> / {totalItems}
+                    <div className="absolute bottom-6 left-6 px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[16px] text-gray-400">photo_library</span>
+                        <div className="text-xs font-mono text-gray-500">
+                            <span className="text-white font-bold">{currentIndex + 1}</span> / {totalItems}
+                        </div>
                     </div>
                 </div>
 
@@ -288,16 +377,20 @@ export default function AnnotationPage() {
                             <div className="flex flex-wrap gap-2">
                                 {AVAILABLE_LABELS.map(label => (
                                     <button
-                                        key={label}
+                                        key={label.name}
                                         onClick={() => toggleLabel(label)}
                                         className={`
                                             px-3 py-1.5 rounded-lg text-xs font-bold transition-all border
-                                            ${selectedLabels.includes(label)
-                                                ? 'bg-violet-600/20 border-violet-500 text-violet-300'
+                                            ${selectedLabels.includes(label.name)
+                                                ? 'bg-white/10 text-white'
                                                 : 'bg-white/5 border-transparent text-gray-500 hover:bg-white/10 hover:text-gray-300'}
                                         `}
+                                        style={{
+                                            borderColor: selectedLabels.includes(label.name) ? label.color : 'transparent',
+                                            color: selectedLabels.includes(label.name) ? label.color : undefined
+                                        }}
                                     >
-                                        {label}
+                                        {label.name}
                                     </button>
                                 ))}
                             </div>
@@ -335,11 +428,16 @@ export default function AnnotationPage() {
                                 <span className="material-symbols-outlined text-[18px] text-blue-400">poly</span>
                                 <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Geometry</span>
                             </div>
-                            <div className="bg-black/40 rounded-xl border border-white/5 p-4 overflow-hidden">
+                            <div className="bg-black/40 rounded-xl border border-white/5 p-4 h-48 overflow-y-auto custom-scrollbar">
                                 <pre className="text-[10px] font-mono text-blue-300 whitespace-pre-wrap leading-relaxed">
                                     {JSON.stringify({
-                                        currentSession: shapes,
-                                        original: currentItem.geometry
+                                        active: currentShape ? {
+                                            type: currentShape.type,
+                                            points: currentShape.points ? currentShape.points.length : undefined,
+                                            dimensions: currentShape.type === 'bounding_box' ? { w: Math.round(currentShape.width), h: Math.round(currentShape.height) } : undefined
+                                        } : null,
+                                        session: shapes.map(s => ({ type: s.type, label: s.label })),
+                                        raw: shapes
                                     }, null, 2)}
                                 </pre>
                             </div>
@@ -347,16 +445,25 @@ export default function AnnotationPage() {
                     </div>
 
                     {/* Bottom Actions */}
-                    <div className="mt-auto p-6 bg-black/20 border-t border-white/5 flex gap-3">
-                        <button className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-sm font-bold text-gray-300 hover:bg-white/10 transition-all">
-                            Save
-                        </button>
-                        <button
-                            onClick={handleNext}
-                            className="flex-[1.5] px-4 py-3 rounded-xl bg-violet-600 text-sm font-bold text-white hover:bg-violet-500 shadow-lg shadow-violet-900/20 transition-all flex items-center justify-center gap-2"
-                        >
-                            <span>Next image</span>
-                            <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                    <div className="mt-auto p-6 bg-black/20 border-t border-white/5 flex flex-col gap-3">
+                        <div className="flex gap-3">
+                            <button
+                                onClick={handlePrevious}
+                                className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-sm font-bold text-gray-300 hover:bg-white/10 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                            >
+                                <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+                                <span>Previous</span>
+                            </button>
+                            <button
+                                onClick={handleNext}
+                                className="flex-1 px-4 py-3 rounded-xl bg-violet-600 text-sm font-bold text-white hover:bg-violet-500 shadow-lg shadow-violet-900/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                            >
+                                <span>Next image</span>
+                                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                            </button>
+                        </div>
+                        <button className="w-full px-4 py-3 rounded-xl bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 text-sm font-bold hover:bg-emerald-600/30 transition-all cursor-pointer">
+                            Save Annotations
                         </button>
                     </div>
                 </div>
@@ -365,16 +472,18 @@ export default function AnnotationPage() {
     );
 }
 
-function ToolbarButton({ icon, active = false, onClick }: { icon: string, active?: boolean, onClick?: () => void }) {
+function ToolbarButton({ icon, title, active = false, onClick }: { icon: string, title?: string, active?: boolean, onClick?: () => void }) {
     return (
-        <button
-            onClick={onClick}
-            className={`
-                p-2 rounded-lg transition-all
-                ${active ? 'bg-violet-600 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/10'}
-            `}
-        >
-            <span className="material-symbols-outlined text-[20px]">{icon}</span>
-        </button>
+        <Tooltip title={title} placement="top" mouseEnterDelay={0.3}>
+            <button
+                onClick={onClick}
+                className={`
+                    w-10 h-10 flex items-center justify-center rounded-lg transition-all cursor-pointer
+                    ${active ? 'bg-violet-600 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/10'}
+                `}
+            >
+                <span className="material-symbols-outlined text-[20px]">{icon}</span>
+            </button>
+        </Tooltip>
     );
 }
