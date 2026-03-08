@@ -8,7 +8,6 @@ import {
   type DashboardTabType
 } from '@/features/manager/components/dashboard/DashboardTabs'
 
-
 const ManagerDashboardPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
 
