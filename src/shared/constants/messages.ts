@@ -53,7 +53,6 @@ export const ERROR_MESSAGES = {
   }
 } as const
 
-
 // Success Messages Constants
 export const SUCCESS_MESSAGES = {
   AUTH: {

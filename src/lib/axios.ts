@@ -1,62 +1,57 @@
-import axios, {
-  type AxiosInstance,
-  type AxiosError,
-  type InternalAxiosRequestConfig
-} from 'axios';
-import { useAuthStore } from '@/store';
+import axios, { type AxiosInstance, type AxiosError, type InternalAxiosRequestConfig } from 'axios'
+import { useAuthStore } from '@/store'
 
 // ============ Types ============
 // Định nghĩa lại Config để không phụ thuộc file bên ngoài nếu chưa có
 export interface ApiClientConfig {
-  baseURL?: string;
-  timeout?: number;
-  headers?: Record<string, string>;
-  getToken?: () => string | null;
-  getRefreshToken?: () => string | null; // Thêm function lấy refresh token
-  onUnauthorized?: () => void;
-  onForbidden?: () => void;
+  baseURL?: string
+  timeout?: number
+  headers?: Record<string, string>
+  getToken?: () => string | null
+  getRefreshToken?: () => string | null // Thêm function lấy refresh token
+  onUnauthorized?: () => void
+  onForbidden?: () => void
 }
 
 // Mở rộng type cho Request Config để thêm cờ _retry
 interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
-  _retry?: boolean;
+  _retry?: boolean
 }
 
 // ============ Config & State ============
-export const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
+export const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL
 
 // Biến trạng thái cho logic Refresh Token
-let isRefreshing = false;
-let failedQueue: any[] = [];
+let isRefreshing = false
+let failedQueue: any[] = []
 
 // Hàm xử lý hàng đợi các request bị lỗi
 const processQueue = (error: any, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) {
-      prom.reject(error);
+      prom.reject(error)
     } else {
-      prom.resolve(token);
+      prom.resolve(token)
     }
-  });
-  failedQueue = [];
-};
+  })
+  failedQueue = []
+}
 
 // ============ Auth Helpers (Mặc định) ============
-export const getStoredToken = () => localStorage.getItem('accessToken');
-const defaultGetRefreshToken = () => localStorage.getItem('refreshToken');
+export const getStoredToken = () => localStorage.getItem('accessToken')
+const defaultGetRefreshToken = () => localStorage.getItem('refreshToken')
 
 export const handleUnauthorized = () => {
-  localStorage.removeItem('accessToken');
-  localStorage.removeItem('refreshToken');
+  localStorage.removeItem('accessToken')
+  localStorage.removeItem('refreshToken')
 
   // Đồng bộ với Zustand Store
-  useAuthStore.getState().logout();
-
+  useAuthStore.getState().logout()
   // Chỉ redirect nếu chưa ở trang login để tránh lặp vô tận
   if (!window.location.pathname.includes('/login')) {
-    window.location.href = '/login';
+    window.location.href = '/login'
   }
-};
+}
 
 // ============ Factory Function ============
 export function createApiClient({
@@ -68,24 +63,23 @@ export function createApiClient({
   onUnauthorized = handleUnauthorized,
   onForbidden
 }: ApiClientConfig): AxiosInstance {
-
   const client = axios.create({
     baseURL,
     timeout,
     headers: { 'Content-Type': 'application/json', ...headers }
-  });
+  })
 
   // 1. Request Interceptor: Gắn Token
   client.interceptors.request.use(
     (config) => {
-      const token = getToken();
+      const token = getToken()
       if (token && config.headers) {
-        config.headers.Authorization = `Bearer ${token}`;
+        config.headers.Authorization = `Bearer ${token}`
       }
-      return config;
+      return config
     },
     (error) => Promise.reject(error)
-  );
+  )
 
   // 2. Response Interceptor: Xử lý lỗi & Refresh Token
   client.interceptors.response.use(
@@ -93,87 +87,85 @@ export function createApiClient({
     async (error: AxiosError) => {
       // Log lỗi detail từ server để debug (ví dụ lỗi validation 400)
       if (error.response?.data) {
-        console.error('Backend Error Details:', error.response.data);
+        console.error('Backend Error Details:', error.response.data)
       }
 
-      const originalRequest = error.config as CustomAxiosRequestConfig;
-      const status = error.response?.status;
+      const originalRequest = error.config as CustomAxiosRequestConfig
+      const status = error.response?.status
 
       // Xử lý lỗi 403 Forbidden
       if (status === 403) {
         if (onForbidden) {
-          onForbidden();
+          onForbidden()
         } else {
           // Nếu không có handler riêng, coi như unauthorized (hết hạn session)
-          onUnauthorized();
+          onUnauthorized()
         }
-        return Promise.reject(error);
+        return Promise.reject(error)
       }
 
       // Xử lý lỗi 401 Unauthorized (Token hết hạn)
       if (status === 401 && originalRequest && !originalRequest._retry) {
-
         // Nếu đang refresh thì đẩy request này vào hàng đợi
         if (isRefreshing) {
           return new Promise(function (resolve, reject) {
-            failedQueue.push({ resolve, reject });
+            failedQueue.push({ resolve, reject })
           })
             .then((token) => {
               if (originalRequest.headers) {
-                originalRequest.headers.Authorization = `Bearer ${token}`;
+                originalRequest.headers.Authorization = `Bearer ${token}`
               }
-              return client(originalRequest);
+              return client(originalRequest)
             })
-            .catch((err) => Promise.reject(err));
+            .catch((err) => Promise.reject(err))
         }
 
-        originalRequest._retry = true;
-        isRefreshing = true;
+        originalRequest._retry = true
+        isRefreshing = true
 
         try {
-          const refreshToken = getRefreshToken();
+          const refreshToken = getRefreshToken()
           // Gọi API refresh token (Sử dụng instance axios mới để tránh loop interceptor)
           const response = await axios.post(`${baseURL}/auth/refresh-token`, {
             refreshToken
-          });
+          })
 
-          const { accessToken } = response.data;
+          const { accessToken } = response.data
 
           // Lưu token mới
-          localStorage.setItem('accessToken', accessToken);
+          localStorage.setItem('accessToken', accessToken)
 
           // Set lại header cho request gốc
           if (originalRequest.headers) {
-            originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+            originalRequest.headers.Authorization = `Bearer ${accessToken}`
           }
 
           // Xử lý hàng đợi đang chờ
-          processQueue(null, accessToken);
+          processQueue(null, accessToken)
 
           // Gọi lại request gốc
-          return client(originalRequest);
-
+          return client(originalRequest)
         } catch (refreshError) {
           // Nếu refresh fail thì force logout
-          processQueue(refreshError, null);
-          onUnauthorized();
-          return Promise.reject(refreshError);
+          processQueue(refreshError, null)
+          onUnauthorized()
+          return Promise.reject(refreshError)
         } finally {
-          isRefreshing = false;
+          isRefreshing = false
         }
       }
 
-      return Promise.reject(error);
+      return Promise.reject(error)
     }
-  );
+  )
 
-  return client;
+  return client
 }
 
 // ============ Default Instance Export ============
 // Tạo sẵn một instance để dùng ngay trong app (Singleton)
 const axiosClient = createApiClient({
-  baseURL: API_BASE_URL,
-});
+  baseURL: API_BASE_URL
+})
 
-export default axiosClient;
+export default axiosClient

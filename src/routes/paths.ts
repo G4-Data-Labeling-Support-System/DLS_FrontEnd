@@ -2,15 +2,15 @@ export const PATHS = {
   HOME: '/',
   AUTH: {
     LOGIN: '/auth/login',
-    REGISTER: '/auth/register',
+    REGISTER: '/auth/register'
   },
   PRODUCT: {
     LIST: '/products',
-    DETAIL: (id: string) => `/products/${id}`,
+    DETAIL: (id: string) => `/products/${id}`
   },
   CART: '/cart',
   ADMIN: {
-    DASHBOARD: '/admin/dashboard',
+    DASHBOARD: '/admin/dashboard'
   },
   NOT_FOUND: '*'
 }
@@ -25,7 +25,7 @@ export const PATH_MANAGER = {
   teamAssignment: '/manager/create-project/team-assignment',
   datasetManagement: '/manager/datasets',
   createDataset: '/manager/datasets/create'
-};
+}
 
 export const PATH_ANNOTATOR = {
   root: '/annotator',
@@ -38,5 +38,5 @@ export const PATH_ANNOTATOR = {
 export const PATH_REVIEWER = {
   root: '/reviewer',
   dashboard: '/reviewer',
-  workspace: '/reviewer/workspace',
+  workspace: '/reviewer/workspace'
 }

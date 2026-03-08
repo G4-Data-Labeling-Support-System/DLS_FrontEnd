@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
   --violet: #8b5cf6;
@@ -84,10 +84,10 @@ input:-webkit-autofill:active {
   }
 
   .ant-dropdown-menu {
-  background: rgba(20, 20, 40, 0.85) !important;
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.1);
-}
+    background: rgba(20, 20, 40, 0.85) !important;
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
 
   /* Specifically for Ant Design placeholders */
   & .ant-input::placeholder,
@@ -141,7 +141,9 @@ input:-webkit-autofill:active {
 @utility neon-border-focus {
   &:focus-within {
     border-color: #895af6;
-    box-shadow: 0 0 0 2px rgba(137, 90, 246, 0.2), 0 0 15px rgba(137, 90, 246, 0.4);
+    box-shadow:
+      0 0 0 2px rgba(137, 90, 246, 0.2),
+      0 0 15px rgba(137, 90, 246, 0.4);
   }
 }
 
@@ -205,7 +207,8 @@ input:-webkit-autofill:active {
     @apply text-white font-sans;
 
     /* Grid Background - Dùng fixed để nền đứng yên khi cuộn, không bị hết nền */
-    background-image: linear-gradient(rgba(157, 39, 241, 0.05) 1px, transparent 1px),
+    background-image:
+      linear-gradient(rgba(157, 39, 241, 0.05) 1px, transparent 1px),
       linear-gradient(90deg, rgba(157, 39, 241, 0.05) 1px, transparent 1px);
     background-size: 40px 40px;
     background-attachment: fixed;
@@ -224,7 +227,6 @@ input:-webkit-autofill:active {
 /* ... (Phần @tailwind giữ nguyên) ... */
 
 @layer base {
-
   /* Reset quan trọng để Layout hoạt động đúng */
   html,
   body,

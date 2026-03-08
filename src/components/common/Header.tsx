@@ -1,11 +1,6 @@
 import { useState } from 'react'
-import { Button, Dropdown } from 'antd'
-import type { MenuProps } from 'antd'
-import {
-  UserOutlined,
-  LogoutOutlined,
-  SettingOutlined
-} from '@ant-design/icons'
+import { Button, Dropdown, type MenuProps } from 'antd'
+import { UserOutlined, LogoutOutlined, SettingOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { BrandLogo } from '@/components/common/BrandLogo'
 import { useAuthStore } from '@/store'
@@ -17,7 +12,6 @@ export function Header() {
   const user = useAuthStore((state) => state.user)
   const navigate = useNavigate()
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
-
 
   const items: MenuProps['items'] = [
     {
@@ -31,10 +25,10 @@ export function Header() {
       key: 'settings',
       icon: <SettingOutlined />,
       label: 'Settings',
-      className: 'hover:bg-gray-100 rounded-lg',
+      className: 'hover:bg-gray-100 rounded-lg'
     },
     {
-      type: 'divider',
+      type: 'divider'
     },
     {
       key: 'logout',
@@ -50,11 +44,11 @@ export function Header() {
   ]
 
   const getAvatarUrl = (avatarPath: string | undefined | null) => {
-    if (!avatarPath) return "https://cdn-icons-png.flaticon.com/512/9408/9408175.png";
-    if (avatarPath.startsWith('http')) return avatarPath;
-    const cleanPath = avatarPath.startsWith('/') ? avatarPath.substring(1) : avatarPath;
-    return `${API_BASE_URL}/${cleanPath}`;
-  };
+    if (!avatarPath) return 'https://cdn-icons-png.flaticon.com/512/9408/9408175.png'
+    if (avatarPath.startsWith('http')) return avatarPath
+    const cleanPath = avatarPath.startsWith('/') ? avatarPath.substring(1) : avatarPath
+    return `${API_BASE_URL}/${cleanPath}`
+  }
 
   return (
     <>
@@ -85,7 +79,8 @@ export function Header() {
             <Dropdown
               menu={{
                 items,
-                className: 'p-2 rounded-2xl shadow-2xl border border-gray-100 bg-white/95 backdrop-blur-md min-w-[200px]'
+                className:
+                  'p-2 rounded-2xl shadow-2xl border border-gray-100 bg-white/95 backdrop-blur-md min-w-[200px]'
               }}
               trigger={['click']}
               placement="bottomRight"
@@ -114,10 +109,7 @@ export function Header() {
         `}</style>
       </header>
 
-      <ProfileModal
-        open={isProfileModalOpen}
-        onClose={() => setIsProfileModalOpen(false)}
-      />
+      <ProfileModal open={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} />
     </>
   )
 }
