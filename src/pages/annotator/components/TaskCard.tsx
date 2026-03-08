@@ -4,14 +4,24 @@ import getTaskStatusStyle, {
   getAnnotationStatusStyle
 } from './StatusStyle'
 
-export default function TaskCard({ task }: { task: any }) {
+interface Task {
+  id: string
+  taskStatus?: string
+  status?: string
+  name?: string
+  filename?: string
+  annotationStatus?: string
+}
+
+export default function TaskCard({ task }: { task: Task }) {
   const navigate = useNavigate()
+  if (!task.id) return null // Guard against missing ID
   const taskStatus = task.taskStatus || task.status || 'PENDING'
   const taskName = task.name || task.filename || 'Untitled Task'
 
   const statusStyle = getTaskStatusStyle(taskStatus)
-  const annotationLabel = getAnnotationStatusLabel(task.annotationStatus)
-  const annotationStyle = getAnnotationStatusStyle(task.annotationStatus)
+  const annotationLabel = getAnnotationStatusLabel(task.annotationStatus || '')
+  const annotationStyle = getAnnotationStatusStyle(task.annotationStatus || '')
 
   return (
     <div

@@ -155,16 +155,19 @@ export const theme = {
 } as const
 
 // Utility function to get theme values
-export const getThemeColor = (path: string) => {
+export const getThemeColor = (path: string): string | undefined => {
   const keys = path.split('.')
-  let value: any = theme
+  let value: unknown = theme
 
   for (const key of keys) {
-    value = value[key]
-    if (value === undefined) return undefined
+    if (value && typeof value === 'object' && key in (value as Record<string, unknown>)) {
+      value = (value as Record<string, unknown>)[key]
+    } else {
+      return undefined
+    }
   }
 
-  return value
+  return value as string | undefined
 }
 
 // Export individual sections for convenience

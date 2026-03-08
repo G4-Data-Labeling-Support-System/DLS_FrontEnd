@@ -8,18 +8,27 @@ import {
 import { Button } from '@/shared/components/ui/Button'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
 import { useCreateUser } from '@/features/admin/hooks/useUsers'
+import type { AxiosError } from 'axios'
+import type { User } from '@/shared/types/api.types'
 
 interface AddUserModalProps {
   isOpen: boolean
   onClose: () => void
-  onSuccess?: (user: any) => void
+  onSuccess?: (user: User) => void
 }
 
 export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModalProps) {
   const [form] = Form.useForm()
   const createUserMutation = useCreateUser()
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: {
+    username: string
+    fullName: string
+    email: string
+    password?: string
+    role: string
+    specialization: string
+  }) => {
     // [Logic: Chuẩn bị dữ liệu] Kết hợp dữ liệu form với giá trị mặc định
     // [Logic: Xử lý Role] Ánh xạ 'role' (frontend) sang 'userRole' (backend) và viết hoa chữ cái đầu
     const roleMapping: Record<string, string> = {
@@ -28,23 +37,24 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModa
       manager: 'Manager'
     }
 
-    const payload = {
+    const payload: User & { password?: string; status: string } = {
       ...values,
-      role: roleMapping[values.role] || values.role, // Send as 'role' per API types
-      status: 'ACTIVE', // Default to ACTIVE
-      coverImage: 'https://placehold.co/400' // Default cover image
+      id: '', // Temporary for cast if needed, but createUser usually returns User
+      role: roleMapping[values.role] || values.role,
+      status: 'ACTIVE',
+      coverImage: 'https://placehold.co/400'
     }
 
     // [Logic: Gọi API] Thực hiện tạo user
-    createUserMutation.mutate(payload, {
+    createUserMutation.mutate(payload as any, {
       onSuccess: (data) => {
         // [Logic: Thành công] Reset form và gọi callback thông báo ra ngoài
         form.resetFields()
-        onSuccess?.(data)
+        onSuccess?.(data as User)
       },
-      onError: (error: any) => {
+      onError: (error: AxiosError) => {
         // [Logic: Xử lý lỗi] Lấy thông báo lỗi chi tiết từ backend
-        const errorData = error.response?.data
+        const errorData = error.response?.data as { message?: string }
         console.error('Backend Error Details:', errorData)
 
         // Hiển thị thông báo lỗi cho người dùng (ưu tiên message từ backend)
@@ -83,6 +93,19 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModa
               size="large"
               prefix={<UserOutlined className="text-gray-500" />}
               placeholder="e.g. jdoe123"
+            />
+          </Form.Item>
+
+          {/* Full Name Field - NEW */}
+          <Form.Item
+            name="fullName"
+            label={<span className="text-gray-300 font-medium">Full Name</span>}
+            rules={[{ required: true, message: 'Please enter full name' }]}
+          >
+            <Input
+              size="large"
+              prefix={<UserOutlined className="text-gray-500" />}
+              placeholder="e.g. John Doe"
             />
           </Form.Item>
 

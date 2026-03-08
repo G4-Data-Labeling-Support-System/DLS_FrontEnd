@@ -2,6 +2,20 @@ import { useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { Tooltip } from 'antd'
 
+interface Shape {
+  type: 'bounding_box' | 'polygon'
+  x?: number
+  y?: number
+  width?: number
+  height?: number
+  startX?: number
+  startY?: number
+  points?: [number, number][]
+  label: string
+  color: string
+  isPreview?: boolean
+}
+
 const MOCK_DATA_ITEMS = [
   {
     id: 'item-1',
@@ -58,7 +72,8 @@ export default function AnnotationPage() {
   const location = useLocation()
 
   // Get starting index from state if passed, otherwise 0
-  const startIdx = (location.state as any)?.startIndex || 0
+  const state = location.state as { startIndex?: number } | null
+  const startIdx = state?.startIndex || 0
   const [currentIndex, setCurrentIndex] = useState(startIdx)
   const [selectedLabels, setSelectedLabels] = useState<string[]>([AVAILABLE_LABELS[0].name])
   const [currentLabel, setCurrentLabel] = useState(AVAILABLE_LABELS[0])
@@ -71,8 +86,8 @@ export default function AnnotationPage() {
   const [panStart, setPanStart] = useState({ x: 0, y: 0 })
   const [tool, setTool] = useState<'pan' | 'box' | 'polygon'>('pan')
   const [isDrawing, setIsDrawing] = useState(false)
-  const [currentShape, setCurrentShape] = useState<any>(null)
-  const [shapes, setShapes] = useState<any[]>([])
+  const [currentShape, setCurrentShape] = useState<Shape | null>(null)
+  const [shapes, setShapes] = useState<Shape[]>([])
 
   const currentItem = MOCK_DATA_ITEMS[currentIndex]
   const totalItems = MOCK_DATA_ITEMS.length
@@ -111,7 +126,7 @@ export default function AnnotationPage() {
           label: currentLabel.name,
           color: currentLabel.color
         })
-      } else {
+      } else if (currentShape && currentShape.points) {
         // Add more points - strip preview if exists
         const points = currentShape.isPreview
           ? currentShape.points.slice(0, -1)
@@ -152,7 +167,12 @@ export default function AnnotationPage() {
     const x = (e.clientX - rect.left) / zoom
     const y = (e.clientY - rect.top) / zoom
 
-    if (tool === 'box') {
+    if (
+      tool === 'box' &&
+      currentShape &&
+      currentShape.startX !== undefined &&
+      currentShape.startY !== undefined
+    ) {
       setCurrentShape({
         ...currentShape,
         x: Math.min(x, currentShape.startX),
@@ -235,7 +255,7 @@ export default function AnnotationPage() {
     }
   }
 
-  const toggleLabel = (labelObj: any) => {
+  const toggleLabel = (labelObj: (typeof AVAILABLE_LABELS)[0]) => {
     setCurrentLabel(labelObj)
     setSelectedLabels((prev) =>
       prev.includes(labelObj.name)
@@ -318,7 +338,7 @@ export default function AnnotationPage() {
                     />
                   ) : (
                     <polyline
-                      points={shape.points.map((p: any) => p.join(',')).join(' ')}
+                      points={shape.points?.map((p: [number, number]) => p.join(',')).join(' ')}
                       fill={`${shape.color}33`}
                       stroke={shape.color}
                       strokeWidth={2 / zoom}
@@ -341,7 +361,9 @@ export default function AnnotationPage() {
                     />
                   ) : (
                     <polyline
-                      points={currentShape.points.map((p: any) => p.join(',')).join(' ')}
+                      points={currentShape.points
+                        ?.map((p: [number, number]) => p.join(','))
+                        .join(' ')}
                       fill={`${currentShape.color}66`}
                       stroke={currentShape.color}
                       strokeWidth={2 / zoom}
@@ -497,8 +519,8 @@ export default function AnnotationPage() {
                             dimensions:
                               currentShape.type === 'bounding_box'
                                 ? {
-                                    w: Math.round(currentShape.width),
-                                    h: Math.round(currentShape.height)
+                                    w: Math.round(currentShape.width || 0),
+                                    h: Math.round(currentShape.height || 0)
                                   }
                                 : undefined
                           }

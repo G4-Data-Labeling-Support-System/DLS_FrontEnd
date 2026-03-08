@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import projectApi, { type GetProjectsParams } from '@/api/ProjectApi'
+import type { AxiosError } from 'axios'
 
 export const useProjects = (params?: GetProjectsParams) => {
   return useQuery({
@@ -17,7 +18,7 @@ export const useCreateProject = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] })
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError) => {
       console.error('Create project error:', error)
     }
   })
@@ -32,7 +33,7 @@ export const useUpdateProject = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] })
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError) => {
       console.error('Update project error:', error)
     }
   })
@@ -46,7 +47,7 @@ export const useDeleteProject = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] })
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError) => {
       console.error('Delete project error:', error)
     }
   })

@@ -2,19 +2,25 @@ import { themeClasses } from '@/styles'
 import { TeamOutlined, DesktopOutlined, DatabaseOutlined } from '@ant-design/icons'
 import { useUsers } from '@/features/admin/hooks/useUsers'
 import { useLabels } from '@/features/admin/hooks/useLabels'
+import type { User } from '@/shared/types/api.types'
 
 export default function AdminDashboard() {
   const { data: rawUsers, isLoading } = useUsers()
   const { data: labelsResponse, isLoading: isLoadingLabels } = useLabels()
-  const users = Array.isArray(rawUsers) ? rawUsers : (rawUsers as any)?.data || []
+  const users = Array.isArray(rawUsers)
+    ? (rawUsers as User[])
+    : (rawUsers as unknown as { data: User[] })?.data || []
 
   // Extract label count robustly
   const getLabelCount = () => {
     if (!labelsResponse) return 0
-    const data = (labelsResponse as any).data ?? labelsResponse
+    const data =
+      (labelsResponse as { data?: unknown; total?: number; count?: number; totalLabels?: number })
+        .data ?? labelsResponse
     if (Array.isArray(data)) return data.length
     if (typeof data === 'number') return data
-    return data.total ?? data.count ?? data.totalLabels ?? 0
+    const typedData = data as { total?: number; count?: number; totalLabels?: number }
+    return typedData.total ?? typedData.count ?? typedData.totalLabels ?? 0
   }
   const labelCount = getLabelCount()
 

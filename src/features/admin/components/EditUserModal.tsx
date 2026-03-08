@@ -4,12 +4,14 @@ import { Button } from '@/shared/components/ui/Button'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
 import { useEffect } from 'react'
 import { useUpdateUser } from '@/features/admin/hooks/useUsers'
+import type { AxiosError } from 'axios'
+import type { User } from '@/shared/types/api.types'
 
 interface EditUserModalProps {
   isOpen: boolean
   onClose: () => void
-  onSuccess?: (user: any) => void
-  userData?: any
+  onSuccess?: (user: User) => void
+  userData?: User & { userId?: string; userRole?: string }
 }
 
 export default function EditUserModal({
@@ -35,7 +37,7 @@ export default function EditUserModal({
     }
   }, [isOpen, userData, form])
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: Record<string, string>) => {
     const roleMapping: Record<string, string> = {
       annotator: 'Annotator',
       reviewer: 'Reviewer',
@@ -48,6 +50,7 @@ export default function EditUserModal({
     }
 
     const userId = userData?.userId || userData?.id
+    if (!userId) return
 
     updateUserMutation.mutate(
       { userId, data: payload },
@@ -55,10 +58,10 @@ export default function EditUserModal({
         onSuccess: (data) => {
           message.success('User updated successfully')
           form.resetFields()
-          onSuccess?.(data)
+          onSuccess?.(data as User)
         },
-        onError: (error: any) => {
-          const errorData = error.response?.data
+        onError: (error: AxiosError) => {
+          const errorData = error.response?.data as { message?: string }
           console.error('Backend Error Details:', errorData)
 
           const messageStr =

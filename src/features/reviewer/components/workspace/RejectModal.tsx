@@ -45,17 +45,9 @@ export const RejectModal: React.FC<RejectModalProps> = ({
       centered
       className="[&_.ant-modal-content]:!rounded-2xl [&_.ant-modal-content]:!shadow-2xl [&_.ant-modal-content]:!shadow-red-900/20 overflow-hidden"
       width={700}
-      styles={
-        {
-          mask: { backdropFilter: 'blur(8px)', backgroundColor: 'rgba(15, 14, 23, 0.6)' },
-          content: {
-            background: 'rgba(15, 14, 23, 0.85)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(137, 90, 246, 0.3)',
-            boxShadow: '0 0 40px rgba(137, 90, 246, 0.15)'
-          }
-        } as any
-      }
+      styles={{
+        mask: { backdropFilter: 'blur(8px)', backgroundColor: 'rgba(15, 14, 23, 0.6)' }
+      }}
       title={
         <div className="p-4 border-b border-violet-500/10 flex items-center gap-3 bg-white/5">
           <div className="w-8 h-8 bg-red-500/10 rounded-lg flex items-center justify-center border border-red-500/20">

@@ -5,6 +5,7 @@ import { useAuthStore } from '@/store/auth.store'
 import { userApi } from '@/api/userApi'
 import { themeClasses } from '@/styles'
 import { Button } from '@/shared/components/ui/Button'
+import type { UpdateUserRequest, User } from '@/shared/types/api.types'
 
 export default function ProfilePage() {
   const { user, setUser } = useAuthStore()
@@ -16,12 +17,12 @@ export default function ProfilePage() {
       form.setFieldsValue({
         fullName: user.fullName,
         email: user.email,
-        phone: (user as any).phone || ''
+        phone: (user as User & { phone?: string }).phone || ''
       })
     }
   }, [user, form])
 
-  const onFinish = async (values: any) => {
+  const onFinish = async (values: { fullName: string; phone?: string }) => {
     if (!user?.id) return
     setLoading(true)
     try {
@@ -31,15 +32,15 @@ export default function ProfilePage() {
       }
 
       // The backend update endpoint expects specific fields
-      const payload: any = {
-        username: user.username,
-        email: user.email,
-        coverImage: user.coverImage,
-        specialization: (user as any).specialization || '',
-        role: user.role || user.userRole,
+      const payload: UpdateUserRequest = {
+        username: user.username || '',
+        email: user.email || '',
+        coverImage: user.coverImage || '',
+        specialization: (user as User & { specialization?: string }).specialization || '',
+        role: user.role || user.userRole || '',
         userStatus: user.status || 'ACTIVE',
         fullName: values.fullName,
-        phone: values.phone
+        phone: values.phone || ''
       }
 
       await userApi.updateUser(user.id, payload)

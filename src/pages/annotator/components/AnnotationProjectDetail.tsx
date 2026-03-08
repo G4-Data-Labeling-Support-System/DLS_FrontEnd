@@ -1,4 +1,16 @@
-export default function AnnotatorProjectDetail({ project }: { project: any }) {
+interface Project {
+  id?: string
+  projectId?: string
+  name?: string
+  projectName?: string
+  status?: string
+  projectStatus?: string
+  description?: string
+  createdAt?: string
+  updatedAt?: string
+}
+
+export default function AnnotatorProjectDetail({ project }: { project: Project }) {
   if (!project) return null
 
   const getStatusColor = (status?: string) => {

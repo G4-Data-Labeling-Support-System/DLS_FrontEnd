@@ -3,6 +3,7 @@ import { publicAuthClient } from '@/api/ApiClients'
 import { ENDPOINTS } from '@/api/endpoints'
 import { useAuthStore } from '@/store'
 import type { LoginInformation } from '../types/auth.types'
+import type { User } from '@/shared/types/api.types'
 
 export class AuthService {
   /**
@@ -54,14 +55,14 @@ export class AuthService {
         const user = profileResponse.data.data || profileResponse.data
 
         // Merge JWT info with API Profile (API profile is more detailed)
-        const finalUser = { ...(jwtUser as any), ...user }
-        useAuthStore.getState().setUser(finalUser)
+        const finalUser = { ...(jwtUser as User), ...user }
+        useAuthStore.getState().setUser(finalUser as User)
         // console.log('Final User from API:', finalUser);
         return finalUser
       } catch (profileErr) {
         console.warn('Profile endpoint error, falling back to JWT data:', profileErr)
         if (jwtUser) {
-          useAuthStore.getState().setUser(jwtUser as any)
+          useAuthStore.getState().setUser(jwtUser as User)
           return jwtUser
         }
       }
