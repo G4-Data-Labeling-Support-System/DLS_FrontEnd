@@ -5,7 +5,7 @@ interface Task {
   id: string
   batchLabel: string
   annotationStatus?: string
-  [key: string]: any
+  [key: string]: string | number | boolean | undefined | object | null
 }
 
 /** Groups tasks by their batchLabel */
