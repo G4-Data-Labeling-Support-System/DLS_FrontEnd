@@ -1,13 +1,5 @@
-<<<<<<< Updated upstream
-import axios, {
-  type AxiosInstance,
-  type AxiosError,
-  type InternalAxiosRequestConfig
-} from 'axios';
-=======
 import axios, { type AxiosInstance, type AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from '@/store'
->>>>>>> Stashed changes
 
 // ============ Types ============
 // Định nghĩa lại Config để không phụ thuộc file bên ngoài nếu chưa có
@@ -50,17 +42,11 @@ export const getStoredToken = () => localStorage.getItem('accessToken')
 const defaultGetRefreshToken = () => localStorage.getItem('refreshToken')
 
 export const handleUnauthorized = () => {
-<<<<<<< Updated upstream
-  localStorage.removeItem('accessToken');
-  localStorage.removeItem('refreshToken');
-=======
   localStorage.removeItem('accessToken')
   localStorage.removeItem('refreshToken')
 
   // Đồng bộ với Zustand Store
   useAuthStore.getState().logout()
-
->>>>>>> Stashed changes
   // Chỉ redirect nếu chưa ở trang login để tránh lặp vô tận
   if (!window.location.pathname.includes('/login')) {
     window.location.href = '/login'
@@ -108,11 +94,6 @@ export function createApiClient({
       const status = error.response?.status
 
       // Xử lý lỗi 403 Forbidden
-<<<<<<< Updated upstream
-      if (status === 403 && onForbidden) {
-        onForbidden();
-        return Promise.reject(error);
-=======
       if (status === 403) {
         if (onForbidden) {
           onForbidden()
@@ -121,7 +102,6 @@ export function createApiClient({
           onUnauthorized()
         }
         return Promise.reject(error)
->>>>>>> Stashed changes
       }
 
       // Xử lý lỗi 401 Unauthorized (Token hết hạn)

@@ -1,34 +1,4 @@
 export default function getTaskStatusStyle(status: string) {
-<<<<<<< Updated upstream
-    switch (status.toLowerCase()) {
-        case 'completed':
-        case 'done':
-            return {
-                badge: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400',
-                dot: 'bg-emerald-400',
-                icon: 'task_alt',
-            };
-        case 'pending':
-            return {
-                badge: 'border-amber-500/30 bg-amber-500/10 text-amber-400',
-                dot: 'bg-amber-400',
-                icon: 'pending',
-            };
-        case 'active':
-        case 'in progress':
-            return {
-                badge: 'border-violet-500/30 bg-violet-500/10 text-violet-400',
-                dot: 'bg-violet-400',
-                icon: 'edit_note',
-            };
-        default:
-            return {
-                badge: 'border-gray-500/20 bg-gray-500/10 text-gray-400',
-                dot: 'bg-gray-400',
-                icon: 'radio_button_unchecked',
-            };
-    }
-=======
   if (!status)
     return {
       badge: 'border-gray-500/20 bg-gray-500/10 text-gray-400',
@@ -63,7 +33,6 @@ export default function getTaskStatusStyle(status: string) {
         icon: 'radio_button_unchecked'
       }
   }
->>>>>>> Stashed changes
 }
 
 export function getAnnotationStatusLabel(status: string) {

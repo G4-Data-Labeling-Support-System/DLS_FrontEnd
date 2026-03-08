@@ -21,18 +21,10 @@ export default function AnnotatorProjectDetail({ project }: { project: any }) {
     return new Date(dateString).toLocaleDateString('vi-VN')
   }
 
-<<<<<<< Updated upstream
-    return (
-        <div className="glass-panel rounded-2xl p-7 relative overflow-hidden">
-            {/* Ambient glow */}
-            <div className="absolute -top-10 -right-10 w-56 h-56 rounded-full bg-violet-500/10 blur-[60px] pointer-events-none" />
-            <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-fuchsia-500/10 blur-[50px] pointer-events-none" />
-=======
   return (
     <div className="glass-panel rounded-2xl p-7 relative overflow-hidden">
       <div className="absolute -top-10 -right-10 w-56 h-56 rounded-full bg-violet-500/10 blur-[60px] pointer-events-none" />
       <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-fuchsia-500/10 blur-[50px] pointer-events-none" />
->>>>>>> Stashed changes
 
       <div className="relative z-10">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">

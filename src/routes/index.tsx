@@ -32,6 +32,8 @@ const SystemSettings = lazy(() => import('@/pages/admin/SystemSettingsPage'))
 // Annotator pages
 const AnnotatorLayout = lazy(() => import('@/components/layout/AnnotatorLayout'))
 const AnnotatorDashboardPage = lazy(() => import('@/pages/annotator/AnnotatorDashboardPage'))
+const TaskDetailPage = lazy(() => import('@/pages/annotator/TaskDetailPage'))
+const AnnotationPage = lazy(() => import('@/pages/annotator/AnnotationPage'))
 
 // Reviewer pages
 const ReviewerLayout = lazy(() => import('@/components/layout/ReviewerLayout'))
@@ -239,9 +241,6 @@ export const router = createBrowserRouter([
           </LazyPage>
         )
       },
-<<<<<<< Updated upstream
-    ],
-=======
       {
         path: 'task/:taskId',
         element: (
@@ -259,7 +258,6 @@ export const router = createBrowserRouter([
         )
       }
     ]
->>>>>>> Stashed changes
   },
 
   // ─── Reviewer routes (reviewer only) ──────────────────────────────────────

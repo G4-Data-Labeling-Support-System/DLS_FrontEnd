@@ -1,14 +1,7 @@
-<<<<<<< Updated upstream
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import projectApi from '@/api/project';
-import assignmentApi from '@/api/assignment';
-import guidelineApi from '@/api/guideline';
-=======
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import projectApi from '@/api/ProjectApi'
 import assignmentApi from '@/api/AssignmentApi'
 import guidelineApi from '@/api/GuidelineApi'
->>>>>>> Stashed changes
 
 export const useProjectById = (projectId: string) => {
   return useQuery({

@@ -57,8 +57,6 @@ export const ENDPOINTS = {
     UPDATE: (id: string) => `/guidelines/${id}`
   },
 
-<<<<<<< Updated upstream
-=======
   LABELS: {
     LIST: '/labels'
   },
@@ -69,5 +67,4 @@ export const ENDPOINTS = {
     ITEM_DETAIL: (itemId: string) => `/reviewer/items/${itemId}`,
     REVIEW_DECISION: (itemId: string) => `/reviewer/items/${itemId}/review`
   }
->>>>>>> Stashed changes
 } as const
