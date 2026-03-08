@@ -3,18 +3,30 @@ import { ProjectOutlined, SafetyCertificateOutlined } from '@ant-design/icons'
 import { Button } from '@/shared/components/ui/Button'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
 import { useCreateProject } from '@/features/admin/hooks/useProjects'
+import type { AxiosError } from 'axios'
+
+interface Project {
+  id: string
+  projectName: string
+  description?: string
+  projectStatus: string
+}
 
 interface AddProjectModalProps {
   isOpen: boolean
   onClose: () => void
-  onSuccess?: (project: any) => void
+  onSuccess?: (project: Project) => void
 }
 
 export default function AddProjectModal({ isOpen, onClose, onSuccess }: AddProjectModalProps) {
   const [form] = Form.useForm()
   const createProjectMutation = useCreateProject()
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: {
+    projectName: string
+    description?: string
+    status: string
+  }) => {
     const payload = {
       projectName: values.projectName,
       description: values.description,
@@ -22,13 +34,13 @@ export default function AddProjectModal({ isOpen, onClose, onSuccess }: AddProje
     }
 
     createProjectMutation.mutate(payload, {
-      onSuccess: (data) => {
+      onSuccess: (data: Project) => {
         form.resetFields()
         message.success('Project created successfully!')
         onSuccess?.(data)
       },
-      onError: (error: any) => {
-        const errorData = error.response?.data
+      onError: (error: AxiosError) => {
+        const errorData = error.response?.data as { message?: string }
         console.error('Backend Error Details:', errorData)
         const messageStr =
           errorData?.message || JSON.stringify(errorData) || 'Failed to create project'

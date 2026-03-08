@@ -6,13 +6,15 @@ import { Button } from '@/shared/components/ui/Button'
 import { MailOutlined, LockOutlined } from '@ant-design/icons'
 import { Form, Input } from 'antd'
 import { BrandLogo } from '@/components/common/BrandLogo'
+import type { User } from '@/shared/types/api.types'
+import type { AxiosError } from 'axios'
 
 export default function LoginPage() {
   const navigate = useNavigate()
   const { login, isLoading, error } = useAuth()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  const onFinish = async (values: any) => {
+  const onFinish = async (values: Record<string, string>) => {
     setErrorMessage(null)
     const { email, password } = values
 
@@ -21,7 +23,8 @@ export default function LoginPage() {
 
       if (user) {
         // Redirection logic based on role
-        const role = ((user as any).userRole || (user as any).role || '').toLowerCase()
+        const typedUser = user as User
+        const role = (typedUser.userRole || typedUser.role || '').toLowerCase()
 
         if (role === 'admin') {
           navigate('/admin/dashboard')
@@ -35,9 +38,10 @@ export default function LoginPage() {
       } else {
         setErrorMessage('Invalid username or password. Please try again.')
       }
-    } catch (err: any) {
+    } catch (err) {
+      const axiosError = err as AxiosError<{ message?: string }>
       // Extract detailed message from backend if available
-      const detailMsg = err.response?.data?.message || err.message
+      const detailMsg = axiosError.response?.data?.message || axiosError.message
       setErrorMessage(detailMsg || 'An unexpected error occurred')
     }
   }

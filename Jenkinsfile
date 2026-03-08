@@ -192,7 +192,7 @@ pipeline {
                         SLEEP=3
 
                         for i in \$(seq 1 \$ATTEMPTS); do
-                        if curl -fs http://localhost:${testPort}/admin > /dev/null; then
+                        if curl -fs http://localhost:${testPort} > /dev/null; then
                             echo "App is UP (after \$((i*SLEEP))s)"
                             break
                         fi
@@ -259,7 +259,7 @@ pipeline {
             steps {
                 sshagent(['development-srv']) {
                     sh "ssh -o StrictHostKeyChecking=no -l ${SERVER_CONNECTION}  'sudo docker stop ${APP_NAME} || true && sudo docker rm ${APP_NAME} || true'"
-                    sh "ssh -o StrictHostKeyChecking=no -l ${SERVER_CONNECTION} 'sudo docker run -p 9463:9463 -d --name ${APP_NAME} --restart unless-stopped ${DOCKER_CONTAINER}'"
+                    sh "ssh -o StrictHostKeyChecking=no -l ${SERVER_CONNECTION} 'sudo docker run -p 5173:5173 -d --name ${APP_NAME} --restart unless-stopped ${DOCKER_CONTAINER}'"
                 }
             }
         }

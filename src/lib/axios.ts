@@ -23,10 +23,16 @@ export const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE
 
 // Biến trạng thái cho logic Refresh Token
 let isRefreshing = false
-let failedQueue: any[] = []
+
+interface FailedQueueItem {
+  resolve: (token: string | null) => void
+  reject: (error: AxiosError | null) => void
+}
+
+let failedQueue: FailedQueueItem[] = []
 
 // Hàm xử lý hàng đợi các request bị lỗi
-const processQueue = (error: any, token: string | null = null) => {
+const processQueue = (error: AxiosError | null, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error)
@@ -147,7 +153,7 @@ export function createApiClient({
           return client(originalRequest)
         } catch (refreshError) {
           // Nếu refresh fail thì force logout
-          processQueue(refreshError, null)
+          processQueue(refreshError as AxiosError, null)
           onUnauthorized()
           return Promise.reject(refreshError)
         } finally {

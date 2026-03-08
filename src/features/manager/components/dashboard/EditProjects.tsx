@@ -49,7 +49,11 @@ export const EditProject = () => {
   }, [id, form, navigate])
 
   // 2. Xử lý khi submit Form thành công
-  const onFinish = async (values: any) => {
+  const onFinish = async (values: {
+    projectName: string
+    description?: string
+    projectStatus: string
+  }) => {
     if (!id) return
     try {
       setSubmitting(true)

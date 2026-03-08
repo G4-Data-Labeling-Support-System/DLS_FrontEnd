@@ -4,6 +4,7 @@ import { CloseOutlined, MailOutlined, CameraOutlined, EditOutlined } from '@ant-
 import { useAuthStore } from '@/store'
 import { userApi } from '@/api/userApi'
 import { API_BASE_URL } from '@/lib/axios'
+import type { UpdateUserRequest } from '@/shared/types/api.types'
 
 interface ProfileModalProps {
   open: boolean
@@ -39,7 +40,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose }) => 
         specialization: values.specialization
       }
 
-      await userApi.updateUser(user!.id, payload as any)
+      await userApi.updateUser(user!.id, payload as UpdateUserRequest)
       setUser({
         ...user!,
         email: values.email,
@@ -76,7 +77,9 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose }) => 
       const response = await userApi.updateAvatar(user!.id, file)
 
       // Assuming the backend returns the new avatar URL or we just need to refresh the user data
-      const newAvatarUrl = (response as any).avatarUrl || (response as any).data?.avatarUrl
+      const newAvatarUrl =
+        (response as { avatarUrl?: string; data?: { avatarUrl?: string } }).avatarUrl ||
+        (response as { avatarUrl?: string; data?: { avatarUrl?: string } }).data?.avatarUrl
 
       if (newAvatarUrl) {
         setUser({ ...user!, coverImage: newAvatarUrl })

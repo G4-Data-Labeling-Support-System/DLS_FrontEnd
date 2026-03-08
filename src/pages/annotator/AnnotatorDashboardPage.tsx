@@ -14,6 +14,40 @@ import TasksSection from './components/TaskSection'
 import GuidelineSection from './components/GuidelineSection'
 import AnnotatorProjectDetail from './components/AnnotationProjectDetail'
 
+// ============ Types ============
+interface AssignmentTask {
+  id: string
+  name: string
+  taskStatus: string
+  annotationStatus: string
+  batchLabel: string
+  timeTaken: string
+}
+
+interface Assignment {
+  id: string
+  name: string
+  status: string
+  description: string
+  projectId: string
+  completedTasks: number
+  totalTasks: number
+  tasks: AssignmentTask[]
+}
+
+interface ProjectDetail {
+  id: string
+  name: string
+  status: string
+  description: string
+}
+
+interface Guideline {
+  id: string
+  content: string
+  status: string
+}
+
 // ============ MOCK DATA ============
 const MOCK_DATA = {
   assignment: {
@@ -102,9 +136,9 @@ export default function AnnotatorDashboardPage() {
     }
   }
 
-  const [assignment, setAssignment] = useState<any>(MOCK_DATA.assignment)
-  const [projectDetail, setProjectDetail] = useState<any>(MOCK_DATA.project)
-  const [guideline, setGuideline] = useState<any>(MOCK_DATA.guideline)
+  const [assignment, setAssignment] = useState<Assignment>(MOCK_DATA.assignment)
+  const [projectDetail, setProjectDetail] = useState<ProjectDetail>(MOCK_DATA.project)
+  const [guideline, setGuideline] = useState<Guideline | null>(MOCK_DATA.guideline)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { user } = useAuthStore()
@@ -147,7 +181,9 @@ export default function AnnotatorDashboardPage() {
             const guidelineRes = await guidelineApi.getGuidelines(projectIdToFetch)
             const guidelinesList = guidelineRes.data?.data || guidelineRes.data || []
             const activeGuide = Array.isArray(guidelinesList)
-              ? (guidelinesList.find((g: any) => g.status === 'ACTIVE' || g.status === 'active') ??
+              ? (guidelinesList.find(
+                  (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
+                ) ??
                 guidelinesList[0] ??
                 null)
               : guidelinesList
@@ -198,8 +234,8 @@ export default function AnnotatorDashboardPage() {
                   const guidelinesList = guidelineRes.data?.data || guidelineRes.data || []
                   const activeGuide = Array.isArray(guidelinesList)
                     ? (guidelinesList.find(
-                      (g: any) => g.status === 'ACTIVE' || g.status === 'active'
-                    ) ??
+                        (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
+                      ) ??
                       guidelinesList[0] ??
                       null)
                     : guidelinesList
@@ -243,8 +279,8 @@ export default function AnnotatorDashboardPage() {
                     const guidelinesList = guidelineRes.data?.data || guidelineRes.data || []
                     const activeGuide = Array.isArray(guidelinesList)
                       ? (guidelinesList.find(
-                        (g: any) => g.status === 'ACTIVE' || g.status === 'active'
-                      ) ??
+                          (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
+                        ) ??
                         guidelinesList[0] ??
                         null)
                       : guidelinesList

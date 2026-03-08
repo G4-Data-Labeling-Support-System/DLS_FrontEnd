@@ -17,15 +17,18 @@ export type ApiClient = AxiosInstance
 
 export interface User {
   id: string // or number, depends on BE. Usually string for UUID
+  userId?: string // Some BE responses use this field
   username: string
   fullName: string
   email: string
   role: string
   userRole?: string // Some BE responses use this field
-  status: 'ACTIVE' | 'INACTIVE'
+  status: 'ACTIVE' | 'INACTIVE' | 'DEACTIVE' | string
+  userStatus?: string // Some BE responses use this field
   avatar?: string
   coverImage?: string
   specialization?: string
+  phone?: string
   createdAt?: string
 }
 
@@ -35,11 +38,18 @@ export interface CreateUserRequest {
   email: string
   password?: string // Optional because UI might generate or backend generic
   role: string
+  status?: string
+  coverImage?: string
 }
 
 export interface UpdateUserRequest {
+  username?: string
+  fullName?: string
   email?: string
   role?: string
   userRole?: string
   specialization?: string
+  phone?: string
+  coverImage?: string
+  userStatus?: string
 }
