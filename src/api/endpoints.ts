@@ -54,7 +54,8 @@ export const ENDPOINTS = {
     LIST: (projectId: string) => `/guidelines/project/${projectId}`,
     DETAIL: (id: string) => `/guidelines/${id}`,
     CREATE: (projectId: string) => `/guidelines/project/${projectId}`,
-    UPDATE: (id: string) => `/guidelines/${id}`
+    UPDATE: (id: string) => `/guidelines/${id}`,
+    DELETE: (id: string) => `/guidelines/${id}`
   },
 
   LABELS: {
