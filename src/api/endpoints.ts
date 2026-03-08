@@ -10,7 +10,6 @@ export const ENDPOINTS = {
     PROFILE: '/auth/profile'
   },
 
-
   USERS: {
     LIST: '/users',
     DETAIL: (id: string) => `/users/${id}`,
@@ -33,7 +32,7 @@ export const ENDPOINTS = {
     LIST: '/datasets',
     DETAIL: (id: string) => `/datasets/${id}`,
     CREATE: '/datasets',
-    BY_PROJECT: (projectId: string) => `/datasets/project/${projectId}`,
+    BY_PROJECT: (projectId: string) => `/datasets/project/${projectId}`
   },
 
   ASSIGNMENTS: {
@@ -43,19 +42,32 @@ export const ENDPOINTS = {
     BY_ANNOTATOR: (annotatorId: string) => `/assignments/annotators/${annotatorId}`,
     CREATE: '/assignments',
     DELETE: (id: string) => `/assignments/${id}/remove`,
-    CREATE_BY_PROJECT: (projectId: string) => `/assignments/projects/${projectId}`,
+    CREATE_BY_PROJECT: (projectId: string) => `/assignments/projects/${projectId}`
   },
 
   ANNOTATIONS: {
     LIST: '/annotations',
-    DETAIL: (id: string) => `/annotations/${id}`,
+    DETAIL: (id: string) => `/annotations/${id}`
   },
 
   GUIDELINES: {
     LIST: (projectId: string) => `/guidelines/project/${projectId}`,
     DETAIL: (id: string) => `/guidelines/${id}`,
     CREATE: (projectId: string) => `/guidelines/project/${projectId}`,
-    UPDATE: (id: string) => `/guidelines/${id}`,
+    UPDATE: (id: string) => `/guidelines/${id}`
   },
 
+<<<<<<< Updated upstream
+=======
+  LABELS: {
+    LIST: '/labels'
+  },
+
+  REVIEWER: {
+    STATS: '/reviewer/stats',
+    PROJECT_ITEMS: (projectId: string) => `/reviewer/projects/${projectId}/items`,
+    ITEM_DETAIL: (itemId: string) => `/reviewer/items/${itemId}`,
+    REVIEW_DECISION: (itemId: string) => `/reviewer/items/${itemId}/review`
+  }
+>>>>>>> Stashed changes
 } as const
