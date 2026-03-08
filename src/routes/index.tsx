@@ -1,6 +1,5 @@
-import { LoadingOverlay, PageErrorBoundary } from '@/shared/components/ui'
 import { UserRole } from '@/shared/constants/user_role'
-import { Suspense, lazy } from 'react'
+import { lazy } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { PATH_ANNOTATOR, PATH_MANAGER } from './paths'
 import { CreateProjectPage } from '@/pages/manager'
@@ -9,6 +8,7 @@ import ManagerLayout from '@/components/layout/ManagerLayout'
 import GuidelinesSetupPage from '@/pages/manager/GuidelinesSetupPage'
 import { GuestGuard, RoleGuard } from './guards'
 import { Header } from '@/components/common/Header'
+import { LazyPage } from '@/components/common/LazyPage'
 import { Layout } from 'antd'
 import ReviewerDashboardPage from '@/pages/reviewer/ReviewerDashboardPage'
 
@@ -39,17 +39,6 @@ const AnnotationPage = lazy(() => import('@/pages/annotator/AnnotationPage'))
 const ReviewerLayout = lazy(() => import('@/components/layout/ReviewerLayout'))
 const ReviewerWorkspacePage = lazy(() => import('@/pages/reviewer/ReviewerWorkspacePage'))
 
-// Wrapper component for lazy loaded pages
-function LazyPage({ children }: { children: React.ReactNode }) {
-  return (
-    <PageErrorBoundary>
-      <Suspense fallback={<LoadingOverlay message="Loading..." />}>
-        {children}
-      </Suspense>
-    </PageErrorBoundary>
-  )
-}
-
 export const router = createBrowserRouter([
   {
     path: '/',
@@ -57,7 +46,7 @@ export const router = createBrowserRouter([
       <LazyPage>
         <HomePage />
       </LazyPage>
-    ),
+    )
   },
   {
     path: '/login',
@@ -67,7 +56,7 @@ export const router = createBrowserRouter([
           <LoginPage />
         </GuestGuard>
       </LazyPage>
-    ),
+    )
   },
   {
     path: '/forgot-password',
@@ -77,13 +66,15 @@ export const router = createBrowserRouter([
           <ForgotPasswordPage />
         </GuestGuard>
       </LazyPage>
-    ),
+    )
   },
   {
     path: '/profile',
     element: (
       <LazyPage>
-        <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.MANAGER, UserRole.REVIEWER, UserRole.ANNOTATOR]}>
+        <RoleGuard
+          allowedRoles={[UserRole.ADMIN, UserRole.MANAGER, UserRole.REVIEWER, UserRole.ANNOTATOR]}
+        >
           <Layout className={`min-h-screen bg-[#0f0e17]`} style={{ background: '#0f0e17' }}>
             <Header />
             <Layout.Content className="w-full max-w-[1600px] mx-auto p-6 overflow-auto bg-transparent">
@@ -92,7 +83,7 @@ export const router = createBrowserRouter([
           </Layout>
         </RoleGuard>
       </LazyPage>
-    ),
+    )
   },
 
   // ─── Admin routes (admin only) ────────────────────────────────────────────
@@ -108,21 +99,21 @@ export const router = createBrowserRouter([
     children: [
       {
         path: 'dashboard',
-        element: <AdminDashboard />,
+        element: <AdminDashboard />
       },
       {
         path: 'users',
-        element: <UserManagement />,
+        element: <UserManagement />
       },
       {
         path: 'projects',
-        element: <ProjectManagement />,
+        element: <ProjectManagement />
       },
       {
         path: 'settings',
-        element: <SystemSettings />,
-      },
-    ],
+        element: <SystemSettings />
+      }
+    ]
   },
 
   // ─── Manager routes (manager only) ────────────────────────────────────────
@@ -138,37 +129,69 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <LazyPage><ManagerDashboardPage /></LazyPage>,
+        element: (
+          <LazyPage>
+            <ManagerDashboardPage />
+          </LazyPage>
+        )
       },
       {
         path: PATH_MANAGER.createProject,
-        element: <LazyPage><CreateProjectPage /></LazyPage>,
+        element: (
+          <LazyPage>
+            <CreateProjectPage />
+          </LazyPage>
+        )
       },
       {
         path: PATH_MANAGER.editProject,
-        element: <LazyPage><CreateProjectPage /></LazyPage>,
+        element: (
+          <LazyPage>
+            <CreateProjectPage />
+          </LazyPage>
+        )
       },
       {
         path: PATH_MANAGER.datasetSetup,
-        element: <LazyPage><DatasetSetupPage /></LazyPage>,
+        element: (
+          <LazyPage>
+            <DatasetSetupPage />
+          </LazyPage>
+        )
       },
       {
         path: PATH_MANAGER.guidelinesSetup,
-        element: <LazyPage><GuidelinesSetupPage /></LazyPage>,
+        element: (
+          <LazyPage>
+            <GuidelinesSetupPage />
+          </LazyPage>
+        )
       },
       {
         path: PATH_MANAGER.editGuidelines,
-        element: <LazyPage><GuidelinesSetupPage /></LazyPage>,
+        element: (
+          <LazyPage>
+            <GuidelinesSetupPage />
+          </LazyPage>
+        )
       },
       {
         path: PATH_MANAGER.datasetManagement,
-        element: <LazyPage><DatasetManagementPage /></LazyPage>,
+        element: (
+          <LazyPage>
+            <DatasetManagementPage />
+          </LazyPage>
+        )
       },
       {
         path: PATH_MANAGER.createDataset,
-        element: <LazyPage><CreateDatasetPage /></LazyPage>,
-      },
-    ],
+        element: (
+          <LazyPage>
+            <CreateDatasetPage />
+          </LazyPage>
+        )
+      }
+    ]
   },
 
   // ─── Annotator routes (annotator only) ────────────────────────────────────
@@ -184,33 +207,57 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Navigate to={PATH_ANNOTATOR.project} replace />,
+        element: <Navigate to={PATH_ANNOTATOR.project} replace />
       },
       {
         path: PATH_ANNOTATOR.project,
-        element: <LazyPage><AnnotatorDashboardPage /></LazyPage>,
+        element: (
+          <LazyPage>
+            <AnnotatorDashboardPage />
+          </LazyPage>
+        )
       },
       {
         path: `${PATH_ANNOTATOR.project}/:assignmentId`,
-        element: <LazyPage><AnnotatorDashboardPage /></LazyPage>,
+        element: (
+          <LazyPage>
+            <AnnotatorDashboardPage />
+          </LazyPage>
+        )
       },
       {
         path: PATH_ANNOTATOR.assignment,
-        element: <LazyPage><AnnotatorDashboardPage /></LazyPage>,
+        element: (
+          <LazyPage>
+            <AnnotatorDashboardPage />
+          </LazyPage>
+        )
       },
       {
         path: `${PATH_ANNOTATOR.assignment}/:assignmentId`,
-        element: <LazyPage><AnnotatorDashboardPage /></LazyPage>,
+        element: (
+          <LazyPage>
+            <AnnotatorDashboardPage />
+          </LazyPage>
+        )
       },
       {
         path: 'task/:taskId',
-        element: <LazyPage><TaskDetailPage /></LazyPage>,
+        element: (
+          <LazyPage>
+            <TaskDetailPage />
+          </LazyPage>
+        )
       },
       {
         path: 'task/:taskId/annotate',
-        element: <LazyPage><AnnotationPage /></LazyPage>,
-      },
-    ],
+        element: (
+          <LazyPage>
+            <AnnotationPage />
+          </LazyPage>
+        )
+      }
+    ]
   },
 
   // ─── Reviewer routes (reviewer only) ──────────────────────────────────────
@@ -226,13 +273,21 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <LazyPage><ReviewerDashboardPage /></LazyPage>,
+        element: (
+          <LazyPage>
+            <ReviewerDashboardPage />
+          </LazyPage>
+        )
       },
       {
         path: 'workspace',
-        element: <LazyPage><ReviewerWorkspacePage /></LazyPage>,
-      },
-    ],
+        element: (
+          <LazyPage>
+            <ReviewerWorkspacePage />
+          </LazyPage>
+        )
+      }
+    ]
   },
 
   // ─── 404 ──────────────────────────────────────────────────────────────────
@@ -242,6 +297,6 @@ export const router = createBrowserRouter([
       <LazyPage>
         <NotFoundPage />
       </LazyPage>
-    ),
-  },
+    )
+  }
 ])

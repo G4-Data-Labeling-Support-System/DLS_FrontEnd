@@ -1,0 +1,133 @@
+
+> eyewear-project@0.0.0 lint
+> eslint src --ext .ts,.tsx
+
+
+D:\Github\swp-Data-Labeling-Support-System\FrontEnd\src\api\LabelApi.ts
+  33:38  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  53:79  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Github\swp-Data-Labeling-Support-System\FrontEnd\src\components\common\ProfileModal.tsx
+  47:59  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  84:47  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  84:78  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Github\swp-Data-Labeling-Support-System\FrontEnd\src\features\admin\components\AddProjectModal.tsx
+  10:27  warning  Unexpected any. Specify a different type                                                                                                                       @typescript-eslint/no-explicit-any
+  17:41  warning  Unexpected any. Specify a different type                                                                                                                       @typescript-eslint/no-explicit-any
+  30:30  warning  Unexpected any. Specify a different type                                                                                                                       @typescript-eslint/no-explicit-any
+  95:29  error    Include a description after the "@ts-expect-error" directive to explain why the @ts-expect-error is necessary. The description must be 3 characters or longer  @typescript-eslint/ban-ts-comment
+
+D:\Github\swp-Data-Labeling-Support-System\FrontEnd\src\features\admin\components\AddUserModal.tsx
+  10:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  17:41  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  40:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Github\swp-Data-Labeling-Support-System\FrontEnd\src\features\admin\components\EditUserModal.tsx
+  11:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  12:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  33:41  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  53:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Github\swp-Data-Labeling-Support-System\FrontEnd\src\features\admin\hooks\useProjects.ts
+  20:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  34:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  48:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Github\swp-Data-Labeling-Support-System\FrontEnd\src\features\admin\hooks\useUsers.ts
+  22:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  38:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  53:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  67:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Github\swp-Data-Labeling-Support-System\FrontEnd\src\features\auth\services\auth.service.ts
+  54:44  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  61:54  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Github\swp-Data-Labeling-Support-System\FrontEnd\src\features\manager\components\TeamAssignmentContent.tsx
+  49:83  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Github\swp-Data-Labeling-Support-System\FrontEnd\src\features\manager\components\dashboard\EditProjects.tsx
+  52:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Github\swp-Data-Labeling-Support-System\FrontEnd\src\features\reviewer\components\workspace\RejectModal.tsx
+  51:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Github\swp-Data-Labeling-Support-System\FrontEnd\src\lib\axios.ts
+  30:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  33:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Github\swp-Data-Labeling-Support-System\FrontEnd\src\pages\admin\AdminDashboardPage.tsx
+  9:69  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Github\swp-Data-Labeling-Support-System\FrontEnd\src\pages\admin\ProjectManagementPage.tsx
+   10:81  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  148:57  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Github\swp-Data-Labeling-Support-System\FrontEnd\src\pages\admin\UserManagementPage.tsx
+   13:74  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   14:80  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   21:69  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   24:47  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   27:44  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   32:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  238:51  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Github\swp-Data-Labeling-Support-System\FrontEnd\src\pages\annotator\AnnotationPage.tsx
+   53:41  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   66:54  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   67:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  226:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  301:74  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  324:81  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Github\swp-Data-Labeling-Support-System\FrontEnd\src\pages\annotator\AnnotatorDashboardPage.tsx
+   64:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   65:56  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   66:48  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  103:56  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  147:68  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  162:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  188:72  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  203:65  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  208:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  215:53  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Github\swp-Data-Labeling-Support-System\FrontEnd\src\pages\annotator\components\AnnotationProjectDetail.tsx
+  1:72  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Github\swp-Data-Labeling-Support-System\FrontEnd\src\pages\annotator\components\AssignmentHeader.tsx
+  3:72  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Github\swp-Data-Labeling-Support-System\FrontEnd\src\pages\annotator\components\TaskCard.tsx
+  4:52  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Github\swp-Data-Labeling-Support-System\FrontEnd\src\pages\annotator\components\TaskSection.tsx
+   4:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   4:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   5:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  12:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Github\swp-Data-Labeling-Support-System\FrontEnd\src\pages\auth\LoginPage.tsx
+  15:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  38:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Github\swp-Data-Labeling-Support-System\FrontEnd\src\pages\common\ProfilePage.tsx
+  19:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  24:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  34:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  38:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Github\swp-Data-Labeling-Support-System\FrontEnd\src\pages\manager\GuidelinesSetupPage.tsx
+  43:56  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Github\swp-Data-Labeling-Support-System\FrontEnd\src\pages\reviewer\ReviewerWorkspacePage.tsx
+   76:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  141:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  296:53  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Github\swp-Data-Labeling-Support-System\FrontEnd\src\styles\theme.ts
+  158:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+Γ£û 74 problems (1 error, 73 warnings)
+

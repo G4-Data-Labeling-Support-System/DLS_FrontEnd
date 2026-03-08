@@ -11,7 +11,7 @@ export const ManagerFeatures = {
   description: 'EPIC 4: Manager features - Project, Dataset, Guideline, Task'
 }
 
-export type ProjectDataType = 'image' | 'video' | 'text';
+export type ProjectDataType = 'image' | 'video' | 'text'
 
-export * from './components/CreateProjectForm';
-export * from './types';
+export * from './components/CreateProjectForm'
+export * from './types'
