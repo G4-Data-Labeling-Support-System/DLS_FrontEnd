@@ -42,26 +42,16 @@ export const CreateDatasetForm: React.FC<CreateDatasetFormProps> = ({
   }, [])
 
   const handleUploadChange = (info: UploadChangeParam<UploadFile & { preview?: string }>) => {
-    const { status } = info.file
     let newFileList = [...info.fileList]
 
     newFileList = newFileList.map((file) => {
-      if (file.response) {
-        file.url = file.response.url
-      }
-      if (!file.url && !file.thumbUrl && file.originFileObj) {
+      if (!file.preview && file.originFileObj) {
         file.preview = URL.createObjectURL(file.originFileObj as Blob)
       }
       return file
     })
 
     setFileList(newFileList)
-
-    if (status === 'done') {
-      message.success(`${info.file.name} uploaded successfully.`)
-    } else if (status === 'error') {
-      message.success(`${info.file.name} uploaded (Demo mode).`)
-    }
   }
 
   const handleRemoveFile = (uid: string) => {
@@ -86,7 +76,7 @@ export const CreateDatasetForm: React.FC<CreateDatasetFormProps> = ({
       }
     }
     fetchProjects()
-  }, [])
+  }, [message])
 
   const handleCancel = () => {
     if (onBack) {
@@ -103,13 +93,16 @@ export const CreateDatasetForm: React.FC<CreateDatasetFormProps> = ({
   }) => {
     setLoading(true)
     try {
-      const payload = {
+      const files = fileList
+        .map((f) => f.originFileObj as File | undefined)
+        .filter((f): f is File => !!f)
+
+      const response = await datasetApi.createDataset({
+        projectId: values.projectId,
         datasetName: values.datasetName,
         description: values.description,
-        projectId: values.projectId
-      }
-
-      const response = await datasetApi.createDataset(payload)
+        files: files.length > 0 ? files : undefined
+      })
       message.success('Dataset created successfully!')
 
       if (onSuccess) {
@@ -208,7 +201,7 @@ export const CreateDatasetForm: React.FC<CreateDatasetFormProps> = ({
             <Dragger
               multiple
               name="file"
-              action="https://run.mocky.io/v3/435e224c-44fb-4773-9faf-380c5e6a2188"
+              beforeUpload={() => false}
               fileList={fileList}
               onChange={handleUploadChange}
               showUploadList={false}

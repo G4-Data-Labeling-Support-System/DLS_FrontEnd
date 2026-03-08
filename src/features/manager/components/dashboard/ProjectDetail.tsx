@@ -11,17 +11,14 @@ import {
     App,
     Form,
     Input,
-    Select,
-    DatePicker,
     Dropdown
 } from 'antd'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
 import { EditOutlined, UserOutlined, MoreOutlined, DeleteOutlined } from '@ant-design/icons'
-import datasetApi from '@/api/DatasetApi'
-import { userApi } from '@/api/userApi'
 import assignmentApi from '@/api/AssignmentApi'
 import guidelineApi from '@/api/GuidelineApi'
 import { AssignmentDetail } from './AssignmentDetail'
+import { CreateAssignmentModal } from './CreateAssignmentModal'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
     useProjectById,
@@ -53,13 +50,8 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
 
     const loading = projectLoading || assignmentsLoading || guidelinesLoading
 
-    const [isFirstAssignmentModalVisible, setIsFirstAssignmentModalVisible] = useState(false)
-    const [firstAssignmentStep, setFirstAssignmentStep] = useState<'prompt' | 'form'>('prompt')
+    const [isCreateAssignmentModalVisible, setIsCreateAssignmentModalVisible] = useState(false)
     const hasShownFirstAssignmentModal = useRef(false)
-    const [users, setUsers] = useState<Record<string, unknown>[]>([])
-    const [datasets, setDatasets] = useState<Record<string, unknown>[]>([])
-    const [isSubmitting, setIsSubmitting] = useState(false)
-    const [form] = Form.useForm()
     const [guidelineForm] = Form.useForm()
     const [assignmentEditForm] = Form.useForm()
     const navigate = useNavigate()
@@ -95,63 +87,9 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
     useEffect(() => {
         if (!assignmentsLoading && assignments.length === 0 && !hasShownFirstAssignmentModal.current) {
             hasShownFirstAssignmentModal.current = true
-            setIsFirstAssignmentModalVisible(true)
-            setFirstAssignmentStep('prompt')
+            queueMicrotask(() => setIsCreateAssignmentModalVisible(true))
         }
     }, [assignments, assignmentsLoading])
-
-    const handleFirstAssignmentOk = async () => {
-        setFirstAssignmentStep('form')
-        try {
-            const userRes = await userApi.getUsers()
-            const userData = userRes as unknown as { data?: Record<string, unknown>[] }
-            setUsers(
-                (Array.isArray(userRes) ? userRes : userData?.data || []) as Record<string, unknown>[]
-            )
-
-            const datasetRes = await datasetApi.getDatasetsByProjectId(projectId)
-            const datasetsData = datasetRes.data?.data || datasetRes.data
-            setDatasets(Array.isArray(datasetsData) ? datasetsData : [])
-        } catch (error) {
-            console.error(error)
-            message.error('Failed to load users or datasets.')
-        }
-    }
-
-    const handleFirstAssignmentSubmit = async () => {
-        try {
-            const values = await form.validateFields()
-            setIsSubmitting(true)
-
-            const payload = {
-                assignmentName: values.assignmentName,
-                assignedTo: values.assignedTo,
-                assignedBy: values.assignedBy,
-                reviewerId: values.reviewerId,
-                description: values.description,
-                dueDate: values.dueDate ? values.dueDate.toISOString() : undefined,
-                datasetId: values.datasetId,
-                projectId: projectId
-            }
-
-            await assignmentApi.createAssignmentForProject(projectId, payload)
-            message.success('First assignment created successfully!')
-            setIsFirstAssignmentModalVisible(false)
-            form.resetFields()
-
-            // Refresh assignments list via React Query cache invalidation
-            invalidateProjectDetail(projectId)
-        } catch (error) {
-            console.error('Failed to create first assignment', error)
-            if (error && typeof error === 'object' && 'errorFields' in error) {
-                // validation error, do nothing
-            } else {
-                message.error('Failed to create assignment')
-            }
-        } finally {
-            setIsSubmitting(false)
-        }
-    }
 
     const getStatusColor = (status?: string) => {
         switch (status?.toUpperCase()) {
@@ -480,12 +418,22 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
                             <span className="material-symbols-outlined text-blue-400">assignment</span>
                             Project Assignments
                         </span>
-                        <Tag
-                            color="#3b82f6"
-                            className="border-0 bg-blue-600/20 text-blue-300 font-bold px-3 rounded-full"
-                        >
-                            {assignments.length} Assignments
-                        </Tag>
+                        <div className="flex items-center gap-2">
+                            <Tag
+                                color="#3b82f6"
+                                className="border-0 bg-blue-600/20 text-blue-300 font-bold px-3 rounded-full"
+                            >
+                                {assignments.length} Assignments
+                            </Tag>
+                            <Button
+                                type="primary"
+                                size="small"
+                                className="bg-violet-600 hover:bg-violet-500 border-none"
+                                onClick={() => setIsCreateAssignmentModalVisible(true)}
+                            >
+                                + New
+                            </Button>
+                        </div>
                     </div>
 
                     {assignments.length === 0 ? (
@@ -570,195 +518,15 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
                 </Card>
             </div>
 
-            <GlassModal
-                open={isFirstAssignmentModalVisible}
-                onCancel={() => setIsFirstAssignmentModalVisible(false)}
-                destroyOnHidden
-                width={firstAssignmentStep === 'prompt' ? 480 : 640}
-            >
-                {firstAssignmentStep === 'prompt' ? (
-                    <div className="px-8 pt-10 pb-8 text-center">
-                        <div className="flex justify-center mb-4">
-                            <span className="material-symbols-outlined text-violet-400 text-5xl">assignment</span>
-                        </div>
-                        <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">No Assignments Found</h2>
-                        <p className="text-white/50 text-sm mb-8">
-                            This project currently has no assignments. Would you like to create the first assignment?
-                        </p>
-                        <div className="flex justify-center gap-3">
-                            <Button
-                                onClick={() => setIsFirstAssignmentModalVisible(false)}
-                                className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="primary"
-                                onClick={handleFirstAssignmentOk}
-                                className="bg-violet-600 hover:bg-violet-500 border-none"
-                            >
-                                Create Assignment
-                            </Button>
-                        </div>
-                    </div>
-                ) : (
-                    <div className="px-8 pt-10 pb-8">
-                        <div className="text-center border-b border-white/5 pb-6 mb-6">
-                            <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">Create First Assignment</h2>
-                            <p className="text-white/50 text-sm">Set up the first assignment for this project.</p>
-                        </div>
-                        <Form form={form} layout="vertical">
-                            <Form.Item
-                                label="Assignment Name"
-                                name="assignmentName"
-                                rules={[{ required: true, message: 'Please enter assignment name' }]}
-                            >
-                                <Input placeholder="Enter assignment name" />
-                            </Form.Item>
-                            <div className="grid grid-cols-3 gap-4">
-                            <Form.Item
-                                label="Assign To"
-                                name="assignedTo"
-                                rules={[{ required: true, message: 'Please select annotator' }]}
-                            >
-                                <Select placeholder="Select annotator">
-                                    {users
-                                        .filter((u) => {
-                                            const role = String(
-                                                (u.role as string) || (u.userRole as string) || ''
-                                            ).toUpperCase()
-                                            return role.includes('ANNOTATOR') || role === 'ANNOTATOR'
-                                        })
-                                        .map((u: Record<string, unknown>) => {
-                                            const userId = String(u.id || u.userId || u.account_id || u.username || '')
-                                            const name =
-                                                (u.fullName as string) || (u.username as string) || (u.name as string)
-                                            const avatarSrc =
-                                                (u.avatar as string) ||
-                                                (u.coverImage as string) ||
-                                                `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`
-                                            return (
-                                                <Select.Option key={userId} value={userId}>
-                                                    <div className="flex items-center gap-2">
-                                                        <Avatar src={avatarSrc} size="small" />
-                                                        <span>{name}</span>
-                                                    </div>
-                                                </Select.Option>
-                                            )
-                                        })}
-                                </Select>
-                            </Form.Item>
-                            <Form.Item
-                                label="Reviewer"
-                                name="reviewerId"
-                                rules={[{ required: true, message: 'Please select reviewer' }]}
-                            >
-                                <Select placeholder="Select reviewer">
-                                    {users
-                                        .filter((u) => {
-                                            const role = String(
-                                                (u.role as string) || (u.userRole as string) || ''
-                                            ).toUpperCase()
-                                            return role.includes('REVIEWER') || role === 'REVIEWER'
-                                        })
-                                        .map((u: Record<string, unknown>) => {
-                                            const userId = String(u.id || u.userId || u.account_id || u.username || '')
-                                            const name =
-                                                (u.fullName as string) || (u.username as string) || (u.name as string)
-                                            const avatarSrc =
-                                                (u.avatar as string) ||
-                                                (u.coverImage as string) ||
-                                                `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`
-                                            return (
-                                                <Select.Option key={userId} value={userId}>
-                                                    <div className="flex items-center gap-2">
-                                                        <Avatar src={avatarSrc} size="small" />
-                                                        <span>{name}</span>
-                                                    </div>
-                                                </Select.Option>
-                                            )
-                                        })}
-                                </Select>
-                            </Form.Item>
-                            <Form.Item
-                                label="Assigned By"
-                                name="assignedBy"
-                                rules={[{ required: true, message: 'Please select manager' }]}
-                            >
-                                <Select placeholder="Select manager">
-                                    {users
-                                        .filter((u) => {
-                                            const role = String(
-                                                (u.role as string) || (u.userRole as string) || ''
-                                            ).toUpperCase()
-                                            return role.includes('MANAGER') || role === 'MANAGER'
-                                        })
-                                        .map((u: Record<string, unknown>) => {
-                                            const userId = String(u.id || u.userId || u.account_id || u.username || '')
-                                            const name =
-                                                (u.fullName as string) || (u.username as string) || (u.name as string)
-                                            const avatarSrc =
-                                                (u.avatar as string) ||
-                                                (u.coverImage as string) ||
-                                                `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`
-                                            return (
-                                                <Select.Option key={userId} value={userId}>
-                                                    <div className="flex items-center gap-2">
-                                                        <Avatar src={avatarSrc} size="small" />
-                                                        <span>{name}</span>
-                                                    </div>
-                                                </Select.Option>
-                                            )
-                                        })}
-                                </Select>
-                            </Form.Item>
-                        </div>
-                        <Form.Item
-                            label="Dataset"
-                            name="datasetId"
-                            rules={[{ required: true, message: 'Please select a dataset' }]}
-                        >
-                            <Select placeholder="Select dataset">
-                                {datasets.map((d: Record<string, unknown>) => (
-                                    <Select.Option
-                                        key={(d.id as string) || (d.datasetId as string)}
-                                        value={(d.id as string) || (d.datasetId as string)}
-                                    >
-                                        {(d.datasetName as string) || (d.name as string)}
-                                    </Select.Option>
-                                ))}
-                            </Select>
-                        </Form.Item>
-                        <Form.Item
-                            label="Due Date"
-                            name="dueDate"
-                            rules={[{ required: true, message: 'Please select due date' }]}
-                        >
-                            <DatePicker className="w-full" style={{ width: '100%' }} />
-                        </Form.Item>
-                            <Form.Item label="Description" name="description">
-                                <Input.TextArea placeholder="Enter description" rows={4} />
-                            </Form.Item>
-                            <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
-                                <Button
-                                    onClick={() => setIsFirstAssignmentModalVisible(false)}
-                                    className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
-                                >
-                                    Back
-                                </Button>
-                                <Button
-                                    type="primary"
-                                    loading={isSubmitting}
-                                    onClick={handleFirstAssignmentSubmit}
-                                    className="bg-violet-600 hover:bg-violet-500 border-none"
-                                >
-                                    Create Assignment
-                                </Button>
-                            </div>
-                        </Form>
-                    </div>
-                )}
-            </GlassModal>
+            <CreateAssignmentModal
+                open={isCreateAssignmentModalVisible}
+                projectId={projectId}
+                onCancel={() => setIsCreateAssignmentModalVisible(false)}
+                onSuccess={() => {
+                    setIsCreateAssignmentModalVisible(false)
+                    invalidateProjectDetail(projectId)
+                }}
+            />
 
             {/* Guideline Edit Modal */}
             <GlassModal
