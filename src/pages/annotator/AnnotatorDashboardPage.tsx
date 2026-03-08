@@ -22,6 +22,7 @@ interface AssignmentTask {
   annotationStatus: string
   batchLabel: string
   timeTaken: string
+  [key: string]: string | number | boolean | undefined | object | null
 }
 
 interface Assignment {
@@ -252,7 +253,7 @@ export default function AnnotatorDashboardPage() {
                   hasFetchedProject = true
                 }
               }
-            } catch (err: any) {
+            } catch (err: unknown) {
               console.warn('Could not fetch assignments or user has no assignments', err)
             }
 
@@ -297,19 +298,19 @@ export default function AnnotatorDashboardPage() {
               // --- Inject Mock Data as Fallback when empty results ---
               setAssignment(MOCK_DATA.assignment)
               setProjectDetail(MOCK_DATA.project)
-              setGuideline(MOCK_DATA.guideline as any)
+              setGuideline(MOCK_DATA.guideline as Guideline)
               // -------------------------------------------------------
             }
           }
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('API Error, falling back to mock data:', err)
         setError(null) // Clear error to show mock data instead
 
         // --- Inject Mock Data as Fallback ---
         setAssignment(MOCK_DATA.assignment)
         setProjectDetail(MOCK_DATA.project)
-        setGuideline(MOCK_DATA.guideline as any)
+        setGuideline(MOCK_DATA.guideline as Guideline)
         // ------------------------------------
       } finally {
         setLoading(false)
