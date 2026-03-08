@@ -1,6 +1,24 @@
 import { useMemo } from 'react'
 
-export default function AssignmentHeader({ assignment }: { assignment: any }) {
+interface Assignment {
+  id?: string
+  assignmentId?: string
+  name?: string
+  assignmentName?: string
+  title?: string
+  status?: string
+  completedTasks?: number
+  totalTasks?: number
+  dataset?: { totalItems?: number }
+  dueDate?: string
+  deadline?: string
+  updatedAt?: string
+  project?: any // Keeping as any for now to avoid deep nesting issues but usually should be typed
+  description?: string
+  descriptionAssignment?: string
+}
+
+export default function AssignmentHeader({ assignment }: { assignment: Assignment }) {
   const completed = assignment.completedTasks ?? 0
   const total = assignment.totalTasks ?? assignment.dataset?.totalItems ?? 1
   const progress = Math.round((completed / total) * 100)

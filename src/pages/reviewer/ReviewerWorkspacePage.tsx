@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { App, Spin } from 'antd'
+import type { AxiosError } from 'axios'
 
 import {
   DatasetItemList,
@@ -81,9 +82,10 @@ const ReviewerWorkspacePage: React.FC = () => {
         const data = await reviewerApi.getItemDetail(nextId)
         detailCache.set(nextId, data)
         setPrefetchedIds((prev) => new Set(prev).add(nextId))
-      } catch (error: any) {
+      } catch (error) {
         // Silent fail for prefetch
-        if (error.name !== 'AbortError') {
+        const axiosError = error as AxiosError
+        if (axiosError.name !== 'AbortError') {
           // console.debug('Prefetch failed for next item:', error);
         }
       }
@@ -148,8 +150,9 @@ const ReviewerWorkspacePage: React.FC = () => {
 
         // ⚡ Prefetch next item in background
         prefetchNextItem(selectedId)
-      } catch (error: any) {
-        if (error.name !== 'AbortError') {
+      } catch (error) {
+        const axiosError = error as AxiosError
+        if (axiosError.name !== 'AbortError') {
           message.error('Failed to load item details')
           // console.error('Error fetching detail:', error);
         }
@@ -312,7 +315,7 @@ const ReviewerWorkspacePage: React.FC = () => {
             )}
             <ReviewDetailPanel
               annotations={itemDetail?.annotations || []}
-              history={(itemDetail as any)?.history || []}
+              history={(itemDetail as ReviewerItemDetail & { history?: unknown[] })?.history || []}
               annotator={itemDetail?.annotator}
               onApprove={() => setIsApproveModalOpen(true)}
               onReject={() => setIsRejectModalOpen(true)}

@@ -6,6 +6,7 @@ import { ProjectSteps } from '@/features/manager/components/common/ProjectSteps'
 import guidelineApi from '@/api/GuidelineApi'
 import projectApi from '@/api/ProjectApi'
 import { useAuthStore } from '@/store'
+import type { User } from '@/shared/types/api.types'
 
 const GuidelinesSetupPage: React.FC = () => {
   const navigate = useNavigate()
@@ -38,7 +39,8 @@ const GuidelinesSetupPage: React.FC = () => {
         }
       }
       // Step 2: Create guidelines
-      const currentUserId = user?.id || (user as any)?.userId || ''
+      const typedUser = user as User | null
+      const currentUserId = typedUser?.id || typedUser?.userId || ''
 
       const guidelinePayload = {
         title: values.title,

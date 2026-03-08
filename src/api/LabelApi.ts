@@ -30,11 +30,14 @@ export const labelApi = {
           return response.data
         }
       } catch (error: unknown) {
-        const err = error as any
-        console.warn(`Failed attempt for ${url}:`, err.response?.status || err.message)
-        // Continue to next URL if it's 403 or 404
-        if (err.response?.status === 403 || err.response?.status === 404) {
-          continue
+        if (axios.isAxiosError(error)) {
+          console.warn(`Failed attempt for ${url}:`, error.response?.status || error.message)
+          // Continue to next URL if it's 403 or 404
+          if (error.response?.status === 403 || error.response?.status === 404) {
+            continue
+          }
+        } else {
+          console.warn(`Unexpected error for ${url}:`, error)
         }
         break // Stop on major errors like 500
       }
@@ -51,7 +54,7 @@ export const labelApi = {
       const assignments = response.data?.data || response.data || []
       if (Array.isArray(assignments)) {
         const totalCompleted = assignments.reduce(
-          (acc: number, curr: any) => acc + (curr.completedItems || 0),
+          (acc: number, curr: { completedItems?: number }) => acc + (curr.completedItems || 0),
           0
         )
         // console.log("Aggregated label count from assignments:", totalCompleted);
