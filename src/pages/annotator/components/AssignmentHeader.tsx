@@ -13,7 +13,12 @@ interface Assignment {
   dueDate?: string
   deadline?: string
   updatedAt?: string
-  project?: any // Keeping as any for now to avoid deep nesting issues but usually should be typed
+  project?: {
+    id?: string
+    projectId?: string
+    name?: string
+    projectName?: string
+  }
   description?: string
   descriptionAssignment?: string
 }
@@ -35,11 +40,6 @@ export default function AssignmentHeader({ assignment }: { assignment: Assignmen
   const title =
     assignment.assignmentName || assignment.name || assignment.title || 'Untitled Assignment'
   const id = assignment.assignmentId || assignment.id || 'N/A'
-  const projectName =
-    assignment.project?.projectName ||
-    assignment.project?.name ||
-    assignment.project ||
-    'Unknown Project'
   const description =
     assignment.descriptionAssignment || assignment.description || 'No description provided.'
 
@@ -72,7 +72,9 @@ export default function AssignmentHeader({ assignment }: { assignment: Assignmen
               <span className="material-symbols-outlined text-[14px] text-violet-400">
                 folder_special
               </span>
-              {projectName}
+              {assignment.project?.projectName ||
+                assignment.project?.name ||
+                (typeof assignment.project === 'string' ? assignment.project : 'Unknown Project')}
             </div>
             <div
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border text-xs font-bold ${daysLeft <= 2 ? 'border-red-500/30 text-red-400' : daysLeft <= 5 ? 'border-amber-500/30 text-amber-400' : 'border-emerald-500/30 text-emerald-400'}`}

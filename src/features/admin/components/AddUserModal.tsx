@@ -46,7 +46,7 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModa
     }
 
     // [Logic: Gọi API] Thực hiện tạo user
-    createUserMutation.mutate(payload as any, {
+    createUserMutation.mutate(payload as unknown as User, {
       onSuccess: (data) => {
         // [Logic: Thành công] Reset form và gọi callback thông báo ra ngoài
         form.resetFields()
