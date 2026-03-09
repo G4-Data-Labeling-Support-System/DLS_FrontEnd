@@ -2,26 +2,8 @@ import React from 'react'
 import { useParams } from 'react-router-dom'
 import { Card, Button, Tag } from 'antd'
 
-// TODO: Replace with real API call
-const mockDetail = {
-  id: '67021a98-a0c5-4e67-9a8f-d9125a1f1***',
-  name: 'Cityscape_Main_North',
-  totalItems: 42800,
-  labeled: 38200,
-  storage: 'AWS S3',
-  version: 2,
-  createdAt: 'Dec 14, 2023 - 14:32:05 UTC',
-  projectLink: '#',
-  lastSync: '14 minutes ago',
-  tags: ['object', 'layout', 'daytime'],
-  items: [
-    { name: 'north_main_img_0042.jpg', status: 'none', url: '', labeled: false },
-    { name: 'north_main_img_0043.jpg', status: 'labeled', url: '', labeled: true },
-    { name: 'north_main_img_0044.jpg', status: 'labeled', url: '', labeled: true },
-    { name: 'north_main_img_0045.jpg', status: 'pending', url: '', labeled: false },
-    { name: 'north_main_img_0046.jpg', status: 'labeled', url: '', labeled: true }
-  ]
-}
+import { MOCK_DATASET_DETAIL as mockDetail } from '@/shared/constants/mockData'
+
 
 const DatasetDetailPage: React.FC = () => {
   const { id } = useParams()

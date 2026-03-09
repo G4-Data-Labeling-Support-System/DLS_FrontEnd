@@ -1,42 +1,8 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import getTaskStatusStyle from './components/StatusStyle'
 
-const MOCK_TASK_DETAIL = {
-  id: 'TASK-UUID-001',
-  assignmentId: 'ASGN-UUID-123',
-  taskType: 'classification',
-  completedCount: 5,
-  flagForReview: false,
-  reviewStatus: 'not_reviewed',
-  status: 'completed',
-  createdAt: '2024-03-07T10:00:00Z',
-  dataItems: [
-    {
-      id: 'item-1',
-      filename: 'medical_scan_01.png',
-      fileFormat: 'PNG',
-      dataType: 'Image',
-      uploadedAt: '2024-03-07T09:00:00Z',
-      previewUrl: 'https://picsum.photos/seed/scan1/100/100'
-    },
-    {
-      id: 'item-2',
-      filename: 'medical_scan_02.png',
-      fileFormat: 'PNG',
-      dataType: 'Image',
-      uploadedAt: '2024-03-07T09:05:00Z',
-      previewUrl: 'https://picsum.photos/seed/scan2/100/100'
-    },
-    {
-      id: 'item-3',
-      filename: 'medical_scan_03.png',
-      fileFormat: 'PNG',
-      dataType: 'Image',
-      uploadedAt: '2024-03-07T09:10:00Z',
-      previewUrl: 'https://picsum.photos/seed/scan3/100/100'
-    }
-  ]
-}
+import { MOCK_TASK_DETAIL } from '@/shared/constants/mockData'
+
 
 export default function TaskDetailPage() {
   const { taskId } = useParams<{ taskId: string }>()
