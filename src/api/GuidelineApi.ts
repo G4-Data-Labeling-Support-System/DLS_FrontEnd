@@ -22,15 +22,6 @@ const guidelineApi = {
       throw error
     }
   },
-  getProjectById(id: string) {
-    try {
-      const url = ENDPOINTS.PROJECTS.DETAIL(id)
-      return axiosClient.get(url)
-    } catch (error) {
-      console.error('Failed to fetch project by id', error)
-      throw error
-    }
-  },
   createGuideline(projectId: string, guidelineData?: GetGuidelinesParams) {
     try {
       const url = ENDPOINTS.GUIDELINES.CREATE(projectId)
@@ -44,12 +35,21 @@ const guidelineApi = {
       throw error
     }
   },
-  updateGuideline(id: string, guidelineData?: GetGuidelinesParams) {
+  updateGuideline(guidelineId: string, guidelineData?: GetGuidelinesParams) {
     try {
-      const url = ENDPOINTS.GUIDELINES.UPDATE(id)
+      const url = ENDPOINTS.GUIDELINES.UPDATE(guidelineId)
       return axiosClient.put(url, guidelineData)
     } catch (error) {
-      console.error('Failed to update project', error)
+      console.error('Failed to update guideline', error)
+      throw error
+    }
+  },
+  deleteGuideline(guidelineId: string) {
+    try {
+      const url = ENDPOINTS.GUIDELINES.DELETE(guidelineId)
+      return axiosClient.patch(url)
+    } catch (error) {
+      console.error('Failed to delete guideline', error)
       throw error
     }
   }

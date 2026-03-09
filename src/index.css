@@ -24,6 +24,15 @@ input:-webkit-autofill:active {
   --font-space: 'Space Grotesk', sans-serif;
 }
 
+/* Hide all scrollbars globally */
+* {
+  scrollbar-width: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
 @layer base {
   body {
     @apply bg-[#0f0e17] text-gray-100 font-[family-name:--font-inter] antialiased overflow-x-hidden;

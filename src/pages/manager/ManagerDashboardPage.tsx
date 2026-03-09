@@ -1,8 +1,10 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { AllProjects } from '@/features/manager/components/dashboard/AllProjects'
 import { AllAssignments } from '@/features/manager/components/dashboard/AllAssignments'
 import { QuickActions } from '@/features/manager/components/dashboard/QuickActions'
+import { AssignmentQuickActions } from '@/features/manager/components/dashboard/AssignmentQuickActions'
+import { CreateAssignmentModal } from '@/features/manager/components/dashboard/CreateAssignmentModal'
 import {
   DashboardTabs,
   type DashboardTabType
@@ -10,6 +12,7 @@ import {
 
 const ManagerDashboardPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
+  const [createAssignmentOpen, setCreateAssignmentOpen] = useState(false)
 
   const tabParam = searchParams.get('tab')
   const activeTab: DashboardTabType =
@@ -61,10 +64,30 @@ const ManagerDashboardPage: React.FC = () => {
       )}
 
       {activeTab === 'assignment' && (
-        <div className="w-full relative mt-6">
-          <AllAssignments
-            selectedAssignmentId={selectedAssignmentId}
-            onAssignmentSelect={handleAssignmentSelect}
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start relative">
+          {/* All Assignments - Main Content (3 cols) */}
+          <div className="xl:col-span-3">
+            <AllAssignments
+              selectedAssignmentId={selectedAssignmentId}
+              onAssignmentSelect={handleAssignmentSelect}
+            />
+          </div>
+
+          {/* Quick Actions - Sticky Sidebar (1 col) */}
+          <div className="xl:col-span-1 xl:sticky xl:top-6 space-y-6">
+            <AssignmentQuickActions
+              onCreateAssignment={() => setCreateAssignmentOpen(true)}
+            />
+          </div>
+
+          <CreateAssignmentModal
+            open={createAssignmentOpen}
+            projectId=""
+            onCancel={() => setCreateAssignmentOpen(false)}
+            onSuccess={() => {
+              setCreateAssignmentOpen(false)
+              setSearchParams({ tab: 'assignment' })
+            }}
           />
         </div>
       )}

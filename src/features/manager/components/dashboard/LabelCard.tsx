@@ -1,20 +1,20 @@
 import React from 'react'
 import { Card, Button, Typography, Dropdown, Tag, type MenuProps } from 'antd'
 import { MoreOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons'
-import type { GetProjectsParams } from '@/api/ProjectApi' // Import type từ API của bạn
+import type { GetLabelsParams } from '@/api/LabelApi'
 
 const { Title } = Typography
 
-// Mở rộng thêm onEdit và onDelete
-interface ProjectCardProps extends GetProjectsParams {
+interface LabelCardProps extends GetLabelsParams {
   onEdit?: () => void
   onDelete?: () => void
   onClick?: () => void
 }
 
-export const ProjectCard: React.FC<ProjectCardProps> = ({
-  projectName,
-  projectStatus,
+export const LabelCard: React.FC<LabelCardProps> = ({
+  labelName,
+  labelStatus,
+  description,
   createdAt,
   updatedAt,
   onEdit,
@@ -23,39 +23,31 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
 }) => {
   const items: MenuProps['items'] = [
     { key: '1', label: 'View Details', icon: <EyeOutlined />, onClick: onClick },
-    { key: '2', label: 'Edit Project', icon: <EditOutlined />, onClick: onEdit },
+    { key: '2', label: 'Edit Label', icon: <EditOutlined />, onClick: onEdit },
     { type: 'divider' },
     {
       key: '4',
-      label: <span className="text-red-500">Deactivate Project</span>,
+      label: <span className="text-red-500">Delete Label</span>,
       icon: <DeleteOutlined className="text-red-500" />,
       onClick: onDelete
     }
   ]
 
-  // Hàm chọn màu cho Tag trạng thái
   const getStatusColor = (status?: string) => {
     switch (status?.toUpperCase()) {
       case 'ACTIVE':
         return 'processing'
-      case 'INPROCESS':
-        return 'gold'
       case 'COMPLETED':
         return 'success'
-      case 'PAUSED':
-        return 'warning'
-      case 'ARCHIVE':
-        return 'error'
       case 'INACTIVE':
         return 'error'
-      case 'NOT_STARTED':
+      case 'DRAFT':
         return 'default'
       default:
         return 'default'
     }
   }
 
-  // Format ngày tháng hiển thị
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A'
     return new Date(dateString).toLocaleDateString('vi-VN')
@@ -71,9 +63,9 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
           <Title
             level={5}
             className="!text-white !m-0 !text-sm leading-tight line-clamp-2"
-            title={projectName}
+            title={labelName}
           >
-            {projectName || 'Unnamed Project'}
+            {labelName || 'Unnamed Label'}
           </Title>
         </div>
         <div onClick={(e) => e.stopPropagation()}>
@@ -87,11 +79,17 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
         </div>
       </div>
 
-      <div className="mb-4">
-        <Tag color={getStatusColor(projectStatus)} className="m-0 font-medium">
-          {projectStatus || 'UNKNOWN'}
-        </Tag>
-      </div>
+      {labelStatus && (
+        <div className="mb-2">
+          <Tag color={getStatusColor(labelStatus)} className="m-0 font-medium">
+            {labelStatus}
+          </Tag>
+        </div>
+      )}
+
+      {description && (
+        <p className="text-gray-400 text-xs line-clamp-2 mb-4">{description}</p>
+      )}
 
       <div className="grid grid-cols-2 gap-2 bg-[#231e31] p-3 rounded-lg mt-auto">
         <div>
