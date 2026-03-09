@@ -165,7 +165,7 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
           className="my-10 p-10 bg-[#1A1625]/40 rounded-xl border border-dashed border-gray-700"
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 items-stretch">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 items-stretch">
           {projects
             .filter(
               (p) =>

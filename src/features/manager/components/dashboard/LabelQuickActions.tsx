@@ -29,7 +29,7 @@ export const LabelQuickActions: React.FC<LabelQuickActionsProps> = ({ onCreateLa
           onClick={() => onCreateLabel ? onCreateLabel() : navigate(`${PATH_MANAGER.datasetManagement}?tab=label&createLabel=true`)}
         >
           <PlusCircleFilled className="text-lg mr-2" />
-          CREATE NEW LABEL
+          CREATE LABEL
         </Button>
 
         <Button
@@ -38,7 +38,7 @@ export const LabelQuickActions: React.FC<LabelQuickActionsProps> = ({ onCreateLa
         >
           <div className="flex items-center">
             <FolderOpenOutlined className="mr-3 text-lg text-fuchsia-400" />
-            <span>PROJECT LIST</span>
+            <span>PROJECT & ASSIGNMENT LIST</span>
           </div>
           <RightOutlined className="text-xs" />
         </Button>
