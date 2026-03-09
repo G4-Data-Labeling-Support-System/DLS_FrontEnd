@@ -1,16 +1,34 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 
 import datasetApi, { type GetDatasetsParams } from '@/api/DatasetApi'
-import DatasetHeader from '@/features/manager/components/dataset/DatasetHeader'
 import DatasetList from '@/features/manager/components/dataset/DatasetList'
 import { DatasetQuickActions } from '@/features/manager/components/dataset/DatasetQuickActions'
 import { DatasetTabs, type DatasetTabType } from '@/features/manager/components/dataset/DatasetTabs'
 import { AllLabels } from '@/features/manager/components/dashboard/AllLabels'
 
 const DatasetManagementPage: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [activeTab, setActiveTab] = useState<DatasetTabType>('dataset')
   const [datasets, setDatasets] = useState<GetDatasetsParams[]>([])
   const [loading, setLoading] = useState(false)
+
+  const selectedDatasetId = searchParams.get('datasetId')
+
+  const setSelectedDatasetId = useCallback(
+    (id: string | null) => {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev)
+        if (id) {
+          next.set('datasetId', id)
+        } else {
+          next.delete('datasetId')
+        }
+        return next
+      })
+    },
+    [setSearchParams]
+  )
 
   useEffect(() => {
     const fetchDatasets = async () => {
@@ -52,8 +70,12 @@ const DatasetManagementPage: React.FC = () => {
       {activeTab === 'dataset' && (
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start relative">
           <div className="xl:col-span-3 flex flex-col w-full items-center">
-            <DatasetHeader />
-            <DatasetList datasets={datasets} loading={loading} />
+            <DatasetList
+              datasets={datasets}
+              loading={loading}
+              selectedDatasetId={selectedDatasetId}
+              onDatasetSelect={setSelectedDatasetId}
+            />
           </div>
 
           <div className="xl:col-span-1 xl:sticky xl:top-6 space-y-6">
