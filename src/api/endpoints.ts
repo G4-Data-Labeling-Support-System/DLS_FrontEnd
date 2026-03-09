@@ -61,7 +61,8 @@ export const ENDPOINTS = {
   LABELS: {
     LIST: '/labels',
     DETAIL: (id: string) => `/labels/${id}`,
-    CREATE: '/labels',
+    CREATE: (datasetId: string) => `/datasets/${datasetId}/labels`,
+    UPDATE: (id: string) => `/labels/${id}`,
     DELETE: (id: string) => `/labels/${id}`
   },
 

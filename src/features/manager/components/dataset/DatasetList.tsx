@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom'
-import { App, Spin, Empty, Input, Space, Typography } from 'antd'
-import { PlusOutlined, SearchOutlined } from '@ant-design/icons'
+import { App, Spin, Empty, Input, Space, Typography, Button } from 'antd'
+import { PlusOutlined, SearchOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import datasetApi, { type GetDatasetsParams } from '@/api/DatasetApi'
 import { DatasetCard } from './DatasetCard'
 import { DatasetDetail } from './DatasetDetail'
+import { GlassModal } from '@/shared/components/ui/GlassModal'
 import { useState } from 'react'
 
 const { Title } = Typography
@@ -21,9 +22,13 @@ const DatasetList: React.FC<DatasetListProps> = ({
   selectedDatasetId,
   onDatasetSelect
 }) => {
-  const { message, modal } = App.useApp()
+  const { message } = App.useApp()
   const [searchText, setSearchText] = useState<string>('')
   const [internalDatasetId, setInternalDatasetId] = useState<string | null>(null)
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deletingDatasetId, setDeletingDatasetId] = useState<string | null>(null)
+  const [deletingDatasetName, setDeletingDatasetName] = useState('')
 
   const currentDatasetId =
     selectedDatasetId !== undefined ? selectedDatasetId : internalDatasetId
@@ -38,23 +43,27 @@ const DatasetList: React.FC<DatasetListProps> = ({
 
   const handleDelete = (id?: string) => {
     if (!id) return
-    modal.confirm({
-      title: 'Delete Dataset',
-      content: 'Are you sure you want to delete this dataset?',
-      okText: 'Delete',
-      okType: 'danger',
-      cancelText: 'Cancel',
-      centered: true,
-      onOk: async () => {
-        try {
-          await datasetApi.deleteDataset(id)
-          message.success('Dataset deleted successfully!')
-          window.location.reload()
-        } catch {
-          message.error('An error occurred while deleting the dataset.')
-        }
-      }
-    })
+    const ds = datasets.find((d) => d.datasetId === id)
+    setDeletingDatasetId(id)
+    setDeletingDatasetName(ds?.datasetName || 'this dataset')
+    setDeleteModalOpen(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!deletingDatasetId) return
+    setDeleting(true)
+    try {
+      await datasetApi.deleteDataset(deletingDatasetId)
+      message.success('Dataset deleted successfully!')
+      setDeleteModalOpen(false)
+      setDeletingDatasetId(null)
+      setDeletingDatasetName('')
+      window.location.reload()
+    } catch {
+      message.error('An error occurred while deleting the dataset.')
+    } finally {
+      setDeleting(false)
+    }
   }
 
   if (loading && !currentDatasetId) {
@@ -132,6 +141,47 @@ const DatasetList: React.FC<DatasetListProps> = ({
           </Link>
         </div>
       )}
+
+      <GlassModal
+        open={deleteModalOpen}
+        onCancel={() => { setDeleteModalOpen(false); setDeletingDatasetId(null); setDeletingDatasetName('') }}
+        destroyOnHidden
+        width={480}
+      >
+        <div className="px-8 pt-10 pb-8">
+          <div className="text-center pb-6 mb-6">
+            <div className="flex justify-center mb-4">
+              <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center">
+                <ExclamationCircleOutlined className="text-red-500 text-2xl" />
+              </div>
+            </div>
+            <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
+              Delete Dataset
+            </h2>
+            <p className="text-white/50 text-sm">
+              Are you sure you want to delete <span className="text-white/80 font-medium">{deletingDatasetName}</span>? This action cannot be undone.
+            </p>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
+            <Button
+              onClick={() => { setDeleteModalOpen(false); setDeletingDatasetId(null); setDeletingDatasetName('') }}
+              className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
+            >
+              Cancel
+            </Button>
+            <Button
+              danger
+              type="primary"
+              loading={deleting}
+              onClick={confirmDelete}
+              className="bg-red-600 hover:bg-red-500 border-none"
+            >
+              Delete Dataset
+            </Button>
+          </div>
+        </div>
+      </GlassModal>
     </div>
   )
 }

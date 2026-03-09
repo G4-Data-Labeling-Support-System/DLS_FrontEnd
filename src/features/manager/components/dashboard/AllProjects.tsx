@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Space, Typography, Spin, Input, Select, Empty, App } from 'antd'
-import { SearchOutlined, PlusOutlined } from '@ant-design/icons'
+import { Space, Typography, Spin, Input, Select, Empty, App, Button } from 'antd'
+import { SearchOutlined, PlusOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import { ProjectCard } from './ProjectCard'
 import { ProjectDetail } from './ProjectDetail'
 import { Link, useNavigate } from 'react-router-dom'
 import { PATH_MANAGER } from '@/routes/paths'
+import { GlassModal } from '@/shared/components/ui/GlassModal'
 
 import projectApi, { type GetProjectsParams } from '@/api/ProjectApi'
 const { Title } = Typography
@@ -15,13 +16,17 @@ interface AllProjectsProps {
 }
 
 export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onProjectSelect }) => {
-  const { message: messageApi, modal } = App.useApp()
+  const { message: messageApi } = App.useApp()
   // Khai báo state sử dụng mảng của GetProjectsParams
   const [projects, setProjects] = useState<GetProjectsParams[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [searchText, setSearchText] = useState<string>('')
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
   const [internalProjectId, setInternalProjectId] = useState<string | null>(null)
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null)
+  const [deletingProjectName, setDeletingProjectName] = useState('')
   const navigate = useNavigate()
 
   const currentProjectId = selectedProjectId !== undefined ? selectedProjectId : internalProjectId
@@ -82,26 +87,28 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
 
   const handleDelete = (id?: string) => {
     if (!id) return
+    const proj = projects.find((p) => p.projectId === id)
+    setDeletingProjectId(id)
+    setDeletingProjectName(proj?.projectName || 'this project')
+    setDeleteModalOpen(true)
+  }
 
-    modal.confirm({
-      title: 'Deactivate Project',
-      content: 'Are you sure you want to deactivate this project?',
-      okText: 'DeActivate',
-      okType: 'danger',
-      cancelText: 'Cancel',
-      centered: true,
-      onOk: async () => {
-        try {
-          await projectApi.deleteProject(id)
-          messageApi.success('Project deactivated successfully!')
-          // Tải lại list data từ server để sync được trạng thái hệ thống
-          fetchProjects()
-        } catch (error) {
-          console.error('Deactivate project error:', error)
-          messageApi.error('An error occurred while deactivating the project.')
-        }
-      }
-    })
+  const confirmDelete = async () => {
+    if (!deletingProjectId) return
+    setDeleting(true)
+    try {
+      await projectApi.deleteProject(deletingProjectId)
+      messageApi.success('Project deactivated successfully!')
+      setDeleteModalOpen(false)
+      setDeletingProjectId(null)
+      setDeletingProjectName('')
+      fetchProjects()
+    } catch (error) {
+      console.error('Deactivate project error:', error)
+      messageApi.error('An error occurred while deactivating the project.')
+    } finally {
+      setDeleting(false)
+    }
   }
 
   const handleEdit = (id?: string) => {
@@ -197,6 +204,47 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
           </Link>
         </div>
       )}
+
+      <GlassModal
+        open={deleteModalOpen}
+        onCancel={() => { setDeleteModalOpen(false); setDeletingProjectId(null); setDeletingProjectName('') }}
+        destroyOnHidden
+        width={480}
+      >
+        <div className="px-8 pt-10 pb-8">
+          <div className="text-center pb-6 mb-6">
+            <div className="flex justify-center mb-4">
+              <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center">
+                <ExclamationCircleOutlined className="text-red-500 text-2xl" />
+              </div>
+            </div>
+            <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
+              Deactivate Project
+            </h2>
+            <p className="text-white/50 text-sm">
+              Are you sure you want to deactivate <span className="text-white/80 font-medium">{deletingProjectName}</span>? This action cannot be undone.
+            </p>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
+            <Button
+              onClick={() => { setDeleteModalOpen(false); setDeletingProjectId(null); setDeletingProjectName('') }}
+              className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
+            >
+              Cancel
+            </Button>
+            <Button
+              danger
+              type="primary"
+              loading={deleting}
+              onClick={confirmDelete}
+              className="bg-red-600 hover:bg-red-500 border-none"
+            >
+              Deactivate
+            </Button>
+          </div>
+        </div>
+      </GlassModal>
     </div>
   )
 }

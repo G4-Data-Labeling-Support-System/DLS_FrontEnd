@@ -6,14 +6,33 @@ import DatasetList from '@/features/manager/components/dataset/DatasetList'
 import { DatasetQuickActions } from '@/features/manager/components/dataset/DatasetQuickActions'
 import { DatasetTabs, type DatasetTabType } from '@/features/manager/components/dataset/DatasetTabs'
 import { AllLabels } from '@/features/manager/components/dashboard/AllLabels'
+import { LabelQuickActions } from '@/features/manager/components/dashboard/LabelQuickActions'
 
 const DatasetManagementPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const [activeTab, setActiveTab] = useState<DatasetTabType>('dataset')
   const [datasets, setDatasets] = useState<GetDatasetsParams[]>([])
   const [loading, setLoading] = useState(false)
+  const [openCreateLabelModal, setOpenCreateLabelModal] = useState(false)
 
   const selectedDatasetId = searchParams.get('datasetId')
+  const selectedLabelId = searchParams.get('labelId')
+
+  useEffect(() => {
+    const tab = searchParams.get('tab')
+    if (tab === 'label') {
+      setActiveTab('label')
+    }
+    if (searchParams.get('createLabel') === 'true') {
+      setActiveTab('label')
+      setOpenCreateLabelModal(true)
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev)
+        next.delete('createLabel')
+        return next
+      })
+    }
+  }, [searchParams, setSearchParams])
 
   const setSelectedDatasetId = useCallback(
     (id: string | null) => {
@@ -23,6 +42,21 @@ const DatasetManagementPage: React.FC = () => {
           next.set('datasetId', id)
         } else {
           next.delete('datasetId')
+        }
+        return next
+      })
+    },
+    [setSearchParams]
+  )
+
+  const setSelectedLabelId = useCallback(
+    (id: string | null) => {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev)
+        if (id) {
+          next.set('labelId', id)
+        } else {
+          next.delete('labelId')
         }
         return next
       })
@@ -96,11 +130,16 @@ const DatasetManagementPage: React.FC = () => {
       {activeTab === 'label' && (
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start relative">
           <div className="xl:col-span-3">
-            <AllLabels />
+            <AllLabels
+              selectedLabelId={selectedLabelId}
+              onLabelSelect={setSelectedLabelId}
+              openCreateModal={openCreateLabelModal}
+              onCreateModalClose={() => setOpenCreateLabelModal(false)}
+            />
           </div>
 
           <div className="xl:col-span-1 xl:sticky xl:top-6 space-y-6">
-            <DatasetQuickActions />
+            <LabelQuickActions onCreateLabel={() => setOpenCreateLabelModal(true)} />
           </div>
         </div>
       )}

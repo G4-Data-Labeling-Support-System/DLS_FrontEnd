@@ -4,11 +4,24 @@ import { ENDPOINTS } from './endpoints'
 export interface GetLabelsParams {
   labelId?: string
   labelName?: string
+  color?: string
   description?: string
   labelStatus?: string
   projectId?: string
   createdAt?: string
   updatedAt?: string
+}
+
+export interface CreateLabelPayload {
+  labelName: string
+  color: string
+  description: string
+}
+
+export interface UpdateLabelPayload {
+  labelName?: string
+  color?: string
+  description?: string
 }
 
 const labelApiClient = {
@@ -30,18 +43,18 @@ const labelApiClient = {
       throw error
     }
   },
-  createLabel(labelData?: GetLabelsParams) {
+  createLabel(datasetId: string, labelData: CreateLabelPayload) {
     try {
-      const url = ENDPOINTS.LABELS.CREATE
+      const url = ENDPOINTS.LABELS.CREATE(datasetId)
       return axiosClient.post(url, labelData)
     } catch (error) {
       console.error('Failed to create label', error)
       throw error
     }
   },
-  updateLabel(id: string, labelData?: GetLabelsParams) {
+  updateLabel(id: string, labelData: UpdateLabelPayload) {
     try {
-      const url = ENDPOINTS.LABELS.DETAIL(id)
+      const url = ENDPOINTS.LABELS.UPDATE(id)
       return axiosClient.put(url, labelData)
     } catch (error) {
       console.error('Failed to update label', error)

@@ -14,7 +14,7 @@ import {
     Dropdown
 } from 'antd'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
-import { EditOutlined, UserOutlined, MoreOutlined, DeleteOutlined } from '@ant-design/icons'
+import { EditOutlined, UserOutlined, MoreOutlined, DeleteOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import assignmentApi from '@/api/AssignmentApi'
 import guidelineApi from '@/api/GuidelineApi'
 import { AssignmentDetail } from './AssignmentDetail'
@@ -35,7 +35,7 @@ interface ProjectDetailProps {
 }
 
 export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack }) => {
-    const { message, modal } = App.useApp()
+    const { message } = App.useApp()
     const {
         data: project,
         isLoading: projectLoading,
@@ -64,6 +64,10 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
     // Edit/Delete state for assignments
     const [editingAssignment, setEditingAssignment] = useState<Record<string, unknown> | null>(null)
     const [isAssignmentEditModalVisible, setIsAssignmentEditModalVisible] = useState(false)
+    const [deleteAssignmentModalOpen, setDeleteAssignmentModalOpen] = useState(false)
+    const [deletingAssignment, setDeletingAssignment] = useState(false)
+    const [deletingAssignmentId, setDeletingAssignmentId] = useState<string | null>(null)
+    const [deletingAssignmentName, setDeletingAssignmentName] = useState('')
 
     // Assignment detail view via URL search params (enables browser back button)
     const selectedAssignmentId = searchParams.get('assignmentId')
@@ -165,21 +169,27 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
 
     const handleDeleteAssignment = (assignment: Record<string, unknown>) => {
         const assignmentId = String(assignment.assignmentId)
-        modal.confirm({
-            title: 'Delete Assignment',
-            content: `Are you sure you want to delete "${assignment.assignmentName || assignment.name || 'this assignment'}"?`,
-            okText: 'Delete',
-            okType: 'danger',
-            onOk: async () => {
-                try {
-                    await assignmentApi.deleteAssignment(assignmentId)
-                    message.success('Assignment deleted successfully!')
-                    invalidateProjectDetail(projectId)
-                } catch {
-                    message.error('Failed to delete assignment')
-                }
-            }
-        })
+        const name = String(assignment.assignmentName || assignment.name || 'this assignment')
+        setDeletingAssignmentId(assignmentId)
+        setDeletingAssignmentName(name)
+        setDeleteAssignmentModalOpen(true)
+    }
+
+    const confirmDeleteAssignment = async () => {
+        if (!deletingAssignmentId) return
+        setDeletingAssignment(true)
+        try {
+            await assignmentApi.deleteAssignment(deletingAssignmentId)
+            message.success('Assignment deleted successfully!')
+            setDeleteAssignmentModalOpen(false)
+            setDeletingAssignmentId(null)
+            setDeletingAssignmentName('')
+            invalidateProjectDetail(projectId)
+        } catch {
+            message.error('Failed to delete assignment')
+        } finally {
+            setDeletingAssignment(false)
+        }
     }
 
     const formatDate = (dateString?: string) => {
@@ -627,6 +637,47 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
                             </Button>
                         </div>
                     </Form>
+                </div>
+            </GlassModal>
+
+            <GlassModal
+                open={deleteAssignmentModalOpen}
+                onCancel={() => { setDeleteAssignmentModalOpen(false); setDeletingAssignmentId(null); setDeletingAssignmentName('') }}
+                destroyOnHidden
+                width={480}
+            >
+                <div className="px-8 pt-10 pb-8">
+                    <div className="text-center pb-6 mb-6">
+                        <div className="flex justify-center mb-4">
+                            <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center">
+                                <ExclamationCircleOutlined className="text-red-500 text-2xl" />
+                            </div>
+                        </div>
+                        <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
+                            Delete Assignment
+                        </h2>
+                        <p className="text-white/50 text-sm">
+                            Are you sure you want to delete <span className="text-white/80 font-medium">{deletingAssignmentName}</span>? This action cannot be undone.
+                        </p>
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
+                        <Button
+                            onClick={() => { setDeleteAssignmentModalOpen(false); setDeletingAssignmentId(null); setDeletingAssignmentName('') }}
+                            className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            danger
+                            type="primary"
+                            loading={deletingAssignment}
+                            onClick={confirmDeleteAssignment}
+                            className="bg-red-600 hover:bg-red-500 border-none"
+                        >
+                            Delete Assignment
+                        </Button>
+                    </div>
                 </div>
             </GlassModal>
 
