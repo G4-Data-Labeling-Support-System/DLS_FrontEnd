@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import { App, Spin, Typography, Card, Descriptions, Tag } from 'antd'
-import { FolderOutlined } from '@ant-design/icons'
+import { App, Spin, Typography, Card, Descriptions } from 'antd'
+import { DatabaseOutlined } from '@ant-design/icons'
 import labelApiClient from '@/api/LabelApi'
-import projectApi from '@/api/ProjectApi'
+import datasetApi from '@/api/DatasetApi'
 import { useNavigate } from 'react-router-dom'
 
 const { Title } = Typography
@@ -10,11 +10,10 @@ const { Title } = Typography
 interface LabelDetailData {
   labelId?: string
   labelName?: string
+  color?: string
   description?: string
-  labelStatus?: string
-  projectId?: string
-  createdAt?: string
-  updatedAt?: string
+  datasetId?: string
+  createAt?: string
 }
 
 interface LabelDetailProps {
@@ -25,7 +24,7 @@ interface LabelDetailProps {
 export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => {
   const { message } = App.useApp()
   const [label, setLabel] = useState<LabelDetailData | null>(null)
-  const [projectName, setProjectName] = useState<string | null>(null)
+  const [datasetName, setDatasetName] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
   const navigate = useNavigate()
 
@@ -42,22 +41,21 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
           setLabel({
             labelId: String(data.labelId || data.id),
             labelName: String(data.labelName || data.name || ''),
+            color: data.color ? String(data.color) : undefined,
             description: data.description ? String(data.description) : undefined,
-            labelStatus: data.labelStatus || data.status ? String(data.labelStatus || data.status) : undefined,
-            projectId: data.projectId ? String(data.projectId) : undefined,
-            createdAt: data.createdAt ? String(data.createdAt) : undefined,
-            updatedAt: data.updatedAt ? String(data.updatedAt) : undefined
+            datasetId: data.datasetId ? String(data.datasetId) : undefined,
+            createAt: data.createAt ? String(data.createAt) : undefined
           })
 
-          if (data.projectId) {
+          if (data.datasetId) {
             try {
-              const projRes = await projectApi.getProjectById(data.projectId)
-              const projData = projRes.data?.data || projRes.data
-              if (projData && isMounted) {
-                setProjectName(String(projData.projectName || projData.name || data.projectId))
+              const dsRes = await datasetApi.getDatasetById(data.datasetId)
+              const dsData = dsRes.data?.data || dsRes.data
+              if (dsData && isMounted) {
+                setDatasetName(String(dsData.datasetName || dsData.name || data.datasetId))
               }
-            } catch (projErr) {
-              console.error('Failed to fetch associated project details:', projErr)
+            } catch (dsErr) {
+              console.error('Failed to fetch associated dataset details:', dsErr)
             }
           }
         }
@@ -88,21 +86,6 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
     return new Date(dateString).toLocaleDateString('vi-VN')
   }
 
-  const getStatusColor = (status?: string) => {
-    switch (status?.toUpperCase()) {
-      case 'ACTIVE':
-        return 'processing'
-      case 'COMPLETED':
-        return 'success'
-      case 'INACTIVE':
-        return 'error'
-      case 'DRAFT':
-        return 'default'
-      default:
-        return 'default'
-    }
-  }
-
   if (loading) {
     return (
       <div className="w-full h-64 flex justify-center items-center">
@@ -124,6 +107,12 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <div className="flex items-center gap-3">
+          {label.color && (
+            <div
+              className="w-6 h-6 rounded-full border border-white/20"
+              style={{ backgroundColor: label.color }}
+            />
+          )}
           <div>
             <Title level={3} className="!text-white !m-0 !font-display">
               {label.labelName || 'Unnamed Label'}
@@ -156,32 +145,33 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
                   {label.labelId}
                 </span>
               </Descriptions.Item>
-              <Descriptions.Item label="Status">
-                {label.labelStatus ? (
-                  <Tag color={getStatusColor(label.labelStatus)} className="m-0 font-medium">
-                    {label.labelStatus}
-                  </Tag>
+              <Descriptions.Item label="Color">
+                {label.color ? (
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-5 h-5 rounded border border-white/20"
+                      style={{ backgroundColor: label.color }}
+                    />
+                    <span className="font-mono text-sm">{label.color}</span>
+                  </div>
                 ) : (
                   <span className="text-gray-600 italic">N/A</span>
                 )}
               </Descriptions.Item>
               <Descriptions.Item label="Created At">
-                {formatDate(label.createdAt)}
+                {formatDate(label.createAt)}
               </Descriptions.Item>
-              <Descriptions.Item label="Updated At">
-                {formatDate(label.updatedAt)}
-              </Descriptions.Item>
-              <Descriptions.Item label="Associated Project">
-                {label.projectId ? (
+              <Descriptions.Item label="Associated Dataset">
+                {label.datasetId ? (
                   <span
                     className="text-blue-400 hover:text-blue-300 cursor-pointer transition-colors"
-                    onClick={() => navigate(`/manager/projects/${label.projectId}`)}
+                    onClick={() => navigate(`/manager/datasets?tab=label&labelId=${labelId}&datasetId=${label.datasetId}`)}
                   >
-                    <FolderOutlined className="mr-1" />
-                    {projectName || `Project ID: ${label.projectId}`}
+                    <DatabaseOutlined className="mr-1" />
+                    {datasetName || `Dataset ID: ${label.datasetId}`}
                   </span>
                 ) : (
-                  <span className="text-gray-600 italic">No project associated</span>
+                  <span className="text-gray-600 italic">No dataset associated</span>
                 )}
               </Descriptions.Item>
             </Descriptions>

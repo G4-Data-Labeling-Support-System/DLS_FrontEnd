@@ -59,7 +59,7 @@ const assignmentApi = {
   },
   createAssignment(assignmentData?: GetAssignmentsParams) {
     try {
-      const url = ENDPOINTS.ASSIGNMENTS.CREATE
+      const url = ENDPOINTS.ASSIGNMENTS.CREATE_BY_PROJECT(assignmentData?.projectId || '')
       return axiosClient.post(url, assignmentData)
     } catch (error) {
       console.error('Failed to create assignment', error)

@@ -7,10 +7,10 @@ import { DatasetQuickActions } from '@/features/manager/components/dataset/Datas
 import { DatasetTabs, type DatasetTabType } from '@/features/manager/components/dataset/DatasetTabs'
 import { AllLabels } from '@/features/manager/components/dashboard/AllLabels'
 import { LabelQuickActions } from '@/features/manager/components/dashboard/LabelQuickActions'
+import { DatasetDetail } from '@/features/manager/components/dataset/DatasetDetail'
 
 const DatasetManagementPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
-  const [activeTab, setActiveTab] = useState<DatasetTabType>('dataset')
   const [datasets, setDatasets] = useState<GetDatasetsParams[]>([])
   const [loading, setLoading] = useState(false)
   const [openCreateLabelModal, setOpenCreateLabelModal] = useState(false)
@@ -18,11 +18,36 @@ const DatasetManagementPage: React.FC = () => {
   const selectedDatasetId = searchParams.get('datasetId')
   const selectedLabelId = searchParams.get('labelId')
 
-  useEffect(() => {
+  // Derive activeTab from URL params
+  const activeTab: DatasetTabType = (() => {
     const tab = searchParams.get('tab')
-    if (tab === 'label') {
-      setActiveTab('label')
-    }
+    if (tab === 'label' || tab === 'upload') return tab
+    if (tab === 'dataset') return 'dataset'
+    // Infer tab from presence of labelId
+    if (selectedLabelId) return 'label'
+    return 'dataset'
+  })()
+
+  const setActiveTab = useCallback(
+    (tab: DatasetTabType) => {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev)
+        if (tab === 'dataset') {
+          next.delete('tab')
+          next.delete('labelId')
+        } else {
+          next.set('tab', tab)
+          if (tab === 'label') {
+            next.delete('datasetId')
+          }
+        }
+        return next
+      })
+    },
+    [setSearchParams]
+  )
+
+  useEffect(() => {
     if (searchParams.get('createLabel') === 'true') {
       setActiveTab('label')
       setOpenCreateLabelModal(true)
@@ -32,7 +57,7 @@ const DatasetManagementPage: React.FC = () => {
         return next
       })
     }
-  }, [searchParams, setSearchParams])
+  }, [searchParams, setSearchParams, setActiveTab])
 
   const setSelectedDatasetId = useCallback(
     (id: string | null) => {
@@ -55,6 +80,7 @@ const DatasetManagementPage: React.FC = () => {
         const next = new URLSearchParams(prev)
         if (id) {
           next.set('labelId', id)
+          next.set('tab', 'label')
         } else {
           next.delete('labelId')
         }
@@ -130,12 +156,25 @@ const DatasetManagementPage: React.FC = () => {
       {activeTab === 'label' && (
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start relative">
           <div className="xl:col-span-3">
-            <AllLabels
-              selectedLabelId={selectedLabelId}
-              onLabelSelect={setSelectedLabelId}
-              openCreateModal={openCreateLabelModal}
-              onCreateModalClose={() => setOpenCreateLabelModal(false)}
-            />
+            {selectedDatasetId ? (
+              <DatasetDetail
+                datasetId={selectedDatasetId}
+                onBack={() => {
+                  setSearchParams((prev) => {
+                    const next = new URLSearchParams(prev)
+                    next.delete('datasetId')
+                    return next
+                  })
+                }}
+              />
+            ) : (
+              <AllLabels
+                selectedLabelId={selectedLabelId}
+                onLabelSelect={setSelectedLabelId}
+                openCreateModal={openCreateLabelModal}
+                onCreateModalClose={() => setOpenCreateLabelModal(false)}
+              />
+            )}
           </div>
 
           <div className="xl:col-span-1 xl:sticky xl:top-6 space-y-6">

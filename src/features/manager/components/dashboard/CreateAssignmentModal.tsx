@@ -3,12 +3,13 @@ import { Form, Input, Select, DatePicker, Button, Avatar, App } from 'antd'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
 import { userApi } from '@/api/userApi'
 import datasetApi from '@/api/DatasetApi'
+import projectApi from '@/api/ProjectApi'
 import assignmentApi from '@/api/AssignmentApi'
 import { useAuthStore } from '@/store/auth.store'
 
 interface CreateAssignmentModalProps {
     open: boolean
-    projectId: string
+    projectId?: string
     onCancel: () => void
     onSuccess: () => void
 }
@@ -26,8 +27,29 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
     const [annotators, setAnnotators] = useState<Record<string, unknown>[]>([])
     const [reviewers, setReviewers] = useState<Record<string, unknown>[]>([])
     const [datasets, setDatasets] = useState<Record<string, unknown>[]>([])
+    const [projects, setProjects] = useState<Record<string, unknown>[]>([])
+    const [selectedProjectId, setSelectedProjectId] = useState<string>(projectId || '')
     const [loading, setLoading] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
+
+    const hasExternalProjectId = !!projectId
+    const effectiveProjectId = hasExternalProjectId ? projectId : selectedProjectId
+
+    // Fetch projects list when no projectId is provided
+    useEffect(() => {
+        if (!open || hasExternalProjectId) return
+        const fetchProjects = async () => {
+            try {
+                const res = await projectApi.getProjects()
+                const data = res.data?.data || res.data
+                setProjects(Array.isArray(data) ? data : [])
+            } catch (error) {
+                console.error(error)
+                message.error('Failed to load projects.')
+            }
+        }
+        fetchProjects()
+    }, [open, hasExternalProjectId, message])
 
     useEffect(() => {
         if (!open) return
@@ -55,10 +77,14 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
                     })
                 )
 
-                // Fetch datasets by project
-                const datasetRes = await datasetApi.getDatasetsByProjectId(projectId)
-                const datasetsData = datasetRes.data?.data || datasetRes.data
-                setDatasets(Array.isArray(datasetsData) ? datasetsData : [])
+                // Fetch datasets by project (only when we have a project ID)
+                if (effectiveProjectId) {
+                    const datasetRes = await datasetApi.getDatasetsByProjectId(effectiveProjectId)
+                    const datasetsData = datasetRes.data?.data || datasetRes.data
+                    setDatasets(Array.isArray(datasetsData) ? datasetsData : [])
+                } else {
+                    setDatasets([])
+                }
             } catch (error) {
                 console.error(error)
                 message.error('Failed to load users or datasets.')
@@ -67,7 +93,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
             }
         }
         fetchData()
-    }, [open, projectId, message])
+    }, [open, effectiveProjectId, message])
 
     // Set assignedBy to current user when modal opens
     useEffect(() => {
@@ -84,18 +110,23 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
             const values = await form.validateFields()
             setIsSubmitting(true)
 
-            const payload = {
-                assignmentName: values.assignmentName,
-                annotatorId: values.assignedTo,
-                managerId: values.assignedBy,
-                reviewerId: values.reviewerId,
-                descriptionAssignment: values.description,
-                dueDate: values.dueDate ? values.dueDate.toISOString() : undefined,
-                datasetId: values.datasetId,
-                projectId: projectId
+            const resolvedProjectId = hasExternalProjectId ? projectId : values.projectId
+            if (!resolvedProjectId) {
+                message.error('Please select a project')
+                return
             }
 
-            await assignmentApi.createAssignmentForProject(projectId, payload)
+            const payload = {
+                assignmentName: values.assignmentName,
+                assignedTo: values.assignedTo,
+                assignedBy: values.assignedBy,
+                reviewedBy: values.reviewerId,
+                description: values.description,
+                dueDate: values.dueDate ? values.dueDate.toISOString() : undefined,
+                datasetId: values.datasetId
+            }   
+
+            await assignmentApi.createAssignmentForProject(resolvedProjectId, payload)
             message.success('Assignment created successfully!')
             form.resetFields()
             onSuccess()
@@ -113,7 +144,26 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
 
     const handleCancel = () => {
         form.resetFields()
+        if (!hasExternalProjectId) {
+            setSelectedProjectId('')
+            setDatasets([])
+        }
         onCancel()
+    }
+
+    const handleProjectChange = async (value: string) => {
+        setSelectedProjectId(value)
+        form.setFieldsValue({ datasetId: undefined })
+        // Fetch datasets for the newly selected project
+        try {
+            const datasetRes = await datasetApi.getDatasetsByProjectId(value)
+            const datasetsData = datasetRes.data?.data || datasetRes.data
+            setDatasets(Array.isArray(datasetsData) ? datasetsData : [])
+        } catch (error) {
+            console.error(error)
+            message.error('Failed to load datasets for selected project.')
+            setDatasets([])
+        }
     }
 
     const renderUserOption = (u: Record<string, unknown>) => {
@@ -153,6 +203,30 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
                     </p>
                 </div>
                 <Form form={form} layout="vertical">
+                    {!hasExternalProjectId && (
+                        <Form.Item
+                            label="Project"
+                            name="projectId"
+                            rules={[{ required: true, message: 'Please select a project' }]}
+                        >
+                            <Select
+                                placeholder="Select project"
+                                showSearch
+                                optionFilterProp="children"
+                                onChange={handleProjectChange}
+                            >
+                                {projects.map((p: Record<string, unknown>) => (
+                                    <Select.Option
+                                        key={(p.projectId as string) || (p.id as string)}
+                                        value={(p.projectId as string) || (p.id as string)}
+                                    >
+                                        {(p.projectName as string) || (p.name as string)}
+                                    </Select.Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                    )}
+
                     <Form.Item
                         label="Assignment Name"
                         name="assignmentName"
@@ -222,10 +296,11 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
                         rules={[{ required: true, message: 'Please select a dataset' }]}
                     >
                         <Select
-                            placeholder="Select dataset"
+                            placeholder={!effectiveProjectId ? 'Select a project first' : 'Select dataset'}
                             loading={loading}
                             showSearch
                             optionFilterProp="children"
+                            disabled={!effectiveProjectId}
                         >
                             {datasets.map((d: Record<string, unknown>) => (
                                 <Select.Option
