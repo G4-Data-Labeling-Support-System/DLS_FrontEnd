@@ -11,12 +11,16 @@ import {
     App,
     Form,
     Input,
-    Dropdown
+    Dropdown,
+    Select,
+    DatePicker
 } from 'antd'
+import dayjs from 'dayjs'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
 import { EditOutlined, UserOutlined, MoreOutlined, DeleteOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import assignmentApi from '@/api/AssignmentApi'
 import guidelineApi from '@/api/GuidelineApi'
+import { userApi } from '@/api/userApi'
 import { AssignmentDetail } from './AssignmentDetail'
 import { CreateAssignmentModal } from './CreateAssignmentModal'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -68,6 +72,11 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
     const [deletingAssignment, setDeletingAssignment] = useState(false)
     const [deletingAssignmentId, setDeletingAssignmentId] = useState<string | null>(null)
     const [deletingAssignmentName, setDeletingAssignmentName] = useState('')
+
+    // User lists for assignment edit
+    const [editAnnotators, setEditAnnotators] = useState<Record<string, unknown>[]>([])
+    const [editReviewers, setEditReviewers] = useState<Record<string, unknown>[]>([])
+    const [editUsersLoading, setEditUsersLoading] = useState(false)
 
     // Assignment detail view via URL search params (enables browser back button)
     const selectedAssignmentId = searchParams.get('assignmentId')
@@ -140,13 +149,64 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
     }
 
     // --- Assignment Edit/Delete ---
+    const fetchUsersForEdit = async () => {
+        setEditUsersLoading(true)
+        try {
+            const userRes = await userApi.getUsers()
+            const allUsers = (
+                Array.isArray(userRes)
+                    ? userRes
+                    : (userRes as unknown as { data?: Record<string, unknown>[] })?.data || []
+            ) as Record<string, unknown>[]
+
+            setEditAnnotators(
+                allUsers.filter((u) => {
+                    const role = String(u.role || u.userRole || '').toUpperCase()
+                    return role.includes('ANNOTATOR')
+                })
+            )
+            setEditReviewers(
+                allUsers.filter((u) => {
+                    const role = String(u.role || u.userRole || '').toUpperCase()
+                    return role.includes('REVIEWER')
+                })
+            )
+        } catch (error) {
+            console.error('Failed to fetch users for edit', error)
+        } finally {
+            setEditUsersLoading(false)
+        }
+    }
+
+    const renderEditUserOption = (u: Record<string, unknown>) => {
+        const userId = String(u.userId || u.id || '')
+        const name = (u.fullName as string) || (u.username as string) || (u.name as string) || 'Unknown'
+        const avatarSrc =
+            (u.avatar as string) ||
+            (u.coverImage as string) ||
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`
+        return (
+            <Select.Option key={userId} value={userId}>
+                <div className="flex items-center gap-2">
+                    <Avatar src={avatarSrc} size="small" />
+                    <span>{name}</span>
+                </div>
+            </Select.Option>
+        )
+    }
+
     const handleEditAssignment = (assignment: Record<string, unknown>) => {
         setEditingAssignment(assignment)
         assignmentEditForm.setFieldsValue({
             assignmentName: assignment.assignmentName || assignment.name,
-            description: assignment.description || assignment.descriptionAssignment
+            assignedTo: assignment.assignedTo,
+            reviewedBy: assignment.reviewedBy || assignment.reviewerId,
+            description: assignment.description || assignment.descriptionAssignment,
+            dueDate: assignment.dueDate ? dayjs(assignment.dueDate as string) : null,
+            assignmentStatus: assignment.assignmentStatus || assignment.status
         })
         setIsAssignmentEditModalVisible(true)
+        fetchUsersForEdit()
     }
 
     const handleAssignmentEditSubmit = async () => {
@@ -155,7 +215,11 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
             const assignmentId = String(editingAssignment?.assignmentId)
             await assignmentApi.updateAssignment(assignmentId, {
                 assignmentName: values.assignmentName,
-                description: values.description
+                assignedTo: values.assignedTo,
+                reviewedBy: values.reviewedBy,
+                description: values.description,
+                dueDate: values.dueDate ? values.dueDate.toISOString() : undefined,
+                assignmentStatus: values.assignmentStatus
             })
             message.success('Assignment updated successfully!')
             setIsAssignmentEditModalVisible(false)
@@ -487,14 +551,20 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
                                                             key: 'edit',
                                                             label: 'Edit',
                                                             icon: <EditOutlined />,
-                                                            onClick: () => handleEditAssignment(assignment)
+                                                            onClick: (info) => {
+                                                                info.domEvent.stopPropagation()
+                                                                handleEditAssignment(assignment)
+                                                            }
                                                         },
                                                         {
                                                             key: 'delete',
                                                             label: 'Delete',
                                                             icon: <DeleteOutlined />,
                                                             danger: true,
-                                                            onClick: () => handleDeleteAssignment(assignment)
+                                                            onClick: (info) => {
+                                                                info.domEvent.stopPropagation()
+                                                                handleDeleteAssignment(assignment)
+                                                            }
                                                         }
                                                     ]
                                                 }}
@@ -600,7 +670,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
                     assignmentEditForm.resetFields()
                 }}
                 destroyOnHidden
-                width={520}
+                width={600}
             >
                 <div className="px-8 pt-10 pb-8">
                     <div className="text-center border-b border-white/5 pb-6 mb-6">
@@ -614,8 +684,49 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
                         >
                             <Input placeholder="Enter assignment name" />
                         </Form.Item>
+                        <Form.Item label="Assigned To" name="assignedTo">
+                            <Select
+                                placeholder="Select annotator"
+                                allowClear
+                                showSearch
+                                optionFilterProp="children"
+                                loading={editUsersLoading}
+                            >
+                                {editAnnotators.map(renderEditUserOption)}
+                            </Select>
+                        </Form.Item>
+                        <Form.Item label="Reviewed By" name="reviewedBy">
+                            <Select
+                                placeholder="Select reviewer"
+                                allowClear
+                                showSearch
+                                optionFilterProp="children"
+                                loading={editUsersLoading}
+                            >
+                                {editReviewers.map(renderEditUserOption)}
+                            </Select>
+                        </Form.Item>
                         <Form.Item label="Description" name="description">
-                            <Input.TextArea placeholder="Enter description" rows={4} />
+                            <Input.TextArea placeholder="Enter description" rows={3} />
+                        </Form.Item>
+                        <Form.Item label="Due Date" name="dueDate">
+                            <DatePicker
+                                className="w-full"
+                                showTime
+                                format="DD/MM/YYYY HH:mm"
+                                placeholder="Select due date"
+                            />
+                        </Form.Item>
+                        <Form.Item label="Status" name="assignmentStatus">
+                            <Select
+                                placeholder="Select status"
+                                options={[
+                                    { value: 'ASSIGNED', label: 'Assigned' },
+                                    { value: 'ACTIVE', label: 'Active' },
+                                    { value: 'COMPLETED', label: 'Completed' },
+                                    { value: 'PAUSED', label: 'Paused' }
+                                ]}
+                            />
                         </Form.Item>
                         <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
                             <Button

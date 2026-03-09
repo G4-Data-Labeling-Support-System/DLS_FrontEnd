@@ -161,13 +161,14 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
           <Select
             value={statusFilter}
             onChange={(value) => setStatusFilter(value)}
-            className="w-36"
+            className="w-40"
             options={[
               { value: 'ALL', label: 'All Statuses' },
-              { value: 'ACTIVE', label: 'Active' },
-              { value: 'PAUSED', label: 'Paused' },
+              { value: 'ASSIGNED', label: 'Assigned' },
+              { value: 'CANCLED', label: 'Cancled' },
               { value: 'COMPLETED', label: 'Completed' },
-              { value: 'ARCHIVE', label: 'Archive' }
+              { value: 'IN_PROGRESS', label: 'In Progress' },
+              { value: 'REVIEWING', label: 'Reviewing' }
             ]}
           />
           <Input
