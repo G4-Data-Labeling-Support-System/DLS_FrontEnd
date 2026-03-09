@@ -1,6 +1,29 @@
 import { useMemo } from 'react'
 
-export default function AssignmentHeader({ assignment }: { assignment: any }) {
+interface Assignment {
+  id?: string
+  assignmentId?: string
+  name?: string
+  assignmentName?: string
+  title?: string
+  status?: string
+  completedTasks?: number
+  totalTasks?: number
+  dataset?: { totalItems?: number }
+  dueDate?: string
+  deadline?: string
+  updatedAt?: string
+  project?: {
+    id?: string
+    projectId?: string
+    name?: string
+    projectName?: string
+  }
+  description?: string
+  descriptionAssignment?: string
+}
+
+export default function AssignmentHeader({ assignment }: { assignment: Assignment }) {
   const completed = assignment.completedTasks ?? 0
   const total = assignment.totalTasks ?? assignment.dataset?.totalItems ?? 1
   const progress = Math.round((completed / total) * 100)
@@ -17,11 +40,6 @@ export default function AssignmentHeader({ assignment }: { assignment: any }) {
   const title =
     assignment.assignmentName || assignment.name || assignment.title || 'Untitled Assignment'
   const id = assignment.assignmentId || assignment.id || 'N/A'
-  const projectName =
-    assignment.project?.projectName ||
-    assignment.project?.name ||
-    assignment.project ||
-    'Unknown Project'
   const description =
     assignment.descriptionAssignment || assignment.description || 'No description provided.'
 
@@ -54,7 +72,9 @@ export default function AssignmentHeader({ assignment }: { assignment: any }) {
               <span className="material-symbols-outlined text-[14px] text-violet-400">
                 folder_special
               </span>
-              {projectName}
+              {assignment.project?.projectName ||
+                assignment.project?.name ||
+                (typeof assignment.project === 'string' ? assignment.project : 'Unknown Project')}
             </div>
             <div
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border text-xs font-bold ${daysLeft <= 2 ? 'border-red-500/30 text-red-400' : daysLeft <= 5 ? 'border-amber-500/30 text-amber-400' : 'border-emerald-500/30 text-emerald-400'}`}

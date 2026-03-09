@@ -6,6 +6,9 @@ export interface HistoryEvent {
   action: string
   user: string
   timestamp: string
+  time?: string
+  type?: 'success' | 'error' | 'info' | string
+  details?: string
   comment?: string
 }
 

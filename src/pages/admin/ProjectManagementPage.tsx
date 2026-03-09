@@ -15,6 +15,17 @@ import {
 import { App, Dropdown, type MenuProps } from 'antd'
 import { useProjects, useDeleteProject } from '@/features/admin/hooks/useProjects'
 
+interface Project {
+  projectId: string
+  id: string
+  projectName: string
+  description?: string
+  projectStatus: string
+  status?: string
+  createdAt?: string
+  coverImage?: string
+}
+
 export default function ProjectManagement() {
   const { message } = App.useApp()
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
@@ -22,9 +33,11 @@ export default function ProjectManagement() {
   const { data: rawProjects, isLoading } = useProjects()
   const deleteProjectMutation = useDeleteProject()
 
-  const projects = Array.isArray(rawProjects) ? rawProjects : (rawProjects as any)?.data || []
+  const projects = Array.isArray(rawProjects)
+    ? (rawProjects as Project[])
+    : (rawProjects as { data: Project[] })?.data || []
 
-  const getActionItems = (project: any): MenuProps['items'] => {
+  const getActionItems = (project: Project): MenuProps['items'] => {
     return [
       {
         key: 'edit',
@@ -231,7 +244,7 @@ export default function ProjectManagement() {
                   </td>
                 </tr>
               ) : (
-                projects?.map((project: any) => {
+                projects?.map((project: Project) => {
                   const rawStatus = project.projectStatus || project.status || 'Active'
                   const isProjectActive =
                     rawStatus.toUpperCase() === 'ACTIVE' || rawStatus.toUpperCase() === 'ONGOING'

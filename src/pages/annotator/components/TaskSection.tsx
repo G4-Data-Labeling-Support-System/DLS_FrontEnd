@@ -1,15 +1,23 @@
 import TaskCard from './TaskCard'
 
 /** Groups tasks by their batchLabel */
-function groupTasksByBatch(tasks: any[]): Record<string, any[]> {
-  return tasks.reduce<Record<string, any[]>>((acc, task) => {
+interface Task {
+  id: string
+  batchLabel: string
+  annotationStatus?: string
+  [key: string]: string | number | boolean | undefined | object | null
+}
+
+/** Groups tasks by their batchLabel */
+function groupTasksByBatch(tasks: Task[]): Record<string, Task[]> {
+  return tasks.reduce<Record<string, Task[]>>((acc, task) => {
     if (!acc[task.batchLabel]) acc[task.batchLabel] = []
     acc[task.batchLabel].push(task)
     return acc
   }, {})
 }
 
-export default function TasksSection({ tasks }: { tasks: any[] }) {
+export default function TasksSection({ tasks }: { tasks: Task[] }) {
   const grouped = groupTasksByBatch(tasks)
 
   return (

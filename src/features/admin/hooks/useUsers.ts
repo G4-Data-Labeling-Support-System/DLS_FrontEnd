@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { userApi } from '@/api/userApi'
 import type { CreateUserRequest, UpdateUserRequest } from '@/shared/types/api.types'
+import type { AxiosError } from 'axios'
 
 export const useUsers = () => {
   return useQuery({
@@ -19,7 +20,7 @@ export const useCreateUser = () => {
       // Update the user list cache
       queryClient.invalidateQueries({ queryKey: ['users'] })
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError) => {
       console.error('Create user error:', error)
       // Error handling is managed by the component
     }
@@ -35,7 +36,7 @@ export const useDeleteUser = () => {
       // Update the user list cache
       queryClient.invalidateQueries({ queryKey: ['users'] })
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError) => {
       console.error('Delete user error:', error)
     }
   })
@@ -50,7 +51,7 @@ export const useActivateUser = () => {
       // Update the user list cache
       queryClient.invalidateQueries({ queryKey: ['users'] })
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError) => {
       console.error('Activate user error:', error)
     }
   })
@@ -65,7 +66,7 @@ export const useUpdateUser = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] })
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError) => {
       console.error('Update user error:', error)
     }
   })

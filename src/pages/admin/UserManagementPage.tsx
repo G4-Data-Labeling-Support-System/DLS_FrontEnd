@@ -3,6 +3,7 @@ import AddUserModal from '../../features/admin/components/AddUserModal'
 import EditUserModal from '../../features/admin/components/EditUserModal'
 import AddUserSuccessModal from '../../features/admin/components/AddUserSuccessModal'
 import { themeClasses } from '@/styles'
+import type { User } from '@/shared/types/api.types'
 import { Button } from '@/shared/components/ui/Button'
 import {
   UserAddOutlined,
@@ -19,8 +20,8 @@ import { useUsers, useDeleteUser, useActivateUser } from '@/features/admin/hooks
 export default function UserManagement() {
   const { message } = App.useApp()
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false)
-  const [editModal, setEditModal] = useState<{ isOpen: boolean; data?: any }>({ isOpen: false })
-  const [successModal, setSuccessModal] = useState<{ isOpen: boolean; data?: any }>({
+  const [editModal, setEditModal] = useState<{ isOpen: boolean; data?: User }>({ isOpen: false })
+  const [successModal, setSuccessModal] = useState<{ isOpen: boolean; data?: User }>({
     isOpen: false
   })
   const { data: rawUsers, isLoading } = useUsers()
@@ -29,20 +30,25 @@ export default function UserManagement() {
 
   // [Logic: Safety Check] Kiểm tra cấu trúc trả về từ API
   // React Query có thể trả về array trực tiếp hoặc object chứa data (VD: response.data)
-  const users = Array.isArray(rawUsers) ? rawUsers : (rawUsers as any)?.data || []
+  const users = Array.isArray(rawUsers)
+    ? (rawUsers as User[])
+    : (rawUsers as unknown as { data: User[] })?.data || []
   // console.log("Users API Response:", rawUsers, "Parsed Users:", users);
 
   const activeUsersCount = users.filter(
-    (u: any) => (u.userStatus || u.status || '').toUpperCase() === 'ACTIVE'
+    (u: User) =>
+      (u.userRole || u.role || '').toUpperCase() === 'ACTIVE' ||
+      u.userStatus?.toUpperCase() === 'ACTIVE' ||
+      (u.status || '').toUpperCase() === 'ACTIVE'
   ).length
   const inactiveUsersCount = users.length - activeUsersCount
 
-  const handleUserCreateSuccess = (data: any) => {
+  const handleUserCreateSuccess = (data: User) => {
     setIsAddUserModalOpen(false)
     setSuccessModal({ isOpen: true, data })
   }
 
-  const getActionItems = (user: any): MenuProps['items'] => {
+  const getActionItems = (user: User): MenuProps['items'] => {
     const rawStatus = user.userStatus || user.status || 'Active'
     const isUserActive = rawStatus.toUpperCase() === 'ACTIVE'
 
@@ -273,7 +279,7 @@ export default function UserManagement() {
                   </td>
                 </tr>
               ) : (
-                users?.map((user: any) => {
+                users?.map((user: User) => {
                   // Handle backend field difference and normalize
                   const rawRole = user.userRole || user.role || 'Unknown'
                   const roleLower = rawRole.toLowerCase()

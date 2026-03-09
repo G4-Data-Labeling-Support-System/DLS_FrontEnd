@@ -18,11 +18,23 @@ export interface CreateLabelPayload {
   description: string
 }
 
-export interface UpdateLabelPayload {
-  labelName?: string
-  color?: string
-  description?: string
-}
+        if (response.data) {
+          // console.log(`Success! Data from ${url}:`, response.data);
+          return response.data
+        }
+      } catch (error: unknown) {
+        if (axios.isAxiosError(error)) {
+          console.warn(`Failed attempt for ${url}:`, error.response?.status || error.message)
+          // Continue to next URL if it's 403 or 404
+          if (error.response?.status === 403 || error.response?.status === 404) {
+            continue
+          }
+        } else {
+          console.warn(`Unexpected error for ${url}:`, error)
+        }
+        break // Stop on major errors like 500
+      }
+    }
 
 const labelApiClient = {
   getLabels(params?: GetLabelsParams) {
@@ -68,6 +80,23 @@ const labelApiClient = {
     } catch (error) {
       console.error('Failed to delete label', error)
       throw error
+      // console.log("Attempting to aggregate from assignments as fallback...");
+      const response = await axios.get(`${API_BASE_URL}/assignments`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+      const assignments = response.data?.data || response.data || []
+      if (Array.isArray(assignments)) {
+        const totalCompleted = assignments.reduce(
+          (acc: number, curr: { completedItems?: number }) => acc + (curr.completedItems || 0),
+          0
+        )
+        // console.log("Aggregated label count from assignments:", totalCompleted);
+        return { total: totalCompleted }
+      }
+    } catch (e) {
+      console.warn('Failed to aggregate from assignments:', e)
     }
   }
 }
