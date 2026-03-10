@@ -10,13 +10,13 @@ export const ENDPOINTS = {
     PROFILE: '/auth/profile'
   },
 
-
   USERS: {
     LIST: '/users',
     DETAIL: (id: string) => `/users/${id}`,
     CREATE: '/users',
     UPDATE: (id: string) => `/users/update/${id}`,
     UPDATE_PASS: (id: string) => `/users/update/password/${id}`,
+    UPDATE_AVATAR: (id: string) => `/users/${id}/avatar/edit`,
     DEACTIVATE: (id: string) => `/users/${id}/deactivate`,
     ACTIVATE: (id: string) => `/users/${id}/activate`
   },
@@ -32,13 +32,39 @@ export const ENDPOINTS = {
     LIST: '/datasets',
     DETAIL: (id: string) => `/datasets/${id}`,
     CREATE: '/datasets',
+    BY_PROJECT: (projectId: string) => `/datasets/project/${projectId}`
   },
 
   ASSIGNMENTS: {
     LIST: '/assignments',
     DETAIL: (id: string) => `/assignments/${id}`,
+    BY_PROJECT: (projectId: string) => `assignments/projects/${projectId}`,
+    BY_ANNOTATOR: (annotatorId: string) => `/assignments/annotators/${annotatorId}`,
     CREATE: '/assignments',
-    DELETE: (id: string) => `/assignments/${id}/remove`
-  }
+    DELETE: (id: string) => `/assignments/${id}/remove`,
+    CREATE_BY_PROJECT: (projectId: string) => `/assignments/projects/${projectId}`
+  },
 
+  ANNOTATIONS: {
+    LIST: '/annotations',
+    DETAIL: (id: string) => `/annotations/${id}`
+  },
+
+  GUIDELINES: {
+    LIST: (projectId: string) => `/guidelines/project/${projectId}`,
+    DETAIL: (id: string) => `/guidelines/${id}`,
+    CREATE: (projectId: string) => `/guidelines/project/${projectId}`,
+    UPDATE: (id: string) => `/guidelines/${id}`
+  },
+
+  LABELS: {
+    LIST: '/labels'
+  },
+
+  REVIEWER: {
+    STATS: '/reviewer/stats',
+    PROJECT_ITEMS: (projectId: string) => `/reviewer/projects/${projectId}/items`,
+    ITEM_DETAIL: (itemId: string) => `/reviewer/items/${itemId}`,
+    REVIEW_DECISION: (itemId: string) => `/reviewer/items/${itemId}/review`
+  }
 } as const

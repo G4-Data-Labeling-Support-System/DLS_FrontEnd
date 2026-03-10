@@ -14,17 +14,20 @@ src/styles/
 ## 🎨 Theme Configuration (`theme.ts`)
 
 ### Colors
+
 - **Primary**: Violet (#8b5cf6), Fuchsia (#d946ef), Blue (#3b82f6)
 - **Background**: Deep Dark (#0f0e17), Dark (#151118), Card (#1e1b29)
 - **Status**: Success, Warning, Error, Info
 - **Text**: Primary (white), Secondary, Tertiary, Muted
 
 ### Gradients
+
 - `primary`: Violet to Fuchsia (horizontal)
 - `hologram`: Purple to Pink
 - `radialViolet`: Radial gradient for backgrounds
 
 ### Glass Effects
+
 - `glass.card`: Transparent card with blur
 - `glass.panel`: Modal/panel glass effect
 - `glass.input`: Input field glass effect
@@ -34,10 +37,10 @@ src/styles/
 ### 1. Import Theme Values
 
 ```tsx
-import { colors, gradients, shadows } from '@/styles';
+import { colors, gradients, shadows } from '@/styles'
 
 // Use in inline styles
-<div style={{ background: colors.background.deepDark }}>
+;<div style={{ background: colors.background.deepDark }}>
   <h1 style={{ color: colors.primary.violet }}>Title</h1>
 </div>
 ```
@@ -76,7 +79,7 @@ import { commonPatterns } from '@/styles';
 </div>
 
 // Navigation Item
-<Link 
+<Link
   className={`${commonPatterns.nav.item} ${
     isActive ? commonPatterns.nav.itemActive : commonPatterns.nav.itemInactive
   }`}
@@ -88,7 +91,7 @@ import { commonPatterns } from '@/styles';
 ### 4. Complete Component Example
 
 ```tsx
-import { themeClasses, commonPatterns } from '@/styles';
+import { themeClasses, commonPatterns } from '@/styles'
 
 export default function MyPage() {
   return (
@@ -101,40 +104,39 @@ export default function MyPage() {
 
       {/* Glass Card */}
       <div className={themeClasses.cards.glass}>
-        <h2 className={themeClasses.text.gradient}>
-          Beautiful Gradient Title
-        </h2>
-        <p className={themeClasses.text.secondary}>
-          Secondary text content
-        </p>
-        <button className={themeClasses.buttons.primary}>
-          Primary Action
-        </button>
+        <h2 className={themeClasses.text.gradient}>Beautiful Gradient Title</h2>
+        <p className={themeClasses.text.secondary}>Secondary text content</p>
+        <button className={themeClasses.buttons.primary}>Primary Action</button>
       </div>
     </div>
-  );
+  )
 }
 ```
 
 ## 📦 Available Utilities
 
 ### Background Classes
+
 - `deepDark`, `dark`, `card`, `blackAlpha`, `whiteAlpha5`, `violetAlpha10`, etc.
 
 ### Text Classes
+
 - `primary`, `secondary`, `tertiary`, `muted`, `violet`, `fuchsia`, `gradient`
 
 ### Button Classes
+
 - `primary`: Gradient button with glow
 - `secondary`: Ghost button with border
 - `ghost`: Transparent hover button
 
 ### Card Classes
+
 - `glass`: Glass card effect
 - `glassPanel`: Modal/panel glass
 - `admin`: Admin panel card
 
 ### Input Classes
+
 - `glass`: Glass input field
 - `neon`: Neon border focus input
 
@@ -154,11 +156,11 @@ To modify the theme, edit `src/styles/theme.ts`:
 export const theme = {
   colors: {
     primary: {
-      violet: '#YOUR_COLOR', // Change primary color
-    },
-  },
+      violet: '#YOUR_COLOR' // Change primary color
+    }
+  }
   // ... rest of theme
-};
+}
 ```
 
 ## 📝 Notes

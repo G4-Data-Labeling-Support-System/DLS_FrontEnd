@@ -1,6 +1,6 @@
-import React from 'react';
-import { useParams } from 'react-router-dom';
-import { Card, Button, Tag } from 'antd';
+import React from 'react'
+import { useParams } from 'react-router-dom'
+import { Card, Button, Tag } from 'antd'
 
 // TODO: Replace with real API call
 const mockDetail = {
@@ -19,22 +19,24 @@ const mockDetail = {
     { name: 'north_main_img_0043.jpg', status: 'labeled', url: '', labeled: true },
     { name: 'north_main_img_0044.jpg', status: 'labeled', url: '', labeled: true },
     { name: 'north_main_img_0045.jpg', status: 'pending', url: '', labeled: false },
-    { name: 'north_main_img_0046.jpg', status: 'labeled', url: '', labeled: true },
-  ],
-};
+    { name: 'north_main_img_0046.jpg', status: 'labeled', url: '', labeled: true }
+  ]
+}
 
 const DatasetDetailPage: React.FC = () => {
-  const { id } = useParams();
+  const { id } = useParams()
   // TODO: fetch detail by id
   // Hiện tại mock, sau này sẽ fetch theo id
-  const detail = { ...mockDetail, id, name: `Dataset_${id}` };
+  const detail = { ...mockDetail, id, name: `Dataset_${id}` }
 
   return (
     <div className="flex flex-col w-full items-center min-h-screen bg-[#18122B] py-8">
       <div className="w-full max-w-[1400px]">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
-          <Button shape="circle" size="large">←</Button>
+          <Button shape="circle" size="large">
+            ←
+          </Button>
           <h2 className="text-3xl font-bold text-white">Dataset: {detail.name}</h2>
         </div>
         {/* Stats */}
@@ -64,7 +66,9 @@ const DatasetDetailPage: React.FC = () => {
                   {item.labeled && <Tag color="success">LABELED</Tag>}
                   {item.status === 'pending' && <Tag color="warning">PENDING</Tag>}
                 </div>
-                <Button type="link" className="mt-2 p-0">QUICK VIEW</Button>
+                <Button type="link" className="mt-2 p-0">
+                  QUICK VIEW
+                </Button>
               </Card>
             ))}
           </div>
@@ -81,20 +85,28 @@ const DatasetDetailPage: React.FC = () => {
             <div className="mb-2 text-xs text-gray-400">CREATED AT</div>
             <div className="mb-2 text-white text-sm">{detail.createdAt}</div>
             <div className="mb-2 text-xs text-gray-400">PROJECT LINK</div>
-            <div className="mb-2 text-fuchsia-400 underline cursor-pointer">Autonomous Driving North A, B</div>
+            <div className="mb-2 text-fuchsia-400 underline cursor-pointer">
+              Autonomous Driving North A, B
+            </div>
             <div className="mb-2 text-xs text-gray-400">LAST SYNCHRONIZED</div>
             <div className="mb-2 text-white text-sm">{detail.lastSync}</div>
             <div className="mb-2 text-xs text-gray-400">TAGS</div>
             <div className="mb-2">
-              {detail.tags.map(tag => <Tag key={tag} color="purple" className="mr-1">{tag.toUpperCase()}</Tag>)}
+              {detail.tags.map((tag) => (
+                <Tag key={tag} color="purple" className="mr-1">
+                  {tag.toUpperCase()}
+                </Tag>
+              ))}
             </div>
             <Button className="w-full mb-2 bg-fuchsia-600 text-white">SYNC NOW</Button>
-            <Button className="w-full" danger>DELETE DATASET</Button>
+            <Button className="w-full" danger>
+              DELETE DATASET
+            </Button>
           </Card>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default DatasetDetailPage;
+export default DatasetDetailPage

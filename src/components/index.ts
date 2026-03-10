@@ -1,5 +1,4 @@
 // Components - Main Barrel Export
-export * from './common';
-export * from './layout';
-export * from './types';
-
+export * from './common'
+export * from './layout'
+export * from './types'
