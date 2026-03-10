@@ -18,14 +18,14 @@ export function Header() {
       key: 'profile',
       icon: <UserOutlined />,
       label: 'Profile',
-      className: 'hover:bg-gray-100 rounded-lg',
+      className: 'hover:bg-white/10 text-gray-200 hover:text-white transition-colors rounded-lg',
       onClick: () => setIsProfileModalOpen(true)
     },
     {
       key: 'settings',
       icon: <SettingOutlined />,
       label: 'Settings',
-      className: 'hover:bg-gray-100 rounded-lg'
+      className: 'hover:bg-white/10 text-gray-200 hover:text-white transition-colors rounded-lg'
     },
     {
       type: 'divider'
@@ -35,7 +35,7 @@ export function Header() {
       icon: <LogoutOutlined />,
       danger: true,
       label: 'Logout',
-      className: 'rounded-lg',
+      className: 'rounded-lg hover:bg-red-500/10 hover:text-red-400 transition-colors',
       onClick: () => {
         logout()
         navigate('/login')
@@ -80,7 +80,7 @@ export function Header() {
               menu={{
                 items,
                 className:
-                  'p-2 rounded-2xl shadow-2xl border border-gray-100 bg-white/95 backdrop-blur-md min-w-[200px]'
+                  'p-2 rounded-2xl shadow-2xl border border-white/10 bg-[#1a1625]/95 backdrop-blur-md min-w-[200px]'
               }}
               trigger={['click']}
               placement="bottomRight"

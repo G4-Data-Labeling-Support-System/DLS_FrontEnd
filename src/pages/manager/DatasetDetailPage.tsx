@@ -1,6 +1,11 @@
 import React from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { DatasetDetail } from '@/features/manager/components/dataset/DatasetDetail'
+import { useParams } from 'react-router-dom'
+import { Card, Button, Tag } from 'antd'
+
+import { MOCK_DATASET_DETAIL as mockDetail } from '@/shared/constants/mockData'
+
 
 const DatasetDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
