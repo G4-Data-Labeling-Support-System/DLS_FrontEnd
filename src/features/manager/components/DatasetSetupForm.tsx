@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Form, Input, Upload, message } from 'antd'
+import { App, Form, Input, Upload } from 'antd'
 import { DeleteOutlined, PlusOutlined, InboxOutlined } from '@ant-design/icons'
 import type { UploadFile } from 'antd/es/upload/interface'
 import type { UploadChangeParam } from 'antd/es/upload'
@@ -20,6 +20,7 @@ export const DatasetSetupForm: React.FC<DatasetSetupFormProps> = ({
   submitLabel,
   editId
 }) => {
+  const { message } = App.useApp()
   const [form] = Form.useForm()
   const [fileList, setFileList] = useState<(UploadFile & { preview?: string })[]>([])
 

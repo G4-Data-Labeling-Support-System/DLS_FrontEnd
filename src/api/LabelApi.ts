@@ -1,29 +1,22 @@
-import axios from 'axios'
-import { API_BASE_URL, getStoredToken } from '@/lib/axios'
+import axiosClient from '@/lib/axios'
+import { ENDPOINTS } from './endpoints'
 
-export const labelApi = {
-  /**
-   * Get all labels - Uses direct axios to bypass global logout redirect on 403
-   */
-  getLabels: async (): Promise<unknown> => {
-    const token = getStoredToken()
-    const urls = [
-      `${API_BASE_URL}/labels`,
-      `${API_BASE_URL}/labels/`,
-      `${API_BASE_URL}/label/all`,
-      `${API_BASE_URL}/labels/all`,
-      `${API_BASE_URL}/annotations/count`
-    ]
+export interface GetLabelsParams {
+  labelId?: string
+  labelName?: string
+  color?: string
+  description?: string
+  labelStatus?: string
+  projectId?: string
+  createdAt?: string
+  updatedAt?: string
+}
 
-    for (const url of urls) {
-      try {
-        // console.log(`Attempting to fetch label count from: ${url}`);
-        const response = await axios.get(url, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          },
-          timeout: 5000
-        })
+export interface CreateLabelPayload {
+  labelName: string
+  color: string
+  description: string
+}
 
         if (response.data) {
           // console.log(`Success! Data from ${url}:`, response.data);
@@ -43,8 +36,50 @@ export const labelApi = {
       }
     }
 
-    // Final fallback: Try to sum completed items from all assignments
+const labelApiClient = {
+  getLabels(params?: GetLabelsParams) {
     try {
+      const url = ENDPOINTS.LABELS.LIST
+      return axiosClient.get(url, { params })
+    } catch (error) {
+      console.error('Failed to fetch labels', error)
+      throw error
+    }
+  },
+  getLabelById(id: string) {
+    try {
+      const url = ENDPOINTS.LABELS.DETAIL(id)
+      return axiosClient.get(url)
+    } catch (error) {
+      console.error('Failed to fetch label by id', error)
+      throw error
+    }
+  },
+  createLabel(datasetId: string, labelData: CreateLabelPayload) {
+    try {
+      const url = ENDPOINTS.LABELS.CREATE(datasetId)
+      return axiosClient.post(url, labelData)
+    } catch (error) {
+      console.error('Failed to create label', error)
+      throw error
+    }
+  },
+  updateLabel(id: string, labelData: UpdateLabelPayload) {
+    try {
+      const url = ENDPOINTS.LABELS.UPDATE(id)
+      return axiosClient.put(url, labelData)
+    } catch (error) {
+      console.error('Failed to update label', error)
+      throw error
+    }
+  },
+  deleteLabel(id: string) {
+    try {
+      const url = ENDPOINTS.LABELS.DELETE(id)
+      return axiosClient.delete(url)
+    } catch (error) {
+      console.error('Failed to delete label', error)
+      throw error
       // console.log("Attempting to aggregate from assignments as fallback...");
       const response = await axios.get(`${API_BASE_URL}/assignments`, {
         headers: {
@@ -63,7 +98,8 @@ export const labelApi = {
     } catch (e) {
       console.warn('Failed to aggregate from assignments:', e)
     }
-
-    return null
   }
 }
+
+export default labelApiClient
+export { labelApiClient as labelApi }
