@@ -1,13 +1,12 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import getTaskStatusStyle from './components/StatusStyle'
-
-import { MOCK_TASK_DETAIL } from '@/shared/constants/mockData'
+import { StatusStyle as getTaskStatusStyle, MOCK_TASK_DETAIL, MOCK_TEST_TASK_DETAIL } from '@/features/annotator'
 
 
 export default function TaskDetailPage() {
   const { taskId } = useParams<{ taskId: string }>()
   const navigate = useNavigate()
-  const task = MOCK_TASK_DETAIL // In real app, fetch by taskId
+  const task =
+    taskId === 'test-task-1' ? MOCK_TEST_TASK_DETAIL : MOCK_TASK_DETAIL
   const statusStyle = getTaskStatusStyle(task.status)
 
   return (

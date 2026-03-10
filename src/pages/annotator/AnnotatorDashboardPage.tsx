@@ -9,11 +9,14 @@ import {
   type DashboardTabType
 } from '@/features/manager/components/dashboard/DashboardTabs'
 import { useAuthStore } from '@/store/auth.store'
-import AssignmentHeader from './components/AssignmentHeader'
-import TasksSection from './components/TaskSection'
-import GuidelineSection from './components/GuidelineSection'
-import AnnotatorProjectDetail from './components/AnnotationProjectDetail'
-import AnnotatorDatasetCard from './components/AnnotatorDatasetCard'
+import {
+  AssignmentHeader,
+  TasksSection,
+  GuidelineSection,
+  AnnotationProjectDetail,
+  AnnotatorDatasetCard,
+  MOCK_TEST_TASK
+} from '@/features/annotator'
 
 // ============ Types ============
 interface AssignmentTask {
@@ -99,9 +102,11 @@ export default function AnnotatorDashboardPage() {
               assignmentData.project?.projectId ||
               assignmentData.project?.id,
             // Fallback to mock tasks and counts if missing
-            tasks: assignmentData.tasks || [],
+            tasks: Array.isArray(assignmentData.tasks)
+              ? [...assignmentData.tasks, MOCK_TEST_TASK]
+              : [MOCK_TEST_TASK],
             completedTasks: assignmentData.completedTasks ?? 0,
-            totalTasks: assignmentData.totalTasks || 0
+            totalTasks: (assignmentData.totalTasks || 0) + 1
           }
           setAssignment(normAssignment)
 
@@ -149,9 +154,11 @@ export default function AnnotatorDashboardPage() {
                   projectId:
                     rawAssign.projectId || rawAssign.project?.projectId || rawAssign.project?.id,
                   // Fallback to mock tasks and counts if missing
-                  tasks: rawAssign.tasks || [],
+                  tasks: Array.isArray(rawAssign.tasks)
+                    ? [...rawAssign.tasks, MOCK_TEST_TASK]
+                    : [MOCK_TEST_TASK],
                   completedTasks: rawAssign.completedTasks ?? 0,
-                  totalTasks: rawAssign.totalTasks || 0
+                  totalTasks: (rawAssign.totalTasks || 0) + 1
                 }
                 setAssignment(normAssign)
 
@@ -253,7 +260,7 @@ export default function AnnotatorDashboardPage() {
               </div>
             )}
             <div className="rounded-2xl grid md:grid-cols-2 sm:grid-cols-1 gap-6">
-              <AnnotatorProjectDetail project={projectDetail} />
+              <AnnotationProjectDetail project={projectDetail} />
               {guideline && <GuidelineSection guideline={guideline.content} />}
               <div className="md:col-span-2">
                 <AnnotatorDatasetCard projectId={projectDetail.id} />

@@ -16,7 +16,11 @@ interface Shape {
   isPreview?: boolean
 }
 
-import { MOCK_ANNOTATION_ITEMS as MOCK_DATA_ITEMS, MOCK_AVAILABLE_LABELS as AVAILABLE_LABELS } from '@/shared/constants/mockData'
+import {
+  MOCK_DATA_ITEMS,
+  AVAILABLE_LABELS,
+  MOCK_TEST_ANNOTATION_ITEMS
+} from '@/features/annotator'
 
 
 export default function AnnotationPage() {
@@ -42,8 +46,9 @@ export default function AnnotationPage() {
   const [currentShape, setCurrentShape] = useState<Shape | null>(null)
   const [shapes, setShapes] = useState<Shape[]>([])
 
-  const currentItem = MOCK_DATA_ITEMS[currentIndex]
-  const totalItems = MOCK_DATA_ITEMS.length
+  const dataItems = taskId === 'test-task-1' ? MOCK_TEST_ANNOTATION_ITEMS : MOCK_DATA_ITEMS
+  const currentItem = dataItems[currentIndex]
+  const totalItems = dataItems.length
 
   // Reset zoom and tools when changing image is now handled in handleNext/handlePrevious
 

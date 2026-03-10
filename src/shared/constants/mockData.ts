@@ -2,6 +2,15 @@
  * Centralized Mock Data for Development and Fallback
  */
 
+export const MOCK_TEST_TASK = {
+    id: 'test-task-1',
+    name: 'TEST_SCAN_001.png',
+    taskStatus: 'PENDING',
+    annotationStatus: 'not_submitted',
+    batchLabel: 'Test Batch',
+    timeTaken: '--'
+}
+
 export const MOCK_DASHBOARD_DATA = {
     assignment: {
         id: 'ASGN-MOCK-001',
@@ -52,7 +61,8 @@ export const MOCK_DASHBOARD_DATA = {
                 annotationStatus: 'not_submitted',
                 batchLabel: 'Batch 2',
                 timeTaken: '--'
-            }
+            },
+            MOCK_TEST_TASK
         ]
     },
     project: {
@@ -170,6 +180,43 @@ export const MOCK_TASK_DETAIL = {
             dataType: 'Image',
             uploadedAt: '2024-03-07T09:10:00Z',
             previewUrl: 'https://picsum.photos/seed/scan3/100/100'
+        }
+    ]
+}
+
+export const MOCK_TEST_ANNOTATION_ITEMS = [
+    {
+        id: 'test-item-1',
+        filename: 'TEST_SCAN_001.png',
+        url: 'https://picsum.photos/seed/test1/800/600',
+        dataType: 'Image',
+        geometry: {
+            type: 'bounding_box',
+            x: 50,
+            y: 50,
+            width: 100,
+            height: 100
+        }
+    }
+]
+
+export const MOCK_TEST_TASK_DETAIL = {
+    id: 'test-task-1',
+    assignmentId: 'ASGN-MOCK-001',
+    taskType: 'classification',
+    completedCount: 0,
+    flagForReview: false,
+    reviewStatus: 'not_reviewed',
+    status: 'pending',
+    createdAt: new Date().toISOString(),
+    dataItems: [
+        {
+            id: 'test-item-1',
+            filename: 'TEST_SCAN_001.png',
+            fileFormat: 'PNG',
+            dataType: 'Image',
+            uploadedAt: new Date().toISOString(),
+            previewUrl: 'https://picsum.photos/seed/test1/100/100'
         }
     ]
 }
