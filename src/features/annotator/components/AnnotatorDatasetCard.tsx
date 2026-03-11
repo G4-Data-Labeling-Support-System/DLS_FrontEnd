@@ -10,6 +10,17 @@ interface Dataset {
     createdAt?: string
 }
 
+interface DatasetItem {
+    itemId: string
+    id?: string
+    fileName?: string
+    name?: string
+    filename?: string
+    previewUrl?: string
+    url?: string
+    labeled?: boolean
+}
+
 interface AnnotatorDatasetCardProps {
     projectId: string
 }
@@ -21,7 +32,7 @@ export default function AnnotatorDatasetCard({ projectId }: AnnotatorDatasetCard
     const [searchTerm, setSearchTerm] = useState('')
     const [currentPage, setCurrentPage] = useState(1)
     const [expandedDatasetId, setExpandedDatasetId] = useState<string | null>(null)
-    const [datasetItems, setDatasetItems] = useState<any[]>([])
+    const [datasetItems, setDatasetItems] = useState<DatasetItem[]>([])
     const [itemsLoading, setItemsLoading] = useState(false)
     const itemsPerPage = 5
 
@@ -161,7 +172,9 @@ export default function AnnotatorDatasetCard({ projectId }: AnnotatorDatasetCard
                                 >
                                     <div className="p-4">
                                         <div className="flex justify-between items-start mb-2">
-                                            <h4 className="text-white font-semibold text-base group-hover:text-blue-400 transition-colors">
+                                            <h4 
+                                                className="text-white font-semibold text-base"
+                                            >
                                                 {dataset.datasetName}
                                             </h4>
                                             <span className="text-[10px] text-gray-500 font-mono bg-white/5 px-2 py-0.5 rounded-full border border-white/10 uppercase tracking-tighter">
@@ -188,7 +201,7 @@ export default function AnnotatorDatasetCard({ projectId }: AnnotatorDatasetCard
                                                     className={`flex items-center gap-1 text-[11px] font-bold transition-colors ${expandedDatasetId === dataset.datasetId ? 'text-blue-400' : 'text-gray-500 hover:text-blue-400'}`}
                                                 >
                                                     <span className="material-symbols-outlined text-[16px]">
-                                                        {expandedDatasetId === dataset.datasetId ? 'keyboard_arrow_up' : 'stat_0'}
+                                                        {expandedDatasetId === dataset.datasetId ? 'keyboard_arrow_up' : 'keyboard_arrow_down'}
                                                     </span>
                                                     {expandedDatasetId === dataset.datasetId ? 'Hide Items' : 'Show Items'}
                                                 </button>
@@ -214,15 +227,20 @@ export default function AnnotatorDatasetCard({ projectId }: AnnotatorDatasetCard
                                                     </div>
                                                 ) : (
                                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                                        {datasetItems.map((item) => (
-                                                            <div key={item.id} className="relative group/item rounded-lg overflow-hidden border border-white/5 bg-black/20 aspect-square">
+                                                        {datasetItems.map((item: DatasetItem) => (
+                                                            <div key={item.itemId || item.id} className="relative group/item rounded-lg overflow-hidden border border-white/5 bg-black/20 aspect-square flex items-center justify-center">
+                                                                <div className="absolute inset-0 flex items-center justify-center bg-violet-500/5 group-hover/item:bg-violet-500/10 transition-colors">
+                                                                    <span className="material-symbols-outlined text-gray-600 text-3xl opacity-20">
+                                                                        image
+                                                                    </span>
+                                                                </div>
                                                                 <img
-                                                                    src={item.previewUrl || item.url || 'https://picsum.photos/seed/placeholder/100/100'}
-                                                                    alt={item.name || item.filename}
+                                                                    src={item.previewUrl || item.url || (item.fileName ? `https://picsum.photos/seed/${item.itemId}/150/150` : 'https://picsum.photos/seed/placeholder/150/150')}
+                                                                    alt={item.fileName || item.name || item.filename}
                                                                     className="w-full h-full object-cover opacity-60 group-hover/item:opacity-100 transition-opacity"
                                                                 />
                                                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover/item:opacity-100 transition-opacity p-2 flex flex-col justify-end">
-                                                                    <span className="text-[8px] text-white truncate font-mono">{item.name || item.filename}</span>
+                                                                    <span className="text-[10px] text-white truncate font-medium">{item.fileName || item.name || item.filename}</span>
                                                                 </div>
                                                                 {item.labeled && (
                                                                     <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
@@ -246,7 +264,7 @@ export default function AnnotatorDatasetCard({ projectId }: AnnotatorDatasetCard
                                 </span>
                                 <div className="flex items-center gap-2">
                                     <button
-                                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                                        onClick={() => setCurrentPage((p: number) => Math.max(1, p - 1))}
                                         disabled={currentPage === 1}
                                         className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-all"
                                     >
@@ -258,7 +276,7 @@ export default function AnnotatorDatasetCard({ projectId }: AnnotatorDatasetCard
                                         <span className="text-xs text-gray-500">{totalPages}</span>
                                     </div>
                                     <button
-                                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                                        onClick={() => setCurrentPage((p: number) => Math.min(totalPages, p + 1))}
                                         disabled={currentPage === totalPages}
                                         className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-all"
                                     >

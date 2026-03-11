@@ -9,8 +9,8 @@ export interface ApiClientConfig {
   headers?: Record<string, string>
   getToken?: () => string | null
   getRefreshToken?: () => string | null // Thêm function lấy refresh token
-  onUnauthorized?: () => void
-  onForbidden?: () => void
+  onUnauthorized?: (error?: AxiosError) => void
+  onForbidden?: (error?: AxiosError) => void
 }
 
 // Mở rộng type cho Request Config để thêm cờ _retry
@@ -47,12 +47,23 @@ const processQueue = (error: AxiosError | null, token: string | null = null) => 
 export const getStoredToken = () => localStorage.getItem('accessToken')
 const defaultGetRefreshToken = () => localStorage.getItem('refreshToken')
 
-export const handleUnauthorized = () => {
+export const handleUnauthorized = (error?: AxiosError) => {
+  // Log specific error details for debugging before logout
+  if (error) {
+    console.group('🚨 AUTH ERROR DETECTED');
+    console.error('URL:', error.config?.url);
+    console.error('Status:', error.response?.status);
+    console.error('Method:', error.config?.method?.toUpperCase());
+    console.error('Response Data:', error.response?.data);
+    console.groupEnd();
+  }
+
   localStorage.removeItem('accessToken')
   localStorage.removeItem('refreshToken')
 
   // Đồng bộ với Zustand Store
   useAuthStore.getState().logout()
+  
   // Chỉ redirect nếu chưa ở trang login để tránh lặp vô tận
   if (!window.location.pathname.includes('/login')) {
     window.location.href = '/login'
@@ -91,21 +102,16 @@ export function createApiClient({
   client.interceptors.response.use(
     (res) => res,
     async (error: AxiosError) => {
-      // Log lỗi detail từ server để debug (ví dụ lỗi validation 400)
-      if (error.response?.data) {
-        console.error('Backend Error Details:', error.response.data)
-      }
-
       const originalRequest = error.config as CustomAxiosRequestConfig
       const status = error.response?.status
 
       // Xử lý lỗi 403 Forbidden
       if (status === 403) {
         if (onForbidden) {
-          onForbidden()
+          onForbidden(error)
         } else {
           // Nếu không có handler riêng, coi như unauthorized (hết hạn session)
-          onUnauthorized()
+          onUnauthorized(error)
         }
         return Promise.reject(error)
       }
@@ -154,7 +160,7 @@ export function createApiClient({
         } catch (refreshError) {
           // Nếu refresh fail thì force logout
           processQueue(refreshError as AxiosError, null)
-          onUnauthorized()
+          onUnauthorized(refreshError as AxiosError)
           return Promise.reject(refreshError)
         } finally {
           isRefreshing = false

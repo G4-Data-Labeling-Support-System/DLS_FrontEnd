@@ -17,7 +17,7 @@ import {
 } from 'antd'
 import dayjs from 'dayjs'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
-import { EditOutlined, UserOutlined, MoreOutlined, DeleteOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
+import { EditOutlined, MoreOutlined, DeleteOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import assignmentApi from '@/api/AssignmentApi'
 import guidelineApi from '@/api/GuidelineApi'
 import { userApi } from '@/api/userApi'
