@@ -56,10 +56,11 @@ const projectApi = {
       throw error
     }
   },
-  updateProjectStatus(id: string, status: string) {
+  async updateProjectStatus(id: string, status: string) {
     try {
       const url = ENDPOINTS.PROJECTS.STATUS(id)
-      return axiosClient.put(url, { projectStatus: status })
+      const response = await axiosClient.put(url, { status: status })
+      return response
     } catch (error) {
       console.error('Failed to update project status', error)
       throw error

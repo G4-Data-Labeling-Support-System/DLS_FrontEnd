@@ -52,25 +52,38 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
       if (Array.isArray(data)) {
         // Map the data to ensure properties match GetProjectsParams expected by ProjectCard
         const mappedProjects: GetProjectsParams[] = data.map((p: Record<string, unknown>) => {
+          const projectInfo = (p.project as Record<string, unknown>) || p
           const mapped: GetProjectsParams = {}
-          if (p.projectId || p.id) {
-            mapped.projectId = String(p.projectId || p.id)
+
+          const pid = projectInfo.projectId || projectInfo.id || p.id || p.projectId
+          if (pid) {
+            mapped.projectId = String(pid)
           }
-          if (p.projectName || p.name) {
-            mapped.projectName = String(p.projectName || p.name)
+
+          const pname = projectInfo.projectName || projectInfo.name || p.projectName || p.name
+          if (pname) {
+            mapped.projectName = String(pname)
           }
-          if (p.projectStatus || p.status) {
-            mapped.projectStatus = String(p.projectStatus || p.status)
+
+          const pstatus = projectInfo.projectStatus || projectInfo.status || p.projectStatus || p.status
+          if (pstatus) {
+            mapped.projectStatus = String(pstatus)
           }
-          if (p.description) {
-            mapped.description = String(p.description)
+
+          if (projectInfo.description || p.description) {
+            mapped.description = String(projectInfo.description || p.description)
           }
-          if (p.createdAt || p.created_at || p.createdDate) {
-            mapped.createdAt = String(p.createdAt || p.created_at || p.createdDate)
+
+          const pcreated = projectInfo.createdAt || projectInfo.created_at || p.createdAt || p.created_at || projectInfo.createdDate || p.createdDate
+          if (pcreated) {
+            mapped.createdAt = String(pcreated)
           }
-          if (p.updatedAt) {
-            mapped.updatedAt = String(p.updatedAt)
+
+          const pupdated = projectInfo.updatedAt || projectInfo.updated_at || p.updatedAt || p.updated_at
+          if (pupdated) {
+            mapped.updatedAt = String(pupdated)
           }
+
           return mapped
         })
         setProjects(mappedProjects)
@@ -173,8 +186,9 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
               { value: 'ALL', label: 'All Statuses' },
               { value: 'NOT_STARTED', label: 'Not Started' },
               { value: 'ACTIVE', label: 'Active' },
-              { value: 'INPROCESS', label: 'In Process' },
-              { value: 'COMPLETED', label: 'Completed' }
+              { value: 'INPROCESS', label: 'In Progress' },
+              { value: 'COMPLETED', label: 'Completed' },
+              { value: 'CANCELLED', label: 'Cancelled' }
             ]}
           />
           <Input
