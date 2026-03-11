@@ -40,7 +40,6 @@ interface DataItem {
 
 export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack }) => {
   const { message } = App.useApp()
-  const { user } = useAuthStore()
   const [dataset, setDataset] = useState<DatasetDetailData | null>(null)
   const [projectName, setProjectName] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
@@ -72,20 +71,8 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
     const fetchDetail = async () => {
       try {
         setLoading(true)
-        let data: any = null
-
-        if (user?.role === UserRole.ANNOTATOR && urlProjectId) {
-          // Fallback for Annotators: fetch from project list (which is authorized)
-          const response = await datasetApi.getDatasetsByProjectId(urlProjectId)
-          const datasets = response.data?.data || response.data || []
-          data = Array.isArray(datasets) 
-            ? datasets.find((d: any) => String(d.datasetId || d.id) === String(datasetId))
-            : null
-        } else {
-          // Default for Managers/Admins
-          const response = await datasetApi.getDatasetById(datasetId)
-          data = response.data?.data || response.data
-        }
+        const response = await datasetApi.getDatasetById(datasetId)
+        const data = response.data?.data || response.data
 
         if (data && isMounted) {
           const extractedProjectId = data.projectId || data.project?.id || data.project?.projectId;
@@ -96,7 +83,7 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
             description: data.description ? String(data.description) : undefined,
             projectId: extractedProjectId ? String(extractedProjectId) : undefined,
             totalItems: Number(data.totalItems || data.itemCount) || 0,
-            createdAt: data.createdAt ? String(data.createdAt) : undefined
+createdAt: data.createdAt ? String(data.createdAt) : undefined
           })
 
           if (extractedProjectId) {
@@ -106,41 +93,20 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
               if (projData && isMounted) {
                 setProjectName(String(projData.projectName || projData.name || extractedProjectId))
               }
-            } catch (projErr: any) {
-              console.warn('Could not fetch project name:', projErr)
+            } catch (projErr) {
+              console.error('Failed to fetch associated project details:', projErr)
             }
           }
-        } else if (isMounted) {
-            throw new Error('Dataset not found')
         }
-      } catch (error: any) {
+      } catch (error) {
         if (isMounted) {
           console.error('Error fetching dataset details:', error)
-          if (error?.response?.status !== 403) {
-            message.error('Cannot load dataset details.')
-          }
+          message.error('Cannot load dataset details.')
           onBack()
         }
       } finally {
         if (isMounted) {
           setLoading(false)
-        }
-      }
-    }
-
-    const fetchItems = async () => {
-      try {
-        setItemsLoading(true)
-        const response = await datasetApi.getDatasetItems(datasetId)
-        const data = response.data?.data || response.data || []
-        if (isMounted) {
-          setDatasetItems(data)
-        }
-      } catch (error) {
-        console.error('Error fetching dataset items:', error)
-      } finally {
-        if (isMounted) {
-          setItemsLoading(false)
         }
       }
     }
@@ -168,7 +134,7 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
     return () => {
       isMounted = false
     }
-  }, [datasetId, user?.role, message, onBack, urlProjectId])
+  }, [datasetId, onBack, message])
 
   const handleItemClick = async (item: DataItem) => {
     const itemId = item.dataItemId || item.id || item.itemId
@@ -211,8 +177,7 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
       handleItemClick(dataItems[0]) // Loop to first
     }
   }
-
-  const handlePrevItem = () => {
+const handlePrevItem = () => {
     if (!selectedIdForNav || dataItems.length <= 1) return
     const currentIndex = dataItems.findIndex(i => (i.dataItemId || i.id || i.itemId) === selectedIdForNav)
     if (currentIndex > 0) {
@@ -241,14 +206,14 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
   if (loading) {
     return (
       <div className="w-full h-64 flex justify-center items-center">
-        <Spin size="large" tip="Loading dataset details..." />
+        <Spin size="large" />
       </div>
     )
   }
 
   if (!dataset) {
     return (
-      <div className="w-full text-center py-10 text-gray-400 glass-panel rounded-2xl">
+      <div className="w-full text-center py-10 text-gray-400">
         Error loading dataset information.
       </div>
     )
@@ -260,14 +225,9 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
 
   return (
     <div className="w-full animate-fade-in">
+      {/* Header - same layout as ProjectDetail */}
       <div className="flex justify-between items-start mb-6">
         <div className="flex items-center gap-3">
-          <Button
-            type="text"
-            icon={<span className="material-symbols-outlined">arrow_back</span>}
-            onClick={onBack}
-            className="text-gray-400 hover:text-white"
-          />
           <div>
             <Title level={3} className="!text-white !m-0 !font-display">
               {dataset.datasetName || 'Unnamed Dataset'}
@@ -303,20 +263,21 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
               <Descriptions.Item label="Total Items">
                 {(dataset.totalItems ?? 0).toLocaleString()}
               </Descriptions.Item>
-              <Descriptions.Item label="Created At">
+<Descriptions.Item label="Created At">
                 {formatDate(dataset.createdAt)}
               </Descriptions.Item>
             </Descriptions>
           </div>
 
+          {/* Right: Description */}
           <div className="flex-1 p-6 flex flex-col">
             <div className="flex items-center justify-between mb-4">
               <span className="text-white text-lg font-display flex items-center gap-2">
-                <span className="material-symbols-outlined text-emerald-400">description</span>
+                <span className="material-symbols-outlined text-green-400">description</span>
                 Description
               </span>
             </div>
-            <div className="flex-1 bg-[#231e31] p-4 rounded-xl border border-white/5 min-h-[100px]">
+            <div className="flex-1 bg-[#231e31] p-4 rounded-xl border border-white/5">
               <div className="text-gray-400 text-sm whitespace-pre-wrap">
                 {dataset.description || (
                   <span className="text-gray-600 italic">No description provided.</span>
@@ -371,7 +332,7 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
           <Empty 
             description={<span className="text-gray-500">No data items found</span>}
             className="my-10"
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
+image={Empty.PRESENTED_IMAGE_SIMPLE}
           />
         ) : (
           <>
@@ -422,7 +383,7 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
             
             <div className="flex justify-end pt-4 border-t border-gray-800">
               <Pagination
-                current={currentPage}
+current={currentPage}
                 pageSize={itemsPerPage}
                 total={dataItems.length}
                 onChange={setCurrentPage}
@@ -481,7 +442,7 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
                      src={selectedItem.imageUrl || selectedItem.url || selectedItem.previewUrl || selectedItem.path} 
                      alt={selectedItem.name || selectedItem.filename || selectedItem.fileName || selectedItem.title || 'Item'} 
                      className="max-w-full max-h-full object-contain"
-                     rootClassName="w-full h-full flex items-center justify-center"
+rootClassName="w-full h-full flex items-center justify-center"
                      onError={(e) => {
                        const target = e.target as HTMLImageElement;
                        if (!target.src.includes('picsum.photos')) {
@@ -533,7 +494,7 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
                       <span className={`text-xs font-medium ${selectedItem.labeled ? 'text-emerald-400' : 'text-gray-400'}`}>
                         {selectedItem.labeled ? 'Completed' : 'Pending'}
                       </span>
-                    </div>
+</div>
                   </Descriptions.Item>
                 </Descriptions>
               </div>
@@ -558,10 +519,6 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
           border-bottom: 1px solid #2d263b;
           padding-bottom: 12px;
           margin-bottom: 12px;
-          display: flex;
-        }
-        .custom-descriptions .ant-descriptions-item-label {
-          flex-shrink: 0;
         }
         .custom-descriptions .ant-descriptions-item-container:last-child {
           border-bottom: none;

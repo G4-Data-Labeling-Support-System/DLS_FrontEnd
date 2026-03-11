@@ -91,6 +91,10 @@ export default function AnnotatorDashboardPage() {
           const assignmentData = assignmentRes.data?.data || assignmentRes.data
 
           // Normalize assignment
+          const actualTasks = Array.isArray(assignmentData.tasks) ? assignmentData.tasks : []
+          const fallbackTasks = actualTasks.length > 0 ? actualTasks : [MOCK_TEST_TASK]
+          const calcCompleted = actualTasks.filter((t: any) => t.taskStatus === 'COMPLETED' || t.annotationStatus === 'COMPLETED').length
+
           const normAssignment = {
             ...assignmentData,
             id: assignmentData.assignmentId || assignmentData.id,
@@ -101,12 +105,9 @@ export default function AnnotatorDashboardPage() {
               assignmentData.projectId ||
               assignmentData.project?.projectId ||
               assignmentData.project?.id,
-            // Fallback to mock tasks and counts if missing
-            tasks: Array.isArray(assignmentData.tasks)
-              ? [...assignmentData.tasks, MOCK_TEST_TASK]
-              : [MOCK_TEST_TASK],
-            completedTasks: assignmentData.completedTasks ?? 0,
-            totalTasks: (assignmentData.totalTasks || 0) + 1
+            tasks: fallbackTasks,
+            completedTasks: actualTasks.length > 0 ? calcCompleted : (assignmentData.completedTasks ?? 0),
+            totalTasks: actualTasks.length > 0 ? actualTasks.length : (assignmentData.totalTasks || 1)
           }
           setAssignment(normAssignment)
 
@@ -145,6 +146,10 @@ export default function AnnotatorDashboardPage() {
 
               if (assignsList.length > 0) {
                 const rawAssign = assignsList[0]
+                const actualTasks2 = Array.isArray(rawAssign.tasks) ? rawAssign.tasks : []
+                const fallbackTasks2 = actualTasks2.length > 0 ? actualTasks2 : [MOCK_TEST_TASK]
+                const calcCompleted2 = actualTasks2.filter((t: any) => t.taskStatus === 'COMPLETED' || t.annotationStatus === 'COMPLETED').length
+
                 const normAssign = {
                   ...rawAssign,
                   id: rawAssign.assignmentId || rawAssign.id,
@@ -153,12 +158,9 @@ export default function AnnotatorDashboardPage() {
                   description: rawAssign.descriptionAssignment || rawAssign.description,
                   projectId:
                     rawAssign.projectId || rawAssign.project?.projectId || rawAssign.project?.id,
-                  // Fallback to mock tasks and counts if missing
-                  tasks: Array.isArray(rawAssign.tasks)
-                    ? [...rawAssign.tasks, MOCK_TEST_TASK]
-                    : [MOCK_TEST_TASK],
-                  completedTasks: rawAssign.completedTasks ?? 0,
-                  totalTasks: (rawAssign.totalTasks || 0) + 1
+                  tasks: fallbackTasks2,
+                  completedTasks: actualTasks2.length > 0 ? calcCompleted2 : (rawAssign.completedTasks ?? 0),
+                  totalTasks: actualTasks2.length > 0 ? actualTasks2.length : (rawAssign.totalTasks || 1)
                 }
                 setAssignment(normAssign)
 

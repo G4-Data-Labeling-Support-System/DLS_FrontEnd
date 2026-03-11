@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import datasetApi from '@/api/DatasetApi'
 import { themeClasses } from '@/styles'
+import { useNavigate } from 'react-router-dom'
+import { PATH_ANNOTATOR } from '@/routes/paths'
 
 interface Dataset {
     datasetId: string
@@ -8,6 +10,7 @@ interface Dataset {
     description?: string
     totalItems?: number
     createdAt?: string
+    dataitems?: DatasetItem[]
 }
 
 interface DatasetItem {
@@ -26,14 +29,13 @@ interface AnnotatorDatasetCardProps {
 }
 
 export default function AnnotatorDatasetCard({ projectId }: AnnotatorDatasetCardProps) {
+    const navigate = useNavigate()
     const [datasets, setDatasets] = useState<Dataset[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [searchTerm, setSearchTerm] = useState('')
     const [currentPage, setCurrentPage] = useState(1)
     const [expandedDatasetId, setExpandedDatasetId] = useState<string | null>(null)
-    const [datasetItems, setDatasetItems] = useState<DatasetItem[]>([])
-    const [itemsLoading, setItemsLoading] = useState(false)
     const itemsPerPage = 5
 
     useEffect(() => {
@@ -59,28 +61,7 @@ export default function AnnotatorDatasetCard({ projectId }: AnnotatorDatasetCard
         fetchDatasets()
     }, [projectId])
 
-    useEffect(() => {
-        const fetchItems = async () => {
-            if (!expandedDatasetId) {
-                setDatasetItems([])
-                return
-            }
 
-            try {
-                setItemsLoading(true)
-                const response = await datasetApi.getDatasetItems(expandedDatasetId)
-                const data = response.data?.data || response.data || []
-                setDatasetItems(data)
-            } catch (err) {
-                console.error('Failed to fetch dataset items:', err)
-                setDatasetItems([])
-            } finally {
-                setItemsLoading(false)
-            }
-        }
-
-        fetchItems()
-    }, [expandedDatasetId])
 
     const filteredDatasets = datasets.filter((d) =>
         d.datasetName.toLowerCase().includes(searchTerm.toLowerCase())
@@ -186,6 +167,16 @@ export default function AnnotatorDatasetCard({ projectId }: AnnotatorDatasetCard
                                             {dataset.description || 'No description provided.'}
                                         </p>
 
+                                        <div className="flex justify-end mb-3">
+                                            <button
+                                                onClick={() => navigate(PATH_ANNOTATOR.datasetDetail.replace(':projectId', projectId).replace(':datasetId', dataset.datasetId))}
+                                                className="px-3 py-1 bg-violet-600 hover:bg-violet-700 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 shadow-lg shadow-violet-500/20"
+                                            >
+                                                <span>View Detail</span>
+                                                <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                                            </button>
+                                        </div>
+
                                         <div className="flex items-center justify-between mt-auto pt-3 border-t border-white/5">
                                             <div className="flex items-center gap-4">
                                                 <div className="flex items-center gap-1">
@@ -221,34 +212,32 @@ export default function AnnotatorDatasetCard({ projectId }: AnnotatorDatasetCard
                                     {expandedDatasetId === dataset.datasetId && (
                                         <div className="px-4 pb-4 animate-in fade-in slide-in-from-top-2 duration-300">
                                             <div className="pt-4 border-t border-white/5">
-                                                {itemsLoading ? (
-                                                    <div className="flex items-center justify-center py-8">
-                                                        <div className="w-5 h-5 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
-                                                    </div>
-                                                ) : (
-                                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                                        {datasetItems.map((item: DatasetItem) => (
-                                                            <div key={item.itemId || item.id} className="relative group/item rounded-lg overflow-hidden border border-white/5 bg-black/20 aspect-square flex items-center justify-center">
-                                                                <div className="absolute inset-0 flex items-center justify-center bg-violet-500/5 group-hover/item:bg-violet-500/10 transition-colors">
-                                                                    <span className="material-symbols-outlined text-gray-600 text-3xl opacity-20">
-                                                                        image
-                                                                    </span>
-                                                                </div>
-                                                                <img
-                                                                    src={item.previewUrl || item.url || (item.fileName ? `https://picsum.photos/seed/${item.itemId}/150/150` : 'https://picsum.photos/seed/placeholder/150/150')}
-                                                                    alt={item.fileName || item.name || item.filename}
-                                                                    className="w-full h-full object-cover opacity-60 group-hover/item:opacity-100 transition-opacity"
-                                                                />
-                                                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover/item:opacity-100 transition-opacity p-2 flex flex-col justify-end">
-                                                                    <span className="text-[10px] text-white truncate font-medium">{item.fileName || item.name || item.filename}</span>
-                                                                </div>
-                                                                {item.labeled && (
-                                                                    <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                                                                )}
+                                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                                    {(dataset.dataitems || []).length > 0 ? (dataset.dataitems || []).map((item: DatasetItem) => (
+                                                        <div key={item.itemId || item.id} className="relative group/item rounded-lg overflow-hidden border border-white/5 bg-black/20 aspect-square flex items-center justify-center">
+                                                            <div className="absolute inset-0 flex items-center justify-center bg-violet-500/5 group-hover/item:bg-violet-500/10 transition-colors">
+                                                                <span className="material-symbols-outlined text-gray-600 text-3xl opacity-20">
+                                                                    image
+                                                                </span>
                                                             </div>
-                                                        ))}
-                                                    </div>
-                                                )}
+                                                            <img
+                                                                src={item.previewUrl || item.url || (item.fileName ? `https://picsum.photos/seed/${item.itemId}/150/150` : 'https://picsum.photos/seed/placeholder/150/150')}
+                                                                alt={item.fileName || item.name || item.filename}
+                                                                className="w-full h-full object-cover opacity-60 group-hover/item:opacity-100 transition-opacity"
+                                                            />
+                                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover/item:opacity-100 transition-opacity p-2 flex flex-col justify-end">
+                                                                <span className="text-[10px] text-white truncate font-medium">{item.fileName || item.name || item.filename}</span>
+                                                            </div>
+                                                            {item.labeled && (
+                                                                <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                                                            )}
+                                                        </div>
+                                                    )) : (
+                                                        <div className="col-span-full py-4 text-center text-gray-500 text-xs italic">
+                                                            No items in this dataset.
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     )}
