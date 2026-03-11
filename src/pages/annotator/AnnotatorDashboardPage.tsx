@@ -292,7 +292,7 @@ export default function AnnotatorDashboardPage() {
                 <div
                   className={`${themeClasses.backgrounds.card} border ${themeClasses.borders.violet10} rounded-2xl p-6 md:col-span-2`}
                 >
-                  <TasksSection tasks={assignment.tasks} />
+                  <TasksSection tasks={assignment.tasks} assignmentId={assignment.id} />
                 </div>
               )}
             </div>

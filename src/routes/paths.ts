@@ -31,6 +31,7 @@ export const PATH_MANAGER = {
 export const PATH_ANNOTATOR = {
   root: '/annotator',
   project: '/annotator/project',
+  projectDetail: '/annotator/project/:id',
   assignment: '/annotator/assignment',
   taskDetail: (taskId: string) => `/annotator/task/${taskId}`,
   annotation: (taskId: string) => `/annotator/task/${taskId}/annotate`

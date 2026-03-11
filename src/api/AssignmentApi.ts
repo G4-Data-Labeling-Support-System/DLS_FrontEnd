@@ -103,6 +103,15 @@ const assignmentApi = {
       console.error('Failed to create assignment for project', error)
       throw error
     }
+  },
+  getTasksByAssignmentId(assignmentId: string) {
+    try {
+      const url = ENDPOINTS.TASKS.BY_ASSIGNMENT(assignmentId)
+      return axiosClient.get(url)
+    } catch (error) {
+      console.error('Failed to fetch tasks for assignment', error)
+      throw error
+    }
   }
 }
 

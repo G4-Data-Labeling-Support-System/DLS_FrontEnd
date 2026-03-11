@@ -65,7 +65,7 @@ const datasetApi = {
   },
   getDatasetItems(datasetId: string) {
     try {
-      const url = ENDPOINTS.DATASETS.ITEMS(datasetId)
+      const url = ENDPOINTS.DATAITEMS.BY_DATASET(datasetId)
       return axiosClient.get(url)
     } catch (error) {
       console.error('Failed to fetch dataset items', error)

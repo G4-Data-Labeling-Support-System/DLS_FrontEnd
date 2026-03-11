@@ -1,10 +1,13 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import TaskCard from './TaskCard'
+import assignmentApi from '@/api/AssignmentApi'
 
 /** Groups tasks by their batchLabel */
 interface Task {
   id: string
+  batchId?: string
   batchLabel: string
+  taskName?: string
   name?: string
   filename?: string
   taskStatus?: string
@@ -13,11 +16,49 @@ interface Task {
   [key: string]: string | number | boolean | undefined | object | null
 }
 
-export default function TasksSection({ tasks }: { tasks: Task[] }) {
+interface TasksSectionProps {
+  tasks?: Task[]
+  assignmentId?: string
+}
+
+export default function TasksSection({ tasks: initialTasks = [], assignmentId }: TasksSectionProps) {
+  const [tasks, setTasks] = useState<Task[]>(initialTasks)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 6
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      if (!assignmentId) return
+
+      try {
+        setLoading(true)
+        setError(null)
+        const response = await assignmentApi.getTasksByAssignmentId(assignmentId)
+        const rawData = response.data?.data || response.data || []
+
+        if (Array.isArray(rawData)) {
+          const mappedTasks: Task[] = rawData.map((t: any) => ({
+            ...t,
+            id: t.taskId || t.id,
+            name: t.taskName || t.name,
+            batchLabel: t.batchLabel || t.taskType || 'Unbatched'
+          }))
+          setTasks(mappedTasks)
+        }
+      } catch (err) {
+        console.error('Failed to fetch tasks:', err)
+        setError('Failed to load tasks from server.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchTasks()
+  }, [assignmentId])
 
   // 1. Filter tasks based on search and status
   const filteredTasks = useMemo(() => {
@@ -47,6 +88,30 @@ export default function TasksSection({ tasks }: { tasks: Task[] }) {
 
   const availableStatuses = ['ALL', 'PENDING', 'IN_PROGRESS', 'COMPLETED']
 
+  if (loading && tasks.length === 0) {
+    return (
+      <div className="w-full h-64 flex flex-col justify-center items-center gap-4">
+        <div className="w-10 h-10 border-4 border-violet-500/20 border-t-violet-500 rounded-full animate-spin"></div>
+        <span className="text-gray-400 text-sm font-mono animate-pulse">Fetching tasks...</span>
+      </div>
+    )
+  }
+
+  if (error && tasks.length === 0) {
+    return (
+      <div className="w-full py-10 text-center glass-panel rounded-2xl border border-red-500/10">
+        <span className="material-symbols-outlined text-red-400 text-4xl mb-4">error</span>
+        <p className="text-red-400 text-sm">{error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-4 text-violet-400 text-xs font-bold hover:underline"
+        >
+          Try Reloading
+        </button>
+      </div>
+    )
+  }
+
   return (
     <div className="w-full flex flex-col h-full">
       {/* Section Header + Search & Filter */}
@@ -57,9 +122,14 @@ export default function TasksSection({ tasks }: { tasks: Task[] }) {
           </div>
           <div>
             <h2 className="text-xl font-bold text-white tracking-tight">Tasks</h2>
-            <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">
-              {filteredTasks.length} of {tasks.length} tasks matched
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">
+                {filteredTasks.length} of {tasks.length} tasks matched
+              </span>
+              {loading && (
+                <div className="w-2 h-2 rounded-full bg-violet-500 animate-pulse"></div>
+              )}
+            </div>
           </div>
         </div>
 

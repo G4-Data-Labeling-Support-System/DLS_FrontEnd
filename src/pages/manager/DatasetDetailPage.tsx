@@ -2,8 +2,6 @@ import React from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { DatasetDetail } from '@/features/manager/components/dataset/DatasetDetail'
 
-
-
 const DatasetDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()

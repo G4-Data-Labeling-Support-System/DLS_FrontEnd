@@ -76,5 +76,13 @@ export const ENDPOINTS = {
     PROJECT_ITEMS: (projectId: string) => `/reviewer/projects/${projectId}/items`,
     ITEM_DETAIL: (itemId: string) => `/reviewer/items/${itemId}`,
     REVIEW_DECISION: (itemId: string) => `/reviewer/items/${itemId}/review`
+  },
+
+  DATAITEMS: {
+    BY_DATASET: (datasetId: string) => `/dataitems/datasets/${datasetId}`
+  },
+
+  TASKS: {
+    BY_ASSIGNMENT: (assignmentId: string) => `/tasks/assignments/${assignmentId}`
   }
 } as const

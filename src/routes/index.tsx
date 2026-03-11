@@ -265,7 +265,7 @@ export const router = createBrowserRouter([
             <AnnotationPage />
           </LazyPage>
         )
-      }
+      },
     ]
   },
 

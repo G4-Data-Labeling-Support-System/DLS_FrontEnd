@@ -40,6 +40,7 @@ interface DataItem {
 
 export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack }) => {
   const { message } = App.useApp()
+  const { user } = useAuthStore()
   const [dataset, setDataset] = useState<DatasetDetailData | null>(null)
   const [projectName, setProjectName] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
@@ -71,8 +72,20 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
     const fetchDetail = async () => {
       try {
         setLoading(true)
-        const response = await datasetApi.getDatasetById(datasetId)
-        const data = response.data?.data || response.data
+        let data: any = null
+
+        if (user?.role === UserRole.ANNOTATOR && urlProjectId) {
+          // Fallback for Annotators: fetch from project list (which is authorized)
+          const response = await datasetApi.getDatasetsByProjectId(urlProjectId)
+          const datasets = response.data?.data || response.data || []
+          data = Array.isArray(datasets) 
+            ? datasets.find((d: any) => String(d.datasetId || d.id) === String(datasetId))
+            : null
+        } else {
+          // Default for Managers/Admins
+          const response = await datasetApi.getDatasetById(datasetId)
+          data = response.data?.data || response.data
+        }
 
         if (data && isMounted) {
           const extractedProjectId = data.projectId || data.project?.id || data.project?.projectId;
@@ -93,20 +106,41 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
               if (projData && isMounted) {
                 setProjectName(String(projData.projectName || projData.name || extractedProjectId))
               }
-            } catch (projErr) {
-              console.error('Failed to fetch associated project details:', projErr)
+            } catch (projErr: any) {
+              console.warn('Could not fetch project name:', projErr)
             }
           }
+        } else if (isMounted) {
+            throw new Error('Dataset not found')
         }
-      } catch (error) {
+      } catch (error: any) {
         if (isMounted) {
           console.error('Error fetching dataset details:', error)
-          message.error('Cannot load dataset details.')
+          if (error?.response?.status !== 403) {
+            message.error('Cannot load dataset details.')
+          }
           onBack()
         }
       } finally {
         if (isMounted) {
           setLoading(false)
+        }
+      }
+    }
+
+    const fetchItems = async () => {
+      try {
+        setItemsLoading(true)
+        const response = await datasetApi.getDatasetItems(datasetId)
+        const data = response.data?.data || response.data || []
+        if (isMounted) {
+          setDatasetItems(data)
+        }
+      } catch (error) {
+        console.error('Error fetching dataset items:', error)
+      } finally {
+        if (isMounted) {
+          setItemsLoading(false)
         }
       }
     }
@@ -134,7 +168,7 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
     return () => {
       isMounted = false
     }
-  }, [datasetId, onBack, message])
+  }, [datasetId, user?.role, message, onBack, urlProjectId])
 
   const handleItemClick = async (item: DataItem) => {
     const itemId = item.dataItemId || item.id || item.itemId
@@ -207,14 +241,14 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
   if (loading) {
     return (
       <div className="w-full h-64 flex justify-center items-center">
-        <Spin size="large" />
+        <Spin size="large" tip="Loading dataset details..." />
       </div>
     )
   }
 
   if (!dataset) {
     return (
-      <div className="w-full text-center py-10 text-gray-400">
+      <div className="w-full text-center py-10 text-gray-400 glass-panel rounded-2xl">
         Error loading dataset information.
       </div>
     )
@@ -226,9 +260,14 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
 
   return (
     <div className="w-full animate-fade-in">
-      {/* Header - same layout as ProjectDetail */}
       <div className="flex justify-between items-start mb-6">
         <div className="flex items-center gap-3">
+          <Button
+            type="text"
+            icon={<span className="material-symbols-outlined">arrow_back</span>}
+            onClick={onBack}
+            className="text-gray-400 hover:text-white"
+          />
           <div>
             <Title level={3} className="!text-white !m-0 !font-display">
               {dataset.datasetName || 'Unnamed Dataset'}
@@ -270,15 +309,14 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
             </Descriptions>
           </div>
 
-          {/* Right: Description */}
           <div className="flex-1 p-6 flex flex-col">
             <div className="flex items-center justify-between mb-4">
               <span className="text-white text-lg font-display flex items-center gap-2">
-                <span className="material-symbols-outlined text-green-400">description</span>
+                <span className="material-symbols-outlined text-emerald-400">description</span>
                 Description
               </span>
             </div>
-            <div className="flex-1 bg-[#231e31] p-4 rounded-xl border border-white/5">
+            <div className="flex-1 bg-[#231e31] p-4 rounded-xl border border-white/5 min-h-[100px]">
               <div className="text-gray-400 text-sm whitespace-pre-wrap">
                 {dataset.description || (
                   <span className="text-gray-600 italic">No description provided.</span>
@@ -520,6 +558,10 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
           border-bottom: 1px solid #2d263b;
           padding-bottom: 12px;
           margin-bottom: 12px;
+          display: flex;
+        }
+        .custom-descriptions .ant-descriptions-item-label {
+          flex-shrink: 0;
         }
         .custom-descriptions .ant-descriptions-item-container:last-child {
           border-bottom: none;
