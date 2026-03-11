@@ -32,6 +32,7 @@ import {
     useInvalidateProjectDetail
 } from '@/features/manager/hooks/useProjectDetail'
 import { DatasetCard } from '../dataset/DatasetCard'
+import { CreateDatasetModal } from '../dataset/CreateDatasetModal'
 
 const { Title } = Typography
 
@@ -59,6 +60,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack,
     const loading = projectLoading || assignmentsLoading || guidelinesLoading || datasetsLoading
 
     const [isCreateAssignmentModalVisible, setIsCreateAssignmentModalVisible] = useState(false)
+    const [isCreateDatasetModalVisible, setIsCreateDatasetModalVisible] = useState(false)
     const hasShownFirstAssignmentModal = useRef(false)
     const [guidelineForm] = Form.useForm()
     const [assignmentEditForm] = Form.useForm()
@@ -453,12 +455,22 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack,
                             <span className="material-symbols-outlined text-fuchsia-400">database</span>
                             Project Datasets
                         </span>
-                        <Tag
-                            color="#8b5cf6"
-                            className="border-0 bg-violet-600/20 text-violet-300 font-bold px-3 rounded-full"
-                        >
-                            {datasets.length} Datasets
-                        </Tag>
+                        <div className="flex items-center gap-2">
+                            <Tag
+                                color="#8b5cf6"
+                                className="border-0 bg-violet-600/20 text-violet-300 font-bold px-3 rounded-full"
+                            >
+                                {datasets.length} Datasets
+                            </Tag>
+                            <Button
+                                type="primary"
+                                size="small"
+                                className="bg-violet-600 hover:bg-violet-500 border-none"
+                                onClick={() => setIsCreateDatasetModalVisible(true)}
+                            >
+                                + New
+                            </Button>
+                        </div>
                     </div>
 
                     {datasets.length === 0 ? (
@@ -608,6 +620,16 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack,
                 onCancel={() => setIsCreateAssignmentModalVisible(false)}
                 onSuccess={() => {
                     setIsCreateAssignmentModalVisible(false)
+                    invalidateProjectDetail(projectId)
+                }}
+            />
+
+            <CreateDatasetModal
+                open={isCreateDatasetModalVisible}
+                projectId={projectId}
+                onCancel={() => setIsCreateDatasetModalVisible(false)}
+                onSuccess={() => {
+                    setIsCreateDatasetModalVisible(false)
                     invalidateProjectDetail(projectId)
                 }}
             />
