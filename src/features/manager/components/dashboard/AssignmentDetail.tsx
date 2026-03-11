@@ -13,9 +13,10 @@ const { Title } = Typography
 interface AssignmentDetailProps {
   assignmentId: string
   onBack: () => void
+  onEdit?: (assignment: GetAssignmentsParams) => void
 }
 
-export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId, onBack }) => {
+export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId, onBack, onEdit }) => {
   const { message } = App.useApp()
   const [assignment, setAssignment] = useState<GetAssignmentsParams | null>(null)
   const [projectName, setProjectName] = useState<string | null>(null)
@@ -75,7 +76,11 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId
             projectId: extractedProjectId ? String(extractedProjectId) : undefined,
             datasetId: extractedDatasetId ? String(extractedDatasetId) : undefined,
             createdAt: data.createdAt ? String(data.createdAt) : undefined,
-            updatedAt: data.updatedAt ? String(data.updatedAt) : undefined
+            updatedAt: data.updatedAt ? String(data.updatedAt) : undefined,
+            assignedTo: data.assignedTo || data.user_id || data.annotatorId ? String(data.assignedTo || data.user_id || data.annotatorId) : undefined,
+            reviewedBy: data.reviewedBy || data.reviewerId ? String(data.reviewedBy || data.reviewerId) : undefined,
+            dueDate: data.dueDate || data.due_date ? String(data.dueDate || data.due_date) : undefined,
+            assignedBy: data.assignedBy || data.creatorId ? String(data.assignedBy || data.creatorId) : undefined
           })
 
           // Fetch associated project name if projectId exists
@@ -193,14 +198,16 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId
                   but omit features like "Add Subtask", etc. Actually, I will remove the edit button to be safe, since there is no edit endpoint connected safely in AllAssignments either yet.
                   Wait, ProjectDetail has an Edit button. Let's include it but maybe it does a message.info for now.
                 */}
-        <Button
-          type="primary"
-          icon={<EditOutlined />}
-          className="bg-violet-600 hover:bg-violet-500 border-none hidden"
-          onClick={() => message.info('Edit mode not fully supported yet.')}
-        >
-          Edit
-        </Button>
+        {onEdit && (
+          <Button
+            type="primary"
+            icon={<EditOutlined />}
+            className="bg-violet-600 hover:bg-violet-500 border-none"
+            onClick={() => onEdit(assignment)}
+          >
+            Edit
+          </Button>
+        )}
       </div>
 
       <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-6">

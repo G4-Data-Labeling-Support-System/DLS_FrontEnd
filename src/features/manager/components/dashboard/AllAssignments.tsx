@@ -11,12 +11,14 @@ const { Title } = Typography
 interface AllAssignmentsProps {
   selectedAssignmentId?: string | null
   onAssignmentSelect?: (id: string | null) => void
+  onEdit?: (assignment: GetAssignmentsParams) => void
   refreshTrigger?: number
 }
 
 export const AllAssignments: React.FC<AllAssignmentsProps> = ({
   selectedAssignmentId,
   onAssignmentSelect,
+  onEdit,
   refreshTrigger
 }) => {
   const { message } = App.useApp()
@@ -74,6 +76,18 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
           }
           if (a.updatedAt) {
             mapped.updatedAt = String(a.updatedAt)
+          }
+          if (a.assignedTo || a.user_id || a.annotatorId) {
+            mapped.assignedTo = String(a.assignedTo || a.user_id || a.annotatorId)
+          }
+          if (a.reviewedBy || a.reviewerId) {
+            mapped.reviewedBy = String(a.reviewedBy || a.reviewerId)
+          }
+          if (a.dueDate || a.due_date) {
+            mapped.dueDate = String(a.dueDate || a.due_date)
+          }
+          if (a.assignedBy || a.creatorId) {
+            mapped.assignedBy = String(a.assignedBy || a.creatorId)
           }
           return mapped
         })
@@ -133,7 +147,10 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
 
   const handleEdit = (id?: string) => {
     if (!id) return
-    message.info(`Editing assignment ID: ${id} is currently not supported.`)
+    const asn = assignments.find((a) => a.assignmentId === id)
+    if (asn && onEdit) {
+      onEdit(asn)
+    }
   }
 
   if (loading && !currentAssignmentId) {
@@ -149,6 +166,7 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
       <AssignmentDetail
         assignmentId={currentAssignmentId}
         onBack={() => handleAssignmentSelect(null)}
+        onEdit={onEdit}
       />
     )
   }

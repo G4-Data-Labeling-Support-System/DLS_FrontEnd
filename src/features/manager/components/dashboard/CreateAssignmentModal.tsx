@@ -4,12 +4,14 @@ import { GlassModal } from '@/shared/components/ui/GlassModal'
 import { userApi } from '@/api/userApi'
 import datasetApi from '@/api/DatasetApi'
 import projectApi from '@/api/ProjectApi'
-import assignmentApi from '@/api/AssignmentApi'
+import assignmentApi, { type GetAssignmentsParams } from '@/api/AssignmentApi'
 import { useAuthStore } from '@/store/auth.store'
+import dayjs from 'dayjs'
 
 interface CreateAssignmentModalProps {
     open: boolean
     projectId?: string
+    initialData?: GetAssignmentsParams
     onCancel: () => void
     onSuccess: () => void
 }
@@ -17,6 +19,7 @@ interface CreateAssignmentModalProps {
 export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
     open,
     projectId,
+    initialData,
     onCancel,
     onSuccess
 }) => {
@@ -32,6 +35,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
     const [loading, setLoading] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
 
+    const isEditMode = !!initialData
     const hasExternalProjectId = !!projectId
     const effectiveProjectId = hasExternalProjectId ? projectId : selectedProjectId
 
@@ -86,8 +90,9 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
                 )
 
                 // Fetch datasets by project (only when we have a project ID)
-                if (effectiveProjectId) {
-                    const datasetRes = await datasetApi.getDatasetsByProjectId(effectiveProjectId)
+                const currentPid = initialData?.projectId || effectiveProjectId
+                if (currentPid) {
+                    const datasetRes = await datasetApi.getDatasetsByProjectId(currentPid)
                     const datasetsData = datasetRes.data?.data || datasetRes.data
                     const dsArray = Array.isArray(datasetsData) ? datasetsData : []
                     setDatasets(dsArray)
@@ -102,25 +107,47 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
             }
         }
         fetchData()
-    }, [open, effectiveProjectId, message])
+    }, [open, effectiveProjectId, message, initialData])
 
-    // Set assignedBy to current user when modal opens
+    // Set form fields when modal opens or initialData changes
     useEffect(() => {
-        if (open && currentUser) {
-            const managerId = (currentUser as unknown as Record<string, unknown>).userId || currentUser.id
-            form.setFieldsValue({
-                assignedBy: managerId
-            })
+        if (open) {
+            if (isEditMode && initialData) {
+                form.setFieldsValue({
+                    assignmentName: initialData.assignmentName,
+                    assignedTo: initialData.assignedTo,
+                    reviewerId: initialData.reviewedBy || initialData.reviewerId,
+                    description: initialData.description,
+                    dueDate: initialData.dueDate ? dayjs(initialData.dueDate) : undefined,
+                    datasetId: initialData.datasetId,
+                    projectId: initialData.projectId,
+                    assignedBy: initialData.assignedBy
+                })
+                if (initialData.projectId) {
+                    setSelectedProjectId(initialData.projectId)
+                }
+            } else {
+                form.resetFields()
+                if (currentUser) {
+                    const managerId = (currentUser as unknown as Record<string, unknown>).userId || currentUser.id
+                    form.setFieldsValue({
+                        assignedBy: managerId
+                    })
+                }
+                if (projectId) {
+                    setSelectedProjectId(projectId)
+                }
+            }
         }
-    }, [open, currentUser, form])
+    }, [open, initialData, isEditMode, form, currentUser, projectId])
 
     const handleSubmit = async () => {
         try {
             const values = await form.validateFields()
             setIsSubmitting(true)
 
-            const resolvedProjectId = hasExternalProjectId ? projectId : values.projectId
-            if (!resolvedProjectId) {
+            const resolvedProjectId = hasExternalProjectId ? projectId : (values.projectId || initialData?.projectId)
+            if (!resolvedProjectId && !isEditMode) {
                 message.error('Please select a project')
                 return
             }
@@ -128,23 +155,33 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
             const payload = {
                 assignmentName: values.assignmentName,
                 assignedTo: values.assignedTo,
-                assignedBy: values.assignedBy,
                 reviewedBy: values.reviewerId,
                 description: values.description,
                 dueDate: values.dueDate ? values.dueDate.toISOString() : undefined,
-                datasetId: values.datasetId
-            }   
+                assignmentStatus: "ASSIGNED"
+            }
 
-            await assignmentApi.createAssignmentForProject(resolvedProjectId, payload)
-            message.success('Assignment created successfully!')
+            if (isEditMode && initialData?.assignmentId) {
+                await assignmentApi.updateAssignment(initialData.assignmentId, payload)
+                message.success('Assignment updated successfully!')
+            } else {
+                const createPayload = {
+                    ...payload,
+                    assignedBy: values.assignedBy,
+                    datasetId: values.datasetId
+                }
+                await assignmentApi.createAssignmentForProject(resolvedProjectId!, createPayload)
+                message.success('Assignment created successfully!')
+            }
+            
             form.resetFields()
             onSuccess()
         } catch (error) {
             if (error && typeof error === 'object' && 'errorFields' in error) {
                 // validation error, do nothing
             } else {
-                console.error('Failed to create assignment', error)
-                message.error('Failed to create assignment')
+                console.error(isEditMode ? 'Failed to update assignment' : 'Failed to create assignment', error)
+                message.error(isEditMode ? 'Failed to update assignment' : 'Failed to create assignment')
             }
         } finally {
             setIsSubmitting(false)
@@ -206,14 +243,14 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
             <div className="px-8 pt-10 pb-8">
                 <div className="text-center border-b border-white/5 pb-6 mb-6">
                     <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
-                        Create Assignment
+                        {isEditMode ? 'Edit Assignment' : 'Create Assignment'}
                     </h2>
                     <p className="text-white/50 text-sm">
-                        Set up a new assignment for this project.
+                        {isEditMode ? 'Update the details of this assignment.' : 'Set up a new assignment for this project.'}
                     </p>
                 </div>
                 <Form form={form} layout="vertical">
-                    {!hasExternalProjectId && (
+                    {!hasExternalProjectId && !isEditMode && (
                         <Form.Item
                             label="Project"
                             name="projectId"
@@ -279,10 +316,19 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
                         <Form.Item
                             label="Assigned By"
                             name="assignedBy"
-                            rules={[{ required: true }]}
                         >
-                            <Select disabled>
-                                {currentUser && (
+                            <Select disabled placeholder="Original creator">
+                                {isEditMode && initialData?.assignedBy ? (
+                                    <Select.Option value={initialData.assignedBy}>
+                                        <div className="flex items-center gap-2">
+                                            <Avatar
+                                                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(initialData.assignedBy)}&background=random`}
+                                                size="small"
+                                            />
+                                            <span>{initialData.assignedBy}</span>
+                                        </div>
+                                    </Select.Option>
+                                ) : currentUser ? (
                                     <Select.Option value={(currentUser as unknown as Record<string, unknown>).userId as string || currentUser.id}>
                                         <div className="flex items-center gap-2">
                                             <Avatar
@@ -295,33 +341,35 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
                                             <span>{currentUserName}</span>
                                         </div>
                                     </Select.Option>
-                                )}
+                                ) : null}
                             </Select>
                         </Form.Item>
                     </div>
 
-                    <Form.Item
-                        label="Dataset"
-                        name="datasetId"
-                        rules={[{ required: true, message: 'Please select a dataset' }]}
-                    >
-                        <Select
-                            placeholder={!effectiveProjectId ? 'Select a project first' : 'Select dataset'}
-                            loading={loading}
-                            showSearch
-                            optionFilterProp="children"
-                            disabled={!effectiveProjectId}
+                    {!isEditMode && (
+                        <Form.Item
+                            label="Dataset"
+                            name="datasetId"
+                            rules={[{ required: true, message: 'Please select a dataset' }]}
                         >
-                            {datasets.map((d: Record<string, unknown>) => (
-                                <Select.Option
-                                    key={(d.datasetId as string) || (d.id as string)}
-                                    value={(d.datasetId as string) || (d.id as string)}
-                                >
-                                    {(d.datasetName as string) || (d.name as string)}
-                                </Select.Option>
-                            ))}
-                        </Select>
-                    </Form.Item>
+                            <Select
+                                placeholder={!effectiveProjectId ? 'Select a project first' : 'Select dataset'}
+                                loading={loading}
+                                showSearch
+                                optionFilterProp="children"
+                                disabled={!effectiveProjectId}
+                            >
+                                {datasets.map((d: Record<string, unknown>) => (
+                                    <Select.Option
+                                        key={(d.datasetId as string) || (d.id as string)}
+                                        value={(d.datasetId as string) || (d.id as string)}
+                                    >
+                                        {(d.datasetName as string) || (d.name as string)}
+                                    </Select.Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                    )}
 
                     <Form.Item
                         label="Due Date"
@@ -348,7 +396,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
                             onClick={handleSubmit}
                             className="bg-violet-600 hover:bg-violet-500 border-none"
                         >
-                            Create Assignment
+                            {isEditMode ? 'Update Assignment' : 'Create Assignment'}
                         </Button>
                     </div>
                 </Form>

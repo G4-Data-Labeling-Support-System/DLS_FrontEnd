@@ -44,6 +44,7 @@ export const ENDPOINTS = {
   ASSIGNMENTS: {
     LIST: '/assignments',
     DETAIL: (id: string) => `/assignments/${id}`,
+    UPDATE: (id: string) => `/assignments/${id}`,
     BY_PROJECT: (projectId: string) => `assignments/projects/${projectId}`,
     BY_ANNOTATOR: (annotatorId: string) => `/assignments/annotators/${annotatorId}`,
     DELETE: (id: string) => `/assignments/${id}`,

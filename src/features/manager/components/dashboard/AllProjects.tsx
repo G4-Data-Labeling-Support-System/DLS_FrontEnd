@@ -60,12 +60,12 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
             mapped.projectId = String(pid)
           }
 
-          const pname = projectInfo.projectName || projectInfo.name || p.projectName || p.name
+          const pname = projectInfo.projectName || projectInfo.name || projectInfo.project_name || p.projectName || p.name || p.project_name
           if (pname) {
             mapped.projectName = String(pname)
           }
 
-          const pstatus = projectInfo.projectStatus || projectInfo.status || p.projectStatus || p.status
+          const pstatus = projectInfo.projectStatus || projectInfo.status || projectInfo.project_status || p.projectStatus || p.status || p.project_status
           if (pstatus) {
             mapped.projectStatus = String(pstatus)
           }
@@ -74,7 +74,7 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
             mapped.description = String(projectInfo.description || p.description)
           }
 
-          const pcreated = projectInfo.createdAt || projectInfo.created_at || p.createdAt || p.created_at || projectInfo.createdDate || p.createdDate
+          const pcreated = projectInfo.createdAt || projectInfo.created_at || projectInfo.Created_at || p.createdAt || p.created_at || p.Created_at || projectInfo.createdDate || p.createdDate
           if (pcreated) {
             mapped.createdAt = String(pcreated)
           }

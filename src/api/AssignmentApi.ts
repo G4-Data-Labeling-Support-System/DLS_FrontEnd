@@ -70,7 +70,7 @@ const assignmentApi = {
   },
   updateAssignment(id: string, assignmentData?: GetAssignmentsParams) {
     try {
-      const url = ENDPOINTS.ASSIGNMENTS.DETAIL(id)
+      const url = ENDPOINTS.ASSIGNMENTS.UPDATE(id)
       return axiosClient.put(url, assignmentData)
     } catch (error) {
       console.error('Failed to update assignment', error)
