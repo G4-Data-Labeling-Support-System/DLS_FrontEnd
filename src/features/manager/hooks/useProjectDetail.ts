@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import projectApi from '@/api/ProjectApi'
 import assignmentApi from '@/api/AssignmentApi'
 import guidelineApi from '@/api/GuidelineApi'
+import datasetApi from '@/api/DatasetApi'
 
 export const useProjectById = (projectId: string) => {
   return useQuery({
@@ -18,6 +19,19 @@ export const useProjectById = (projectId: string) => {
           updatedAt: data.updatedAt ? String(data.updatedAt) : undefined,
           users: data.users || data.members || data.assignees || []
         }
+      }),
+    enabled: !!projectId,
+    staleTime: 1000 * 60 * 5
+  })
+}
+
+export const useDatasetsByProject = (projectId: string) => {
+  return useQuery({
+    queryKey: ['datasets', 'project', projectId],
+    queryFn: () =>
+      datasetApi.getDatasetsByProjectId(projectId).then((res) => {
+        const data = res.data?.data || res.data || []
+        return Array.isArray(data) ? data : []
       }),
     enabled: !!projectId,
     staleTime: 1000 * 60 * 5
@@ -57,5 +71,6 @@ export const useInvalidateProjectDetail = () => {
     queryClient.invalidateQueries({ queryKey: ['project', projectId] })
     queryClient.invalidateQueries({ queryKey: ['assignments', 'project', projectId] })
     queryClient.invalidateQueries({ queryKey: ['guidelines', 'project', projectId] })
+    queryClient.invalidateQueries({ queryKey: ['datasets', 'project', projectId] })
   }
 }
