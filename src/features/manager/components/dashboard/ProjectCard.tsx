@@ -31,7 +31,8 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       key: '5',
       label: <span className="text-orange-500">Cancel Project</span>,
       icon: <CloseCircleOutlined className="text-orange-500" />,
-      onClick: onCancelProject
+      onClick: onCancelProject,
+      disabled: projectStatus === 'CANCELLED'
     },
     {
       key: '4',
@@ -46,7 +47,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
     switch (status?.toUpperCase()) {
       case 'ACTIVE':
         return 'processing'
-      case 'INPROCESS':
+      case 'INPROGRESS':
         return 'gold'
       case 'COMPLETED':
         return 'success'
