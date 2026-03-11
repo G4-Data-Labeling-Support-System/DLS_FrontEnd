@@ -16,55 +16,12 @@ interface Shape {
   isPreview?: boolean
 }
 
-const MOCK_DATA_ITEMS = [
-  {
-    id: 'item-1',
-    filename: 'medical_scan_01.png',
-    url: 'https://picsum.photos/seed/scan1/800/600',
-    dataType: 'Image',
-    geometry: {
-      type: 'polygon',
-      coordinates: [
-        [10, 20],
-        [30, 40],
-        [50, 60]
-      ]
-    }
-  },
-  {
-    id: 'item-2',
-    filename: 'medical_scan_02.png',
-    url: 'https://picsum.photos/seed/scan2/800/600',
-    dataType: 'Image',
-    geometry: {
-      type: 'bounding_box',
-      x: 100,
-      y: 150,
-      width: 200,
-      height: 180
-    }
-  },
-  {
-    id: 'item-3',
-    filename: 'medical_scan_03.png',
-    url: 'https://picsum.photos/seed/scan3/800/600',
-    dataType: 'Image',
-    geometry: {
-      type: 'point',
-      x: 450,
-      y: 320
-    }
-  }
-]
+import {
+  MOCK_DATA_ITEMS,
+  AVAILABLE_LABELS,
+  MOCK_TEST_ANNOTATION_ITEMS
+} from '@/features/annotator'
 
-const AVAILABLE_LABELS = [
-  { name: 'Car', color: '#8b5cf6' },
-  { name: 'People', color: '#f43f5e' },
-  { name: 'Tree', color: '#10b981' },
-  { name: 'Sign', color: '#f59e0b' },
-  { name: 'Building', color: '#3b82f6' },
-  { name: 'Road', color: '#6366f1' }
-]
 
 export default function AnnotationPage() {
   const { taskId } = useParams<{ taskId: string }>()
@@ -89,8 +46,9 @@ export default function AnnotationPage() {
   const [currentShape, setCurrentShape] = useState<Shape | null>(null)
   const [shapes, setShapes] = useState<Shape[]>([])
 
-  const currentItem = MOCK_DATA_ITEMS[currentIndex]
-  const totalItems = MOCK_DATA_ITEMS.length
+  const dataItems = taskId === 'test-task-1' ? MOCK_TEST_ANNOTATION_ITEMS : MOCK_DATA_ITEMS
+  const currentItem = dataItems[currentIndex]
+  const totalItems = dataItems.length
 
   // Reset zoom and tools when changing image is now handled in handleNext/handlePrevious
 
@@ -447,11 +405,10 @@ export default function AnnotationPage() {
                     onClick={() => toggleLabel(label)}
                     className={`
                                             px-3 py-1.5 rounded-lg text-xs font-bold transition-all border
-                                            ${
-                                              selectedLabels.includes(label.name)
-                                                ? 'bg-white/10 text-white'
-                                                : 'bg-white/5 border-transparent text-gray-500 hover:bg-white/10 hover:text-gray-300'
-                                            }
+                                            ${selectedLabels.includes(label.name)
+                        ? 'bg-white/10 text-white'
+                        : 'bg-white/5 border-transparent text-gray-500 hover:bg-white/10 hover:text-gray-300'
+                      }
                                         `}
                     style={{
                       borderColor: selectedLabels.includes(label.name)
@@ -514,16 +471,16 @@ export default function AnnotationPage() {
                     {
                       active: currentShape
                         ? {
-                            type: currentShape.type,
-                            points: currentShape.points ? currentShape.points.length : undefined,
-                            dimensions:
-                              currentShape.type === 'bounding_box'
-                                ? {
-                                    w: Math.round(currentShape.width || 0),
-                                    h: Math.round(currentShape.height || 0)
-                                  }
-                                : undefined
-                          }
+                          type: currentShape.type,
+                          points: currentShape.points ? currentShape.points.length : undefined,
+                          dimensions:
+                            currentShape.type === 'bounding_box'
+                              ? {
+                                w: Math.round(currentShape.width || 0),
+                                h: Math.round(currentShape.height || 0)
+                              }
+                              : undefined
+                        }
                         : null,
                       session: shapes.map((s) => ({ type: s.type, label: s.label })),
                       raw: shapes
