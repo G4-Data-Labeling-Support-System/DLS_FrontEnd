@@ -32,9 +32,13 @@ export const ENDPOINTS = {
   DATASETS: {
     LIST: '/datasets',
     DETAIL: (id: string) => `/datasets/${id}`,
-    ITEMS: (id: string) => `/datasets/${id}/items`,
+    ITEMS: (id: string) => `/dataitems/datasets/${id}`,
     CREATE: '/datasets',
     BY_PROJECT: (projectId: string) => `/datasets/project/${projectId}`
+  },
+
+  DATA_ITEMS: {
+    DETAIL: (id: string) => `/v1/dataitems/${id}`
   },
 
   ASSIGNMENTS: {

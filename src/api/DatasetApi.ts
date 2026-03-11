@@ -72,6 +72,15 @@ const datasetApi = {
       throw error
     }
   },
+  getDataItemById(id: string) {
+    try {
+      const url = ENDPOINTS.DATA_ITEMS.DETAIL(id)
+      return axiosClient.get(url)
+    } catch (error) {
+      console.error('Failed to fetch data item by id', error)
+      throw error
+    }
+  },
   updateDataset(id: string, datasetData?: GetDatasetsParams) {
     try {
       const url = ENDPOINTS.DATASETS.DETAIL

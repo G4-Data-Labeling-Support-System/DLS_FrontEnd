@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import { App, Spin, Typography, Card, Descriptions } from 'antd'
-import { FolderOutlined } from '@ant-design/icons'
+import { App, Spin, Typography, Card, Descriptions, Empty, Pagination, Image } from 'antd'
+import { FolderOutlined, DatabaseOutlined, PictureOutlined } from '@ant-design/icons'
 import datasetApi from '@/api/DatasetApi'
 import projectApi from '@/api/ProjectApi'
 import { ProjectDetail } from '../dashboard/ProjectDetail'
 import { useSearchParams } from 'react-router-dom'
+import { GlassModal } from '@/shared/components/ui/GlassModal'
 
 const { Title } = Typography
 
@@ -22,12 +23,34 @@ interface DatasetDetailProps {
   onBack: () => void
 }
 
+interface DataItem {
+  id?: string | number
+  dataItemId?: string | number
+  itemId?: string | number
+  name?: string
+  filename?: string
+  fileName?: string
+  title?: string
+  url?: string
+  imageUrl?: string
+  previewUrl?: string
+  path?: string
+  labeled?: boolean
+}
+
 export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack }) => {
   const { message } = App.useApp()
   const [dataset, setDataset] = useState<DatasetDetailData | null>(null)
   const [projectName, setProjectName] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
+  const [dataItems, setDataItems] = useState<DataItem[]>([])
+  const [itemsLoading, setItemsLoading] = useState<boolean>(false)
+  const [currentPage, setCurrentPage] = useState<number>(1)
+  const [selectedItem, setSelectedItem] = useState<DataItem | null>(null)
+  const [modalVisible, setModalVisible] = useState<boolean>(false)
+  const [itemDetailLoading, setItemDetailLoading] = useState<boolean>(false)
   const [searchParams, setSearchParams] = useSearchParams()
+  const itemsPerPage = 12
 
   const viewProjectId = searchParams.get('viewProjectId')
   const setViewProjectId = (id: string | null) => {
@@ -90,12 +113,91 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
 
     if (datasetId) {
       fetchDetail()
+
+      const fetchItems = async () => {
+        try {
+          setItemsLoading(true)
+          const response = await datasetApi.getDatasetItems(datasetId)
+          const data = response.data?.data || response.data || []
+          if (isMounted) {
+            setDataItems(Array.isArray(data) ? data : [data])
+          }
+        } catch (error) {
+          console.error('Error fetching data items:', error)
+        } finally {
+          if (isMounted) setItemsLoading(false)
+        }
+      }
+      fetchItems()
     }
 
     return () => {
       isMounted = false
     }
   }, [datasetId, onBack, message])
+
+  const handleItemClick = async (item: DataItem) => {
+    const itemId = item.dataItemId || item.id || item.itemId
+    const itemName = item.name || item.filename || item.fileName || item.title
+    
+    // Set basic info immediately to show in modal
+    setSelectedItem({
+      ...item,
+      id: itemId || undefined,
+      name: itemName || undefined
+    })
+    setModalVisible(true)
+    
+    // If we have an ID, fetch full details
+    if (itemId) {
+      setItemDetailLoading(true)
+      try {
+        const response = await datasetApi.getDataItemById(String(itemId))
+        const data = response.data?.data || response.data
+        setSelectedItem({
+          ...data,
+          id: data.dataItemId || data.id || data.itemId || itemId, // Prefer new ID if available
+          name: data.name || data.filename || data.fileName || data.title || itemName
+        })
+      } catch (error) {
+        console.error('Error fetching item details:', error)
+        // Keep showing whatever we gathered from the list
+      } finally {
+        setItemDetailLoading(false)
+      }
+    }
+  }
+
+  const handleNextItem = () => {
+    if (!selectedIdForNav || dataItems.length <= 1) return
+    const currentIndex = dataItems.findIndex(i => (i.dataItemId || i.id || i.itemId) === selectedIdForNav)
+    if (currentIndex < dataItems.length - 1) {
+      handleItemClick(dataItems[currentIndex + 1])
+    } else {
+      handleItemClick(dataItems[0]) // Loop to first
+    }
+  }
+
+  const handlePrevItem = () => {
+    if (!selectedIdForNav || dataItems.length <= 1) return
+    const currentIndex = dataItems.findIndex(i => (i.dataItemId || i.id || i.itemId) === selectedIdForNav)
+    if (currentIndex > 0) {
+      handleItemClick(dataItems[currentIndex - 1])
+    } else {
+      handleItemClick(dataItems[dataItems.length - 1]) // Loop to last
+    }
+  }
+
+  const selectedIdForNav = selectedItem ? (selectedItem.dataItemId || selectedItem.id || selectedItem.itemId) : null
+
+
+  const handleModalClose = () => {
+    setModalVisible(false)
+    setTimeout(() => {
+      setSelectedItem(null)
+      setItemDetailLoading(false)
+    }, 300)
+  }
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A'
@@ -211,6 +313,205 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
         </Card>
       </div>
 
+      {/* Data Items Section */}
+      <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-6 flex flex-col">
+        <div className="flex items-center justify-between mb-6">
+          <span className="text-white text-lg font-display flex items-center gap-2">
+            <DatabaseOutlined className="text-emerald-400" />
+            Data Items
+          </span>
+          <div className="bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full text-xs font-mono border border-emerald-500/20">
+            Total: {dataItems.length}
+          </div>
+        </div>
+
+        {itemsLoading ? (
+          <div className="w-full h-40 flex justify-center items-center">
+            <Spin />
+          </div>
+        ) : dataItems.length === 0 ? (
+          <Empty 
+            description={<span className="text-gray-500">No data items found</span>}
+            className="my-10"
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+          />
+        ) : (
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
+              {dataItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((item, index) => (
+                <div 
+                  key={item.dataItemId || item.id || item.itemId || `item-${index}`} 
+                  className="relative group rounded-xl overflow-hidden border border-white/5 bg-[#231e31] aspect-square flex flex-col cursor-pointer transition-all hover:border-emerald-500/30"
+                  onClick={() => handleItemClick(item)}
+                >
+                  {/* Thumbnail / Image preview */}
+                  <div className="flex-1 bg-black/40 overflow-hidden relative">
+                    {item.imageUrl || item.url || item.previewUrl || item.path ? (
+                      <img 
+                        src={item.imageUrl || item.url || item.previewUrl || item.path} 
+                        alt={item.name || item.filename || item.fileName || item.title || 'Data Item'} 
+                        className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          if (!target.src.includes('picsum.photos')) {
+                            target.src = `https://picsum.photos/seed/${item.id || item.dataItemId || index}/200/200`;
+                          }
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-600 bg-gray-900/50">
+                        <PictureOutlined className="text-3xl opacity-50" />
+                      </div>
+                    )}
+                    
+                    {/* Status Badge */}
+                    {item.labeled !== undefined && (
+                      <div className="absolute top-2 right-2">
+                        <div className={`w-2.5 h-2.5 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.5)] ${item.labeled ? 'bg-emerald-500' : 'bg-gray-400'}`} />
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Details */}
+                  <div className="p-3 border-t border-white/5 bg-[#2a2438]">
+                    <div className="text-xs text-gray-300 truncate font-mono" title={item.name || item.filename || item.fileName || item.title || `Item ${index + 1}`}>
+                      {item.name || item.filename || item.fileName || item.title || item.dataItemId || item.id || item.itemId || `Item ${index + 1}`}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="flex justify-end pt-4 border-t border-gray-800">
+              <Pagination
+                current={currentPage}
+                pageSize={itemsPerPage}
+                total={dataItems.length}
+                onChange={setCurrentPage}
+                showSizeChanger={false}
+                className="custom-pagination"
+              />
+            </div>
+          </>
+        )}
+      </Card>
+
+      {/* Data Item Detail Modal */}
+      <GlassModal
+        title={<span className="font-display text-lg text-white">Data Item Details</span>}
+        open={modalVisible}
+        onCancel={handleModalClose}
+        width={700}
+        destroyOnHidden
+      >
+        <div className="px-8 pt-10 pb-8 min-h-[400px]">
+          <div className="flex justify-between items-center border-b border-white/5 pb-4 mb-6">
+            <h2 className="text-white text-xl font-bold font-display flex items-center gap-2">
+              <DatabaseOutlined className="text-emerald-400" />
+              {selectedItem ? (selectedItem.name || selectedItem.filename || 'Item Details') : 'Item Details'}
+            </h2>
+            <button 
+              onClick={handleModalClose}
+              className="text-gray-400 hover:text-white transition-colors flex items-center justify-center"
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
+          </div>
+
+          {selectedItem ? (
+            <div className="flex flex-col gap-6 relative">
+              {/* Background loading indicator */}
+              {itemDetailLoading && (
+                <div className="absolute -top-4 right-0 flex items-center gap-2 text-xs text-emerald-400 animate-pulse bg-emerald-400/5 px-2 py-1 rounded-full border border-emerald-400/10 z-20">
+                  <Spin size="small" />
+                  <span>Loading full details...</span>
+                </div>
+              )}
+
+              <div className="bg-black/40 w-full h-80 rounded-xl flex items-center justify-center overflow-hidden border border-white/5 relative group/item">
+                <div className="absolute inset-y-0 left-0 flex items-center p-2 z-10">
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handlePrevItem(); }}
+                    className="w-10 h-10 rounded-full bg-black/40 text-white hover:bg-violet-500/80 transition-all flex items-center justify-center backdrop-blur-md border border-white/10 opacity-0 group-hover/item:opacity-100"
+                  >
+                    <span className="material-symbols-outlined">chevron_left</span>
+                  </button>
+                </div>
+
+                {selectedItem.imageUrl || selectedItem.url || selectedItem.previewUrl || selectedItem.path ? (
+                   <Image 
+                     src={selectedItem.imageUrl || selectedItem.url || selectedItem.previewUrl || selectedItem.path} 
+                     alt={selectedItem.name || selectedItem.filename || selectedItem.fileName || selectedItem.title || 'Item'} 
+                     className="max-w-full max-h-full object-contain"
+                     rootClassName="w-full h-full flex items-center justify-center"
+                     onError={(e) => {
+                       const target = e.target as HTMLImageElement;
+                       if (!target.src.includes('picsum.photos')) {
+                         target.src = `https://picsum.photos/seed/${selectedItem.id || selectedItem.dataItemId || 'err'}/400/300`;
+                       }
+                     }}
+                   />
+                ) : (
+                  <PictureOutlined className="text-5xl text-gray-600 opacity-50" />
+                )}
+
+                <div className="absolute inset-y-0 right-0 flex items-center p-2 z-10">
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleNextItem(); }}
+                    className="w-10 h-10 rounded-full bg-black/40 text-white hover:bg-violet-500/80 transition-all flex items-center justify-center backdrop-blur-md border border-white/10 opacity-0 group-hover/item:opacity-100"
+                  >
+                    <span className="material-symbols-outlined">chevron_right</span>
+                  </button>
+                </div>
+                
+                {/* Visual loading mask for image if applicable */}
+                {itemDetailLoading && (
+                  <div className="absolute inset-0 bg-black/20 backdrop-blur-[1px] flex items-center justify-center pointer-events-none">
+                    <Spin size="large" />
+                  </div>
+                )}
+              </div>
+              
+              <div className="bg-[#231e31]/50 border border-white/5 rounded-xl p-4">
+                <Descriptions
+                  column={1}
+                  className="custom-descriptions"
+                  styles={{
+                    label: { color: '#9ca3af', fontWeight: 500, width: '140px' },
+                    content: { color: '#d1d5db' }
+                  }}
+                >
+                  <Descriptions.Item label="Item ID">
+                    <span className="font-mono text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded border border-emerald-400/20">
+                      {selectedItem.dataItemId || selectedItem.id || selectedItem.itemId || 'N/A'}
+                    </span>
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Filename">
+                    {selectedItem.name || selectedItem.filename || selectedItem.fileName || selectedItem.title || 'N/A'}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Status">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2.5 h-2.5 rounded-full ${selectedItem.labeled ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-gray-500'}`} />
+                      <span className={`text-xs font-medium ${selectedItem.labeled ? 'text-emerald-400' : 'text-gray-400'}`}>
+                        {selectedItem.labeled ? 'Completed' : 'Pending'}
+                      </span>
+                    </div>
+                  </Descriptions.Item>
+                </Descriptions>
+              </div>
+            </div>
+          ) : itemDetailLoading ? (
+            <div className="py-20 flex justify-center items-center">
+              <Spin size="large" />
+            </div>
+          ) : (
+            <div className="py-10 text-center text-gray-500">
+              <Empty description="No details available" />
+            </div>
+          )}
+        </div>
+      </GlassModal>
+
       <style>{`
         .custom-descriptions .ant-descriptions-title {
           margin-bottom: 20px;
@@ -224,6 +525,29 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
           border-bottom: none;
           margin-bottom: 0;
           padding-bottom: 0;
+        }
+        .custom-pagination .ant-pagination-item {
+          background: rgba(255, 255, 255, 0.05);
+          border-color: rgba(255, 255, 255, 0.1);
+        }
+        .custom-pagination .ant-pagination-item a {
+          color: #9ca3af;
+        }
+        .custom-pagination .ant-pagination-item-active {
+          background: rgba(59, 130, 246, 0.2);
+          border-color: rgba(59, 130, 246, 0.5);
+        }
+        .custom-pagination .ant-pagination-item-active a {
+          color: #60a5fa;
+        }
+        .custom-pagination .ant-pagination-prev .ant-pagination-item-link,
+        .custom-pagination .ant-pagination-next .ant-pagination-item-link {
+          background: rgba(255, 255, 255, 0.05);
+          color: #9ca3af;
+          border-color: rgba(255, 255, 255, 0.1);
+        }
+        .custom-pagination .ant-pagination-disabled .ant-pagination-item-link {
+          opacity: 0.5;
         }
       `}</style>
     </div>
