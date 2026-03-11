@@ -25,17 +25,17 @@ import { AssignmentDetail } from './AssignmentDetail'
 import { CreateAssignmentModal } from './CreateAssignmentModal'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
-  useProjectById,
-  useAssignmentsByProject,
-  useGuidelinesByProject,
-  useInvalidateProjectDetail
+    useProjectById,
+    useAssignmentsByProject,
+    useGuidelinesByProject,
+    useInvalidateProjectDetail
 } from '@/features/manager/hooks/useProjectDetail'
 
 const { Title } = Typography
 
 interface ProjectDetailProps {
-  projectId: string
-  onBack: () => void
+    projectId: string
+    onBack: () => void
 }
 
 export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack }) => {
@@ -52,7 +52,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
     const { data: guidelines = [], isLoading: guidelinesLoading } = useGuidelinesByProject(projectId)
     const invalidateProjectDetail = useInvalidateProjectDetail()
 
-  const loading = projectLoading || assignmentsLoading || guidelinesLoading
+    const loading = projectLoading || assignmentsLoading || guidelinesLoading
 
     const [isCreateAssignmentModalVisible, setIsCreateAssignmentModalVisible] = useState(false)
     const hasShownFirstAssignmentModal = useRef(false)
@@ -177,7 +177,6 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
             setEditUsersLoading(false)
         }
     }
-  }
 
     const renderEditUserOption = (u: Record<string, unknown>) => {
         const userId = String(u.userId || u.id || '')
@@ -231,7 +230,6 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
             message.error('Failed to update assignment')
         }
     }
-  }
 
     const handleDeleteAssignment = (assignment: Record<string, unknown>) => {
         const assignmentId = String(assignment.assignmentId)
@@ -257,20 +255,19 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
             setDeletingAssignment(false)
         }
     }
-  }
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'N/A'
-    return new Date(dateString).toLocaleDateString('vi-VN')
-  }
+    const formatDate = (dateString?: string) => {
+        if (!dateString) return 'N/A'
+        return new Date(dateString).toLocaleDateString('vi-VN')
+    }
 
-  if (loading) {
-    return (
-      <div className="w-full h-64 flex justify-center items-center">
-        <Spin size="large" />
-      </div>
-    )
-  }
+    if (loading) {
+        return (
+            <div className="w-full h-64 flex justify-center items-center">
+                <Spin size="large" />
+            </div>
+        )
+    }
 
     if (selectedAssignmentId) {
         return (
@@ -281,75 +278,81 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
         )
     }
 
+    if (!project) {
+        return (
+            <div className="w-full text-center py-10 text-gray-400">
+                Error loading project information.
+            </div>
+        )
+    }
+
     return (
-      <div className="w-full text-center py-10 text-gray-400">
-        Error loading project information.
-      </div>
-    )
-  }
+        <div className="w-full animate-fade-in">
+            <div className="flex justify-between items-start mb-6">
+                <div>
+                    <Title level={3} className="!text-white !m-0 !font-display">
+                        {project.projectName}
+                    </Title>
+                    <div className="mt-2">
+                        <Tag
+                            color={getStatusColor(project.projectStatus as string)}
+                            className="m-0 font-medium text-sm px-3 py-1"
+                        >
+                            {(project.projectStatus as string) || 'UNKNOWN'}
+                        </Tag>
+                    </div>
+                </div>
+                <Button
+                    type="primary"
+                    icon={<EditOutlined />}
+                    className="bg-violet-600 hover:bg-violet-500 border-none"
+                    onClick={() => navigate(`/manager/projects/edit/${project.projectId}`)}
+                >
+                    Edit
+                </Button>
+            </div>
 
-  return (
-    <div className="w-full animate-fade-in">
-      <div className="flex justify-between items-start mb-6">
-        <div>
-          <Title level={3} className="!text-white !m-0 !font-display">
-            {project.projectName}
-          </Title>
-          <div className="mt-2">
-            <Tag
-              color={getStatusColor(project.projectStatus)}
-              className="m-0 font-medium text-sm px-3 py-1"
-            >
-              {project.projectStatus || 'UNKNOWN'}
-            </Tag>
-          </div>
-        </div>
-        <Button
-          type="primary"
-          icon={<EditOutlined />}
-          className="bg-violet-600 hover:bg-violet-500 border-none"
-          onClick={() => navigate(`/manager/projects/edit/${project.projectId}`)}
-        >
-          Edit
-        </Button>
-      </div>
+            <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-6 p-0 overflow-hidden">
+                <div className="flex flex-col lg:flex-row h-full w-full">
+                    <div className="flex-1 p-6 border-b lg:border-b-0 lg:border-r border-gray-800">
+                        <Descriptions
+                            title={
+                                <span className="text-white text-lg font-display flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-violet-400">info</span>Project
+                                    Information
+                                </span>
+                            }
+                            column={1}
+                            className="custom-descriptions"
+                            styles={{
+                                label: { color: '#9ca3af', fontWeight: 500, width: '150px' },
+                                content: { color: '#d1d5db' }
+                            }}
+                        >
+                            <Descriptions.Item label="Project ID">
+                                <span className="font-mono text-violet-300 bg-violet-500/10 px-2 py-0.5 rounded border border-violet-500/20">
+                                    {project.projectId}
+                                </span>
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Description">
+                                {project.description || (
+                                    <span className="text-gray-600 italic">No description</span>
+                                )}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Created At">
+                                {formatDate(project.createdAt as string)}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Last Updated">
+                                {formatDate(project.updatedAt as string)}
+                            </Descriptions.Item>
+                        </Descriptions>
+                    </div>
 
-      <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-6 p-0 overflow-hidden">
-        <div className="flex flex-col lg:flex-row h-full w-full">
-          <div className="flex-1 p-6 border-b lg:border-b-0 lg:border-r border-gray-800">
-            <Descriptions
-              title={
-                <span className="text-white text-lg font-display flex items-center gap-2">
-                  <span className="material-symbols-outlined text-violet-400">info</span>Project
-                  Information
-                </span>
-              }
-              column={1}
-              className="custom-descriptions"
-              styles={{
-                label: { color: '#9ca3af', fontWeight: 500, width: '150px' },
-                content: { color: '#d1d5db' }
-              }}
-            >
-              <Descriptions.Item label="Project ID">
-                <span className="font-mono text-violet-300 bg-violet-500/10 px-2 py-0.5 rounded border border-violet-500/20">
-                  {project.projectId}
-                </span>
-              </Descriptions.Item>
-              <Descriptions.Item label="Description">
-                {project.description || (
-                  <span className="text-gray-600 italic">No description</span>
-                )}
-              </Descriptions.Item>
-              <Descriptions.Item label="Created At">
-                {formatDate(project.createdAt)}
-              </Descriptions.Item>
-              <Descriptions.Item label="Last Updated">
-                {formatDate(project.updatedAt)}
-              </Descriptions.Item>
-            </Descriptions>
-          </div>
-
+                    <div className="flex-1 p-6">
+                        <h3 className="text-white text-lg font-display flex items-center gap-2 mb-4">
+                            <span className="material-symbols-outlined text-green-400">menu_book</span>
+                            Project Guidelines
+                        </h3>
                         {guidelines.length === 0 ? (
                             <div className="flex-1 flex flex-col items-center justify-center min-h-[150px]">
                                 <Empty
@@ -412,61 +415,21 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
                 </div>
             </Card>
 
-            {guidelines.length === 0 ? (
-              <div className="flex-1 flex flex-col items-center justify-center min-h-[150px]">
-                <Empty
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description={<span className="text-gray-500">No guidelines created yet</span>}
-                />
-              </div>
-            ) : (
-              <div
-                className="grid grid-cols-1 gap-4 overflow-y-auto pr-1"
-                style={{ maxHeight: '300px' }}
-              >
-                {guidelines.map((guideline: Record<string, unknown>, index: number) => (
-                  <div
-                    key={(guideline.guide_id as string) || (guideline.id as string) || index}
-                    className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-green-500/30 transition-colors"
-                  >
-                    <div className="flex justify-between items-start">
-                      <h4
-                        className="text-white font-bold text-sm truncate pr-2"
-                        title={(guideline.title as string) || 'Unnamed Guideline'}
-                      >
-                        {(guideline.title as string) || 'Unnamed Guideline'}
-                      </h4>
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-6 mt-1">
+                <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
+                    <div className="flex items-center justify-between mb-4">
+                        <span className="text-white text-lg font-display flex items-center gap-2">
+                            <span className="material-symbols-outlined text-fuchsia-400">group</span>
+                            Project Members
+                        </span>
+                        <Tag
+                            color="#8b5cf6"
+                            className="border-0 bg-violet-600/20 text-violet-300 font-bold px-3 rounded-full"
+                        >
+                            {project.users?.length || 0} Members
+                        </Tag>
                     </div>
-                    <div className="text-gray-400 text-sm mt-2 whitespace-pre-wrap">
-                      {(guideline.content as string) || 'No content provided.'}
-                    </div>
-                    <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/5">
-                      <span className="text-gray-500 text-xs">
-                        {formatDate(guideline.createdAt as string)}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </Card>
-
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-1 mb-6 mt-1">
-        <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-white text-lg font-display flex items-center gap-2">
-              <span className="material-symbols-outlined text-fuchsia-400">group</span>
-              Project Members
-            </span>
-            <Tag
-              color="#8b5cf6"
-              className="border-0 bg-violet-600/20 text-violet-300 font-bold px-3 rounded-full"
-            >
-              {project.users?.length || 0} Members
-            </Tag>
-          </div>
+                </Card>
 
                 <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
                     <div className="flex items-center justify-between mb-4">
@@ -579,8 +542,6 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
                     )}
                 </Card>
             </div>
-          )}
-        </Card>
 
             <CreateAssignmentModal
                 open={isCreateAssignmentModalVisible}
@@ -776,7 +737,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
                 </div>
             </GlassModal>
 
-      <style>{`
+            <style>{`
                 .custom-descriptions .ant-descriptions-title {
                     margin-bottom: 20px;
                 }
@@ -791,6 +752,6 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
                     padding-bottom: 0;
                 }
             `}</style>
-    </div>
-  )
+        </div>
+    )
 }
