@@ -3,7 +3,8 @@ import { App, Spin, Typography, Card, Descriptions } from 'antd'
 import { FolderOutlined } from '@ant-design/icons'
 import datasetApi from '@/api/DatasetApi'
 import projectApi from '@/api/ProjectApi'
-import { useNavigate } from 'react-router-dom'
+import { ProjectDetail } from '../dashboard/ProjectDetail'
+import { useSearchParams } from 'react-router-dom'
 
 const { Title } = Typography
 
@@ -26,7 +27,20 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
   const [dataset, setDataset] = useState<DatasetDetailData | null>(null)
   const [projectName, setProjectName] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
-  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const viewProjectId = searchParams.get('viewProjectId')
+  const setViewProjectId = (id: string | null) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev)
+      if (id) {
+        next.set('viewProjectId', id)
+      } else {
+        next.delete('viewProjectId')
+      }
+      return next
+    })
+  }
 
   useEffect(() => {
     let isMounted = true
@@ -38,21 +52,23 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
         const data = response.data?.data || response.data
 
         if (data && isMounted) {
+          const extractedProjectId = data.projectId || data.project?.id || data.project?.projectId;
+
           setDataset({
             datasetId: String(data.datasetId || data.id),
             datasetName: String(data.datasetName || data.name || ''),
             description: data.description ? String(data.description) : undefined,
-            projectId: data.projectId ? String(data.projectId) : undefined,
+            projectId: extractedProjectId ? String(extractedProjectId) : undefined,
             totalItems: Number(data.totalItems || data.itemCount) || 0,
             createdAt: data.createdAt ? String(data.createdAt) : undefined
           })
 
-          if (data.projectId) {
+          if (extractedProjectId) {
             try {
-              const projRes = await projectApi.getProjectById(data.projectId)
+              const projRes = await projectApi.getProjectById(extractedProjectId)
               const projData = projRes.data?.data || projRes.data
               if (projData && isMounted) {
-                setProjectName(String(projData.projectName || projData.name || data.projectId))
+                setProjectName(String(projData.projectName || projData.name || extractedProjectId))
               }
             } catch (projErr) {
               console.error('Failed to fetch associated project details:', projErr)
@@ -102,6 +118,10 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
     )
   }
 
+  if (viewProjectId) {
+    return <ProjectDetail projectId={viewProjectId} onBack={() => setViewProjectId(null)} isInline={true} />
+  }
+
   return (
     <div className="w-full animate-fade-in">
       {/* Header - same layout as ProjectDetail */}
@@ -115,7 +135,7 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
         </div>
       </div>
 
-      {/* Main Info Card - split layout like ProjectDetail */}
+      {/* Main Info Card */}
       <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-6 p-0 overflow-hidden">
         <div className="flex flex-col lg:flex-row h-full w-full">
           {/* Left: Dataset Information */}
@@ -145,19 +165,6 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
               <Descriptions.Item label="Created At">
                 {formatDate(dataset.createdAt)}
               </Descriptions.Item>
-              <Descriptions.Item label="Associated Project">
-                {dataset.projectId ? (
-                  <span
-                    className="text-blue-400 hover:text-blue-300 cursor-pointer transition-colors"
-                    onClick={() => navigate(`/manager/projects/${dataset.projectId}`)}
-                  >
-                    <FolderOutlined className="mr-1" />
-                    {projectName || `Project ID: ${dataset.projectId}`}
-                  </span>
-                ) : (
-                  <span className="text-gray-600 italic">No project associated</span>
-                )}
-              </Descriptions.Item>
             </Descriptions>
           </div>
 
@@ -179,6 +186,30 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
           </div>
         </div>
       </Card>
+
+      <div className="grid grid-cols-1 mb-6 mt-1">
+        <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-white text-lg font-display flex items-center gap-2">
+              <FolderOutlined className="text-blue-400" />
+              Associated Project
+            </span>
+          </div>
+          {dataset.projectId ? (
+            <div
+              className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-blue-500/30 transition-colors cursor-pointer"
+              onClick={() => setViewProjectId(dataset.projectId || null)}
+            >
+              <h4 className="text-white font-bold text-sm truncate">
+                {projectName ? projectName : `Project ID: ${dataset.projectId}`}
+              </h4>
+              <div className="text-gray-400 text-xs mt-1">Click to view project details</div>
+            </div>
+          ) : (
+            <div className="text-gray-500 italic py-4 text-center">No associated project</div>
+          )}
+        </Card>
+      </div>
 
       <style>{`
         .custom-descriptions .ant-descriptions-title {

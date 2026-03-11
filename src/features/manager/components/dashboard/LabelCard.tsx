@@ -17,6 +17,7 @@ export const LabelCard: React.FC<LabelCardProps> = ({
   description,
   createdAt,
   updatedAt,
+  color,
   onEdit,
   onDelete,
   onClick
@@ -59,7 +60,13 @@ export const LabelCard: React.FC<LabelCardProps> = ({
       onClick={onClick}
     >
       <div className="flex justify-between items-start mb-2">
-        <div className="flex-1 pr-2">
+        <div className="flex-1 pr-2 flex items-center gap-2">
+          {color && (
+            <div
+              className="w-4 h-4 rounded-full border border-white/20 shrink-0"
+              style={{ backgroundColor: color }}
+            />
+          )}
           <Title
             level={5}
             className="!text-white !m-0 !text-sm leading-tight line-clamp-2"

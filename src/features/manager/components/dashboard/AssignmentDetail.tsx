@@ -3,7 +3,10 @@ import { App, Spin, Typography, Card, Button, Descriptions, Tag, Empty } from 'a
 import { EditOutlined, FolderOutlined, DatabaseOutlined } from '@ant-design/icons'
 import assignmentApi, { type GetAssignmentsParams } from '@/api/AssignmentApi'
 import projectApi from '@/api/ProjectApi'
-import { useNavigate } from 'react-router-dom'
+import datasetApi from '@/api/DatasetApi'
+import { ProjectDetail } from './ProjectDetail'
+import { DatasetDetail } from '../dataset/DatasetDetail'
+import { useSearchParams } from 'react-router-dom'
 
 const { Title } = Typography
 
@@ -16,8 +19,36 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId
   const { message } = App.useApp()
   const [assignment, setAssignment] = useState<GetAssignmentsParams | null>(null)
   const [projectName, setProjectName] = useState<string | null>(null)
+  const [datasetName, setDatasetName] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
-  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const viewProjectId = searchParams.get('viewProjectId')
+  const viewDatasetId = searchParams.get('viewDatasetId')
+
+  const setViewProjectId = (id: string | null) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev)
+      if (id) {
+        next.set('viewProjectId', id)
+      } else {
+        next.delete('viewProjectId')
+      }
+      return next
+    })
+  }
+
+  const setViewDatasetId = (id: string | null) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev)
+      if (id) {
+        next.set('viewDatasetId', id)
+      } else {
+        next.delete('viewDatasetId')
+      }
+      return next
+    })
+  }
 
   useEffect(() => {
     let isMounted = true
@@ -29,6 +60,9 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId
         const data = response.data?.data || response.data
 
         if (data && isMounted) {
+          const extractedProjectId = data.projectId || data.project?.id || data.project?.projectId;
+          const extractedDatasetId = data.datasetId || data.dataset?.id || data.dataset?.datasetId;
+
           setAssignment({
             assignmentId: String(data.assignmentId || data.id),
             assignmentName: String(data.assignmentName || data.name),
@@ -38,22 +72,35 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId
               : data.descriptionAssignment
                 ? String(data.descriptionAssignment)
                 : undefined,
-            projectId: data.projectId ? String(data.projectId) : undefined,
-            datasetId: data.datasetId ? String(data.datasetId) : undefined,
+            projectId: extractedProjectId ? String(extractedProjectId) : undefined,
+            datasetId: extractedDatasetId ? String(extractedDatasetId) : undefined,
             createdAt: data.createdAt ? String(data.createdAt) : undefined,
             updatedAt: data.updatedAt ? String(data.updatedAt) : undefined
           })
 
           // Fetch associated project name if projectId exists
-          if (data.projectId) {
+          if (extractedProjectId) {
             try {
-              const projRes = await projectApi.getProjectById(data.projectId)
+              const projRes = await projectApi.getProjectById(extractedProjectId)
               const projData = projRes.data?.data || projRes.data
               if (projData && isMounted) {
-                setProjectName(String(projData.projectName || projData.name || data.projectId))
+                setProjectName(String(projData.projectName || projData.name || extractedProjectId))
               }
             } catch (projErr) {
               console.error('Failed to fetch associated project details:', projErr)
+            }
+          }
+
+          // Fetch associated dataset name if datasetId exists
+          if (extractedDatasetId) {
+            try {
+              const dsRes = await datasetApi.getDatasetById(extractedDatasetId)
+              const dsData = dsRes.data?.data || dsRes.data
+              if (dsData && isMounted) {
+                setDatasetName(String(dsData.datasetName || dsData.name || extractedDatasetId))
+              }
+            } catch (dsErr) {
+              console.error('Failed to fetch associated dataset details:', dsErr)
             }
           }
         }
@@ -77,7 +124,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId
     return () => {
       isMounted = false
     }
-  }, [assignmentId, onBack])
+  }, [assignmentId, onBack, message])
 
   const getStatusColor = (status?: string) => {
     switch (status?.toUpperCase()) {
@@ -113,6 +160,14 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId
         Error loading assignment information.
       </div>
     )
+  }
+
+  if (viewProjectId) {
+    return <ProjectDetail projectId={viewProjectId} onBack={() => setViewProjectId(null)} isInline={true} />
+  }
+
+  if (viewDatasetId) {
+    return <DatasetDetail datasetId={viewDatasetId} onBack={() => setViewDatasetId(null)} />
   }
 
   return (
@@ -191,7 +246,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId
           {assignment.projectId ? (
             <div
               className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-blue-500/30 transition-colors cursor-pointer"
-              onClick={() => navigate(`/manager/projects/${assignment.projectId}`)}
+              onClick={() => setViewProjectId(assignment.projectId || null)}
             >
               <h4 className="text-white font-bold text-sm truncate">
                 {projectName ? projectName : `Project ID: ${assignment.projectId}`}
@@ -216,10 +271,10 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId
           {assignment.datasetId ? (
             <div
               className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-fuchsia-500/30 transition-colors cursor-pointer"
-              onClick={() => navigate(`/manager/datasets/${assignment.datasetId}`)}
+              onClick={() => setViewDatasetId(assignment.datasetId || null)}
             >
               <h4 className="text-white font-bold text-sm truncate">
-                Dataset ID: {assignment.datasetId}
+                {datasetName ? datasetName : `Dataset ID: ${assignment.datasetId}`}
               </h4>
               <div className="text-gray-400 text-xs mt-1">Click to view dataset details</div>
             </div>

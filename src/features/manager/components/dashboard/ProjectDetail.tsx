@@ -36,9 +36,10 @@ const { Title } = Typography
 interface ProjectDetailProps {
     projectId: string
     onBack: () => void
+    isInline?: boolean
 }
 
-export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack }) => {
+export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, isInline = false }) => {
     const { message } = App.useApp()
     const {
         data: project,
@@ -78,16 +79,23 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
     const [editReviewers, setEditReviewers] = useState<Record<string, unknown>[]>([])
     const [editUsersLoading, setEditUsersLoading] = useState(false)
 
-    // Assignment detail view via URL search params (enables browser back button)
-    const selectedAssignmentId = searchParams.get('assignmentId')
+    // Assignment detail view via URL search params or local state for inline usage
+    const [localAssignmentId, setLocalAssignmentId] = useState<string | null>(null)
+    const urlAssignmentId = searchParams.get('assignmentId')
+    const selectedAssignmentId = isInline ? localAssignmentId : urlAssignmentId
+
     const setSelectedAssignmentId = (id: string | null) => {
-        const params = new URLSearchParams(searchParams)
-        if (id) {
-            params.set('assignmentId', id)
+        if (isInline) {
+            setLocalAssignmentId(id)
         } else {
-            params.delete('assignmentId')
+            const params = new URLSearchParams(searchParams)
+            if (id) {
+                params.set('assignmentId', id)
+            } else {
+                params.delete('assignmentId')
+            }
+            setSearchParams(params)
         }
-        setSearchParams(params)
     }
 
     useEffect(() => {
@@ -415,7 +423,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
                 </div>
             </Card>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-6 mt-1">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 mb-6 mt-1">
                 <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
                     <div className="flex items-center justify-between mb-4">
                         <span className="text-white text-lg font-display flex items-center gap-2">

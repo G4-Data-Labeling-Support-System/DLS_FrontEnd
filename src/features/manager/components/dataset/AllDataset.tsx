@@ -9,14 +9,14 @@ import { useState } from 'react'
 
 const { Title } = Typography
 
-interface DatasetListProps {
+interface AllDatasetProps {
   datasets: GetDatasetsParams[]
   loading: boolean
   selectedDatasetId?: string | null
   onDatasetSelect?: (id: string | null) => void
 }
 
-const DatasetList: React.FC<DatasetListProps> = ({
+const AllDataset: React.FC<AllDatasetProps> = ({
   datasets,
   loading,
   selectedDatasetId,
@@ -187,4 +187,4 @@ const DatasetList: React.FC<DatasetListProps> = ({
   )
 }
 
-export default DatasetList
+export default AllDataset

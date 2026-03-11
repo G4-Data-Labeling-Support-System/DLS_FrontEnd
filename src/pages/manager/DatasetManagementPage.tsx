@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
 import datasetApi, { type GetDatasetsParams } from '@/api/DatasetApi'
-import DatasetList from '@/features/manager/components/dataset/DatasetList'
+import AllDataset from '@/features/manager/components/dataset/AllDataset'
 import { DatasetQuickActions } from '@/features/manager/components/dataset/DatasetQuickActions'
 import { DatasetTabs, type DatasetTabType } from '@/features/manager/components/dataset/DatasetTabs'
 import { AllLabels } from '@/features/manager/components/dashboard/AllLabels'
@@ -35,10 +35,16 @@ const DatasetManagementPage: React.FC = () => {
         if (tab === 'dataset') {
           next.delete('tab')
           next.delete('labelId')
+          next.delete('datasetId')
+          next.delete('viewProjectId')
+          next.delete('viewDatasetId')
         } else {
           next.set('tab', tab)
           if (tab === 'label') {
+            next.delete('labelId')
             next.delete('datasetId')
+            next.delete('viewProjectId')
+            next.delete('viewDatasetId')
           }
         }
         return next
@@ -130,7 +136,7 @@ const DatasetManagementPage: React.FC = () => {
       {activeTab === 'dataset' && (
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start relative">
           <div className="xl:col-span-3 flex flex-col w-full items-center">
-            <DatasetList
+            <AllDataset
               datasets={datasets}
               loading={loading}
               selectedDatasetId={selectedDatasetId}
