@@ -17,7 +17,7 @@ import {
 } from 'antd'
 import dayjs from 'dayjs'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
-import { EditOutlined, UserOutlined, MoreOutlined, DeleteOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
+import { EditOutlined, MoreOutlined, DeleteOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import assignmentApi from '@/api/AssignmentApi'
 import guidelineApi from '@/api/GuidelineApi'
 import { userApi } from '@/api/userApi'
@@ -258,7 +258,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
 
     const formatDate = (dateString?: string) => {
         if (!dateString) return 'N/A'
-        return new Date(dateString).toLocaleDateString('vi-VN')
+        return new Date(dateString).toLocaleString('vi-VN')
     }
 
     if (loading) {

@@ -68,7 +68,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   // Format ngày tháng hiển thị
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A'
-    return new Date(dateString).toLocaleDateString('vi-VN')
+    return new Date(dateString).toLocaleString('vi-VN')
   }
 
   return (

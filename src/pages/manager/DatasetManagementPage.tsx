@@ -105,7 +105,7 @@ const DatasetManagementPage: React.FC = () => {
                   datasetId: String(d.id || d.datasetId || ''),
                   datasetName: String(d.name || d.datasetName || ''),
                   totalItems: Number(d.itemCount || d.totalItems) || 0,
-                  createdAt: String(d.createdAt || ''),
+                  createdAt: String(d.createdAt || d.created_at || d.createdDate || ''),
                   description: String(d.description || '')
                 }) as unknown as GetDatasetsParams
             )

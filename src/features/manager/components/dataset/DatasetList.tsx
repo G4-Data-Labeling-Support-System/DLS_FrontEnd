@@ -115,6 +115,7 @@ const DatasetList: React.FC<DatasetListProps> = ({
                 (ds.datasetName &&
                   ds.datasetName.toLowerCase().includes(searchText.toLowerCase()))
             )
+            .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
             .map((ds) => {
               const uniqueId = ds.datasetId || ''
               return (

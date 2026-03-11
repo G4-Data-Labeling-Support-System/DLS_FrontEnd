@@ -65,8 +65,8 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
           if (p.description) {
             mapped.description = String(p.description)
           }
-          if (p.createdAt) {
-            mapped.createdAt = String(p.createdAt)
+          if (p.createdAt || p.created_at || p.createdDate) {
+            mapped.createdAt = String(p.createdAt || p.created_at || p.createdDate)
           }
           if (p.updatedAt) {
             mapped.updatedAt = String(p.updatedAt)

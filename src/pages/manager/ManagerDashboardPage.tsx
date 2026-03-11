@@ -13,6 +13,7 @@ import {
 const ManagerDashboardPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const [createAssignmentOpen, setCreateAssignmentOpen] = useState(false)
+  const [assignmentRefreshTrigger, setAssignmentRefreshTrigger] = useState(0)
 
   const tabParam = searchParams.get('tab')
   const activeTab: DashboardTabType =
@@ -70,6 +71,7 @@ const ManagerDashboardPage: React.FC = () => {
             <AllAssignments
               selectedAssignmentId={selectedAssignmentId}
               onAssignmentSelect={handleAssignmentSelect}
+              refreshTrigger={assignmentRefreshTrigger}
             />
           </div>
 
@@ -87,6 +89,7 @@ const ManagerDashboardPage: React.FC = () => {
             onSuccess={() => {
               setCreateAssignmentOpen(false)
               setSearchParams({ tab: 'assignment' })
+              setAssignmentRefreshTrigger(prev => prev + 1)
             }}
           />
         </div>

@@ -11,11 +11,13 @@ const { Title } = Typography
 interface AllAssignmentsProps {
   selectedAssignmentId?: string | null
   onAssignmentSelect?: (id: string | null) => void
+  refreshTrigger?: number
 }
 
 export const AllAssignments: React.FC<AllAssignmentsProps> = ({
   selectedAssignmentId,
-  onAssignmentSelect
+  onAssignmentSelect,
+  refreshTrigger
 }) => {
   const { message } = App.useApp()
   const [assignments, setAssignments] = useState<GetAssignmentsParams[]>([])
@@ -67,8 +69,8 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
           if (a.datasetId || a.dataset_id) {
             mapped.datasetId = String(a.datasetId || a.dataset_id)
           }
-          if (a.createdAt) {
-            mapped.createdAt = String(a.createdAt)
+          if (a.createdAt || a.created_at || a.createdDate) {
+            mapped.createdAt = String(a.createdAt || a.created_at || a.createdDate)
           }
           if (a.updatedAt) {
             mapped.updatedAt = String(a.updatedAt)
@@ -101,7 +103,7 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
     if (!currentAssignmentId) {
       fetchAssignments()
     }
-  }, [currentAssignmentId])
+  }, [currentAssignmentId, refreshTrigger])
 
   const handleDelete = (id?: string) => {
     if (!id) return
@@ -199,6 +201,7 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
             .filter(
               (a) => statusFilter === 'ALL' || (a.status && a.status.toUpperCase() === statusFilter)
             )
+            .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
             .map((a, index) => {
               const uniqueId = a.assignmentId || String(index)
               return (
