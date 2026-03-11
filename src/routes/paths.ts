@@ -34,7 +34,8 @@ export const PATH_ANNOTATOR = {
   projectDetail: '/annotator/project/:id',
   assignment: '/annotator/assignment',
   taskDetail: (taskId: string) => `/annotator/task/${taskId}`,
-  annotation: (taskId: string) => `/annotator/task/${taskId}/annotate`
+  annotation: (taskId: string) => `/annotator/task/${taskId}/annotate`,
+  datasetDetail: '/annotator/project/:projectId/dataset/:datasetId'
 }
 
 export const PATH_REVIEWER = {
