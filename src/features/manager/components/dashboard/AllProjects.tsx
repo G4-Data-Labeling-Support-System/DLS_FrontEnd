@@ -27,6 +27,10 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
   const [deleting, setDeleting] = useState(false)
   const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null)
   const [deletingProjectName, setDeletingProjectName] = useState('')
+  const [cancelModalOpen, setCancelModalOpen] = useState(false)
+  const [canceling, setCanceling] = useState(false)
+  const [cancelingProjectId, setCancelingProjectId] = useState<string | null>(null)
+  const [cancelingProjectName, setCancelingProjectName] = useState('')
   const navigate = useNavigate()
 
   const currentProjectId = selectedProjectId !== undefined ? selectedProjectId : internalProjectId
@@ -116,6 +120,32 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
     navigate(`/manager/projects/edit/${id}`)
   }
 
+  const handleCancelProject = (id?: string) => {
+    if (!id) return
+    const proj = projects.find((p) => p.projectId === id)
+    setCancelingProjectId(id)
+    setCancelingProjectName(proj?.projectName || 'this project')
+    setCancelModalOpen(true)
+  }
+
+  const confirmCancel = async () => {
+    if (!cancelingProjectId) return
+    setCanceling(true)
+    try {
+      await projectApi.updateProjectStatus(cancelingProjectId, 'CANCELLED')
+      messageApi.success('Project cancelled successfully!')
+      setCancelModalOpen(false)
+      setCancelingProjectId(null)
+      setCancelingProjectName('')
+      fetchProjects()
+    } catch (error) {
+      console.error('Cancel project error:', error)
+      messageApi.error('An error occurred while cancelling the project.')
+    } finally {
+      setCanceling(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="w-full flex justify-center py-10">
@@ -144,8 +174,7 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
               { value: 'NOT_STARTED', label: 'Not Started' },
               { value: 'ACTIVE', label: 'Active' },
               { value: 'INPROCESS', label: 'In Process' },
-              { value: 'COMPLETED', label: 'Completed' },
-              { value: 'INACTIVE', label: 'Inactive' }
+              { value: 'COMPLETED', label: 'Completed' }
             ]}
           />
           <Input
@@ -167,6 +196,7 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 items-stretch">
           {projects
+            .filter((p) => p.projectStatus?.toUpperCase() !== 'INACTIVE')
             .filter(
               (p) =>
                 !searchText ||
@@ -177,6 +207,7 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
                 statusFilter === 'ALL' ||
                 (p.projectStatus && p.projectStatus.toUpperCase() === statusFilter)
             )
+            .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
             .map((p) => {
               if (!p.projectId) return null // Bỏ qua nếu data rác không có ID
 
@@ -187,6 +218,7 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
                   onClick={() => handleProjectSelect(p.projectId as string)}
                   onEdit={() => handleEdit(p.projectId)}
                   onDelete={() => handleDelete(p.projectId)}
+                  onCancelProject={() => handleCancelProject(p.projectId)}
                 />
               )
             })}
@@ -241,6 +273,46 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
               className="bg-red-600 hover:bg-red-500 border-none"
             >
               Deactivate
+            </Button>
+          </div>
+        </div>
+      </GlassModal>
+
+      <GlassModal
+        open={cancelModalOpen}
+        onCancel={() => { setCancelModalOpen(false); setCancelingProjectId(null); setCancelingProjectName('') }}
+        destroyOnHidden
+        width={480}
+      >
+        <div className="px-8 pt-10 pb-8">
+          <div className="text-center pb-6 mb-6">
+            <div className="flex justify-center mb-4">
+              <div className="w-14 h-14 rounded-full bg-orange-500/10 flex items-center justify-center">
+                <ExclamationCircleOutlined className="text-orange-500 text-2xl" />
+              </div>
+            </div>
+            <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
+              Cancel Project
+            </h2>
+            <p className="text-white/50 text-sm">
+              Are you sure you want to cancel <span className="text-white/80 font-medium">{cancelingProjectName}</span>? This action will change the project status to CANCELLED.
+            </p>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
+            <Button
+              onClick={() => { setCancelModalOpen(false); setCancelingProjectId(null); setCancelingProjectName('') }}
+              className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
+            >
+              Close
+            </Button>
+            <Button
+              type="primary"
+              loading={canceling}
+              onClick={confirmCancel}
+              className="bg-orange-600 hover:bg-orange-500 border-none"
+            >
+              Cancel Project
             </Button>
           </div>
         </div>

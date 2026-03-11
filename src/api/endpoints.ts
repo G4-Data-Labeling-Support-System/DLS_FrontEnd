@@ -25,7 +25,8 @@ export const ENDPOINTS = {
     LIST: '/projects',
     DETAIL: (id: string) => `/projects/${id}`,
     CREATE: '/projects',
-    DELETE: (id: string) => `/projects/${id}/remove`
+    DELETE: (id: string) => `/projects/${id}/remove`,
+    STATUS: (id: string) => `/projects/${id}/status`
   },
 
   DATASETS: {
