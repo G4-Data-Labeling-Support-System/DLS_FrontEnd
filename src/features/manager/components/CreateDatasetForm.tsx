@@ -14,12 +14,14 @@ interface CreateDatasetFormProps {
   onSuccess?: (datasetId?: string) => void
   onBack?: () => void
   submitLabel?: string
+  initialProjectId?: string
 }
 
 export const CreateDatasetForm: React.FC<CreateDatasetFormProps> = ({
   onSuccess,
   onBack,
-  submitLabel
+  submitLabel,
+  initialProjectId
 }) => {
   const { message } = App.useApp()
   const [form] = Form.useForm()
@@ -32,6 +34,12 @@ export const CreateDatasetForm: React.FC<CreateDatasetFormProps> = ({
   useEffect(() => {
     fileListRef.current = fileList
   }, [fileList])
+
+  useEffect(() => {
+    if (initialProjectId) {
+      form.setFieldsValue({ projectId: initialProjectId })
+    }
+  }, [initialProjectId, form])
 
   useEffect(() => {
     return () => {
@@ -153,6 +161,7 @@ export const CreateDatasetForm: React.FC<CreateDatasetFormProps> = ({
                 loading={projects.length === 0}
                 showSearch
                 optionFilterProp="children"
+                disabled={!!initialProjectId}
                 filterOption={(input, option) =>
                   (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                 }

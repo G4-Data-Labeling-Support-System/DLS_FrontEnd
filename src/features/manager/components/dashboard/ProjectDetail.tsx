@@ -17,7 +17,7 @@ import {
 } from 'antd'
 import dayjs from 'dayjs'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
-import { EditOutlined, UserOutlined, MoreOutlined, DeleteOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
+import { EditOutlined, MoreOutlined, DeleteOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import assignmentApi from '@/api/AssignmentApi'
 import guidelineApi from '@/api/GuidelineApi'
 import { userApi } from '@/api/userApi'
@@ -28,17 +28,21 @@ import {
     useProjectById,
     useAssignmentsByProject,
     useGuidelinesByProject,
+    useDatasetsByProject,
     useInvalidateProjectDetail
 } from '@/features/manager/hooks/useProjectDetail'
+import { DatasetCard } from '../dataset/DatasetCard'
+import { CreateDatasetModal } from '../dataset/CreateDatasetModal'
 
 const { Title } = Typography
 
 interface ProjectDetailProps {
     projectId: string
     onBack: () => void
+    isInline?: boolean
 }
 
-export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack }) => {
+export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, isInline = false }) => {
     const { message } = App.useApp()
     const {
         data: project,
@@ -50,11 +54,13 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
         isLoading: assignmentsLoading
     } = useAssignmentsByProject(projectId)
     const { data: guidelines = [], isLoading: guidelinesLoading } = useGuidelinesByProject(projectId)
+    const { data: datasets = [], isLoading: datasetsLoading } = useDatasetsByProject(projectId)
     const invalidateProjectDetail = useInvalidateProjectDetail()
 
-    const loading = projectLoading || assignmentsLoading || guidelinesLoading
+    const loading = projectLoading || assignmentsLoading || guidelinesLoading || datasetsLoading
 
     const [isCreateAssignmentModalVisible, setIsCreateAssignmentModalVisible] = useState(false)
+    const [isCreateDatasetModalVisible, setIsCreateDatasetModalVisible] = useState(false)
     const hasShownFirstAssignmentModal = useRef(false)
     const [guidelineForm] = Form.useForm()
     const [assignmentEditForm] = Form.useForm()
@@ -78,16 +84,23 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
     const [editReviewers, setEditReviewers] = useState<Record<string, unknown>[]>([])
     const [editUsersLoading, setEditUsersLoading] = useState(false)
 
-    // Assignment detail view via URL search params (enables browser back button)
-    const selectedAssignmentId = searchParams.get('assignmentId')
+    // Assignment detail view via URL search params or local state for inline usage
+    const [localAssignmentId, setLocalAssignmentId] = useState<string | null>(null)
+    const urlAssignmentId = searchParams.get('assignmentId')
+    const selectedAssignmentId = isInline ? localAssignmentId : urlAssignmentId
+
     const setSelectedAssignmentId = (id: string | null) => {
-        const params = new URLSearchParams(searchParams)
-        if (id) {
-            params.set('assignmentId', id)
+        if (isInline) {
+            setLocalAssignmentId(id)
         } else {
-            params.delete('assignmentId')
+            const params = new URLSearchParams(searchParams)
+            if (id) {
+                params.set('assignmentId', id)
+            } else {
+                params.delete('assignmentId')
+            }
+            setSearchParams(params)
         }
-        setSearchParams(params)
     }
 
     useEffect(() => {
@@ -258,7 +271,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
 
     const formatDate = (dateString?: string) => {
         if (!dateString) return 'N/A'
-        return new Date(dateString).toLocaleDateString('vi-VN')
+        return new Date(dateString).toLocaleString('vi-VN')
     }
 
     if (loading) {
@@ -345,6 +358,26 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
                             <Descriptions.Item label="Last Updated">
                                 {formatDate(project.updatedAt as string)}
                             </Descriptions.Item>
+                            <Descriptions.Item label="Members">
+                                <div className="flex -space-x-2 overflow-hidden py-1">
+                                    {(project.users || []).slice(0, 5).map((user: { avatar?: string; fullName?: string; username?: string }, i: number) => (
+                                        <Avatar
+                                            key={i}
+                                            size="small"
+                                            className="border-2 border-[#1A1625]"
+                                            src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName || user.username || 'U')}&background=random`}
+                                        />
+                                    ))}
+                                    {(project.users?.length || 0) > 5 && (
+                                        <div className="flex items-center justify-center w-6 h-6 rounded-full bg-violet-600 text-[10px] font-bold text-white border-2 border-[#1A1625]">
+                                            +{(project.users?.length || 0) - 5}
+                                        </div>
+                                    )}
+                                    {(project.users?.length || 0) === 0 && (
+                                        <span className="text-gray-600 italic text-sm">No members yet</span>
+                                    )}
+                                </div>
+                            </Descriptions.Item>
                         </Descriptions>
                     </div>
 
@@ -415,20 +448,53 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
                 </div>
             </Card>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-6 mt-1">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 mb-6 mt-1">
                 <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
                     <div className="flex items-center justify-between mb-4">
                         <span className="text-white text-lg font-display flex items-center gap-2">
-                            <span className="material-symbols-outlined text-fuchsia-400">group</span>
-                            Project Members
+                            <span className="material-symbols-outlined text-fuchsia-400">database</span>
+                            Project Datasets
                         </span>
-                        <Tag
-                            color="#8b5cf6"
-                            className="border-0 bg-violet-600/20 text-violet-300 font-bold px-3 rounded-full"
-                        >
-                            {project.users?.length || 0} Members
-                        </Tag>
+                        <div className="flex items-center gap-2">
+                            <Tag
+                                color="#8b5cf6"
+                                className="border-0 bg-violet-600/20 text-violet-300 font-bold px-3 rounded-full"
+                            >
+                                {datasets.length} Datasets
+                            </Tag>
+                            <Button
+                                type="primary"
+                                size="small"
+                                className="bg-violet-600 hover:bg-violet-500 border-none"
+                                onClick={() => setIsCreateDatasetModalVisible(true)}
+                            >
+                                + New
+                            </Button>
+                        </div>
                     </div>
+
+                    {datasets.length === 0 ? (
+                        <Empty
+                            image={Empty.PRESENTED_IMAGE_SIMPLE}
+                            description={<span className="text-gray-500">No datasets associated yet</span>}
+                            className="my-8"
+                        />
+                    ) : (
+                        <div
+                            className="overflow-y-auto pr-1"
+                            style={{ maxHeight: '500px' }}
+                        >
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {datasets.map((dataset: { datasetId: string; datasetName?: string; totalItems?: number; createdAt?: string }) => (
+                                    <DatasetCard
+                                        key={dataset.datasetId}
+                                        {...dataset}
+                                        onClick={() => navigate(`/manager/datasets/${dataset.datasetId}`)}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </Card>
 
                 <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
@@ -462,82 +528,87 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
                             className="my-8"
                         />
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {assignments.map((assignment: Record<string, unknown>, index: number) => (
-                                <div
-                                    key={(assignment.assignmentId as string) || index}
-                                    className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-blue-500/30 transition-colors cursor-pointer"
-                                    onClick={() => setSelectedAssignmentId(String(assignment.assignmentId))}
-                                >
-                                    <div className="flex justify-between items-start">
-                                        <h4
-                                            className="text-white font-bold text-sm truncate pr-2"
-                                            title={(assignment.assignmentName as string) || (assignment.name as string)}
-                                        >
-                                            {(assignment.assignmentName as string) ||
-                                                (assignment.name as string) ||
-                                                'Unnamed Assignment'}
-                                        </h4>
-                                        <div className="flex items-center gap-1 flex-shrink-0">
-                                            <Tag
-                                                color={getStatusColor(
-                                                    (assignment.status as string) || (assignment.assignmentStatus as string)
-                                                )}
-                                                className="m-0 text-[10px] px-1.5 py-0"
+                        <div
+                            className="overflow-y-auto pr-1"
+                            style={{ maxHeight: '500px' }}
+                        >
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {assignments.map((assignment: Record<string, unknown>, index: number) => (
+                                    <div
+                                        key={(assignment.assignmentId as string) || index}
+                                        className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-blue-500/30 transition-colors cursor-pointer"
+                                        onClick={() => setSelectedAssignmentId(String(assignment.assignmentId))}
+                                    >
+                                        <div className="flex justify-between items-start">
+                                            <h4
+                                                className="text-white font-bold text-sm truncate pr-2"
+                                                title={(assignment.assignmentName as string) || (assignment.name as string)}
                                             >
-                                                {(assignment.status as string) ||
-                                                    (assignment.assignmentStatus as string) ||
-                                                    'UNKNOWN'}
-                                            </Tag>
-                                            <Dropdown
-                                                menu={{
-                                                    items: [
-                                                        {
-                                                            key: 'edit',
-                                                            label: 'Edit',
-                                                            icon: <EditOutlined />,
-                                                            onClick: (info) => {
-                                                                info.domEvent.stopPropagation()
-                                                                handleEditAssignment(assignment)
+                                                {(assignment.assignmentName as string) ||
+                                                    (assignment.name as string) ||
+                                                    'Unnamed Assignment'}
+                                            </h4>
+                                            <div className="flex items-center gap-1 flex-shrink-0">
+                                                <Tag
+                                                    color={getStatusColor(
+                                                        (assignment.status as string) || (assignment.assignmentStatus as string)
+                                                    )}
+                                                    className="m-0 text-[10px] px-1.5 py-0"
+                                                >
+                                                    {(assignment.status as string) ||
+                                                        (assignment.assignmentStatus as string) ||
+                                                        'UNKNOWN'}
+                                                </Tag>
+                                                <Dropdown
+                                                    menu={{
+                                                        items: [
+                                                            {
+                                                                key: 'edit',
+                                                                label: 'Edit',
+                                                                icon: <EditOutlined />,
+                                                                onClick: (info) => {
+                                                                    info.domEvent.stopPropagation()
+                                                                    handleEditAssignment(assignment)
+                                                                }
+                                                            },
+                                                            {
+                                                                key: 'delete',
+                                                                label: 'Delete',
+                                                                icon: <DeleteOutlined />,
+                                                                danger: true,
+                                                                onClick: (info) => {
+                                                                    info.domEvent.stopPropagation()
+                                                                    handleDeleteAssignment(assignment)
+                                                                }
                                                             }
-                                                        },
-                                                        {
-                                                            key: 'delete',
-                                                            label: 'Delete',
-                                                            icon: <DeleteOutlined />,
-                                                            danger: true,
-                                                            onClick: (info) => {
-                                                                info.domEvent.stopPropagation()
-                                                                handleDeleteAssignment(assignment)
-                                                            }
-                                                        }
-                                                    ]
-                                                }}
-                                                trigger={['click']}
-                                                placement="bottomRight"
-                                            >
-                                                <Button
-                                                    type="text"
-                                                    size="small"
-                                                    icon={<MoreOutlined />}
-                                                    className="text-gray-400 hover:text-white"
-                                                    onClick={(e) => e.stopPropagation()}
-                                                />
-                                            </Dropdown>
+                                                        ]
+                                                    }}
+                                                    trigger={['click']}
+                                                    placement="bottomRight"
+                                                >
+                                                    <Button
+                                                        type="text"
+                                                        size="small"
+                                                        icon={<MoreOutlined />}
+                                                        className="text-gray-400 hover:text-white"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    />
+                                                </Dropdown>
+                                            </div>
+                                        </div>
+                                        <div className="text-gray-400 text-xs line-clamp-2 mt-1 min-h-[32px]">
+                                            {(assignment.description as string) ||
+                                                (assignment.descriptionAssignment as string) ||
+                                                'No description provided.'}
+                                        </div>
+                                        <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/5">
+                                            <span className="text-gray-500 text-xs">
+                                                {formatDate(assignment.createdAt as string)}
+                                            </span>
                                         </div>
                                     </div>
-                                    <div className="text-gray-400 text-xs line-clamp-2 mt-1 min-h-[32px]">
-                                        {(assignment.description as string) ||
-                                            (assignment.descriptionAssignment as string) ||
-                                            'No description provided.'}
-                                    </div>
-                                    <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/5">
-                                        <span className="text-gray-500 text-xs">
-                                            {formatDate(assignment.createdAt as string)}
-                                        </span>
-                                    </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
                     )}
                 </Card>
@@ -549,6 +620,16 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
                 onCancel={() => setIsCreateAssignmentModalVisible(false)}
                 onSuccess={() => {
                     setIsCreateAssignmentModalVisible(false)
+                    invalidateProjectDetail(projectId)
+                }}
+            />
+
+            <CreateDatasetModal
+                open={isCreateDatasetModalVisible}
+                projectId={projectId}
+                onCancel={() => setIsCreateDatasetModalVisible(false)}
+                onSuccess={() => {
+                    setIsCreateDatasetModalVisible(false)
                     invalidateProjectDetail(projectId)
                 }}
             />
