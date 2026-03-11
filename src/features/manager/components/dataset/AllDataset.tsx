@@ -9,14 +9,14 @@ import { useState } from 'react'
 
 const { Title } = Typography
 
-interface DatasetListProps {
+interface AllDatasetProps {
   datasets: GetDatasetsParams[]
   loading: boolean
   selectedDatasetId?: string | null
   onDatasetSelect?: (id: string | null) => void
 }
 
-const DatasetList: React.FC<DatasetListProps> = ({
+const AllDataset: React.FC<AllDatasetProps> = ({
   datasets,
   loading,
   selectedDatasetId,
@@ -115,6 +115,7 @@ const DatasetList: React.FC<DatasetListProps> = ({
                 (ds.datasetName &&
                   ds.datasetName.toLowerCase().includes(searchText.toLowerCase()))
             )
+            .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
             .map((ds) => {
               const uniqueId = ds.datasetId || ''
               return (
@@ -186,4 +187,4 @@ const DatasetList: React.FC<DatasetListProps> = ({
   )
 }
 
-export default DatasetList
+export default AllDataset

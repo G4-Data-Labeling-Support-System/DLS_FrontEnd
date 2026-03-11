@@ -55,6 +55,15 @@ const projectApi = {
       console.error('Failed to delete project', error)
       throw error
     }
+  },
+  updateProjectStatus(id: string, status: string) {
+    try {
+      const url = ENDPOINTS.PROJECTS.STATUS(id)
+      return axiosClient.put(url, { projectStatus: status })
+    } catch (error) {
+      console.error('Failed to update project status', error)
+      throw error
+    }
   }
 }
 

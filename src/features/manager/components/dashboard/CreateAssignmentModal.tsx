@@ -35,6 +35,8 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
     const hasExternalProjectId = !!projectId
     const effectiveProjectId = hasExternalProjectId ? projectId : selectedProjectId
 
+
+
     // Fetch projects list when no projectId is provided
     useEffect(() => {
         if (!open || hasExternalProjectId) return
@@ -56,6 +58,8 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
         const fetchData = async () => {
             setLoading(true)
             try {
+
+
                 // Fetch all users
                 const userRes = await userApi.getUsers()
                 const allUsers = (
@@ -67,13 +71,17 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
                 setAnnotators(
                     allUsers.filter((u) => {
                         const role = String(u.role || u.userRole || '').toUpperCase()
-                        return role.includes('ANNOTATOR')
+                        const status = String(u.status || u.userStatus || '').toUpperCase()
+                        const isInactive = status === 'INACTIVE' || u.isActive === false || u.is_active === false
+                        return role.includes('ANNOTATOR') && !isInactive
                     })
                 )
                 setReviewers(
                     allUsers.filter((u) => {
                         const role = String(u.role || u.userRole || '').toUpperCase()
-                        return role.includes('REVIEWER')
+                        const status = String(u.status || u.userStatus || '').toUpperCase()
+                        const isInactive = status === 'INACTIVE' || u.isActive === false || u.is_active === false
+                        return role.includes('REVIEWER') && !isInactive
                     })
                 )
 
@@ -81,7 +89,8 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
                 if (effectiveProjectId) {
                     const datasetRes = await datasetApi.getDatasetsByProjectId(effectiveProjectId)
                     const datasetsData = datasetRes.data?.data || datasetRes.data
-                    setDatasets(Array.isArray(datasetsData) ? datasetsData : [])
+                    const dsArray = Array.isArray(datasetsData) ? datasetsData : []
+                    setDatasets(dsArray)
                 } else {
                     setDatasets([])
                 }
@@ -158,7 +167,8 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
         try {
             const datasetRes = await datasetApi.getDatasetsByProjectId(value)
             const datasetsData = datasetRes.data?.data || datasetRes.data
-            setDatasets(Array.isArray(datasetsData) ? datasetsData : [])
+            const dsArray = Array.isArray(datasetsData) ? datasetsData : []
+            setDatasets(dsArray)
         } catch (error) {
             console.error(error)
             message.error('Failed to load datasets for selected project.')

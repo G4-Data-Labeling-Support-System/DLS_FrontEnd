@@ -75,8 +75,8 @@ export const AllLabels: React.FC<AllLabelsProps> = ({ selectedLabelId: _selected
           if (l.projectId || l.project_id) {
             mapped.projectId = String(l.projectId || l.project_id)
           }
-          if (l.createdAt) {
-            mapped.createdAt = String(l.createdAt)
+          if (l.createdAt || l.created_at || l.createdDate) {
+            mapped.createdAt = String(l.createdAt || l.created_at || l.createdDate)
           }
           if (l.updatedAt) {
             mapped.updatedAt = String(l.updatedAt)
@@ -300,6 +300,7 @@ export const AllLabels: React.FC<AllLabelsProps> = ({ selectedLabelId: _selected
                 !searchText ||
                 (l.labelName && l.labelName.toLowerCase().includes(searchText.toLowerCase()))
             )
+            .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
             .map((l, index) => {
               const uniqueId = l.labelId || String(index)
               return (

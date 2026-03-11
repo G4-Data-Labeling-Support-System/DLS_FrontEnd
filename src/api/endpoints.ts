@@ -25,15 +25,20 @@ export const ENDPOINTS = {
     LIST: '/projects',
     DETAIL: (id: string) => `/projects/${id}`,
     CREATE: '/projects',
-    DELETE: (id: string) => `/projects/${id}/remove`
+    DELETE: (id: string) => `/projects/${id}/remove`,
+    STATUS: (id: string) => `/projects/${id}/status`
   },
 
   DATASETS: {
     LIST: '/datasets',
     DETAIL: (id: string) => `/datasets/${id}`,
-    ITEMS: (id: string) => `/datasets/${id}/items`,
+    ITEMS: (id: string) => `/dataitems/datasets/${id}`,
     CREATE: '/datasets',
     BY_PROJECT: (projectId: string) => `/datasets/project/${projectId}`
+  },
+
+  DATA_ITEMS: {
+    DETAIL: (id: string) => `/v1/dataitems/${id}`
   },
 
   ASSIGNMENTS: {
