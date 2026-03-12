@@ -507,7 +507,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack,
 
             <CreateDatasetModal
                 open={isCreateDatasetModalVisible}
-                projectId={projectId}
+                initialProjectId={projectId}
                 onCancel={() => setIsCreateDatasetModalVisible(false)}
                 onSuccess={() => {
                     setIsCreateDatasetModalVisible(false)

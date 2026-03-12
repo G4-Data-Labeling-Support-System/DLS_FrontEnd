@@ -19,10 +19,8 @@ export const PATH_MANAGER = {
   root: '/manager',
   createProject: '/manager/create-project',
   editProject: '/manager/projects/edit/:id',
-  datasetSetup: '/manager/datasets/setup',
   teamAssignment: '/manager/create-project/team-assignment',
   datasetManagement: '/manager/datasets',
-  createDataset: '/manager/datasets/create',
   datasetDetail: '/manager/datasets/:id'
 }
 

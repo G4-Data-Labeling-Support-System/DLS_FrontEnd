@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 import { App, Spin, Empty, Input, Space, Typography, Button } from 'antd'
 import { PlusOutlined, SearchOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import datasetApi, { type GetDatasetsParams } from '@/api/DatasetApi'
@@ -15,13 +14,15 @@ interface AllDatasetProps {
   loading: boolean
   selectedDatasetId?: string | null
   onDatasetSelect?: (id: string | null) => void
+  onCreate?: () => void
 }
 
 const AllDataset: React.FC<AllDatasetProps> = ({
   datasets,
   loading,
   selectedDatasetId,
-  onDatasetSelect
+  onDatasetSelect,
+  onCreate
 }) => {
   const { message } = App.useApp()
   const [searchText, setSearchText] = useState<string>('')
@@ -138,16 +139,17 @@ const AllDataset: React.FC<AllDatasetProps> = ({
             })}
 
           {/* Start New Dataset Card */}
-          <Link to="/manager/datasets/create" className="block group">
-            <div className="h-full min-h-[160px] border-2 border-dashed border-gray-700 rounded-xl flex flex-col items-center justify-center gap-4 bg-[#1A1625]/30 hover:bg-[#1A1625] hover:border-violet-500 transition-all cursor-pointer">
-              <div className="w-12 h-12 rounded-full bg-[#231e31] group-hover:bg-violet-600 flex items-center justify-center transition-colors">
-                <PlusOutlined className="text-gray-400 group-hover:text-white text-xl" />
-              </div>
-              <span className="text-gray-400 group-hover:text-white font-medium font-display">
-                Create Dataset
-              </span>
+          <div
+            onClick={onCreate}
+            className="block group h-full min-h-[160px] border-2 border-dashed border-gray-700 rounded-xl flex flex-col items-center justify-center gap-4 bg-[#1A1625]/30 hover:bg-[#1A1625] hover:border-violet-500 transition-all cursor-pointer"
+          >
+            <div className="w-12 h-12 rounded-full bg-[#231e31] group-hover:bg-violet-600 flex items-center justify-center transition-colors">
+              <PlusOutlined className="text-gray-400 group-hover:text-white text-xl" />
             </div>
-          </Link>
+            <span className="text-gray-400 group-hover:text-white font-medium font-display">
+              Create Dataset
+            </span>
+          </div>
         </div>
       )}
 
