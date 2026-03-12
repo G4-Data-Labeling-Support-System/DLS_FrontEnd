@@ -157,7 +157,11 @@ export const CreateDatasetForm: React.FC<CreateDatasetFormProps> = ({
                 size="large"
                 placeholder="Select a project for this dataset"
                 className="w-full"
-                classNames={{ popup: { root: "!bg-[#1a1625] !border !border-white/10 [&_.ant-select-item]:!text-gray-300 [&_.ant-select-item-option-active]:!bg-violet-500/20 [&_.ant-select-item-option-selected]:!bg-violet-500/40 [&_.ant-select-item-option-selected]:!text-white" } }}
+                classNames={{
+                  popup: {
+                    root: '!bg-[#1a1625] !border !border-white/10 [&_.ant-select-item]:!text-gray-300 [&_.ant-select-item-option-active]:!bg-violet-500/20 [&_.ant-select-item-option-selected]:!bg-violet-500/40 [&_.ant-select-item-option-selected]:!text-white'
+                  }
+                }}
                 loading={projects.length === 0}
                 showSearch
                 optionFilterProp="children"

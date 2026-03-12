@@ -221,7 +221,9 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
                 statusFilter === 'ALL' ||
                 (p.projectStatus && p.projectStatus.toUpperCase() === statusFilter)
             )
-            .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+            .sort(
+              (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+            )
             .map((p) => {
               if (!p.projectId) return null // Bỏ qua nếu data rác không có ID
 
@@ -253,7 +255,11 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
 
       <GlassModal
         open={deleteModalOpen}
-        onCancel={() => { setDeleteModalOpen(false); setDeletingProjectId(null); setDeletingProjectName('') }}
+        onCancel={() => {
+          setDeleteModalOpen(false)
+          setDeletingProjectId(null)
+          setDeletingProjectName('')
+        }}
         destroyOnHidden
         width={480}
       >
@@ -268,13 +274,19 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
               Deactivate Project
             </h2>
             <p className="text-white/50 text-sm">
-              Are you sure you want to deactivate <span className="text-white/80 font-medium">{deletingProjectName}</span>? This action cannot be undone.
+              Are you sure you want to deactivate{' '}
+              <span className="text-white/80 font-medium">{deletingProjectName}</span>? This action
+              cannot be undone.
             </p>
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
             <Button
-              onClick={() => { setDeleteModalOpen(false); setDeletingProjectId(null); setDeletingProjectName('') }}
+              onClick={() => {
+                setDeleteModalOpen(false)
+                setDeletingProjectId(null)
+                setDeletingProjectName('')
+              }}
               className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
             >
               Cancel
@@ -294,7 +306,11 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
 
       <GlassModal
         open={cancelModalOpen}
-        onCancel={() => { setCancelModalOpen(false); setCancelingProjectId(null); setCancelingProjectName('') }}
+        onCancel={() => {
+          setCancelModalOpen(false)
+          setCancelingProjectId(null)
+          setCancelingProjectName('')
+        }}
         destroyOnHidden
         width={480}
       >
@@ -309,13 +325,19 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
               Cancel Project
             </h2>
             <p className="text-white/50 text-sm">
-              Are you sure you want to cancel <span className="text-white/80 font-medium">{cancelingProjectName}</span>? This action will change the project status to CANCELLED.
+              Are you sure you want to cancel{' '}
+              <span className="text-white/80 font-medium">{cancelingProjectName}</span>? This action
+              will change the project status to CANCELLED.
             </p>
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
             <Button
-              onClick={() => { setCancelModalOpen(false); setCancelingProjectId(null); setCancelingProjectName('') }}
+              onClick={() => {
+                setCancelModalOpen(false)
+                setCancelingProjectId(null)
+                setCancelingProjectName('')
+              }}
               className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
             >
               Close

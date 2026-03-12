@@ -50,12 +50,12 @@ const defaultGetRefreshToken = () => localStorage.getItem('refreshToken')
 export const handleUnauthorized = (error?: AxiosError) => {
   // Log specific error details for debugging before logout
   if (error) {
-    console.group('🚨 AUTH ERROR DETECTED');
-    console.error('URL:', error.config?.url);
-    console.error('Status:', error.response?.status);
-    console.error('Method:', error.config?.method?.toUpperCase());
-    console.error('Response Data:', error.response?.data);
-    console.groupEnd();
+    console.warn('🚨 AUTH ERROR DETECTED', {
+      URL: error.config?.url,
+      Status: error.response?.status,
+      Method: error.config?.method?.toUpperCase(),
+      ResponseData: error.response?.data
+    })
   }
 
   localStorage.removeItem('accessToken')
@@ -63,7 +63,7 @@ export const handleUnauthorized = (error?: AxiosError) => {
 
   // Đồng bộ với Zustand Store
   useAuthStore.getState().logout()
-  
+
   // Chỉ redirect nếu chưa ở trang login để tránh lặp vô tận
   if (!window.location.pathname.includes('/login')) {
     window.location.href = '/login'

@@ -1,6 +1,12 @@
 import React from 'react'
 import { Card, Button, Typography, Dropdown, Tag, type MenuProps } from 'antd'
-import { MoreOutlined, EditOutlined, DeleteOutlined, EyeOutlined, CloseCircleOutlined } from '@ant-design/icons'
+import {
+  MoreOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  EyeOutlined,
+  CloseCircleOutlined
+} from '@ant-design/icons'
 import type { GetProjectsParams } from '@/api/ProjectApi' // Import type từ API của bạn
 
 const { Title } = Typography
@@ -39,7 +45,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       label: <span className="text-red-500">Deactivate Project</span>,
       icon: <DeleteOutlined className="text-red-500" />,
       onClick: onDelete
-    },
+    }
   ]
 
   // Hàm chọn màu cho Tag trạng thái

@@ -16,12 +16,7 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
   onSuccess
 }) => {
   return (
-    <GlassModal
-      open={open}
-      onCancel={onCancel}
-      width={1000}
-      destroyOnHidden
-    >
+    <GlassModal open={open} onCancel={onCancel} width={1000} destroyOnHidden>
       <div className="px-8 pt-10 pb-8">
         <div className="text-center border-b border-white/5 pb-6 mb-8">
           <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
@@ -31,7 +26,7 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
             Fill in the details below to create a new dataset for your project.
           </p>
         </div>
-        
+
         <CreateDatasetForm
           initialProjectId={projectId}
           onSuccess={onSuccess}

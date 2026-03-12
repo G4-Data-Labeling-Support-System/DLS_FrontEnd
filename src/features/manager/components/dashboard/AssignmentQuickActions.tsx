@@ -1,9 +1,5 @@
 import { Card, Button, Typography } from 'antd'
-import {
-  PlusCircleFilled,
-  DatabaseOutlined,
-  RightOutlined
-} from '@ant-design/icons'
+import { PlusCircleFilled, DatabaseOutlined, RightOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { PATH_MANAGER } from '@/routes/paths'
 

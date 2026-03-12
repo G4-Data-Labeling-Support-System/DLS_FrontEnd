@@ -31,7 +31,7 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
 
   const viewDatasetId = searchParams.get('viewDatasetId')
   const setViewDatasetId = (id: string | null) => {
-    setSearchParams(prev => {
+    setSearchParams((prev) => {
       const next = new URLSearchParams(prev)
       if (id) {
         next.set('viewDatasetId', id)
@@ -110,9 +110,7 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
 
   if (!label) {
     return (
-      <div className="w-full text-center py-10 text-gray-400">
-        Error loading label information.
-      </div>
+      <div className="w-full text-center py-10 text-gray-400">Error loading label information.</div>
     )
   }
 
@@ -176,9 +174,7 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
                   <span className="text-gray-600 italic">N/A</span>
                 )}
               </Descriptions.Item>
-              <Descriptions.Item label="Created At">
-                {formatDate(label.createAt)}
-              </Descriptions.Item>
+              <Descriptions.Item label="Created At">{formatDate(label.createAt)}</Descriptions.Item>
             </Descriptions>
           </div>
 

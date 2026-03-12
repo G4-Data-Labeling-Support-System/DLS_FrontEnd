@@ -24,7 +24,7 @@ export const AnnotatorLabelList: React.FC<AnnotatorLabelListProps> = ({ datasetI
         const data = response.data?.data || response.data?.content || response.data || []
 
         if (Array.isArray(data)) {
-          const mappedLabels: GetLabelsParams[] = data.map((l: any) => ({
+          const mappedLabels: GetLabelsParams[] = (data as Record<string, unknown>[]).map((l) => ({
             labelId: String(l.labelId || l.id),
             labelName: String(l.labelName || l.name),
             color: String(l.color),
@@ -33,10 +33,15 @@ export const AnnotatorLabelList: React.FC<AnnotatorLabelListProps> = ({ datasetI
           }))
           setLabels(mappedLabels)
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Failed to load labels.', error)
         // Only show error if it's not a 403 (avoid double logout msg)
-        if (error?.response?.status !== 403) {
+        if (
+          error &&
+          typeof error === 'object' &&
+          'response' in error &&
+          (error as { response: { status: number } }).response.status !== 403
+        ) {
           message.error('Failed to load labels.')
         }
         // If 403, we just show empty or a notice
@@ -50,8 +55,8 @@ export const AnnotatorLabelList: React.FC<AnnotatorLabelListProps> = ({ datasetI
     }
   }, [datasetId, message])
 
-  const filteredLabels = labels.filter(label => 
-    !searchText || label.labelName?.toLowerCase().includes(searchText.toLowerCase())
+  const filteredLabels = labels.filter(
+    (label) => !searchText || label.labelName?.toLowerCase().includes(searchText.toLowerCase())
   )
 
   if (loading) {

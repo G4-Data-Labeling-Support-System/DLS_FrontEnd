@@ -219,7 +219,9 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
             .filter(
               (a) => statusFilter === 'ALL' || (a.status && a.status.toUpperCase() === statusFilter)
             )
-            .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+            .sort(
+              (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+            )
             .map((a, index) => {
               const uniqueId = a.assignmentId || String(index)
               return (
@@ -237,7 +239,11 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
 
       <GlassModal
         open={deleteModalOpen}
-        onCancel={() => { setDeleteModalOpen(false); setDeletingAssignmentId(null); setDeletingAssignmentName('') }}
+        onCancel={() => {
+          setDeleteModalOpen(false)
+          setDeletingAssignmentId(null)
+          setDeletingAssignmentName('')
+        }}
         destroyOnHidden
         width={480}
       >
@@ -252,13 +258,19 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
               Delete Assignment
             </h2>
             <p className="text-white/50 text-sm">
-              Are you sure you want to delete <span className="text-white/80 font-medium">{deletingAssignmentName}</span>? This action cannot be undone.
+              Are you sure you want to delete{' '}
+              <span className="text-white/80 font-medium">{deletingAssignmentName}</span>? This
+              action cannot be undone.
             </p>
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
             <Button
-              onClick={() => { setDeleteModalOpen(false); setDeletingAssignmentId(null); setDeletingAssignmentName('') }}
+              onClick={() => {
+                setDeleteModalOpen(false)
+                setDeletingAssignmentId(null)
+                setDeletingAssignmentName('')
+              }}
               className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
             >
               Cancel

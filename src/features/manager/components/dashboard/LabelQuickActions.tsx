@@ -26,7 +26,11 @@ export const LabelQuickActions: React.FC<LabelQuickActionsProps> = ({ onCreateLa
           type="primary"
           size="large"
           className="w-full h-12 flex items-center justify-center bg-fuchsia-600 hover:bg-fuchsia-500 border-none shadow-[0_0_15px_rgba(192,38,211,0.4)]"
-          onClick={() => onCreateLabel ? onCreateLabel() : navigate(`${PATH_MANAGER.datasetManagement}?tab=label&createLabel=true`)}
+          onClick={() =>
+            onCreateLabel
+              ? onCreateLabel()
+              : navigate(`${PATH_MANAGER.datasetManagement}?tab=label&createLabel=true`)
+          }
         >
           <PlusCircleFilled className="text-lg mr-2" />
           CREATE LABEL

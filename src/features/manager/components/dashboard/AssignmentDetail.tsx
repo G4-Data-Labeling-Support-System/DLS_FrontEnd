@@ -28,7 +28,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId
   const viewDatasetId = searchParams.get('viewDatasetId')
 
   const setViewProjectId = (id: string | null) => {
-    setSearchParams(prev => {
+    setSearchParams((prev) => {
       const next = new URLSearchParams(prev)
       if (id) {
         next.set('viewProjectId', id)
@@ -40,7 +40,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId
   }
 
   const setViewDatasetId = (id: string | null) => {
-    setSearchParams(prev => {
+    setSearchParams((prev) => {
       const next = new URLSearchParams(prev)
       if (id) {
         next.set('viewDatasetId', id)
@@ -61,8 +61,8 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId
         const data = response.data?.data || response.data
 
         if (data && isMounted) {
-          const extractedProjectId = data.projectId || data.project?.id || data.project?.projectId;
-          const extractedDatasetId = data.datasetId || data.dataset?.id || data.dataset?.datasetId;
+          const extractedProjectId = data.projectId || data.project?.id || data.project?.projectId
+          const extractedDatasetId = data.datasetId || data.dataset?.id || data.dataset?.datasetId
 
           setAssignment({
             assignmentId: String(data.assignmentId || data.id),
@@ -168,7 +168,13 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId
   }
 
   if (viewProjectId) {
-    return <ProjectDetail projectId={viewProjectId} onBack={() => setViewProjectId(null)} isInline={true} />
+    return (
+      <ProjectDetail
+        projectId={viewProjectId}
+        onBack={() => setViewProjectId(null)}
+        isInline={true}
+      />
+    )
   }
 
   if (viewDatasetId) {

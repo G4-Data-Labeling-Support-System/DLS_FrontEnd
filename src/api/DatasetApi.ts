@@ -32,7 +32,12 @@ const datasetApi = {
       throw error
     }
   },
-  createDataset(data: { projectId: string; datasetName: string; description?: string; files?: File[] }) {
+  createDataset(data: {
+    projectId: string
+    datasetName: string
+    description?: string
+    files?: File[]
+  }) {
     try {
       const url = ENDPOINTS.DATASETS.CREATE
       const formData = new FormData()
