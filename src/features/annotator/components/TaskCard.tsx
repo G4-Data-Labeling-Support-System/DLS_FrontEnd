@@ -13,7 +13,7 @@ interface Task {
   annotationStatus?: string
 }
 
-export default function TaskCard({ task }: { task: Task }) {
+export default function TaskCard({ task, assignmentId }: { task: Task; assignmentId?: string }) {
   const navigate = useNavigate()
   if (!task.id) return null // Guard against missing ID
   const taskStatus = task.taskStatus || task.status || 'PENDING'
@@ -25,7 +25,7 @@ export default function TaskCard({ task }: { task: Task }) {
 
   return (
     <div
-      onClick={() => navigate(`/annotator/task/${task.id}`)}
+      onClick={() => navigate(`/annotator/task/${task.id}`, { state: { assignmentId } })}
       className={`
                 relative group rounded-xl p-4 cursor-pointer overflow-hidden
                 bg-[#1a3a5c] border border-[#2a5a8c]/60

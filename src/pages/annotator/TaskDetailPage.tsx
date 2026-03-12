@@ -19,6 +19,7 @@ interface DataItem {
 export default function TaskDetailPage() {
   const { taskId } = useParams<{ taskId: string }>()
   const location = useLocation()
+  const location = useLocation()
   const navigate = useNavigate()
 
   const [task, setTask] = useState<Task | null>(null)
@@ -114,8 +115,10 @@ export default function TaskDetailPage() {
             className={`px-2 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider ${statusStyle.badge}`}
           >
             {task.status || task.taskStatus || 'PENDING'}
+            {task.status || task.taskStatus || 'PENDING'}
           </span>
         </div>
+        <p className="text-gray-500 text-sm font-mono">{task.taskId || task.id}</p>
         <p className="text-gray-500 text-sm font-mono">{task.taskId || task.id}</p>
       </div>
 
@@ -156,6 +159,7 @@ export default function TaskDetailPage() {
                 <span className="text-xs font-bold uppercase tracking-wider">Data Items</span>
               </div>
               <span className="text-xs text-gray-500 font-medium">
+                {dataItems.length} items total
                 {dataItems.length} items total
               </span>
             </div>
