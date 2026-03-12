@@ -81,12 +81,13 @@ const datasetApi = {
       throw error
     }
   },
-  updateDataset(id: string, datasetData?: GetDatasetsParams) {
+  async updateDataset(id: string, datasetData: GetDatasetsParams) {
     try {
-      const url = ENDPOINTS.DATASETS.DETAIL
-        ? ENDPOINTS.DATASETS.DETAIL(id)
-        : `${ENDPOINTS.DATASETS.LIST}/${id}`
-      return axiosClient.patch(url, datasetData)
+      const url = ENDPOINTS.DATASETS.UPDATE(id)
+      console.log(url)
+      console.log(datasetData)
+      const response = await axiosClient.put(url, datasetData)
+      return response
     } catch (error) {
       console.error('Failed to update dataset', error)
       throw error

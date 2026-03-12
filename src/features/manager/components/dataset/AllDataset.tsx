@@ -4,6 +4,7 @@ import { PlusOutlined, SearchOutlined, ExclamationCircleOutlined } from '@ant-de
 import datasetApi, { type GetDatasetsParams } from '@/api/DatasetApi'
 import { DatasetCard } from './DatasetCard'
 import { DatasetDetail } from './DatasetDetail'
+import { CreateDatasetModal } from './CreateDatasetModal'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
 import { useState } from 'react'
 
@@ -29,6 +30,8 @@ const AllDataset: React.FC<AllDatasetProps> = ({
   const [deleting, setDeleting] = useState(false)
   const [deletingDatasetId, setDeletingDatasetId] = useState<string | null>(null)
   const [deletingDatasetName, setDeletingDatasetName] = useState('')
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [editingDataset, setEditingDataset] = useState<GetDatasetsParams | null>(null)
 
   const currentDatasetId =
     selectedDatasetId !== undefined ? selectedDatasetId : internalDatasetId
@@ -47,6 +50,11 @@ const AllDataset: React.FC<AllDatasetProps> = ({
     setDeletingDatasetId(id)
     setDeletingDatasetName(ds?.datasetName || 'this dataset')
     setDeleteModalOpen(true)
+  }
+
+  const handleEdit = (ds: GetDatasetsParams) => {
+    setEditingDataset(ds)
+    setEditModalOpen(true)
   }
 
   const confirmDelete = async () => {
@@ -123,7 +131,7 @@ const AllDataset: React.FC<AllDatasetProps> = ({
                   key={uniqueId}
                   {...ds}
                   onClick={() => handleDatasetSelect(uniqueId)}
-                  onEdit={() => handleDatasetSelect(uniqueId)}
+                  onEdit={() => handleEdit(ds)}
                   onDelete={() => handleDelete(uniqueId)}
                 />
               )
@@ -183,6 +191,26 @@ const AllDataset: React.FC<AllDatasetProps> = ({
           </div>
         </div>
       </GlassModal>
+
+      <CreateDatasetModal
+        open={editModalOpen}
+        isEdit={true}
+        initialData={editingDataset ? {
+          datasetId: editingDataset.datasetId!,
+          datasetName: editingDataset.datasetName || '',
+          description: editingDataset.description,
+          projectId: editingDataset.projectId
+        } : undefined}
+        onCancel={() => {
+          setEditModalOpen(false)
+          setEditingDataset(null)
+        }}
+        onSuccess={() => {
+          setEditModalOpen(false)
+          setEditingDataset(null)
+          window.location.reload()
+        }}
+      />
     </div>
   )
 }

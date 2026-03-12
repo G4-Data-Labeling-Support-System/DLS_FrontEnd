@@ -173,7 +173,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
                 await assignmentApi.createAssignmentForProject(resolvedProjectId!, createPayload)
                 message.success('Assignment created successfully!')
             }
-            
+
             form.resetFields()
             onSuccess()
         } catch (error) {

@@ -15,13 +15,22 @@ interface CreateDatasetFormProps {
   onBack?: () => void
   submitLabel?: string
   initialProjectId?: string
+  initialData?: {
+    datasetId: string
+    datasetName: string
+    description?: string
+    projectId?: string
+  }
+  isEdit?: boolean
 }
 
 export const CreateDatasetForm: React.FC<CreateDatasetFormProps> = ({
   onSuccess,
   onBack,
   submitLabel,
-  initialProjectId
+  initialProjectId,
+  initialData,
+  isEdit
 }) => {
   const { message } = App.useApp()
   const [form] = Form.useForm()
@@ -35,11 +44,55 @@ export const CreateDatasetForm: React.FC<CreateDatasetFormProps> = ({
     fileListRef.current = fileList
   }, [fileList])
 
+  // 1. Fetch initial dataset details if editing
   useEffect(() => {
-    if (initialProjectId) {
-      form.setFieldsValue({ projectId: initialProjectId })
+    const fetchDetails = async () => {
+      if (isEdit && initialData?.datasetId) {
+        setLoading(true)
+        try {
+          const res = await datasetApi.getDatasetById(initialData.datasetId)
+          const data = res.data?.data || res.data
+          if (data) {
+            form.setFieldsValue({
+              datasetName: data.datasetName || data.name,
+              description: data.description,
+              projectId: data.projectId || data.project?.id
+            })
+          }
+        } catch (error) {
+          console.error('Failed to fetch dataset details:', error)
+          message.error('Failed to refresh dataset details.')
+        } finally {
+          setLoading(false)
+        }
+      }
     }
-  }, [initialProjectId, form])
+    fetchDetails()
+  }, [isEdit, initialData?.datasetId, form, message])
+
+  // 2. Load active projects list
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const response = await projectApi.getProjects({ projectStatus: 'ACTIVE' })
+        const data = response.data?.data || response.data || []
+        if (Array.isArray(data)) {
+          setProjects(prev => {
+            const merged = [...prev]
+            data.forEach((p: GetProjectsParams) => {
+              if (!merged.find(m => m.projectId === p.projectId)) {
+                merged.push(p)
+              }
+            })
+            return merged
+          })
+        }
+      } catch (error) {
+        console.error('Failed to fetch projects list:', error)
+      }
+    }
+    fetchProjects()
+  }, [])
 
   useEffect(() => {
     return () => {
@@ -70,21 +123,6 @@ export const CreateDatasetForm: React.FC<CreateDatasetFormProps> = ({
     })
   }
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const response = await projectApi.getProjects({ projectStatus: 'ACTIVE' }) // Optional: fetch active projects
-        const data = response.data?.data || response.data || []
-        if (Array.isArray(data)) {
-          setProjects(data)
-        }
-      } catch (error) {
-        console.error('Failed to fetch projects:', error)
-        message.error('Failed to load projects list.')
-      }
-    }
-    fetchProjects()
-  }, [message])
 
   const handleCancel = () => {
     if (onBack) {
@@ -101,26 +139,35 @@ export const CreateDatasetForm: React.FC<CreateDatasetFormProps> = ({
   }) => {
     setLoading(true)
     try {
-      const files = fileList
-        .map((f) => f.originFileObj as File | undefined)
-        .filter((f): f is File => !!f)
+      if (isEdit && initialData?.datasetId) {
+        await datasetApi.updateDataset(initialData.datasetId, {
+          datasetName: values.datasetName,
+          description: values.description
+        })
+        message.success('Dataset updated successfully!')
+        if (onSuccess) onSuccess(initialData.datasetId)
+      } else {
+        const files = fileList
+          .map((f) => f.originFileObj as File | undefined)
+          .filter((f): f is File => !!f)
 
-      const response = await datasetApi.createDataset({
-        projectId: values.projectId,
-        datasetName: values.datasetName,
-        description: values.description,
-        files: files.length > 0 ? files : undefined
-      })
-      message.success('Dataset created successfully!')
+        const response = await datasetApi.createDataset({
+          projectId: values.projectId,
+          datasetName: values.datasetName,
+          description: values.description,
+          files: files.length > 0 ? files : undefined
+        })
+        message.success('Dataset created successfully!')
 
-      if (onSuccess) {
-        const createdDataset = response.data?.data || response.data
-        const newDatasetId = createdDataset?.datasetId || createdDataset?.id
-        onSuccess(newDatasetId)
+        if (onSuccess) {
+          const createdDataset = response.data?.data || response.data
+          const newDatasetId = createdDataset?.datasetId || createdDataset?.id
+          onSuccess(newDatasetId)
+        }
       }
     } catch (error) {
       console.error('API Error:', error)
-      message.error('Failed to create dataset. Please try again.')
+      message.error(`Failed to ${isEdit ? 'update' : 'create'} dataset. Please try again.`)
     } finally {
       setLoading(false)
     }
@@ -132,6 +179,11 @@ export const CreateDatasetForm: React.FC<CreateDatasetFormProps> = ({
       layout="vertical"
       className="!w-full !max-w-none !p-0 !bg-transparent !border-0 !shadow-none"
       onFinish={onFinish}
+      initialValues={{
+        datasetName: initialData?.datasetName,
+        description: initialData?.description,
+        projectId: initialProjectId || initialData?.projectId
+      }}
     >
       <div className="flex flex-col gap-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -148,29 +200,31 @@ export const CreateDatasetForm: React.FC<CreateDatasetFormProps> = ({
               />
             </Form.Item>
 
-            <Form.Item
-              name="projectId"
-              label="Select Project *"
-              rules={[{ required: true, message: 'Please select a project' }]}
-            >
-              <Select
-                size="large"
-                placeholder="Select a project for this dataset"
-                className="w-full"
-                classNames={{ popup: { root: "!bg-[#1a1625] !border !border-white/10 [&_.ant-select-item]:!text-gray-300 [&_.ant-select-item-option-active]:!bg-violet-500/20 [&_.ant-select-item-option-selected]:!bg-violet-500/40 [&_.ant-select-item-option-selected]:!text-white" } }}
-                loading={projects.length === 0}
-                showSearch
-                optionFilterProp="children"
-                disabled={!!initialProjectId}
-                filterOption={(input, option) =>
-                  (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                }
-                options={projects.map((p) => ({
-                  label: p.projectName || 'Unnamed Project',
-                  value: p.projectId
-                }))}
-              />
-            </Form.Item>
+            {!isEdit && (
+              <Form.Item
+                name="projectId"
+                label="Select Project *"
+                rules={[{ required: true, message: 'Please select a project' }]}
+              >
+                <Select
+                  size="large"
+                  placeholder="Select a project for this dataset"
+                  className="w-full"
+                  classNames={{ popup: { root: "!bg-[#1a1625] !border !border-white/10 [&_.ant-select-item]:!text-gray-300 [&_.ant-select-item-option-active]:!bg-violet-500/20 [&_.ant-select-item-option-selected]:!bg-violet-500/40 [&_.ant-select-item-option-selected]:!text-white" } }}
+                  loading={projects.length === 0}
+                  showSearch
+                  optionFilterProp="children"
+                  disabled={!!initialProjectId}
+                  filterOption={(input, option) =>
+                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                  }
+                  options={projects.map((p) => ({
+                    label: p.projectName || 'Unnamed Project',
+                    value: p.projectId
+                  }))}
+                />
+              </Form.Item>
+            )}
 
             <Form.Item name="description" label="Description">
               <Input.TextArea
@@ -186,101 +240,103 @@ export const CreateDatasetForm: React.FC<CreateDatasetFormProps> = ({
               <h4 className="text-violet-300 font-bold text-xs uppercase tracking-wider mb-2">
                 Manager Tip
               </h4>
-              <p className="text-gray-400 text-xs leading-relaxed m-0">
-                A dataset must be associated with a <strong>Project</strong>. You can upload data
-                items later in the dataset details page.
-              </p>
+                <p className="text-gray-400 text-xs leading-relaxed m-0">
+                  {isEdit 
+                    ? "Updating a dataset's name and description doesn't affect existing items. Project assignment cannot be changed after creation."
+                    : "A dataset must be associated with a Project. You can upload data items later in the dataset details page."}
+                </p>
             </div>
           </div>
         </div>
 
-        {/* --- Section 3: Upload Area --- */}
-        <div className="space-y-3">
-          <label className="text-white font-bold flex items-center gap-2 text-sm">
-            <span
-              className="material-symbols-outlined text-violet-500"
-              style={{ fontSize: '18px' }}
-            >
-              photo_library
-            </span>
-            Data Item Source - Image Uploads
-          </label>
+      {/* --- Section 3: Upload Area --- */}
+        {!isEdit && (
+          <div className="space-y-3">
+            <label className="text-white font-bold flex items-center gap-2 text-sm">
+              <span
+                className="material-symbols-outlined text-violet-500"
+                style={{ fontSize: '18px' }}
+              >
+                photo_library
+              </span>
+              Data Item Source - Image Uploads
+            </label>
 
-          <div className="rounded-2xl overflow-hidden bg-[#1a1625]/30 border border-dashed border-white/20 hover:border-violet-500/50 hover:bg-[#1a1625]/50 transition-all group">
-            <Dragger
-              multiple
-              name="file"
-              beforeUpload={() => false}
-              fileList={fileList}
-              onChange={handleUploadChange}
-              showUploadList={false}
-              className="!border-0 !bg-transparent p-8"
-            >
-              <div className="flex flex-col items-center justify-center gap-4 py-6">
-                <div className="w-16 h-16 rounded-full bg-violet-500/10 flex items-center justify-center text-violet-500 text-3xl group-hover:scale-110 transition-transform duration-300">
-                  <InboxOutlined />
-                </div>
-                <div>
-                  <p className="text-white font-bold text-lg mb-1">
-                    Click or drag images to upload
-                  </p>
-                  <p className="text-gray-400 text-sm">Support for a single or bulk upload.</p>
-                </div>
-              </div>
-            </Dragger>
-
-            {/* Custom Preview Grid */}
-            <div className="px-6 pb-6 pt-2 border-t border-white/5">
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                  Preview Items {fileList.length > 0 && `(${fileList.length})`}
-                </span>
-                {fileList.length > 0 && (
-                  <span
-                    className="text-xs text-violet-500 font-bold cursor-pointer hover:text-white transition-colors"
-                    onClick={() => setFileList([])}
-                  >
-                    Clear all
-                  </span>
-                )}
-              </div>
-
-              <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
-                {fileList.map((file) => (
-                  <div
-                    key={file.uid}
-                    className="aspect-square rounded-xl bg-gray-800 border border-white/10 relative group/thumb overflow-hidden shadow-sm hover:border-violet-500 transition-colors"
-                  >
-                    {/* Nút xóa ảnh */}
-                    <div
-                      className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover/thumb:opacity-100 transition-opacity cursor-pointer z-10 backdrop-blur-[2px]"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleRemoveFile(file.uid)
-                      }}
-                    >
-                      <DeleteOutlined className="text-red-400 text-lg hover:scale-125 transition-transform" />
-                    </div>
-
-                    {/* Hiển thị ảnh: Ưu tiên preview (blob) -> thumbUrl (base64) -> url -> placeholder */}
-                    <div
-                      className="w-full h-full bg-cover bg-center opacity-70"
-                      style={{
-                        backgroundImage: `url('${file.preview || file.thumbUrl || file.url || 'https://placehold.co/200x200?text=FILE'}')`
-                      }}
-                    />
+            <div className="rounded-2xl overflow-hidden bg-[#1a1625]/30 border border-dashed border-white/20 hover:border-violet-500/50 hover:bg-[#1a1625]/50 transition-all group">
+              <Dragger
+                multiple
+                name="file"
+                beforeUpload={() => false}
+                fileList={fileList}
+                onChange={handleUploadChange}
+                showUploadList={false}
+                className="!border-0 !bg-transparent p-8"
+              >
+                <div className="flex flex-col items-center justify-center gap-4 py-6">
+                  <div className="w-16 h-16 rounded-full bg-violet-500/10 flex items-center justify-center text-violet-500 text-3xl group-hover:scale-110 transition-transform duration-300">
+                    <InboxOutlined />
                   </div>
-                ))}
+                  <div>
+                    <p className="text-white font-bold text-lg mb-1">
+                      Click or drag images to upload
+                    </p>
+                    <p className="text-gray-400 text-sm">Support for a single or bulk upload.</p>
+                  </div>
+                </div>
+              </Dragger>
 
-                {/* Nút thêm ảnh giả lập */}
-                <div className="aspect-square rounded-xl border border-dashed border-white/20 flex items-center justify-center text-gray-500 hover:text-violet-500 hover:border-violet-500 hover:bg-violet-500/10 transition-all cursor-pointer">
-                  <PlusOutlined className="text-xl" />
+              {/* Custom Preview Grid */}
+              <div className="px-6 pb-6 pt-2 border-t border-white/5">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                    Preview Items {fileList.length > 0 && `(${fileList.length})`}
+                  </span>
+                  {fileList.length > 0 && (
+                    <span
+                      className="text-xs text-violet-500 font-bold cursor-pointer hover:text-white transition-colors"
+                      onClick={() => setFileList([])}
+                    >
+                      Clear all
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
+                  {fileList.map((file) => (
+                    <div
+                      key={file.uid}
+                      className="aspect-square rounded-xl bg-gray-800 border border-white/10 relative group/thumb overflow-hidden shadow-sm hover:border-violet-500 transition-colors"
+                    >
+                      {/* Nút xóa ảnh */}
+                      <div
+                        className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover/thumb:opacity-100 transition-opacity cursor-pointer z-10 backdrop-blur-[2px]"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleRemoveFile(file.uid)
+                        }}
+                      >
+                        <DeleteOutlined className="text-red-400 text-lg hover:scale-125 transition-transform" />
+                      </div>
+
+                      {/* Hiển thị ảnh: Ưu tiên preview (blob) -> thumbUrl (base64) -> url -> placeholder */}
+                      <div
+                        className="w-full h-full bg-cover bg-center opacity-70"
+                        style={{
+                          backgroundImage: `url('${file.preview || file.thumbUrl || file.url || 'https://placehold.co/200x200?text=FILE'}')`
+                        }}
+                      />
+                    </div>
+                  ))}
+
+                  {/* Nút thêm ảnh giả lập */}
+                  <div className="aspect-square rounded-xl border border-dashed border-white/20 flex items-center justify-center text-gray-500 hover:text-violet-500 hover:border-violet-500 hover:bg-violet-500/10 transition-all cursor-pointer">
+                    <PlusOutlined className="text-xl" />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-
+        )}
         <FormFooter
           currentStep={1}
           totalSteps={1}

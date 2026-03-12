@@ -14,11 +14,12 @@ import {
     Dropdown
 } from 'antd'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
-import { EditOutlined, MoreOutlined, DeleteOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
+import { EditOutlined, MoreOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import assignmentApi, { type GetAssignmentsParams } from '@/api/AssignmentApi'
 import guidelineApi from '@/api/GuidelineApi'
 import { AssignmentDetail } from './AssignmentDetail'
 import { CreateAssignmentModal } from './CreateAssignmentModal'
+import { AssignmentCard } from './AssignmentCard'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
     useProjectById,
@@ -373,8 +374,11 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack,
                 </div>
             </Card>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 mb-6 mt-1">
-                <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-6 mt-1">
+                <Card 
+                    className="bg-[#1A1625] border-gray-800 rounded-xl h-[600px]"
+                    styles={{ body: { height: '100%', display: 'flex', flexDirection: 'column', padding: '24px' } }}
+                >
                     <div className="flex items-center justify-between mb-4">
                         <span className="text-white text-lg font-display flex items-center gap-2">
                             <span className="material-symbols-outlined text-fuchsia-400">database</span>
@@ -406,10 +410,9 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack,
                         />
                     ) : (
                         <div
-                            className="overflow-y-auto pr-1"
-                            style={{ maxHeight: '500px' }}
+                            className="flex-1 overflow-y-auto pr-1 custom-scrollbar"
                         >
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                                 {datasets.map((dataset: { datasetId: string; datasetName?: string; totalItems?: number; createdAt?: string }) => (
                                     <DatasetCard
                                         key={dataset.datasetId}
@@ -422,7 +425,10 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack,
                     )}
                 </Card>
 
-                <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
+                <Card 
+                    className="bg-[#1A1625] border-gray-800 rounded-xl h-[600px]"
+                    styles={{ body: { height: '100%', display: 'flex', flexDirection: 'column', padding: '24px' } }}
+                >
                     <div className="flex items-center justify-between mb-4">
                         <span className="text-white text-lg font-display flex items-center gap-2">
                             <span className="material-symbols-outlined text-blue-400">assignment</span>
@@ -457,97 +463,27 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack,
                         />
                     ) : (
                         <div
-                            className="overflow-y-auto pr-1"
-                            style={{ maxHeight: '500px' }}
+                            className="flex-1 overflow-y-auto pr-1 custom-scrollbar"
                         >
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {assignments.map((assignment: Record<string, unknown>, index: number) => (
-                                    <div
-                                        key={(assignment.assignmentId as string) || index}
-                                        className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-blue-500/30 transition-colors cursor-pointer"
-                                        onClick={() => setSelectedAssignmentId(String(assignment.assignmentId))}
-                                    >
-                                        <div className="flex justify-between items-start">
-                                            <h4
-                                                className="text-white font-bold text-sm truncate pr-2"
-                                                title={(assignment.assignmentName as string) || (assignment.name as string)}
-                                            >
-                                                {(assignment.assignmentName as string) ||
-                                                    (assignment.name as string) ||
-                                                    'Unnamed Assignment'}
-                                            </h4>
-                                            <div className="flex items-center gap-1 flex-shrink-0">
-                                                <Tag
-                                                    color={getStatusColor(
-                                                        (assignment.status as string) || (assignment.assignmentStatus as string)
-                                                    )}
-                                                    className="m-0 text-[10px] px-1.5 py-0"
-                                                >
-                                                    {(assignment.status as string) ||
-                                                        (assignment.assignmentStatus as string) ||
-                                                        'UNKNOWN'}
-                                                </Tag>
-                                                <Dropdown
-                                                    menu={{
-                                                        items: [
-                                                            {
-                                                                key: 'edit',
-                                                                label: 'Edit',
-                                                                icon: <EditOutlined />,
-                                                                onClick: (info) => {
-                                                                    info.domEvent.stopPropagation()
-                                                                    handleEditAssignment(assignment)
-                                                                }
-                                                            },
-                                                            {
-                                                                key: 'delete',
-                                                                label: 'Delete',
-                                                                icon: <DeleteOutlined />,
-                                                                danger: true,
-                                                                onClick: (info) => {
-                                                                    info.domEvent.stopPropagation()
-                                                                    handleDeleteAssignment(assignment)
-                                                                }
-                                                            }
-                                                        ]
-                                                    }}
-                                                    trigger={['click']}
-                                                    placement="bottomRight"
-                                                >
-                                                    <Button
-                                                        type="text"
-                                                        size="small"
-                                                        icon={<MoreOutlined />}
-                                                        className="text-gray-400 hover:text-white"
-                                                        onClick={(e) => e.stopPropagation()}
-                                                    />
-                                                </Dropdown>
-                                            </div>
-                                        </div>
-                                        <div className="text-gray-400 text-xs line-clamp-2 mt-1 min-h-[32px]">
-                                            {(assignment.description as string) ||
-                                                (assignment.descriptionAssignment as string) ||
-                                                'No description provided.'}
-                                        </div>
-                                        <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/5">
-                                            <span className="text-gray-500 text-xs">
-                                                {formatDate(assignment.createdAt as string)}
-                                            </span>
-                                            <Button
-                                                type="link"
-                                                size="small"
-                                                icon={<EditOutlined />}
-                                                className="text-violet-400 hover:text-violet-300 p-0 h-auto"
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    handleEditAssignment(assignment)
-                                                }}
-                                            >
-                                                Edit
-                                            </Button>
-                                        </div>
-                                    </div>
-                                ))}
+                            <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                                {assignments.map((assignment: Record<string, unknown>, index: number) => {
+                                    const mapped: GetAssignmentsParams = {
+                                        assignmentId: String(assignment.assignmentId || assignment.id),
+                                        assignmentName: String(assignment.assignmentName || assignment.name),
+                                        status: String(assignment.status || assignment.assignmentStatus),
+                                        createdAt: String(assignment.createdAt),
+                                        updatedAt: String(assignment.updatedAt)
+                                    }
+                                    return (
+                                        <AssignmentCard
+                                            key={mapped.assignmentId || index}
+                                            {...mapped}
+                                            onClick={() => setSelectedAssignmentId(mapped.assignmentId!)}
+                                            onEdit={() => handleEditAssignment(assignment)}
+                                            onDelete={() => handleDeleteAssignment(assignment)}
+                                        />
+                                    )
+                                })}
                             </div>
                         </div>
                     )}

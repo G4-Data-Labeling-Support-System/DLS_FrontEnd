@@ -33,6 +33,7 @@ export const ENDPOINTS = {
     LIST: '/datasets',
     DETAIL: (id: string) => `/datasets/${id}`,
     ITEMS: (id: string) => `/dataitems/datasets/${id}`,
+    UPDATE: (id: string) => `/datasets/${id}`,
     CREATE: '/datasets',
     BY_PROJECT: (projectId: string) => `/datasets/project/${projectId}`
   },
