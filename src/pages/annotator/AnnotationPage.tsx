@@ -258,11 +258,6 @@ export default function AnnotationPage() {
   const toggleLabel = (labelObj: Label) => {
     setCurrentLabel(labelObj)
     setSelectedLabels((prev) =>
-<<<<<<< Updated upstream
-      prev.includes(labelObj.name)
-        ? prev.filter((l) => l !== labelObj.name)
-        : [...prev, labelObj.name]
-=======
       prev.includes(labelObj.labelName)
         ? prev.filter((l) => l !== labelObj.labelName)
         : [...prev, labelObj.labelName]
@@ -292,7 +287,6 @@ export default function AnnotationPage() {
           Go Back
         </button>
       </div>
->>>>>>> Stashed changes
     )
   }
 
@@ -312,13 +306,9 @@ export default function AnnotationPage() {
             <span className="text-[10px] font-bold uppercase tracking-widest text-violet-400">
               Assignment
             </span>
-<<<<<<< Updated upstream
             <h2 className="text-sm font-bold text-white tracking-tight">
               Annotation Workspace
             </h2>
-=======
-            <h2 className="text-sm font-bold text-white tracking-tight">Annotation Workspace</h2>
->>>>>>> Stashed changes
           </div>
         </div>
 
@@ -471,29 +461,6 @@ export default function AnnotationPage() {
                 </span>
               </div>
               <div className="flex flex-wrap gap-2">
-<<<<<<< Updated upstream
-                {AVAILABLE_LABELS.map((label) => (
-                  <button
-                    key={label.name}
-                    onClick={() => toggleLabel(label)}
-                    className={`
-                                            px-3 py-1.5 rounded-lg text-xs font-bold transition-all border
-                                            ${selectedLabels.includes(label.name)
-                        ? 'bg-white/10 text-white'
-                        : 'bg-white/5 border-transparent text-gray-500 hover:bg-white/10 hover:text-gray-300'
-                      }
-                                        `}
-                    style={{
-                      borderColor: selectedLabels.includes(label.name)
-                        ? label.color
-                        : 'transparent',
-                      color: selectedLabels.includes(label.name) ? label.color : undefined
-                    }}
-                  >
-                    {label.name}
-                  </button>
-                ))}
-=======
                 {labels.length === 0 ? (
                   <span className="text-xs text-gray-500 italic">No labels available</span>
                 ) : (
@@ -520,7 +487,6 @@ export default function AnnotationPage() {
                     </button>
                   ))
                 )}
->>>>>>> Stashed changes
               </div>
             </div>
 
