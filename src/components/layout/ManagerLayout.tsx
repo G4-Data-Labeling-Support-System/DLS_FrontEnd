@@ -3,7 +3,6 @@ import { Layout, ConfigProvider } from 'antd'
 import { Outlet } from 'react-router-dom'
 import { Header } from '@/components/common/Header'
 import { managerTheme } from '@/styles/themeConfig'
-// import '@/features/manager/components/manager.css';
 
 const { Content } = Layout
 

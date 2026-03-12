@@ -9,10 +9,12 @@ interface GetAssignmentsParams {
   assignedTo?: string
   assignedBy?: string
   reviewerId?: string
+  reviewedBy?: string
   totalItems?: number
   completedItems?: number
   description?: string
   status?: string
+  assignmentStatus?: string
   dueDate?: string
   createdAt?: string
   updatedAt?: string
@@ -59,7 +61,7 @@ const assignmentApi = {
   },
   createAssignment(assignmentData?: GetAssignmentsParams) {
     try {
-      const url = ENDPOINTS.ASSIGNMENTS.CREATE
+      const url = ENDPOINTS.ASSIGNMENTS.CREATE_BY_PROJECT(assignmentData?.projectId || '')
       return axiosClient.post(url, assignmentData)
     } catch (error) {
       console.error('Failed to create assignment', error)
@@ -69,7 +71,7 @@ const assignmentApi = {
   updateAssignment(id: string, assignmentData?: GetAssignmentsParams) {
     try {
       const url = ENDPOINTS.ASSIGNMENTS.DETAIL(id)
-      return axiosClient.patch(url, assignmentData)
+      return axiosClient.put(url, assignmentData)
     } catch (error) {
       console.error('Failed to update assignment', error)
       throw error
@@ -78,8 +80,7 @@ const assignmentApi = {
   deleteAssignment(id: string) {
     try {
       const url = ENDPOINTS.ASSIGNMENTS.DELETE(id)
-      // using .put() here just in case assignment uses soft-deletes like projects
-      return axiosClient.put(url)
+      return axiosClient.patch(url)
     } catch (error) {
       console.error('Failed to delete assignment', error)
       throw error

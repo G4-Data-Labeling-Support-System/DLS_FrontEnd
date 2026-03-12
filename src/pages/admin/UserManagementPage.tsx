@@ -14,10 +14,11 @@ import {
   MoreOutlined,
   CheckCircleOutlined
 } from '@ant-design/icons'
-import { Dropdown, message, type MenuProps } from 'antd'
+import { App, Dropdown, type MenuProps } from 'antd'
 import { useUsers, useDeleteUser, useActivateUser } from '@/features/admin/hooks/useUsers'
 
 export default function UserManagement() {
+  const { message } = App.useApp()
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false)
   const [editModal, setEditModal] = useState<{ isOpen: boolean; data?: User }>({ isOpen: false })
   const [successModal, setSuccessModal] = useState<{ isOpen: boolean; data?: User }>({

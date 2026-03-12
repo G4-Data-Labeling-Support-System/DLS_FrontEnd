@@ -21,6 +21,7 @@ const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 const ManagerDashboardPage = lazy(() => import('@/pages/manager/ManagerDashboardPage'))
 const DatasetManagementPage = lazy(() => import('@/pages/manager/DatasetManagementPage'))
 const CreateDatasetPage = lazy(() => import('@/pages/manager/CreateDatasetPage'))
+const DatasetDetailPage = lazy(() => import('@/pages/manager/DatasetDetailPage'))
 
 // Admin pages
 const AdminLayout = lazy(() => import('@/features/admin/components/layout/AdminLayout'))
@@ -188,6 +189,14 @@ export const router = createBrowserRouter([
         element: (
           <LazyPage>
             <CreateDatasetPage />
+          </LazyPage>
+        )
+      },
+      {
+        path: PATH_MANAGER.datasetDetail,
+        element: (
+          <LazyPage>
+            <DatasetDetailPage />
           </LazyPage>
         )
       }
