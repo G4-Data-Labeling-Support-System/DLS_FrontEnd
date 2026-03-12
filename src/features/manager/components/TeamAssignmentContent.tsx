@@ -7,7 +7,7 @@ import {
   StopOutlined,
   LoadingOutlined
 } from '@ant-design/icons'
-import { mainClient } from '@/api/ApiClients'
+import { mainClient } from '@/api/apiClients'
 import { ENDPOINTS } from '@/api/endpoints'
 import { FormFooter } from '@/features/manager/components/common/FormFooter'
 

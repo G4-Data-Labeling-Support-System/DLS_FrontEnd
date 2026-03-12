@@ -151,7 +151,8 @@ export default function AnnotatorDashboardPage() {
                 const actualTasks2 = Array.isArray(rawAssign.tasks) ? rawAssign.tasks : []
                 const fallbackTasks2 = actualTasks2.length > 0 ? actualTasks2 : [MOCK_TEST_TASK]
                 const calcCompleted2 = actualTasks2.filter(
-                  (t: any) => t.taskStatus === 'COMPLETED' || t.annotationStatus === 'COMPLETED'
+                  (t: Record<string, unknown>) =>
+                    t.taskStatus === 'COMPLETED' || t.annotationStatus === 'COMPLETED'
                 ).length
 
                 const normAssign = {

@@ -16,7 +16,11 @@ interface AssignmentDetailProps {
   onEdit?: (assignment: GetAssignmentsParams) => void
 }
 
-export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId, onBack, onEdit }) => {
+export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
+  assignmentId,
+  onBack,
+  onEdit
+}) => {
   const { message } = App.useApp()
   const [assignment, setAssignment] = useState<GetAssignmentsParams | null>(null)
   const [projectName, setProjectName] = useState<string | null>(null)
@@ -77,10 +81,20 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId
             datasetId: extractedDatasetId ? String(extractedDatasetId) : undefined,
             createdAt: data.createdAt ? String(data.createdAt) : undefined,
             updatedAt: data.updatedAt ? String(data.updatedAt) : undefined,
-            assignedTo: data.assignedTo || data.user_id || data.annotatorId ? String(data.assignedTo || data.user_id || data.annotatorId) : undefined,
-            reviewedBy: data.reviewedBy || data.reviewerId ? String(data.reviewedBy || data.reviewerId) : undefined,
-            dueDate: data.dueDate || data.due_date ? String(data.dueDate || data.due_date) : undefined,
-            assignedBy: data.assignedBy || data.creatorId ? String(data.assignedBy || data.creatorId) : undefined
+            assignedTo:
+              data.assignedTo || data.user_id || data.annotatorId
+                ? String(data.assignedTo || data.user_id || data.annotatorId)
+                : undefined,
+            reviewedBy:
+              data.reviewedBy || data.reviewerId
+                ? String(data.reviewedBy || data.reviewerId)
+                : undefined,
+            dueDate:
+              data.dueDate || data.due_date ? String(data.dueDate || data.due_date) : undefined,
+            assignedBy:
+              data.assignedBy || data.creatorId
+                ? String(data.assignedBy || data.creatorId)
+                : undefined
           })
 
           // Fetch associated project name if projectId exists

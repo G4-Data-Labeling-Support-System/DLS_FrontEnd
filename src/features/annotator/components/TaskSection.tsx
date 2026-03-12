@@ -218,15 +218,11 @@ export default function TasksSection({
               {/* Grid space */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {batchTasks.map((task) => (
-<<<<<<< Updated upstream
-                  <TaskCard key={`${batchLabel}-${task.id}`} task={task} />
-=======
                   <TaskCard
                     key={`${batchLabel}-${task.id}`}
                     task={task}
                     assignmentId={assignmentId}
                   />
->>>>>>> Stashed changes
                 ))}
               </div>
             </div>

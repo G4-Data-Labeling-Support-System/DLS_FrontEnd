@@ -22,7 +22,6 @@ export const antdThemeConfig: ThemeConfig = {
       colorText: '#ffffff'
     },
     Notification: {
-      colorBg: '#1a1625',
       colorText: '#ffffff',
       colorTextHeading: '#ffffff',
       colorIcon: '#8b5cf6',

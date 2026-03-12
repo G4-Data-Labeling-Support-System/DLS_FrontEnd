@@ -306,9 +306,7 @@ export default function AnnotationPage() {
             <span className="text-[10px] font-bold uppercase tracking-widest text-violet-400">
               Assignment
             </span>
-            <h2 className="text-sm font-bold text-white tracking-tight">
-              Annotation Workspace
-            </h2>
+            <h2 className="text-sm font-bold text-white tracking-tight">Annotation Workspace</h2>
           </div>
         </div>
 
