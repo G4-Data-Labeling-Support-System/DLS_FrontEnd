@@ -3,8 +3,10 @@ import TaskCard from './TaskCard'
 import assignmentApi from '@/api/AssignmentApi'
 
 /** Groups tasks by their batchLabel */
-interface Task {
+export interface Task {
   id: string
+  taskId?: string
+  assignmentId?: string
   batchId?: string
   batchLabel: string
   taskName?: string
@@ -21,7 +23,10 @@ interface TasksSectionProps {
   assignmentId?: string
 }
 
-export default function TasksSection({ tasks: initialTasks = [], assignmentId }: TasksSectionProps) {
+export default function TasksSection({
+  tasks: initialTasks = [],
+  assignmentId
+}: TasksSectionProps) {
   const [tasks, setTasks] = useState<Task[]>(initialTasks)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -41,11 +46,11 @@ export default function TasksSection({ tasks: initialTasks = [], assignmentId }:
         const rawData = response.data?.data || response.data || []
 
         if (Array.isArray(rawData)) {
-          const mappedTasks: Task[] = rawData.map((t: any) => ({
+          const mappedTasks: Task[] = (rawData as Record<string, unknown>[]).map((t) => ({
             ...t,
-            id: t.taskId || t.id,
-            name: t.taskName || t.name,
-            batchLabel: t.batchLabel || t.taskType || 'Unbatched'
+            id: String(t.taskId || t.id || ''),
+            name: String(t.taskName || t.name || ''),
+            batchLabel: String(t.batchLabel || t.taskType || 'Unbatched')
           }))
           setTasks(mappedTasks)
         }
@@ -118,7 +123,9 @@ export default function TasksSection({ tasks: initialTasks = [], assignmentId }:
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-fuchsia-500/10 border border-fuchsia-500/20 flex items-center justify-center">
-            <span className="material-symbols-outlined text-[20px] text-fuchsia-400">grid_view</span>
+            <span className="material-symbols-outlined text-[20px] text-fuchsia-400">
+              grid_view
+            </span>
           </div>
           <div>
             <h2 className="text-xl font-bold text-white tracking-tight">Tasks</h2>
@@ -126,9 +133,7 @@ export default function TasksSection({ tasks: initialTasks = [], assignmentId }:
               <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">
                 {filteredTasks.length} of {tasks.length} tasks matched
               </span>
-              {loading && (
-                <div className="w-2 h-2 rounded-full bg-violet-500 animate-pulse"></div>
-              )}
+              {loading && <div className="w-2 h-2 rounded-full bg-violet-500 animate-pulse"></div>}
             </div>
           </div>
         </div>
@@ -139,13 +144,17 @@ export default function TasksSection({ tasks: initialTasks = [], assignmentId }:
             {availableStatuses.map((status) => (
               <button
                 key={status}
-                onClick={() => { setStatusFilter(status); setCurrentPage(1); }}
+                onClick={() => {
+                  setStatusFilter(status)
+                  setCurrentPage(1)
+                }}
                 className={`
                                     px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap
-                                    ${statusFilter === status
-                    ? 'bg-violet-600 text-white shadow-lg shadow-violet-900/20'
-                    : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
-                  }
+                                    ${
+                                      statusFilter === status
+                                        ? 'bg-violet-600 text-white shadow-lg shadow-violet-900/20'
+                                        : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
+                                    }
                                 `}
               >
                 {status.replace('_', ' ')}
@@ -162,7 +171,10 @@ export default function TasksSection({ tasks: initialTasks = [], assignmentId }:
               type="text"
               placeholder="Search tasks by name..."
               value={searchTerm}
-              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+              onChange={(e) => {
+                setSearchTerm(e.target.value)
+                setCurrentPage(1)
+              }}
               className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pl-10 pr-4 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-fuchsia-500/50 focus:bg-white/10 transition-all"
             />
           </div>
@@ -178,7 +190,11 @@ export default function TasksSection({ tasks: initialTasks = [], assignmentId }:
           <p className="text-gray-400 text-base font-medium">No tasks found</p>
           <p className="text-gray-600 text-sm mt-1">Try adjusting your filters or search term</p>
           <button
-            onClick={() => { setSearchTerm(''); setStatusFilter('ALL'); setCurrentPage(1); }}
+            onClick={() => {
+              setSearchTerm('')
+              setStatusFilter('ALL')
+              setCurrentPage(1)
+            }}
             className="mt-6 text-violet-400 text-xs font-bold hover:text-violet-300 underline underline-offset-4"
           >
             Clear all filters
@@ -187,7 +203,10 @@ export default function TasksSection({ tasks: initialTasks = [], assignmentId }:
       ) : (
         <div className="flex flex-col gap-8 flex-1">
           {Object.entries(groupedPaginated).map(([batchLabel, batchTasks]) => (
-            <div key={batchLabel} className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div
+              key={batchLabel}
+              className="animate-in fade-in slide-in-from-bottom-2 duration-300"
+            >
               {/* Batch label */}
               <div className="flex items-center gap-3 mb-4">
                 <span className="text-[10px] font-black tracking-[0.2em] uppercase text-violet-400/80">
@@ -199,7 +218,15 @@ export default function TasksSection({ tasks: initialTasks = [], assignmentId }:
               {/* Grid space */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {batchTasks.map((task) => (
+<<<<<<< Updated upstream
                   <TaskCard key={`${batchLabel}-${task.id}`} task={task} />
+=======
+                  <TaskCard
+                    key={`${batchLabel}-${task.id}`}
+                    task={task}
+                    assignmentId={assignmentId}
+                  />
+>>>>>>> Stashed changes
                 ))}
               </div>
             </div>
@@ -211,7 +238,11 @@ export default function TasksSection({ tasks: initialTasks = [], assignmentId }:
       {totalPages > 1 && (
         <div className="mt-10 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-xs text-gray-500 font-medium">
-            Showing <span className="text-gray-300">{startIndex + 1}</span> - <span className="text-gray-300">{Math.min(startIndex + itemsPerPage, filteredTasks.length)}</span> of <span className="text-gray-300">{filteredTasks.length}</span> tasks
+            Showing <span className="text-gray-300">{startIndex + 1}</span> -{' '}
+            <span className="text-gray-300">
+              {Math.min(startIndex + itemsPerPage, filteredTasks.length)}
+            </span>{' '}
+            of <span className="text-gray-300">{filteredTasks.length}</span> tasks
           </div>
 
           <div className="flex items-center gap-2">

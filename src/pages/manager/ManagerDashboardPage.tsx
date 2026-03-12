@@ -88,12 +88,16 @@ const ManagerDashboardPage: React.FC = () => {
 
           {/* Quick Actions - Sticky Sidebar (1 col) */}
           <div className="xl:col-span-1 xl:sticky xl:top-6 space-y-6">
+<<<<<<< Updated upstream
             <AssignmentQuickActions
               onCreateAssignment={() => {
                 setEditingAssignment(undefined)
                 setCreateAssignmentOpen(true)
               }}
             />
+=======
+            <AssignmentQuickActions onCreateAssignment={() => setCreateAssignmentOpen(true)} />
+>>>>>>> Stashed changes
           </div>
 
           <CreateAssignmentModal
@@ -104,7 +108,7 @@ const ManagerDashboardPage: React.FC = () => {
             onSuccess={() => {
               handleCloseModal()
               setSearchParams({ tab: 'assignment' })
-              setAssignmentRefreshTrigger(prev => prev + 1)
+              setAssignmentRefreshTrigger((prev) => prev + 1)
             }}
           />
         </div>

@@ -216,9 +216,41 @@ export default function AnnotationPage() {
   const toggleLabel = (labelObj: (typeof AVAILABLE_LABELS)[0]) => {
     setCurrentLabel(labelObj)
     setSelectedLabels((prev) =>
+<<<<<<< Updated upstream
       prev.includes(labelObj.name)
         ? prev.filter((l) => l !== labelObj.name)
         : [...prev, labelObj.name]
+=======
+      prev.includes(labelObj.labelName)
+        ? prev.filter((l) => l !== labelObj.labelName)
+        : [...prev, labelObj.labelName]
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-[#0f0e17] gap-4">
+        <Spin size="large" />
+        <span className="text-violet-400 font-mono text-sm animate-pulse">
+          Loading annotation workspace...
+        </span>
+      </div>
+    )
+  }
+
+  if (error || !currentItem) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-[#0f0e17] gap-4">
+        <span className="material-symbols-outlined text-red-500 text-5xl">error</span>
+        <span className="text-red-400 font-medium">{error || 'No data items found.'}</span>
+        <button
+          onClick={() => navigate(-1)}
+          className="mt-4 px-6 py-2 bg-white/5 border border-white/10 rounded-xl text-white hover:bg-white/10 transition-all"
+        >
+          Go Back
+        </button>
+      </div>
+>>>>>>> Stashed changes
     )
   }
 
@@ -238,9 +270,13 @@ export default function AnnotationPage() {
             <span className="text-[10px] font-bold uppercase tracking-widest text-violet-400">
               Assignment
             </span>
+<<<<<<< Updated upstream
             <h2 className="text-sm font-bold text-white tracking-tight">
               Image Classification - Batch A
             </h2>
+=======
+            <h2 className="text-sm font-bold text-white tracking-tight">Annotation Workspace</h2>
+>>>>>>> Stashed changes
           </div>
         </div>
 
@@ -399,6 +435,7 @@ export default function AnnotationPage() {
                 </span>
               </div>
               <div className="flex flex-wrap gap-2">
+<<<<<<< Updated upstream
                 {AVAILABLE_LABELS.map((label) => (
                   <button
                     key={label.name}
@@ -420,6 +457,34 @@ export default function AnnotationPage() {
                     {label.name}
                   </button>
                 ))}
+=======
+                {labels.length === 0 ? (
+                  <span className="text-xs text-gray-500 italic">No labels available</span>
+                ) : (
+                  labels.map((label) => (
+                    <button
+                      key={label.labelId}
+                      onClick={() => toggleLabel(label)}
+                      className={`
+                                              px-3 py-1.5 rounded-lg text-xs font-bold transition-all border
+                                              ${
+                                                selectedLabels.includes(label.labelName)
+                                                  ? 'bg-white/10 text-white'
+                                                  : 'bg-white/5 border-transparent text-gray-500 hover:bg-white/10 hover:text-gray-300'
+                                              }
+                                          `}
+                      style={{
+                        borderColor: selectedLabels.includes(label.labelName)
+                          ? label.color
+                          : 'transparent',
+                        color: selectedLabels.includes(label.labelName) ? label.color : undefined
+                      }}
+                    >
+                      {label.labelName}
+                    </button>
+                  ))
+                )}
+>>>>>>> Stashed changes
               </div>
             </div>
 
@@ -471,16 +536,16 @@ export default function AnnotationPage() {
                     {
                       active: currentShape
                         ? {
-                          type: currentShape.type,
-                          points: currentShape.points ? currentShape.points.length : undefined,
-                          dimensions:
-                            currentShape.type === 'bounding_box'
-                              ? {
-                                w: Math.round(currentShape.width || 0),
-                                h: Math.round(currentShape.height || 0)
-                              }
-                              : undefined
-                        }
+                            type: currentShape.type,
+                            points: currentShape.points ? currentShape.points.length : undefined,
+                            dimensions:
+                              currentShape.type === 'bounding_box'
+                                ? {
+                                    w: Math.round(currentShape.width || 0),
+                                    h: Math.round(currentShape.height || 0)
+                                  }
+                                : undefined
+                          }
                         : null,
                       session: shapes.map((s) => ({ type: s.type, label: s.label })),
                       raw: shapes
