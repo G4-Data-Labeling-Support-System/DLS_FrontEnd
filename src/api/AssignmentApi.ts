@@ -112,6 +112,24 @@ const assignmentApi = {
       console.error('Failed to fetch tasks for assignment', error)
       throw error
     }
+  },
+  getTaskById(taskId: string) {
+    try {
+      const url = ENDPOINTS.TASKS.DETAIL(taskId)
+      return axiosClient.get(url)
+    } catch (error) {
+      console.error('Failed to fetch task elements', error)
+      throw error
+    }
+  },
+  getLabelsByAssignmentId(assignmentId: string) {
+    try {
+      const url = ENDPOINTS.ASSIGNMENTS.LABELS(assignmentId)
+      return axiosClient.get(url)
+    } catch (error) {
+      console.error('Failed to fetch labels for assignment', error)
+      throw error
+    }
   }
 }
 
