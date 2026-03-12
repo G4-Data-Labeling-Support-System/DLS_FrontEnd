@@ -33,6 +33,9 @@ const SystemSettings = lazy(() => import('@/pages/admin/SystemSettingsPage'))
 // Annotator pages
 const AnnotatorLayout = lazy(() => import('@/components/layout/AnnotatorLayout'))
 const AnnotatorDashboardPage = lazy(() => import('@/pages/annotator/AnnotatorDashboardPage'))
+const AnnotatorDatasetDetailPage = lazy(
+  () => import('@/pages/annotator/AnnotatorDatasetDetailPage')
+)
 const TaskDetailPage = lazy(() => import('@/pages/annotator/TaskDetailPage'))
 const AnnotationPage = lazy(() => import('@/pages/annotator/AnnotationPage'))
 
@@ -247,6 +250,14 @@ export const router = createBrowserRouter([
         element: (
           <LazyPage>
             <AnnotatorDashboardPage />
+          </LazyPage>
+        )
+      },
+      {
+        path: PATH_ANNOTATOR.datasetDetail,
+        element: (
+          <LazyPage>
+            <AnnotatorDatasetDetailPage />
           </LazyPage>
         )
       },

@@ -70,7 +70,7 @@ const assignmentApi = {
   },
   updateAssignment(id: string, assignmentData?: GetAssignmentsParams) {
     try {
-      const url = ENDPOINTS.ASSIGNMENTS.DETAIL(id)
+      const url = ENDPOINTS.ASSIGNMENTS.UPDATE(id)
       return axiosClient.put(url, assignmentData)
     } catch (error) {
       console.error('Failed to update assignment', error)
@@ -101,6 +101,33 @@ const assignmentApi = {
       return axiosClient.post(url, assignmentData)
     } catch (error) {
       console.error('Failed to create assignment for project', error)
+      throw error
+    }
+  },
+  getTasksByAssignmentId(assignmentId: string) {
+    try {
+      const url = ENDPOINTS.TASKS.BY_ASSIGNMENT(assignmentId)
+      return axiosClient.get(url)
+    } catch (error) {
+      console.error('Failed to fetch tasks for assignment', error)
+      throw error
+    }
+  },
+  getTaskById(taskId: string) {
+    try {
+      const url = ENDPOINTS.TASKS.DETAIL(taskId)
+      return axiosClient.get(url)
+    } catch (error) {
+      console.error('Failed to fetch task elements', error)
+      throw error
+    }
+  },
+  getLabelsByAssignmentId(assignmentId: string) {
+    try {
+      const url = ENDPOINTS.ASSIGNMENTS.LABELS(assignmentId)
+      return axiosClient.get(url)
+    } catch (error) {
+      console.error('Failed to fetch labels for assignment', error)
       throw error
     }
   }

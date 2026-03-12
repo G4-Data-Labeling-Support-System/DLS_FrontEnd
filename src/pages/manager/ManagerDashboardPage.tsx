@@ -5,6 +5,7 @@ import { AllAssignments } from '@/features/manager/components/dashboard/AllAssig
 import { QuickActions } from '@/features/manager/components/dashboard/QuickActions'
 import { AssignmentQuickActions } from '@/features/manager/components/dashboard/AssignmentQuickActions'
 import { CreateAssignmentModal } from '@/features/manager/components/dashboard/CreateAssignmentModal'
+import { type GetAssignmentsParams } from '@/api/AssignmentApi'
 import {
   DashboardTabs,
   type DashboardTabType
@@ -13,6 +14,10 @@ import {
 const ManagerDashboardPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const [createAssignmentOpen, setCreateAssignmentOpen] = useState(false)
+  const [editingAssignment, setEditingAssignment] = useState<GetAssignmentsParams | undefined>(
+    undefined
+  )
+  const [assignmentRefreshTrigger, setAssignmentRefreshTrigger] = useState(0)
 
   const tabParam = searchParams.get('tab')
   const activeTab: DashboardTabType =
@@ -39,6 +44,11 @@ const ManagerDashboardPage: React.FC = () => {
     } else {
       setSearchParams({ tab: 'assignment' })
     }
+  }
+
+  const handleCloseModal = () => {
+    setCreateAssignmentOpen(false)
+    setEditingAssignment(undefined)
   }
 
   return (
@@ -70,23 +80,33 @@ const ManagerDashboardPage: React.FC = () => {
             <AllAssignments
               selectedAssignmentId={selectedAssignmentId}
               onAssignmentSelect={handleAssignmentSelect}
+              onEdit={(asn) => {
+                setEditingAssignment(asn)
+                setCreateAssignmentOpen(true)
+              }}
+              refreshTrigger={assignmentRefreshTrigger}
             />
           </div>
 
           {/* Quick Actions - Sticky Sidebar (1 col) */}
           <div className="xl:col-span-1 xl:sticky xl:top-6 space-y-6">
             <AssignmentQuickActions
-              onCreateAssignment={() => setCreateAssignmentOpen(true)}
+              onCreateAssignment={() => {
+                setEditingAssignment(undefined)
+                setCreateAssignmentOpen(true)
+              }}
             />
           </div>
 
           <CreateAssignmentModal
             open={createAssignmentOpen}
+            initialData={editingAssignment}
             projectId=""
-            onCancel={() => setCreateAssignmentOpen(false)}
+            onCancel={handleCloseModal}
             onSuccess={() => {
-              setCreateAssignmentOpen(false)
+              handleCloseModal()
               setSearchParams({ tab: 'assignment' })
+              setAssignmentRefreshTrigger((prev) => prev + 1)
             }}
           />
         </div>

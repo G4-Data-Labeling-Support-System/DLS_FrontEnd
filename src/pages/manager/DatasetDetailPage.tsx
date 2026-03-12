@@ -1,11 +1,6 @@
 import React from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { DatasetDetail } from '@/features/manager/components/dataset/DatasetDetail'
-import { useParams } from 'react-router-dom'
-import { Card, Button, Tag } from 'antd'
-
-import { MOCK_DATASET_DETAIL as mockDetail } from '@/shared/constants/mockData'
-
 
 const DatasetDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
@@ -21,10 +16,7 @@ const DatasetDetailPage: React.FC = () => {
 
   return (
     <div className="p-6">
-      <DatasetDetail
-        datasetId={id}
-        onBack={() => navigate('/manager/datasets')}
-      />
+      <DatasetDetail datasetId={id} onBack={() => navigate('/manager/datasets')} />
     </div>
   )
 }

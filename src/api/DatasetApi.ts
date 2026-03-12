@@ -32,7 +32,12 @@ const datasetApi = {
       throw error
     }
   },
-  createDataset(data: { projectId: string; datasetName: string; description?: string; files?: File[] }) {
+  createDataset(data: {
+    projectId: string
+    datasetName: string
+    description?: string
+    files?: File[]
+  }) {
     try {
       const url = ENDPOINTS.DATASETS.CREATE
       const formData = new FormData()
@@ -65,10 +70,19 @@ const datasetApi = {
   },
   getDatasetItems(datasetId: string) {
     try {
-      const url = ENDPOINTS.DATASETS.ITEMS(datasetId)
+      const url = ENDPOINTS.DATAITEMS.BY_DATASET(datasetId)
       return axiosClient.get(url)
     } catch (error) {
       console.error('Failed to fetch dataset items', error)
+      throw error
+    }
+  },
+  getDataItemById(id: string) {
+    try {
+      const url = ENDPOINTS.DATA_ITEMS.DETAIL(id)
+      return axiosClient.get(url)
+    } catch (error) {
+      console.error('Failed to fetch data item by id', error)
       throw error
     }
   },

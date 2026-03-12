@@ -27,6 +27,10 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
   const [deleting, setDeleting] = useState(false)
   const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null)
   const [deletingProjectName, setDeletingProjectName] = useState('')
+  const [cancelModalOpen, setCancelModalOpen] = useState(false)
+  const [canceling, setCanceling] = useState(false)
+  const [cancelingProjectId, setCancelingProjectId] = useState<string | null>(null)
+  const [cancelingProjectName, setCancelingProjectName] = useState('')
   const navigate = useNavigate()
 
   const currentProjectId = selectedProjectId !== undefined ? selectedProjectId : internalProjectId
@@ -48,25 +52,59 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
       if (Array.isArray(data)) {
         // Map the data to ensure properties match GetProjectsParams expected by ProjectCard
         const mappedProjects: GetProjectsParams[] = data.map((p: Record<string, unknown>) => {
+          const projectInfo = (p.project as Record<string, unknown>) || p
           const mapped: GetProjectsParams = {}
-          if (p.projectId || p.id) {
-            mapped.projectId = String(p.projectId || p.id)
+
+          const pid = projectInfo.projectId || projectInfo.id || p.id || p.projectId
+          if (pid) {
+            mapped.projectId = String(pid)
           }
-          if (p.projectName || p.name) {
-            mapped.projectName = String(p.projectName || p.name)
+
+          const pname =
+            projectInfo.projectName ||
+            projectInfo.name ||
+            projectInfo.project_name ||
+            p.projectName ||
+            p.name ||
+            p.project_name
+          if (pname) {
+            mapped.projectName = String(pname)
           }
-          if (p.projectStatus || p.status) {
-            mapped.projectStatus = String(p.projectStatus || p.status)
+
+          const pstatus =
+            projectInfo.projectStatus ||
+            projectInfo.status ||
+            projectInfo.project_status ||
+            p.projectStatus ||
+            p.status ||
+            p.project_status
+          if (pstatus) {
+            mapped.projectStatus = String(pstatus)
           }
-          if (p.description) {
-            mapped.description = String(p.description)
+
+          if (projectInfo.description || p.description) {
+            mapped.description = String(projectInfo.description || p.description)
           }
-          if (p.createdAt) {
-            mapped.createdAt = String(p.createdAt)
+
+          const pcreated =
+            projectInfo.createdAt ||
+            projectInfo.created_at ||
+            projectInfo.Created_at ||
+            p.createdAt ||
+            p.created_at ||
+            p.Created_at ||
+            projectInfo.createdDate ||
+            p.createdDate
+          if (pcreated) {
+            mapped.createdAt = String(pcreated)
           }
-          if (p.updatedAt) {
-            mapped.updatedAt = String(p.updatedAt)
+
+          const pupdated =
+            projectInfo.updatedAt || projectInfo.updated_at || p.updatedAt || p.updated_at
+          if (pupdated) {
+            mapped.updatedAt = String(pupdated)
           }
+
           return mapped
         })
         setProjects(mappedProjects)
@@ -116,6 +154,32 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
     navigate(`/manager/projects/edit/${id}`)
   }
 
+  const handleCancelProject = (id?: string) => {
+    if (!id) return
+    const proj = projects.find((p) => p.projectId === id)
+    setCancelingProjectId(id)
+    setCancelingProjectName(proj?.projectName || 'this project')
+    setCancelModalOpen(true)
+  }
+
+  const confirmCancel = async () => {
+    if (!cancelingProjectId) return
+    setCanceling(true)
+    try {
+      await projectApi.updateProjectStatus(cancelingProjectId, 'CANCELLED')
+      messageApi.success('Project cancelled successfully!')
+      setCancelModalOpen(false)
+      setCancelingProjectId(null)
+      setCancelingProjectName('')
+      fetchProjects()
+    } catch (error) {
+      console.error('Cancel project error:', error)
+      messageApi.error('An error occurred while cancelling the project.')
+    } finally {
+      setCanceling(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="w-full flex justify-center py-10">
@@ -143,9 +207,9 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
               { value: 'ALL', label: 'All Statuses' },
               { value: 'NOT_STARTED', label: 'Not Started' },
               { value: 'ACTIVE', label: 'Active' },
-              { value: 'INPROCESS', label: 'In Process' },
+              { value: 'INPROCESS', label: 'In Progress' },
               { value: 'COMPLETED', label: 'Completed' },
-              { value: 'INACTIVE', label: 'Inactive' }
+              { value: 'CANCELLED', label: 'Cancelled' }
             ]}
           />
           <Input
@@ -167,6 +231,7 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 items-stretch">
           {projects
+            .filter((p) => p.projectStatus?.toUpperCase() !== 'INACTIVE')
             .filter(
               (p) =>
                 !searchText ||
@@ -176,6 +241,9 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
               (p) =>
                 statusFilter === 'ALL' ||
                 (p.projectStatus && p.projectStatus.toUpperCase() === statusFilter)
+            )
+            .sort(
+              (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
             )
             .map((p) => {
               if (!p.projectId) return null // Bỏ qua nếu data rác không có ID
@@ -187,6 +255,7 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
                   onClick={() => handleProjectSelect(p.projectId as string)}
                   onEdit={() => handleEdit(p.projectId)}
                   onDelete={() => handleDelete(p.projectId)}
+                  onCancelProject={() => handleCancelProject(p.projectId)}
                 />
               )
             })}
@@ -207,7 +276,11 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
 
       <GlassModal
         open={deleteModalOpen}
-        onCancel={() => { setDeleteModalOpen(false); setDeletingProjectId(null); setDeletingProjectName('') }}
+        onCancel={() => {
+          setDeleteModalOpen(false)
+          setDeletingProjectId(null)
+          setDeletingProjectName('')
+        }}
         destroyOnHidden
         width={480}
       >
@@ -222,13 +295,19 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
               Deactivate Project
             </h2>
             <p className="text-white/50 text-sm">
-              Are you sure you want to deactivate <span className="text-white/80 font-medium">{deletingProjectName}</span>? This action cannot be undone.
+              Are you sure you want to deactivate{' '}
+              <span className="text-white/80 font-medium">{deletingProjectName}</span>? This action
+              cannot be undone.
             </p>
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
             <Button
-              onClick={() => { setDeleteModalOpen(false); setDeletingProjectId(null); setDeletingProjectName('') }}
+              onClick={() => {
+                setDeleteModalOpen(false)
+                setDeletingProjectId(null)
+                setDeletingProjectName('')
+              }}
               className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
             >
               Cancel
@@ -241,6 +320,56 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
               className="bg-red-600 hover:bg-red-500 border-none"
             >
               Deactivate
+            </Button>
+          </div>
+        </div>
+      </GlassModal>
+
+      <GlassModal
+        open={cancelModalOpen}
+        onCancel={() => {
+          setCancelModalOpen(false)
+          setCancelingProjectId(null)
+          setCancelingProjectName('')
+        }}
+        destroyOnHidden
+        width={480}
+      >
+        <div className="px-8 pt-10 pb-8">
+          <div className="text-center pb-6 mb-6">
+            <div className="flex justify-center mb-4">
+              <div className="w-14 h-14 rounded-full bg-orange-500/10 flex items-center justify-center">
+                <ExclamationCircleOutlined className="text-orange-500 text-2xl" />
+              </div>
+            </div>
+            <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
+              Cancel Project
+            </h2>
+            <p className="text-white/50 text-sm">
+              Are you sure you want to cancel{' '}
+              <span className="text-white/80 font-medium">{cancelingProjectName}</span>? This action
+              will change the project status to CANCELLED.
+            </p>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
+            <Button
+              onClick={() => {
+                setCancelModalOpen(false)
+                setCancelingProjectId(null)
+                setCancelingProjectName('')
+              }}
+              className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
+            >
+              Close
+            </Button>
+            <Button
+              type="primary"
+              loading={canceling}
+              onClick={confirmCancel}
+              className="bg-orange-600 hover:bg-orange-500 border-none"
+            >
+              Cancel Project
             </Button>
           </div>
         </div>

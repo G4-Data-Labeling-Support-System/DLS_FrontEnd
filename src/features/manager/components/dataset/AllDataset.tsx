@@ -9,14 +9,14 @@ import { useState } from 'react'
 
 const { Title } = Typography
 
-interface DatasetListProps {
+interface AllDatasetProps {
   datasets: GetDatasetsParams[]
   loading: boolean
   selectedDatasetId?: string | null
   onDatasetSelect?: (id: string | null) => void
 }
 
-const DatasetList: React.FC<DatasetListProps> = ({
+const AllDataset: React.FC<AllDatasetProps> = ({
   datasets,
   loading,
   selectedDatasetId,
@@ -30,8 +30,7 @@ const DatasetList: React.FC<DatasetListProps> = ({
   const [deletingDatasetId, setDeletingDatasetId] = useState<string | null>(null)
   const [deletingDatasetName, setDeletingDatasetName] = useState('')
 
-  const currentDatasetId =
-    selectedDatasetId !== undefined ? selectedDatasetId : internalDatasetId
+  const currentDatasetId = selectedDatasetId !== undefined ? selectedDatasetId : internalDatasetId
 
   const handleDatasetSelect = (id: string | null) => {
     if (onDatasetSelect) {
@@ -75,12 +74,7 @@ const DatasetList: React.FC<DatasetListProps> = ({
   }
 
   if (currentDatasetId) {
-    return (
-      <DatasetDetail
-        datasetId={currentDatasetId}
-        onBack={() => handleDatasetSelect(null)}
-      />
-    )
+    return <DatasetDetail datasetId={currentDatasetId} onBack={() => handleDatasetSelect(null)} />
   }
 
   return (
@@ -112,8 +106,10 @@ const DatasetList: React.FC<DatasetListProps> = ({
             .filter(
               (ds) =>
                 !searchText ||
-                (ds.datasetName &&
-                  ds.datasetName.toLowerCase().includes(searchText.toLowerCase()))
+                (ds.datasetName && ds.datasetName.toLowerCase().includes(searchText.toLowerCase()))
+            )
+            .sort(
+              (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
             )
             .map((ds) => {
               const uniqueId = ds.datasetId || ''
@@ -144,7 +140,11 @@ const DatasetList: React.FC<DatasetListProps> = ({
 
       <GlassModal
         open={deleteModalOpen}
-        onCancel={() => { setDeleteModalOpen(false); setDeletingDatasetId(null); setDeletingDatasetName('') }}
+        onCancel={() => {
+          setDeleteModalOpen(false)
+          setDeletingDatasetId(null)
+          setDeletingDatasetName('')
+        }}
         destroyOnHidden
         width={480}
       >
@@ -159,13 +159,19 @@ const DatasetList: React.FC<DatasetListProps> = ({
               Delete Dataset
             </h2>
             <p className="text-white/50 text-sm">
-              Are you sure you want to delete <span className="text-white/80 font-medium">{deletingDatasetName}</span>? This action cannot be undone.
+              Are you sure you want to delete{' '}
+              <span className="text-white/80 font-medium">{deletingDatasetName}</span>? This action
+              cannot be undone.
             </p>
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
             <Button
-              onClick={() => { setDeleteModalOpen(false); setDeletingDatasetId(null); setDeletingDatasetName('') }}
+              onClick={() => {
+                setDeleteModalOpen(false)
+                setDeletingDatasetId(null)
+                setDeletingDatasetName('')
+              }}
               className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
             >
               Cancel
@@ -186,4 +192,4 @@ const DatasetList: React.FC<DatasetListProps> = ({
   )
 }
 
-export default DatasetList
+export default AllDataset

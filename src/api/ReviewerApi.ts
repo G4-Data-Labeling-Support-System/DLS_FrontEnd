@@ -1,4 +1,4 @@
-import { mainClient } from './ApiClients'
+import { mainClient } from './apiClients'
 import { ENDPOINTS } from './endpoints'
 
 export interface HistoryEvent {

@@ -17,6 +17,7 @@ export const LabelCard: React.FC<LabelCardProps> = ({
   description,
   createdAt,
   updatedAt,
+  color,
   onEdit,
   onDelete,
   onClick
@@ -50,7 +51,7 @@ export const LabelCard: React.FC<LabelCardProps> = ({
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A'
-    return new Date(dateString).toLocaleDateString('vi-VN')
+    return new Date(dateString).toLocaleString('vi-VN')
   }
 
   return (
@@ -59,7 +60,13 @@ export const LabelCard: React.FC<LabelCardProps> = ({
       onClick={onClick}
     >
       <div className="flex justify-between items-start mb-2">
-        <div className="flex-1 pr-2">
+        <div className="flex-1 pr-2 flex items-center gap-2">
+          {color && (
+            <div
+              className="w-4 h-4 rounded-full border border-white/20 shrink-0"
+              style={{ backgroundColor: color }}
+            />
+          )}
           <Title
             level={5}
             className="!text-white !m-0 !text-sm leading-tight line-clamp-2"
@@ -87,9 +94,7 @@ export const LabelCard: React.FC<LabelCardProps> = ({
         </div>
       )}
 
-      {description && (
-        <p className="text-gray-400 text-xs line-clamp-2 mb-4">{description}</p>
-      )}
+      {description && <p className="text-gray-400 text-xs line-clamp-2 mb-4">{description}</p>}
 
       <div className="grid grid-cols-2 gap-2 bg-[#231e31] p-3 rounded-lg mt-auto">
         <div>

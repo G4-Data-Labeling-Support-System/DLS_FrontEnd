@@ -3,7 +3,8 @@ import { App, Spin, Typography, Card, Descriptions } from 'antd'
 import { DatabaseOutlined } from '@ant-design/icons'
 import labelApiClient from '@/api/LabelApi'
 import datasetApi from '@/api/DatasetApi'
-import { useNavigate } from 'react-router-dom'
+import { DatasetDetail } from '../dataset/DatasetDetail'
+import { useSearchParams } from 'react-router-dom'
 
 const { Title } = Typography
 
@@ -26,7 +27,20 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
   const [label, setLabel] = useState<LabelDetailData | null>(null)
   const [datasetName, setDatasetName] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
-  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const viewDatasetId = searchParams.get('viewDatasetId')
+  const setViewDatasetId = (id: string | null) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      if (id) {
+        next.set('viewDatasetId', id)
+      } else {
+        next.delete('viewDatasetId')
+      }
+      return next
+    })
+  }
 
   useEffect(() => {
     let isMounted = true
@@ -83,7 +97,7 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A'
-    return new Date(dateString).toLocaleDateString('vi-VN')
+    return new Date(dateString).toLocaleString('vi-VN')
   }
 
   if (loading) {
@@ -96,10 +110,12 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
 
   if (!label) {
     return (
-      <div className="w-full text-center py-10 text-gray-400">
-        Error loading label information.
-      </div>
+      <div className="w-full text-center py-10 text-gray-400">Error loading label information.</div>
     )
+  }
+
+  if (viewDatasetId) {
+    return <DatasetDetail datasetId={viewDatasetId} onBack={() => setViewDatasetId(null)} />
   }
 
   return (
@@ -158,22 +174,7 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
                   <span className="text-gray-600 italic">N/A</span>
                 )}
               </Descriptions.Item>
-              <Descriptions.Item label="Created At">
-                {formatDate(label.createAt)}
-              </Descriptions.Item>
-              <Descriptions.Item label="Associated Dataset">
-                {label.datasetId ? (
-                  <span
-                    className="text-blue-400 hover:text-blue-300 cursor-pointer transition-colors"
-                    onClick={() => navigate(`/manager/datasets?tab=label&labelId=${labelId}&datasetId=${label.datasetId}`)}
-                  >
-                    <DatabaseOutlined className="mr-1" />
-                    {datasetName || `Dataset ID: ${label.datasetId}`}
-                  </span>
-                ) : (
-                  <span className="text-gray-600 italic">No dataset associated</span>
-                )}
-              </Descriptions.Item>
+              <Descriptions.Item label="Created At">{formatDate(label.createAt)}</Descriptions.Item>
             </Descriptions>
           </div>
 
@@ -195,6 +196,30 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
           </div>
         </div>
       </Card>
+
+      <div className="grid grid-cols-1 mb-6 mt-1">
+        <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-white text-lg font-display flex items-center gap-2">
+              <DatabaseOutlined className="text-fuchsia-400" />
+              Associated Dataset
+            </span>
+          </div>
+          {label.datasetId ? (
+            <div
+              className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-fuchsia-500/30 transition-colors cursor-pointer"
+              onClick={() => setViewDatasetId(label.datasetId || null)}
+            >
+              <h4 className="text-white font-bold text-sm truncate">
+                {datasetName ? datasetName : `Dataset ID: ${label.datasetId}`}
+              </h4>
+              <div className="text-gray-400 text-xs mt-1">Click to view dataset details</div>
+            </div>
+          ) : (
+            <div className="text-gray-500 italic py-4 text-center">No associated dataset</div>
+          )}
+        </Card>
+      </div>
 
       <style>{`
         .custom-descriptions .ant-descriptions-title {

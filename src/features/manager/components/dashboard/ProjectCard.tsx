@@ -1,6 +1,12 @@
 import React from 'react'
 import { Card, Button, Typography, Dropdown, Tag, type MenuProps } from 'antd'
-import { MoreOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons'
+import {
+  MoreOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  EyeOutlined,
+  CloseCircleOutlined
+} from '@ant-design/icons'
 import type { GetProjectsParams } from '@/api/ProjectApi' // Import type từ API của bạn
 
 const { Title } = Typography
@@ -9,6 +15,7 @@ const { Title } = Typography
 interface ProjectCardProps extends GetProjectsParams {
   onEdit?: () => void
   onDelete?: () => void
+  onCancelProject?: () => void
   onClick?: () => void
 }
 
@@ -19,12 +26,20 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   updatedAt,
   onEdit,
   onDelete,
+  onCancelProject,
   onClick
 }) => {
   const items: MenuProps['items'] = [
     { key: '1', label: 'View Details', icon: <EyeOutlined />, onClick: onClick },
     { key: '2', label: 'Edit Project', icon: <EditOutlined />, onClick: onEdit },
     { type: 'divider' },
+    {
+      key: '5',
+      label: <span className="text-orange-500">Cancel Project</span>,
+      icon: <CloseCircleOutlined className="text-orange-500" />,
+      onClick: onCancelProject,
+      disabled: projectStatus === 'CANCELLED'
+    },
     {
       key: '4',
       label: <span className="text-red-500">Deactivate Project</span>,
@@ -38,7 +53,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
     switch (status?.toUpperCase()) {
       case 'ACTIVE':
         return 'processing'
-      case 'INPROCESS':
+      case 'INPROGRESS':
         return 'gold'
       case 'COMPLETED':
         return 'success'
@@ -47,6 +62,8 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       case 'ARCHIVE':
         return 'error'
       case 'INACTIVE':
+        return 'error'
+      case 'CANCELLED':
         return 'error'
       case 'NOT_STARTED':
         return 'default'
@@ -58,7 +75,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   // Format ngày tháng hiển thị
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A'
-    return new Date(dateString).toLocaleDateString('vi-VN')
+    return new Date(dateString).toLocaleString('vi-VN')
   }
 
   return (

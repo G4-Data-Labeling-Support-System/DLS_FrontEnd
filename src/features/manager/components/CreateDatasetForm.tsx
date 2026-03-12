@@ -14,12 +14,14 @@ interface CreateDatasetFormProps {
   onSuccess?: (datasetId?: string) => void
   onBack?: () => void
   submitLabel?: string
+  initialProjectId?: string
 }
 
 export const CreateDatasetForm: React.FC<CreateDatasetFormProps> = ({
   onSuccess,
   onBack,
-  submitLabel
+  submitLabel,
+  initialProjectId
 }) => {
   const { message } = App.useApp()
   const [form] = Form.useForm()
@@ -32,6 +34,12 @@ export const CreateDatasetForm: React.FC<CreateDatasetFormProps> = ({
   useEffect(() => {
     fileListRef.current = fileList
   }, [fileList])
+
+  useEffect(() => {
+    if (initialProjectId) {
+      form.setFieldsValue({ projectId: initialProjectId })
+    }
+  }, [initialProjectId, form])
 
   useEffect(() => {
     return () => {
@@ -149,10 +157,15 @@ export const CreateDatasetForm: React.FC<CreateDatasetFormProps> = ({
                 size="large"
                 placeholder="Select a project for this dataset"
                 className="w-full"
-                classNames={{ popup: { root: "!bg-[#1a1625] !border !border-white/10 [&_.ant-select-item]:!text-gray-300 [&_.ant-select-item-option-active]:!bg-violet-500/20 [&_.ant-select-item-option-selected]:!bg-violet-500/40 [&_.ant-select-item-option-selected]:!text-white" } }}
+                classNames={{
+                  popup: {
+                    root: '!bg-[#1a1625] !border !border-white/10 [&_.ant-select-item]:!text-gray-300 [&_.ant-select-item-option-active]:!bg-violet-500/20 [&_.ant-select-item-option-selected]:!bg-violet-500/40 [&_.ant-select-item-option-selected]:!text-white'
+                  }
+                }}
                 loading={projects.length === 0}
                 showSearch
                 optionFilterProp="children"
+                disabled={!!initialProjectId}
                 filterOption={(input, option) =>
                   (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                 }

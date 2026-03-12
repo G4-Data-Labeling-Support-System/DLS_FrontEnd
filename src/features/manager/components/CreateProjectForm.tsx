@@ -42,7 +42,7 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess,
     }
 
     fetchProjectDetail()
-  }, [editId, form])
+  }, [editId, form, message])
 
   // Xử lý Cancel: Quay về Dashboard
   const handleCancel = () => {
