@@ -81,7 +81,7 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({
     }
 
     fetchUsers()
-  }, [])
+  }, [message])
 
   // --- HANDLERS ---
   const handleAddUser = (user: UserUI) => {
@@ -214,7 +214,7 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({
                         size={{ height: 4 }}
                         showInfo={false}
                         strokeColor="#a855f7"
-                        trailColor="rgba(255,255,255,0.05)"
+                        railColor="rgba(255,255,255,0.1)"
                       />
                     </div>
                     <Button
@@ -258,7 +258,7 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({
             <Progress
               percent={progressPercent}
               strokeColor={{ '0%': '#8b5cf6', '100%': '#d946ef' }}
-              trailColor="rgba(255,255,255,0.1)"
+              railColor="rgba(255,255,255,0.1)"
               size={{ height: 6 }}
               showInfo={false}
             />

@@ -1,4 +1,5 @@
 import axiosClient from '@/lib/axios'
+import type { AxiosProgressEvent } from 'axios'
 import { ENDPOINTS } from './endpoints'
 
 export interface GetDatasetsParams {
@@ -32,7 +33,7 @@ const datasetApi = {
       throw error
     }
   },
-  createDataset(data: { projectId: string; datasetName: string; description?: string; files?: File[] }) {
+  createDataset(data: { projectId: string; datasetName: string; description?: string; files?: File[] }, onUploadProgress?: (progressEvent: AxiosProgressEvent) => void) {
     try {
       const url = ENDPOINTS.DATASETS.CREATE
       const formData = new FormData()
@@ -47,7 +48,8 @@ const datasetApi = {
         })
       }
       return axiosClient.post(url, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress
       })
     } catch (error) {
       console.error('Failed to create dataset', error)
@@ -84,8 +86,6 @@ const datasetApi = {
   async updateDataset(id: string, datasetData: GetDatasetsParams) {
     try {
       const url = ENDPOINTS.DATASETS.UPDATE(id)
-      console.log(url)
-      console.log(datasetData)
       const response = await axiosClient.put(url, datasetData)
       return response
     } catch (error) {

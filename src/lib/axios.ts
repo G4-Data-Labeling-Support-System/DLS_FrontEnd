@@ -50,12 +50,12 @@ const defaultGetRefreshToken = () => localStorage.getItem('refreshToken')
 export const handleUnauthorized = (error?: AxiosError) => {
   // Log specific error details for debugging before logout
   if (error) {
-    console.group('🚨 AUTH ERROR DETECTED');
-    console.error('URL:', error.config?.url);
-    console.error('Status:', error.response?.status);
-    console.error('Method:', error.config?.method?.toUpperCase());
-    console.error('Response Data:', error.response?.data);
-    console.groupEnd();
+    console.error('🚨 AUTH ERROR DETECTED', {
+      url: error.config?.url,
+      status: error.response?.status,
+      method: error.config?.method?.toUpperCase(),
+      data: error.response?.data
+    });
   }
 
   localStorage.removeItem('accessToken')
@@ -73,7 +73,7 @@ export const handleUnauthorized = (error?: AxiosError) => {
 // ============ Factory Function ============
 export function createApiClient({
   baseURL = API_BASE_URL,
-  timeout = 10000,
+  timeout = 300000, // 300s (5 minutes) for large uploads
   headers = {},
   getToken = getStoredToken,
   getRefreshToken = defaultGetRefreshToken,
