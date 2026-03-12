@@ -2,10 +2,8 @@ import { UserRole } from '@/shared/constants/user_role'
 import { lazy } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { PATH_ANNOTATOR, PATH_MANAGER } from './paths'
-import { CreateProjectPage } from '@/pages/manager'
 import DatasetSetupPage from '@/pages/manager/DatasetSetupPage'
 import ManagerLayout from '@/components/layout/ManagerLayout'
-import GuidelinesSetupPage from '@/pages/manager/GuidelinesSetupPage'
 import { GuestGuard, RoleGuard } from './guards'
 import { Header } from '@/components/common/Header'
 import { LazyPage } from '@/components/common/LazyPage'
@@ -138,42 +136,10 @@ export const router = createBrowserRouter([
         )
       },
       {
-        path: PATH_MANAGER.createProject,
-        element: (
-          <LazyPage>
-            <CreateProjectPage />
-          </LazyPage>
-        )
-      },
-      {
-        path: PATH_MANAGER.editProject,
-        element: (
-          <LazyPage>
-            <CreateProjectPage />
-          </LazyPage>
-        )
-      },
-      {
         path: PATH_MANAGER.datasetSetup,
         element: (
           <LazyPage>
             <DatasetSetupPage />
-          </LazyPage>
-        )
-      },
-      {
-        path: PATH_MANAGER.guidelinesSetup,
-        element: (
-          <LazyPage>
-            <GuidelinesSetupPage />
-          </LazyPage>
-        )
-      },
-      {
-        path: PATH_MANAGER.editGuidelines,
-        element: (
-          <LazyPage>
-            <GuidelinesSetupPage />
           </LazyPage>
         )
       },
