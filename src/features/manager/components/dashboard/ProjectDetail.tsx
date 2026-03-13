@@ -30,6 +30,7 @@ import {
 } from '@/features/manager/hooks/useProjectDetail'
 import { DatasetCard } from '../dataset/DatasetCard'
 import { CreateDatasetModal } from '../dataset/CreateDatasetModal'
+import { DatasetDetail } from '../dataset/DatasetDetail'
 
 const { Title } = Typography
 
@@ -77,8 +78,11 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack,
 
     // Assignment detail view via URL search params or local state for inline usage
     const [localAssignmentId, setLocalAssignmentId] = useState<string | null>(null)
+    const [localDatasetId, setLocalDatasetId] = useState<string | null>(null)
     const urlAssignmentId = searchParams.get('assignmentId')
+    const urlDatasetId = searchParams.get('datasetId')
     const selectedAssignmentId = isInline ? localAssignmentId : urlAssignmentId
+    const selectedDatasetId = isInline ? localDatasetId : urlDatasetId
 
     const setSelectedAssignmentId = (id: string | null) => {
         if (isInline) {
@@ -89,6 +93,20 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack,
                 params.set('assignmentId', id)
             } else {
                 params.delete('assignmentId')
+            }
+            setSearchParams(params)
+        }
+    }
+
+    const setSelectedDatasetId = (id: string | null) => {
+        if (isInline) {
+            setLocalDatasetId(id)
+        } else {
+            const params = new URLSearchParams(searchParams)
+            if (id) {
+                params.set('datasetId', id)
+            } else {
+                params.delete('datasetId')
             }
             setSearchParams(params)
         }
@@ -213,6 +231,15 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack,
                 assignmentId={selectedAssignmentId}
                 onBack={() => setSelectedAssignmentId(null)}
                 onEdit={(asn) => handleEditAssignment(asn as Record<string, unknown>)}
+            />
+        )
+    }
+
+    if (selectedDatasetId) {
+        return (
+            <DatasetDetail
+                datasetId={selectedDatasetId}
+                onBack={() => setSelectedDatasetId(null)}
             />
         )
     }
@@ -417,7 +444,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack,
                                     <DatasetCard
                                         key={dataset.datasetId}
                                         {...dataset}
-                                        onClick={() => navigate(`/manager/datasets/${dataset.datasetId}`)}
+                                        onClick={() => setSelectedDatasetId(dataset.datasetId)}
                                     />
                                 ))}
                             </div>
