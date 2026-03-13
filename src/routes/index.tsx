@@ -280,6 +280,14 @@ export const router = createBrowserRouter([
         )
       },
       {
+        path: 'assignment',
+        element: (
+          <LazyPage>
+            <ReviewerDashboardPage />
+          </LazyPage>
+        )
+      },
+      {
         path: 'workspace',
         element: (
           <LazyPage>
