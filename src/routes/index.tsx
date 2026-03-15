@@ -21,6 +21,7 @@ const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 const ManagerDashboardPage = lazy(() => import('@/pages/manager/ManagerDashboardPage'))
 const DatasetManagementPage = lazy(() => import('@/pages/manager/DatasetManagementPage'))
 const CreateDatasetPage = lazy(() => import('@/pages/manager/CreateDatasetPage'))
+const DatasetDetailPage = lazy(() => import('@/pages/manager/DatasetDetailPage'))
 
 // Admin pages
 const AdminLayout = lazy(() => import('@/features/admin/components/layout/AdminLayout'))
@@ -32,6 +33,9 @@ const SystemSettings = lazy(() => import('@/pages/admin/SystemSettingsPage'))
 // Annotator pages
 const AnnotatorLayout = lazy(() => import('@/components/layout/AnnotatorLayout'))
 const AnnotatorDashboardPage = lazy(() => import('@/pages/annotator/AnnotatorDashboardPage'))
+const AnnotatorDatasetDetailPage = lazy(
+  () => import('@/pages/annotator/AnnotatorDatasetDetailPage')
+)
 const TaskDetailPage = lazy(() => import('@/pages/annotator/TaskDetailPage'))
 const AnnotationPage = lazy(() => import('@/pages/annotator/AnnotationPage'))
 
@@ -190,6 +194,14 @@ export const router = createBrowserRouter([
             <CreateDatasetPage />
           </LazyPage>
         )
+      },
+      {
+        path: PATH_MANAGER.datasetDetail,
+        element: (
+          <LazyPage>
+            <DatasetDetailPage />
+          </LazyPage>
+        )
       }
     ]
   },
@@ -238,6 +250,14 @@ export const router = createBrowserRouter([
         element: (
           <LazyPage>
             <AnnotatorDashboardPage />
+          </LazyPage>
+        )
+      },
+      {
+        path: PATH_ANNOTATOR.datasetDetail,
+        element: (
+          <LazyPage>
+            <AnnotatorDatasetDetailPage />
           </LazyPage>
         )
       },

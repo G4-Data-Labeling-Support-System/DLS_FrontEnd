@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Form, Input, message, Spin } from 'antd'
+import { App, Form, Input, Spin } from 'antd'
 import projectApi from '@/api/ProjectApi'
 import { useNavigate } from 'react-router-dom'
 // Import Styles & Components
@@ -14,6 +14,7 @@ interface CreateProjectFormProps {
 }
 
 export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess, editId }) => {
+  const { message } = App.useApp()
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(false)
@@ -41,7 +42,7 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onSuccess,
     }
 
     fetchProjectDetail()
-  }, [editId, form])
+  }, [editId, form, message])
 
   // Xử lý Cancel: Quay về Dashboard
   const handleCancel = () => {

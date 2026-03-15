@@ -21,3 +21,5 @@ export const managerTheme = {
 }
 
 export const reviewerTheme = managerTheme
+export const annotatorTheme = managerTheme
+export const adminTheme = managerTheme

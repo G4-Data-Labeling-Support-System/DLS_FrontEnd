@@ -1,5 +1,5 @@
 // Auth Service - Business Logic
-import { publicAuthClient } from '@/api/ApiClients'
+import { publicAuthClient } from '@/api/apiClients'
 import { ENDPOINTS } from '@/api/endpoints'
 import { useAuthStore } from '@/store'
 import type { LoginInformation } from '../types/auth.types'
@@ -50,7 +50,7 @@ export class AuthService {
 
       // 4. Gọi API profile (Sử dụng authClient vì đã có token trong localStorage)
       try {
-        const { authClient } = await import('@/api/ApiClients')
+        const { authClient } = await import('@/api/apiClients')
         const profileResponse = await authClient.get(ENDPOINTS.AUTH.PROFILE)
         const user = profileResponse.data.data || profileResponse.data
 

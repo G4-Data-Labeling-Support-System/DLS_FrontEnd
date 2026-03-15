@@ -2,12 +2,30 @@ import { theme, type ThemeConfig } from 'antd'
 
 export const antdThemeConfig: ThemeConfig = {
   algorithm: theme.darkAlgorithm,
+  token: {
+    colorSuccess: '#10b981',
+    colorPrimary: '#8b5cf6',
+    colorBgElevated: '#1a1625',
+    colorText: '#ffffff',
+    colorTextSecondary: 'rgba(255, 255, 255, 0.65)',
+    borderRadius: 8
+  },
   components: {
     Modal: {
       contentBg: 'transparent',
       headerBg: 'transparent',
       footerBg: 'transparent',
       boxShadow: 'none'
+    },
+    Message: {
+      contentBg: '#1a1625',
+      colorText: '#ffffff'
+    },
+    Notification: {
+      colorText: '#ffffff',
+      colorTextHeading: '#ffffff',
+      colorIcon: '#8b5cf6',
+      colorIconHover: '#a78bfa'
     },
     Input: {
       colorBgContainer: 'rgba(255, 255, 255, 0.05)',

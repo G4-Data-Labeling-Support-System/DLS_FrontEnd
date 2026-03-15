@@ -24,15 +24,18 @@ export const PATH_MANAGER = {
   editGuidelines: '/manager/projects/edit/:id/guidelines',
   teamAssignment: '/manager/create-project/team-assignment',
   datasetManagement: '/manager/datasets',
-  createDataset: '/manager/datasets/create'
+  createDataset: '/manager/datasets/create',
+  datasetDetail: '/manager/datasets/:id'
 }
 
 export const PATH_ANNOTATOR = {
   root: '/annotator',
   project: '/annotator/project',
+  projectDetail: '/annotator/project/:id',
   assignment: '/annotator/assignment',
   taskDetail: (taskId: string) => `/annotator/task/${taskId}`,
-  annotation: (taskId: string) => `/annotator/task/${taskId}/annotate`
+  annotation: (taskId: string) => `/annotator/task/${taskId}/annotate`,
+  datasetDetail: '/annotator/project/:projectId/dataset/:datasetId'
 }
 
 export const PATH_REVIEWER = {

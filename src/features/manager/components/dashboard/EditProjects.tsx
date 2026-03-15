@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Form, Input, Select, Button, message, Spin, Typography, Card, Space } from 'antd'
+import { App, Form, Input, Select, Button, Spin, Typography, Card, Space } from 'antd'
 import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons'
 import projectApi from '@/api/ProjectApi'
 import { PATH_MANAGER } from '@/routes/paths'
@@ -9,6 +9,7 @@ const { Title } = Typography
 const { TextArea } = Input
 
 export const EditProject = () => {
+  const { message } = App.useApp()
   // Lấy id từ URL (ví dụ: /manager/projects/edit/:id)
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -46,7 +47,7 @@ export const EditProject = () => {
     }
 
     fetchProjectDetail()
-  }, [id, form, navigate])
+  }, [id, form, navigate, message])
 
   // 2. Xử lý khi submit Form thành công
   const onFinish = async (values: {

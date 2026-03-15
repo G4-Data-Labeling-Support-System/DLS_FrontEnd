@@ -25,7 +25,7 @@ export const DatasetQuickActions = () => {
           onClick={() => navigate(PATH_MANAGER.createDataset)}
         >
           <PlusCircleFilled className="text-lg mr-2" />
-          CREATE NEW DATASET
+          CREATE DATASET
         </Button>
 
         <Button
@@ -34,7 +34,7 @@ export const DatasetQuickActions = () => {
         >
           <div className="flex items-center">
             <FolderOpenOutlined className="mr-3 text-lg text-fuchsia-400" />
-            <span>PROJECT LIST</span>
+            <span>PROJECT & ASSIGNMENT LIST</span>
           </div>
           <RightOutlined className="text-xs" />
         </Button>

@@ -1,8 +1,11 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { AllProjects } from '@/features/manager/components/dashboard/AllProjects'
 import { AllAssignments } from '@/features/manager/components/dashboard/AllAssignments'
 import { QuickActions } from '@/features/manager/components/dashboard/QuickActions'
+import { AssignmentQuickActions } from '@/features/manager/components/dashboard/AssignmentQuickActions'
+import { CreateAssignmentModal } from '@/features/manager/components/dashboard/CreateAssignmentModal'
+import { type GetAssignmentsParams } from '@/api/AssignmentApi'
 import {
   DashboardTabs,
   type DashboardTabType
@@ -10,6 +13,11 @@ import {
 
 const ManagerDashboardPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
+  const [createAssignmentOpen, setCreateAssignmentOpen] = useState(false)
+  const [editingAssignment, setEditingAssignment] = useState<GetAssignmentsParams | undefined>(
+    undefined
+  )
+  const [assignmentRefreshTrigger, setAssignmentRefreshTrigger] = useState(0)
 
   const tabParam = searchParams.get('tab')
   const activeTab: DashboardTabType =
@@ -38,6 +46,11 @@ const ManagerDashboardPage: React.FC = () => {
     }
   }
 
+  const handleCloseModal = () => {
+    setCreateAssignmentOpen(false)
+    setEditingAssignment(undefined)
+  }
+
   return (
     <div className="p-6">
       {/* Custom Tab Navigation */}
@@ -61,10 +74,40 @@ const ManagerDashboardPage: React.FC = () => {
       )}
 
       {activeTab === 'assignment' && (
-        <div className="w-full relative mt-6">
-          <AllAssignments
-            selectedAssignmentId={selectedAssignmentId}
-            onAssignmentSelect={handleAssignmentSelect}
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start relative">
+          {/* All Assignments - Main Content (3 cols) */}
+          <div className="xl:col-span-3">
+            <AllAssignments
+              selectedAssignmentId={selectedAssignmentId}
+              onAssignmentSelect={handleAssignmentSelect}
+              onEdit={(asn) => {
+                setEditingAssignment(asn)
+                setCreateAssignmentOpen(true)
+              }}
+              refreshTrigger={assignmentRefreshTrigger}
+            />
+          </div>
+
+          {/* Quick Actions - Sticky Sidebar (1 col) */}
+          <div className="xl:col-span-1 xl:sticky xl:top-6 space-y-6">
+            <AssignmentQuickActions
+              onCreateAssignment={() => {
+                setEditingAssignment(undefined)
+                setCreateAssignmentOpen(true)
+              }}
+            />
+          </div>
+
+          <CreateAssignmentModal
+            open={createAssignmentOpen}
+            initialData={editingAssignment}
+            projectId=""
+            onCancel={handleCloseModal}
+            onSuccess={() => {
+              handleCloseModal()
+              setSearchParams({ tab: 'assignment' })
+              setAssignmentRefreshTrigger((prev) => prev + 1)
+            }}
           />
         </div>
       )}

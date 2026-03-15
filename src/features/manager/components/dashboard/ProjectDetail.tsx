@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   Spin,
   Typography,
@@ -8,122 +8,121 @@ import {
   Tag,
   Avatar,
   Empty,
-  message,
-  Modal,
+  App,
   Form,
   Input,
+  Dropdown,
   Select,
   DatePicker
 } from 'antd'
-import { EditOutlined, UserOutlined } from '@ant-design/icons'
-import datasetApi from '@/api/DatasetApi'
-import { userApi } from '@/api/userApi'
+import { GlassModal } from '@/shared/components/ui/GlassModal'
+import {
+  EditOutlined,
+  MoreOutlined,
+  DeleteOutlined,
+  ExclamationCircleOutlined
+} from '@ant-design/icons'
 import assignmentApi from '@/api/AssignmentApi'
-import { useNavigate } from 'react-router-dom'
+import guidelineApi from '@/api/GuidelineApi'
+import { userApi } from '@/api/userApi'
+import { AssignmentDetail } from './AssignmentDetail'
+import { CreateAssignmentModal } from './CreateAssignmentModal'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   useProjectById,
   useAssignmentsByProject,
   useGuidelinesByProject,
+  useDatasetsByProject,
   useInvalidateProjectDetail
 } from '@/features/manager/hooks/useProjectDetail'
+import { DatasetCard } from '../dataset/DatasetCard'
+import { CreateDatasetModal } from '../dataset/CreateDatasetModal'
+import dayjs from 'dayjs'
 
 const { Title } = Typography
 
 interface ProjectDetailProps {
   projectId: string
   onBack: () => void
+  isInline?: boolean
 }
 
-export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack }) => {
+export const ProjectDetail: React.FC<ProjectDetailProps> = ({
+  projectId,
+  onBack,
+  isInline = false
+}) => {
+  const { message } = App.useApp()
   const {
     data: project,
     isLoading: projectLoading,
     isError: projectError
   } = useProjectById(projectId)
-  const {
-    data: assignments = [],
-    isLoading: assignmentsLoading,
-    isError: assignmentsError
-  } = useAssignmentsByProject(projectId)
+  const { data: assignments = [], isLoading: assignmentsLoading } =
+    useAssignmentsByProject(projectId)
   const { data: guidelines = [], isLoading: guidelinesLoading } = useGuidelinesByProject(projectId)
+  const { data: datasets = [], isLoading: datasetsLoading } = useDatasetsByProject(projectId)
   const invalidateProjectDetail = useInvalidateProjectDetail()
 
-  const loading = projectLoading || assignmentsLoading || guidelinesLoading
+  const loading = projectLoading || assignmentsLoading || guidelinesLoading || datasetsLoading
 
-  const [isFirstAssignmentModalVisible, setIsFirstAssignmentModalVisible] = useState(false)
-  const [firstAssignmentStep, setFirstAssignmentStep] = useState<'prompt' | 'form'>('prompt')
-  const [users, setUsers] = useState<Record<string, unknown>[]>([])
-  const [datasets, setDatasets] = useState<Record<string, unknown>[]>([])
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [form] = Form.useForm()
+  const [isCreateAssignmentModalVisible, setIsCreateAssignmentModalVisible] = useState(false)
+  const [isCreateDatasetModalVisible, setIsCreateDatasetModalVisible] = useState(false)
+  const hasShownFirstAssignmentModal = useRef(false)
+  const [guidelineForm] = Form.useForm()
+  const [assignmentEditForm] = Form.useForm()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // Edit/Delete state for guidelines
+  const [editingGuideline, setEditingGuideline] = useState<Record<string, unknown> | null>(null)
+  const [isGuidelineEditModalVisible, setIsGuidelineEditModalVisible] = useState(false)
+
+  // Edit/Delete state for assignments
+  const [editingAssignment, setEditingAssignment] = useState<Record<string, unknown> | null>(null)
+  const [isAssignmentEditModalVisible, setIsAssignmentEditModalVisible] = useState(false)
+  const [deleteAssignmentModalOpen, setDeleteAssignmentModalOpen] = useState(false)
+  const [deletingAssignment, setDeletingAssignment] = useState(false)
+  const [deletingAssignmentId, setDeletingAssignmentId] = useState<string | null>(null)
+  const [deletingAssignmentName, setDeletingAssignmentName] = useState('')
+
+  // User lists for assignment edit
+  const [editAnnotators, setEditAnnotators] = useState<Record<string, unknown>[]>([])
+  const [editReviewers, setEditReviewers] = useState<Record<string, unknown>[]>([])
+  const [editUsersLoading, setEditUsersLoading] = useState(false)
+
+  // Assignment detail view via URL search params or local state for inline usage
+  const [localAssignmentId, setLocalAssignmentId] = useState<string | null>(null)
+  const urlAssignmentId = searchParams.get('assignmentId')
+  const selectedAssignmentId = isInline ? localAssignmentId : urlAssignmentId
+
+  const setSelectedAssignmentId = (id: string | null) => {
+    if (isInline) {
+      setLocalAssignmentId(id)
+    } else {
+      const params = new URLSearchParams(searchParams)
+      if (id) {
+        params.set('assignmentId', id)
+      } else {
+        params.delete('assignmentId')
+      }
+      setSearchParams(params)
+    }
+  }
 
   useEffect(() => {
     if (projectError) {
       message.error('Cannot load project details.')
       onBack()
     }
-  }, [projectError, onBack])
+  }, [projectError, onBack, message])
 
   useEffect(() => {
-    if (!assignmentsLoading && !assignmentsError && assignments.length === 0) {
-      setIsFirstAssignmentModalVisible(true)
-      setFirstAssignmentStep('prompt')
+    if (!assignmentsLoading && assignments.length === 0 && !hasShownFirstAssignmentModal.current) {
+      hasShownFirstAssignmentModal.current = true
+      queueMicrotask(() => setIsCreateAssignmentModalVisible(true))
     }
-  }, [assignments, assignmentsLoading, assignmentsError])
-
-  const handleFirstAssignmentOk = async () => {
-    setFirstAssignmentStep('form')
-    try {
-      const userRes = await userApi.getUsers()
-      const userData = userRes as unknown as { data?: Record<string, unknown>[] }
-      setUsers(
-        (Array.isArray(userRes) ? userRes : userData?.data || []) as Record<string, unknown>[]
-      )
-
-      const datasetRes = await datasetApi.getDatasetsByProjectId(projectId)
-      const datasetsData = datasetRes.data?.data || datasetRes.data
-      setDatasets(Array.isArray(datasetsData) ? datasetsData : [])
-    } catch (error) {
-      console.error(error)
-      message.error('Failed to load users or datasets.')
-    }
-  }
-
-  const handleFirstAssignmentSubmit = async () => {
-    try {
-      const values = await form.validateFields()
-      setIsSubmitting(true)
-
-      const payload = {
-        assignmentName: values.assignmentName,
-        assignedTo: values.assignedTo,
-        assignedBy: values.assignedBy,
-        reviewerId: values.reviewerId,
-        description: values.description,
-        dueDate: values.dueDate ? values.dueDate.toISOString() : undefined,
-        datasetId: values.datasetId,
-        projectId: projectId
-      }
-
-      await assignmentApi.createAssignmentForProject(projectId, payload)
-      message.success('First assignment created successfully!')
-      setIsFirstAssignmentModalVisible(false)
-      form.resetFields()
-
-      // Refresh assignments list via React Query cache invalidation
-      invalidateProjectDetail(projectId)
-    } catch (error) {
-      console.error('Failed to create first assignment', error)
-      if (error && typeof error === 'object' && 'errorFields' in error) {
-        // validation error, do nothing
-      } else {
-        message.error('Failed to create assignment')
-      }
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
+  }, [assignments, assignmentsLoading])
 
   const getStatusColor = (status?: string) => {
     switch (status?.toUpperCase()) {
@@ -140,9 +139,145 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
     }
   }
 
+  // --- Guideline Edit/Delete ---
+  const handleEditGuideline = (guideline: Record<string, unknown>) => {
+    setEditingGuideline(guideline)
+    guidelineForm.setFieldsValue({
+      title: guideline.title,
+      content: guideline.content
+    })
+    setIsGuidelineEditModalVisible(true)
+  }
+
+  const handleGuidelineEditSubmit = async () => {
+    try {
+      const values = await guidelineForm.validateFields()
+      const guideId = String(editingGuideline?.guideId)
+      await guidelineApi.updateGuideline(guideId, {
+        title: values.title,
+        content: values.content
+      })
+      message.success('Guideline updated successfully!')
+      setIsGuidelineEditModalVisible(false)
+      setEditingGuideline(null)
+      guidelineForm.resetFields()
+      invalidateProjectDetail(projectId)
+    } catch {
+      message.error('Failed to update guideline')
+    }
+  }
+
+  // --- Assignment Edit/Delete ---
+  const fetchUsersForEdit = async () => {
+    setEditUsersLoading(true)
+    try {
+      const userRes = await userApi.getUsers()
+      const allUsers = (
+        Array.isArray(userRes)
+          ? userRes
+          : (userRes as unknown as { data?: Record<string, unknown>[] })?.data || []
+      ) as Record<string, unknown>[]
+
+      setEditAnnotators(
+        allUsers.filter((u) => {
+          const role = String(u.role || u.userRole || '').toUpperCase()
+          return role.includes('ANNOTATOR')
+        })
+      )
+      setEditReviewers(
+        allUsers.filter((u) => {
+          const role = String(u.role || u.userRole || '').toUpperCase()
+          return role.includes('REVIEWER')
+        })
+      )
+    } catch (error) {
+      console.error('Failed to fetch users for edit', error)
+    } finally {
+      setEditUsersLoading(false)
+    }
+  }
+
+  const renderEditUserOption = (u: Record<string, unknown>) => {
+    const userId = String(u.userId || u.id || '')
+    const name = (u.fullName as string) || (u.username as string) || (u.name as string) || 'Unknown'
+    const avatarSrc =
+      (u.avatar as string) ||
+      (u.coverImage as string) ||
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`
+    return (
+      <Select.Option key={userId} value={userId}>
+        <div className="flex items-center gap-2">
+          <Avatar src={avatarSrc} size="small" />
+          <span>{name}</span>
+        </div>
+      </Select.Option>
+    )
+  }
+
+  const handleEditAssignment = (assignment: Record<string, unknown>) => {
+    setEditingAssignment(assignment)
+    assignmentEditForm.setFieldsValue({
+      assignmentName: assignment.assignmentName || assignment.name,
+      assignedTo: assignment.assignedTo,
+      reviewedBy: assignment.reviewedBy || assignment.reviewerId,
+      description: assignment.description || assignment.descriptionAssignment,
+      dueDate: assignment.dueDate ? dayjs(assignment.dueDate as string) : null,
+      assignmentStatus: assignment.assignmentStatus || assignment.status
+    })
+    setIsAssignmentEditModalVisible(true)
+    fetchUsersForEdit()
+  }
+
+  const handleAssignmentEditSubmit = async () => {
+    try {
+      const values = await assignmentEditForm.validateFields()
+      const assignmentId = String(editingAssignment?.assignmentId)
+      await assignmentApi.updateAssignment(assignmentId, {
+        assignmentName: values.assignmentName,
+        assignedTo: values.assignedTo,
+        reviewedBy: values.reviewedBy,
+        description: values.description,
+        dueDate: values.dueDate ? values.dueDate.toISOString() : undefined,
+        assignmentStatus: values.assignmentStatus
+      })
+      message.success('Assignment updated successfully!')
+      setIsAssignmentEditModalVisible(false)
+      setEditingAssignment(null)
+      assignmentEditForm.resetFields()
+      invalidateProjectDetail(projectId)
+    } catch {
+      message.error('Failed to update assignment')
+    }
+  }
+
+  const handleDeleteAssignment = (assignment: Record<string, unknown>) => {
+    const assignmentId = String(assignment.assignmentId)
+    const name = String(assignment.assignmentName || assignment.name || 'this assignment')
+    setDeletingAssignmentId(assignmentId)
+    setDeletingAssignmentName(name)
+    setDeleteAssignmentModalOpen(true)
+  }
+
+  const confirmDeleteAssignment = async () => {
+    if (!deletingAssignmentId) return
+    setDeletingAssignment(true)
+    try {
+      await assignmentApi.deleteAssignment(deletingAssignmentId)
+      message.success('Assignment deleted successfully!')
+      setDeleteAssignmentModalOpen(false)
+      setDeletingAssignmentId(null)
+      setDeletingAssignmentName('')
+      invalidateProjectDetail(projectId)
+    } catch {
+      message.error('Failed to delete assignment')
+    } finally {
+      setDeletingAssignment(false)
+    }
+  }
+
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A'
-    return new Date(dateString).toLocaleDateString('vi-VN')
+    return new Date(dateString).toLocaleString('vi-VN')
   }
 
   if (loading) {
@@ -150,6 +285,15 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
       <div className="w-full h-64 flex justify-center items-center">
         <Spin size="large" />
       </div>
+    )
+  }
+
+  if (selectedAssignmentId) {
+    return (
+      <AssignmentDetail
+        assignmentId={selectedAssignmentId}
+        onBack={() => setSelectedAssignmentId(null)}
+      />
     )
   }
 
@@ -170,10 +314,10 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
           </Title>
           <div className="mt-2">
             <Tag
-              color={getStatusColor(project.projectStatus)}
+              color={getStatusColor(project.projectStatus as string)}
               className="m-0 font-medium text-sm px-3 py-1"
             >
-              {project.projectStatus || 'UNKNOWN'}
+              {(project.projectStatus as string) || 'UNKNOWN'}
             </Tag>
           </div>
         </div>
@@ -215,22 +359,49 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
                 )}
               </Descriptions.Item>
               <Descriptions.Item label="Created At">
-                {formatDate(project.createdAt)}
+                {formatDate(project.createdAt as string)}
               </Descriptions.Item>
               <Descriptions.Item label="Last Updated">
-                {formatDate(project.updatedAt)}
+                {formatDate(project.updatedAt as string)}
+              </Descriptions.Item>
+              <Descriptions.Item label="Members">
+                <div className="flex -space-x-2 overflow-hidden py-1">
+                  {(project.users || [])
+                    .slice(0, 5)
+                    .map(
+                      (
+                        user: { avatar?: string; fullName?: string; username?: string },
+                        i: number
+                      ) => (
+                        <Avatar
+                          key={i}
+                          size="small"
+                          className="border-2 border-[#1A1625]"
+                          src={
+                            user.avatar ||
+                            `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName || user.username || 'U')}&background=random`
+                          }
+                        />
+                      )
+                    )}
+                  {(project.users?.length || 0) > 5 && (
+                    <div className="flex items-center justify-center w-6 h-6 rounded-full bg-violet-600 text-[10px] font-bold text-white border-2 border-[#1A1625]">
+                      +{(project.users?.length || 0) - 5}
+                    </div>
+                  )}
+                  {(project.users?.length || 0) === 0 && (
+                    <span className="text-gray-600 italic text-sm">No members yet</span>
+                  )}
+                </div>
               </Descriptions.Item>
             </Descriptions>
           </div>
 
-          <div className="flex-1 p-6 flex flex-col">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-white text-lg font-display flex items-center gap-2">
-                <span className="material-symbols-outlined text-green-400">menu_book</span>
-                Project Guidelines
-              </span>
-            </div>
-
+          <div className="flex-1 p-6">
+            <h3 className="text-white text-lg font-display flex items-center gap-2 mb-4">
+              <span className="material-symbols-outlined text-green-400">menu_book</span>
+              Project Guidelines
+            </h3>
             {guidelines.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center min-h-[150px]">
                 <Empty
@@ -245,7 +416,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
               >
                 {guidelines.map((guideline: Record<string, unknown>, index: number) => (
                   <div
-                    key={(guideline.guide_id as string) || (guideline.id as string) || index}
+                    key={(guideline.guideId as string) || index}
                     className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-green-500/30 transition-colors"
                   >
                     <div className="flex justify-between items-start">
@@ -255,6 +426,27 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
                       >
                         {(guideline.title as string) || 'Unnamed Guideline'}
                       </h4>
+                      <Dropdown
+                        menu={{
+                          items: [
+                            {
+                              key: 'edit',
+                              label: 'Edit',
+                              icon: <EditOutlined />,
+                              onClick: () => handleEditGuideline(guideline)
+                            }
+                          ]
+                        }}
+                        trigger={['click']}
+                        placement="bottomRight"
+                      >
+                        <Button
+                          type="text"
+                          size="small"
+                          icon={<MoreOutlined />}
+                          className="text-gray-400 hover:text-white flex-shrink-0"
+                        />
+                      </Dropdown>
                     </div>
                     <div className="text-gray-400 text-sm mt-2 whitespace-pre-wrap">
                       {(guideline.content as string) || 'No content provided.'}
@@ -272,71 +464,55 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-1 mb-6 mt-1">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
         <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
           <div className="flex items-center justify-between mb-4">
             <span className="text-white text-lg font-display flex items-center gap-2">
-              <span className="material-symbols-outlined text-fuchsia-400">group</span>
-              Project Members
+              <span className="material-symbols-outlined text-fuchsia-400">database</span>
+              Project Datasets
             </span>
-            <Tag
-              color="#8b5cf6"
-              className="border-0 bg-violet-600/20 text-violet-300 font-bold px-3 rounded-full"
-            >
-              {project.users?.length || 0} Members
-            </Tag>
+            <div className="flex items-center gap-2">
+              <Tag
+                color="#8b5cf6"
+                className="border-0 bg-violet-600/20 text-violet-300 font-bold px-3 rounded-full"
+              >
+                {datasets.length} Datasets
+              </Tag>
+              <Button
+                type="primary"
+                size="small"
+                className="bg-violet-600 hover:bg-violet-500 border-none"
+                onClick={() => setIsCreateDatasetModalVisible(true)}
+              >
+                + New
+              </Button>
+            </div>
           </div>
 
-          {!project.users || project.users.length === 0 ? (
+          {datasets.length === 0 ? (
             <Empty
               image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description={<span className="text-gray-500">No members assigned yet</span>}
+              description={<span className="text-gray-500">No datasets associated yet</span>}
               className="my-8"
             />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {project.users.map((user: Record<string, unknown>, index: number) => (
-                <div
-                  key={(user.id as string) || index}
-                  className="flex items-center gap-3 bg-[#231e31] p-3 rounded-xl border border-white/5 hover:border-violet-500/30 transition-colors"
-                >
-                  <Avatar
-                    src={
-                      (user.avatar as string) ||
-                      (user.coverImage as string) ||
-                      `https://ui-avatars.com/api/?name=${encodeURIComponent((user.fullName as string) || (user.username as string) || 'U')}&background=random`
-                    }
-                    size={40}
-                    icon={<UserOutlined />}
-                    className="border border-white/10 flex-shrink-0"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <h4 className="text-white font-bold text-sm truncate">
-                      {(user.fullName as string) ||
-                        (user.name as string) ||
-                        (user.username as string) ||
-                        'Unknown User'}
-                    </h4>
-                    <div className="flex gap-2 items-center mt-1">
-                      <span
-                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase ${
-                          String(user.role || user.userRole || '')
-                            .toLowerCase()
-                            .includes('manager')
-                            ? 'bg-red-500/20 text-red-400'
-                            : String(user.role || user.userRole || '')
-                                  .toLowerCase()
-                                  .includes('annotator')
-                              ? 'bg-orange-500/20 text-orange-400'
-                              : 'bg-cyan-500/20 text-cyan-400'
-                        }`}
-                      >
-                        {(user.role as string) || (user.userRole as string) || 'Member'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
+            <div className="overflow-y-auto pr-1" style={{ maxHeight: '500px' }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {datasets.map(
+                  (dataset: {
+                    datasetId: string
+                    datasetName?: string
+                    totalItems?: number
+                    createdAt?: string
+                  }) => (
+                    <DatasetCard
+                      key={dataset.datasetId}
+                      {...dataset}
+                      onClick={() => navigate(`/manager/datasets/${dataset.datasetId}`)}
+                    />
+                  )
+                )}
+              </div>
             </div>
           )}
         </Card>
@@ -347,12 +523,22 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
               <span className="material-symbols-outlined text-blue-400">assignment</span>
               Project Assignments
             </span>
-            <Tag
-              color="#3b82f6"
-              className="border-0 bg-blue-600/20 text-blue-300 font-bold px-3 rounded-full"
-            >
-              {assignments.length} Assignments
-            </Tag>
+            <div className="flex items-center gap-2">
+              <Tag
+                color="#3b82f6"
+                className="border-0 bg-blue-600/20 text-blue-300 font-bold px-3 rounded-full"
+              >
+                {assignments.length} Assignments
+              </Tag>
+              <Button
+                type="primary"
+                size="small"
+                className="bg-violet-600 hover:bg-violet-500 border-none"
+                onClick={() => setIsCreateAssignmentModalVisible(true)}
+              >
+                + New
+              </Button>
+            </div>
           </div>
 
           {assignments.length === 0 ? (
@@ -362,108 +548,182 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
               className="my-8"
             />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {assignments.map((assignment: Record<string, unknown>, index: number) => (
-                <div
-                  key={(assignment.id as string) || index}
-                  className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-blue-500/30 transition-colors"
-                >
-                  <div className="flex justify-between items-start">
-                    <h4
-                      className="text-white font-bold text-sm truncate pr-2"
-                      title={(assignment.assignmentName as string) || (assignment.name as string)}
-                    >
-                      {(assignment.assignmentName as string) ||
-                        (assignment.name as string) ||
-                        'Unnamed Assignment'}
-                    </h4>
-                    <Tag
-                      color={getStatusColor(
-                        (assignment.status as string) || (assignment.assignmentStatus as string)
-                      )}
-                      className="m-0 text-[10px] px-1.5 py-0 flex-shrink-0"
-                    >
-                      {(assignment.status as string) ||
-                        (assignment.assignmentStatus as string) ||
-                        'UNKNOWN'}
-                    </Tag>
+            <div className="overflow-y-auto pr-1" style={{ maxHeight: '500px' }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {assignments.map((assignment: Record<string, unknown>, index: number) => (
+                  <div
+                    key={(assignment.assignmentId as string) || index}
+                    className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-blue-500/30 transition-colors cursor-pointer"
+                    onClick={() => setSelectedAssignmentId(String(assignment.assignmentId))}
+                  >
+                    <div className="flex justify-between items-start">
+                      <h4
+                        className="text-white font-bold text-sm truncate pr-2"
+                        title={(assignment.assignmentName as string) || (assignment.name as string)}
+                      >
+                        {(assignment.assignmentName as string) ||
+                          (assignment.name as string) ||
+                          'Unnamed Assignment'}
+                      </h4>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <Tag
+                          color={getStatusColor(
+                            (assignment.status as string) || (assignment.assignmentStatus as string)
+                          )}
+                          className="m-0 text-[10px] px-1.5 py-0"
+                        >
+                          {(assignment.status as string) ||
+                            (assignment.assignmentStatus as string) ||
+                            'UNKNOWN'}
+                        </Tag>
+                        <Dropdown
+                          menu={{
+                            items: [
+                              {
+                                key: 'edit',
+                                label: 'Edit',
+                                icon: <EditOutlined />,
+                                onClick: (info) => {
+                                  info.domEvent.stopPropagation()
+                                  handleEditAssignment(assignment)
+                                }
+                              },
+                              {
+                                key: 'delete',
+                                label: 'Delete',
+                                icon: <DeleteOutlined />,
+                                danger: true,
+                                onClick: (info) => {
+                                  info.domEvent.stopPropagation()
+                                  handleDeleteAssignment(assignment)
+                                }
+                              }
+                            ]
+                          }}
+                          trigger={['click']}
+                          placement="bottomRight"
+                        >
+                          <Button
+                            type="text"
+                            size="small"
+                            icon={<MoreOutlined />}
+                            className="text-gray-400 hover:text-white"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </Dropdown>
+                      </div>
+                    </div>
+                    <div className="text-gray-400 text-xs line-clamp-2 mt-1 min-h-[32px]">
+                      {(assignment.description as string) ||
+                        (assignment.descriptionAssignment as string) ||
+                        'No description provided.'}
+                    </div>
+                    <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/5">
+                      <span className="text-gray-500 text-xs">
+                        {formatDate(assignment.createdAt as string)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="text-gray-400 text-xs line-clamp-2 mt-1 min-h-[32px]">
-                    {(assignment.description as string) ||
-                      (assignment.descriptionAssignment as string) ||
-                      'No description provided.'}
-                  </div>
-                  <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/5">
-                    <span className="text-gray-500 text-xs">
-                      {formatDate(assignment.createdAt as string)}
-                    </span>
-                    <Button
-                      type="link"
-                      size="small"
-                      className="text-blue-400 p-0 h-auto"
-                      onClick={() =>
-                        navigate(`/manager/assignments/${assignment.id || assignment.assignmentId}`)
-                      }
-                    >
-                      View Details
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
         </Card>
       </div>
 
-      <Modal
-        title={
-          <span className="font-display text-lg">
-            {firstAssignmentStep === 'prompt' ? 'No Assignments Found' : 'Create First Assignment'}
-          </span>
-        }
-        open={isFirstAssignmentModalVisible}
-        onCancel={() => setIsFirstAssignmentModalVisible(false)}
+      <CreateAssignmentModal
+        open={isCreateAssignmentModalVisible}
+        projectId={projectId}
+        onCancel={() => setIsCreateAssignmentModalVisible(false)}
+        onSuccess={() => {
+          setIsCreateAssignmentModalVisible(false)
+          invalidateProjectDetail(projectId)
+        }}
+      />
+
+      <CreateDatasetModal
+        open={isCreateDatasetModalVisible}
+        projectId={projectId}
+        onCancel={() => setIsCreateDatasetModalVisible(false)}
+        onSuccess={() => {
+          setIsCreateDatasetModalVisible(false)
+          invalidateProjectDetail(projectId)
+        }}
+      />
+
+      {/* Guideline Edit Modal */}
+      <GlassModal
+        open={isGuidelineEditModalVisible}
+        onCancel={() => {
+          setIsGuidelineEditModalVisible(false)
+          setEditingGuideline(null)
+          guidelineForm.resetFields()
+        }}
         destroyOnHidden
-        footer={
-          firstAssignmentStep === 'prompt'
-            ? [
-                <Button key="cancel" onClick={() => setIsFirstAssignmentModalVisible(false)}>
-                  Cancel
-                </Button>,
-                <Button
-                  key="ok"
-                  type="primary"
-                  onClick={handleFirstAssignmentOk}
-                  className="bg-violet-600 hover:bg-violet-500 border-none"
-                >
-                  OK
-                </Button>
-              ]
-            : [
-                <Button key="back" onClick={() => setFirstAssignmentStep('prompt')}>
-                  Back
-                </Button>,
-                <Button
-                  key="submit"
-                  type="primary"
-                  loading={isSubmitting}
-                  onClick={handleFirstAssignmentSubmit}
-                  className="bg-violet-600 hover:bg-violet-500 border-none"
-                >
-                  Create Assignment
-                </Button>
-              ]
-        }
+        width={520}
       >
-        {firstAssignmentStep === 'prompt' ? (
-          <div className="py-4 text-gray-600 dark:text-gray-300">
-            <p>
-              This project currently has no assignments. Would you like to create the first
-              assignment?
-            </p>
+        <div className="px-8 pt-10 pb-8">
+          <div className="text-center border-b border-white/5 pb-6 mb-6">
+            <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
+              Edit Guideline
+            </h2>
           </div>
-        ) : (
-          <Form form={form} layout="vertical" className="mt-4">
+          <Form form={guidelineForm} layout="vertical">
+            <Form.Item
+              label="Title"
+              name="title"
+              rules={[{ required: true, message: 'Please enter title' }]}
+            >
+              <Input placeholder="Enter guideline title" />
+            </Form.Item>
+            <Form.Item
+              label="Content"
+              name="content"
+              rules={[{ required: true, message: 'Please enter content' }]}
+            >
+              <Input.TextArea placeholder="Enter guideline content" rows={5} />
+            </Form.Item>
+            <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
+              <Button
+                onClick={() => {
+                  setIsGuidelineEditModalVisible(false)
+                  setEditingGuideline(null)
+                  guidelineForm.resetFields()
+                }}
+                className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="primary"
+                onClick={handleGuidelineEditSubmit}
+                className="bg-violet-600 hover:bg-violet-500 border-none"
+              >
+                Save
+              </Button>
+            </div>
+          </Form>
+        </div>
+      </GlassModal>
+
+      {/* Assignment Edit Modal */}
+      <GlassModal
+        open={isAssignmentEditModalVisible}
+        onCancel={() => {
+          setIsAssignmentEditModalVisible(false)
+          setEditingAssignment(null)
+          assignmentEditForm.resetFields()
+        }}
+        destroyOnHidden
+        width={600}
+      >
+        <div className="px-8 pt-10 pb-8">
+          <div className="text-center border-b border-white/5 pb-6 mb-6">
+            <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
+              Edit Assignment
+            </h2>
+          </div>
+          <Form form={assignmentEditForm} layout="vertical">
             <Form.Item
               label="Assignment Name"
               name="assignmentName"
@@ -471,133 +731,123 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
             >
               <Input placeholder="Enter assignment name" />
             </Form.Item>
-            <div className="grid grid-cols-3 gap-4">
-              <Form.Item
-                label="Assign To"
-                name="assignedTo"
-                rules={[{ required: true, message: 'Please select annotator' }]}
+            <Form.Item label="Assigned To" name="assignedTo">
+              <Select
+                placeholder="Select annotator"
+                allowClear
+                showSearch
+                optionFilterProp="children"
+                loading={editUsersLoading}
               >
-                <Select placeholder="Select annotator">
-                  {users
-                    .filter((u) => {
-                      const role = String(
-                        (u.role as string) || (u.userRole as string) || ''
-                      ).toUpperCase()
-                      return role.includes('ANNOTATOR') || role === 'ANNOTATOR'
-                    })
-                    .map((u: Record<string, unknown>) => {
-                      const userId = String(u.id || u.userId || u.account_id || u.username || '')
-                      const name =
-                        (u.fullName as string) || (u.username as string) || (u.name as string)
-                      const avatarSrc =
-                        (u.avatar as string) ||
-                        (u.coverImage as string) ||
-                        `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`
-                      return (
-                        <Select.Option key={userId} value={userId}>
-                          <div className="flex items-center gap-2">
-                            <Avatar src={avatarSrc} size="small" />
-                            <span>{name}</span>
-                          </div>
-                        </Select.Option>
-                      )
-                    })}
-                </Select>
-              </Form.Item>
-              <Form.Item
-                label="Reviewer"
-                name="reviewerId"
-                rules={[{ required: true, message: 'Please select reviewer' }]}
-              >
-                <Select placeholder="Select reviewer">
-                  {users
-                    .filter((u) => {
-                      const role = String(
-                        (u.role as string) || (u.userRole as string) || ''
-                      ).toUpperCase()
-                      return role.includes('REVIEWER') || role === 'REVIEWER'
-                    })
-                    .map((u: Record<string, unknown>) => {
-                      const userId = String(u.id || u.userId || u.account_id || u.username || '')
-                      const name =
-                        (u.fullName as string) || (u.username as string) || (u.name as string)
-                      const avatarSrc =
-                        (u.avatar as string) ||
-                        (u.coverImage as string) ||
-                        `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`
-                      return (
-                        <Select.Option key={userId} value={userId}>
-                          <div className="flex items-center gap-2">
-                            <Avatar src={avatarSrc} size="small" />
-                            <span>{name}</span>
-                          </div>
-                        </Select.Option>
-                      )
-                    })}
-                </Select>
-              </Form.Item>
-              <Form.Item
-                label="Assigned By"
-                name="assignedBy"
-                rules={[{ required: true, message: 'Please select manager' }]}
-              >
-                <Select placeholder="Select manager">
-                  {users
-                    .filter((u) => {
-                      const role = String(
-                        (u.role as string) || (u.userRole as string) || ''
-                      ).toUpperCase()
-                      return role.includes('MANAGER') || role === 'MANAGER'
-                    })
-                    .map((u: Record<string, unknown>) => {
-                      const userId = String(u.id || u.userId || u.account_id || u.username || '')
-                      const name =
-                        (u.fullName as string) || (u.username as string) || (u.name as string)
-                      const avatarSrc =
-                        (u.avatar as string) ||
-                        (u.coverImage as string) ||
-                        `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`
-                      return (
-                        <Select.Option key={userId} value={userId}>
-                          <div className="flex items-center gap-2">
-                            <Avatar src={avatarSrc} size="small" />
-                            <span>{name}</span>
-                          </div>
-                        </Select.Option>
-                      )
-                    })}
-                </Select>
-              </Form.Item>
-            </div>
-            <Form.Item
-              label="Dataset"
-              name="datasetId"
-              rules={[{ required: true, message: 'Please select a dataset' }]}
-            >
-              <Select placeholder="Select dataset">
-                {datasets.map((d: Record<string, unknown>) => (
-                  <Select.Option
-                    key={(d.id as string) || (d.datasetId as string)}
-                    value={(d.id as string) || (d.datasetId as string)}
-                  >
-                    {(d.datasetName as string) || (d.name as string)}
-                  </Select.Option>
-                ))}
+                {editAnnotators.map(renderEditUserOption)}
               </Select>
             </Form.Item>
-            <Form.Item
-              label="Due Date"
-              name="dueDate"
-              rules={[{ required: true, message: 'Please select due date' }]}
-            >
-              <DatePicker className="w-full" style={{ width: '100%' }} />
+            <Form.Item label="Reviewed By" name="reviewedBy">
+              <Select
+                placeholder="Select reviewer"
+                allowClear
+                showSearch
+                optionFilterProp="children"
+                loading={editUsersLoading}
+              >
+                {editReviewers.map(renderEditUserOption)}
+              </Select>
             </Form.Item>
             <Form.Item label="Description" name="description">
-              <Input.TextArea placeholder="Enter description" rows={4} />
+              <Input.TextArea placeholder="Enter description" rows={3} />
             </Form.Item>
+            <Form.Item label="Due Date" name="dueDate">
+              <DatePicker
+                className="w-full"
+                showTime
+                format="DD/MM/YYYY HH:mm"
+                placeholder="Select due date"
+              />
+            </Form.Item>
+            <Form.Item label="Status" name="assignmentStatus">
+              <Select
+                placeholder="Select status"
+                options={[
+                  { value: 'ASSIGNED', label: 'Assigned' },
+                  { value: 'ACTIVE', label: 'Active' },
+                  { value: 'COMPLETED', label: 'Completed' },
+                  { value: 'PAUSED', label: 'Paused' }
+                ]}
+              />
+            </Form.Item>
+            <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
+              <Button
+                onClick={() => {
+                  setIsAssignmentEditModalVisible(false)
+                  setEditingAssignment(null)
+                  assignmentEditForm.resetFields()
+                }}
+                className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="primary"
+                onClick={handleAssignmentEditSubmit}
+                className="bg-violet-600 hover:bg-violet-500 border-none"
+              >
+                Save
+              </Button>
+            </div>
           </Form>
-        )}
-      </Modal>
+        </div>
+      </GlassModal>
+
+      <GlassModal
+        open={deleteAssignmentModalOpen}
+        onCancel={() => {
+          setDeleteAssignmentModalOpen(false)
+          setDeletingAssignmentId(null)
+          setDeletingAssignmentName('')
+        }}
+        destroyOnHidden
+        width={480}
+      >
+        <div className="px-8 pt-10 pb-8">
+          <div className="text-center pb-6 mb-6">
+            <div className="flex justify-center mb-4">
+              <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center">
+                <ExclamationCircleOutlined className="text-red-500 text-2xl" />
+              </div>
+            </div>
+            <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
+              Delete Assignment
+            </h2>
+            <p className="text-white/50 text-sm">
+              Are you sure you want to delete{' '}
+              <span className="text-white/80 font-medium">{deletingAssignmentName}</span>? This
+              action cannot be undone.
+            </p>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
+            <Button
+              onClick={() => {
+                setDeleteAssignmentModalOpen(false)
+                setDeletingAssignmentId(null)
+                setDeletingAssignmentName('')
+              }}
+              className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
+            >
+              Cancel
+            </Button>
+            <Button
+              danger
+              type="primary"
+              loading={deletingAssignment}
+              onClick={confirmDeleteAssignment}
+              className="bg-red-600 hover:bg-red-500 border-none"
+            >
+              Delete Assignment
+            </Button>
+          </div>
+        </div>
+      </GlassModal>
 
       <style>{`
                 .custom-descriptions .ant-descriptions-title {
@@ -617,3 +867,5 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack 
     </div>
   )
 }
+
+export default ProjectDetail

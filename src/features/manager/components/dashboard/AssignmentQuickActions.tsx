@@ -1,16 +1,17 @@
 import { Card, Button, Typography } from 'antd'
-import {
-  PlusCircleFilled,
-  DownloadOutlined,
-  FileTextOutlined,
-  RightOutlined
-} from '@ant-design/icons'
+import { PlusCircleFilled, DatabaseOutlined, RightOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { PATH_MANAGER } from '@/routes/paths'
 
 const { Title } = Typography
 
-export const QuickActions = () => {
+interface AssignmentQuickActionsProps {
+  onCreateAssignment?: () => void
+}
+
+export const AssignmentQuickActions: React.FC<AssignmentQuickActionsProps> = ({
+  onCreateAssignment
+}) => {
   const navigate = useNavigate()
 
   return (
@@ -27,18 +28,10 @@ export const QuickActions = () => {
           type="primary"
           size="large"
           className="w-full h-12 flex items-center justify-center bg-fuchsia-600 hover:bg-fuchsia-500 border-none shadow-[0_0_15px_rgba(192,38,211,0.4)]"
-          onClick={() => navigate(PATH_MANAGER.createProject)}
+          onClick={onCreateAssignment}
         >
           <PlusCircleFilled className="text-lg mr-2" />
-          CREATE PROJECT
-        </Button>
-
-        <Button className="w-full h-12 flex items-center justify-between bg-[#231e31] border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 hover:bg-[#2d2640]">
-          <div className="flex items-center">
-            <DownloadOutlined className="mr-3 text-lg text-violet-400" />
-            <span>Export Data</span>
-          </div>
-          <RightOutlined className="text-xs" />
+          CREATE ASSIGNMENT
         </Button>
 
         <Button
@@ -46,7 +39,7 @@ export const QuickActions = () => {
           onClick={() => navigate(PATH_MANAGER.datasetManagement)}
         >
           <div className="flex items-center">
-            <FileTextOutlined className="mr-3 text-lg text-fuchsia-400" />
+            <DatabaseOutlined className="mr-3 text-lg text-fuchsia-400" />
             <span>DATASET & LABEL LIST</span>
           </div>
           <RightOutlined className="text-xs" />
