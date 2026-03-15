@@ -53,8 +53,6 @@ interface Guideline {
   status: string
 }
 
-
-
 export default function AnnotatorDashboardPage() {
   const { assignmentId } = useParams<{ assignmentId: string }>()
   const location = useLocation()
@@ -93,7 +91,10 @@ export default function AnnotatorDashboardPage() {
           // Normalize assignment
           const actualTasks = Array.isArray(assignmentData.tasks) ? assignmentData.tasks : []
           const fallbackTasks = actualTasks.length > 0 ? actualTasks : [MOCK_TEST_TASK]
-          const calcCompleted = actualTasks.filter((t: any) => t.taskStatus === 'COMPLETED' || t.annotationStatus === 'COMPLETED').length
+          const calcCompleted = actualTasks.filter(
+            (t: AssignmentTask) =>
+              t.taskStatus === 'COMPLETED' || t.annotationStatus === 'COMPLETED'
+          ).length
 
           const normAssignment = {
             ...assignmentData,
@@ -106,8 +107,9 @@ export default function AnnotatorDashboardPage() {
               assignmentData.project?.projectId ||
               assignmentData.project?.id,
             tasks: fallbackTasks,
-            completedTasks: actualTasks.length > 0 ? calcCompleted : (assignmentData.completedTasks ?? 0),
-            totalTasks: actualTasks.length > 0 ? actualTasks.length : (assignmentData.totalTasks || 1)
+            completedTasks:
+              actualTasks.length > 0 ? calcCompleted : (assignmentData.completedTasks ?? 0),
+            totalTasks: actualTasks.length > 0 ? actualTasks.length : assignmentData.totalTasks || 1
           }
           setAssignment(normAssignment)
 
@@ -118,8 +120,8 @@ export default function AnnotatorDashboardPage() {
             const guidelinesList = guidelineRes.data?.data || guidelineRes.data || []
             const activeGuide = Array.isArray(guidelinesList)
               ? (guidelinesList.find(
-                (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
-              ) ??
+                  (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
+                ) ??
                 guidelinesList[0] ??
                 null)
               : guidelinesList
@@ -148,7 +150,10 @@ export default function AnnotatorDashboardPage() {
                 const rawAssign = assignsList[0]
                 const actualTasks2 = Array.isArray(rawAssign.tasks) ? rawAssign.tasks : []
                 const fallbackTasks2 = actualTasks2.length > 0 ? actualTasks2 : [MOCK_TEST_TASK]
-                const calcCompleted2 = actualTasks2.filter((t: any) => t.taskStatus === 'COMPLETED' || t.annotationStatus === 'COMPLETED').length
+                const calcCompleted2 = actualTasks2.filter(
+                  (t: Record<string, unknown>) =>
+                    t.taskStatus === 'COMPLETED' || t.annotationStatus === 'COMPLETED'
+                ).length
 
                 const normAssign = {
                   ...rawAssign,
@@ -159,8 +164,10 @@ export default function AnnotatorDashboardPage() {
                   projectId:
                     rawAssign.projectId || rawAssign.project?.projectId || rawAssign.project?.id,
                   tasks: fallbackTasks2,
-                  completedTasks: actualTasks2.length > 0 ? calcCompleted2 : (rawAssign.completedTasks ?? 0),
-                  totalTasks: actualTasks2.length > 0 ? actualTasks2.length : (rawAssign.totalTasks || 1)
+                  completedTasks:
+                    actualTasks2.length > 0 ? calcCompleted2 : (rawAssign.completedTasks ?? 0),
+                  totalTasks:
+                    actualTasks2.length > 0 ? actualTasks2.length : rawAssign.totalTasks || 1
                 }
                 setAssignment(normAssign)
 
@@ -170,8 +177,8 @@ export default function AnnotatorDashboardPage() {
                   const guidelinesList = guidelineRes.data?.data || guidelineRes.data || []
                   const activeGuide = Array.isArray(guidelinesList)
                     ? (guidelinesList.find(
-                      (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
-                    ) ??
+                        (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
+                      ) ??
                       guidelinesList[0] ??
                       null)
                     : guidelinesList
@@ -215,8 +222,8 @@ export default function AnnotatorDashboardPage() {
                     const guidelinesList = guidelineRes.data?.data || guidelineRes.data || []
                     const activeGuide = Array.isArray(guidelinesList)
                       ? (guidelinesList.find(
-                        (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
-                      ) ??
+                          (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
+                        ) ??
                         guidelinesList[0] ??
                         null)
                       : guidelinesList
@@ -237,7 +244,6 @@ export default function AnnotatorDashboardPage() {
       } catch (err: unknown) {
         console.error('API Error:', err)
         setError('Failed to load dashboard data. Please try again later.')
-
       } finally {
         setLoading(false)
       }

@@ -63,7 +63,7 @@ export const handleUnauthorized = (error?: AxiosError) => {
 
   // Đồng bộ với Zustand Store
   useAuthStore.getState().logout()
-  
+
   // Chỉ redirect nếu chưa ở trang login để tránh lặp vô tận
   if (!window.location.pathname.includes('/login')) {
     window.location.href = '/login'
@@ -73,7 +73,7 @@ export const handleUnauthorized = (error?: AxiosError) => {
 // ============ Factory Function ============
 export function createApiClient({
   baseURL = API_BASE_URL,
-  timeout = 300000, // 300s (5 minutes) for large uploads
+  timeout = 3000000, // 3000s (50 minutes) for large uploads
   headers = {},
   getToken = getStoredToken,
   getRefreshToken = defaultGetRefreshToken,

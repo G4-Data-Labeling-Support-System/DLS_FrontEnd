@@ -1,4 +1,4 @@
-import { mainClient } from '@/api/ApiClients'
+import { mainClient } from '@/api/apiClients'
 import { ENDPOINTS } from '@/api/endpoints'
 import type { CreateUserRequest, UpdateUserRequest, User } from '@/shared/types/api.types'
 

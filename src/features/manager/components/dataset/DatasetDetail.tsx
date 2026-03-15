@@ -54,7 +54,7 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
 
   const viewProjectId = searchParams.get('viewProjectId')
   const setViewProjectId = (id: string | null) => {
-    setSearchParams(prev => {
+    setSearchParams((prev) => {
       const next = new URLSearchParams(prev)
       if (id) {
         next.set('viewProjectId', id)
@@ -75,7 +75,7 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
         const data = response.data?.data || response.data
 
         if (data && isMounted) {
-          const extractedProjectId = data.projectId || data.project?.id || data.project?.projectId;
+          const extractedProjectId = data.projectId || data.project?.id || data.project?.projectId
 
           setDataset({
             datasetId: String(data.datasetId || data.id),
@@ -83,7 +83,7 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
             description: data.description ? String(data.description) : undefined,
             projectId: extractedProjectId ? String(extractedProjectId) : undefined,
             totalItems: Number(data.totalItems || data.itemCount) || 0,
-createdAt: data.createdAt ? String(data.createdAt) : undefined
+            createdAt: data.createdAt ? String(data.createdAt) : undefined
           })
 
           if (extractedProjectId) {
@@ -139,7 +139,7 @@ createdAt: data.createdAt ? String(data.createdAt) : undefined
   const handleItemClick = async (item: DataItem) => {
     const itemId = item.dataItemId || item.id || item.itemId
     const itemName = item.name || item.filename || item.fileName || item.title
-    
+
     // Set basic info immediately to show in modal
     setSelectedItem({
       ...item,
@@ -147,7 +147,7 @@ createdAt: data.createdAt ? String(data.createdAt) : undefined
       name: itemName || undefined
     })
     setModalVisible(true)
-    
+
     // If we have an ID, fetch full details
     if (itemId) {
       setItemDetailLoading(true)
@@ -170,16 +170,20 @@ createdAt: data.createdAt ? String(data.createdAt) : undefined
 
   const handleNextItem = () => {
     if (!selectedIdForNav || dataItems.length <= 1) return
-    const currentIndex = dataItems.findIndex(i => (i.dataItemId || i.id || i.itemId) === selectedIdForNav)
+    const currentIndex = dataItems.findIndex(
+      (i) => (i.dataItemId || i.id || i.itemId) === selectedIdForNav
+    )
     if (currentIndex < dataItems.length - 1) {
       handleItemClick(dataItems[currentIndex + 1])
     } else {
       handleItemClick(dataItems[0]) // Loop to first
     }
   }
-const handlePrevItem = () => {
+  const handlePrevItem = () => {
     if (!selectedIdForNav || dataItems.length <= 1) return
-    const currentIndex = dataItems.findIndex(i => (i.dataItemId || i.id || i.itemId) === selectedIdForNav)
+    const currentIndex = dataItems.findIndex(
+      (i) => (i.dataItemId || i.id || i.itemId) === selectedIdForNav
+    )
     if (currentIndex > 0) {
       handleItemClick(dataItems[currentIndex - 1])
     } else {
@@ -187,8 +191,9 @@ const handlePrevItem = () => {
     }
   }
 
-  const selectedIdForNav = selectedItem ? (selectedItem.dataItemId || selectedItem.id || selectedItem.itemId) : null
-
+  const selectedIdForNav = selectedItem
+    ? selectedItem.dataItemId || selectedItem.id || selectedItem.itemId
+    : null
 
   const handleModalClose = () => {
     setModalVisible(false)
@@ -220,7 +225,13 @@ const handlePrevItem = () => {
   }
 
   if (viewProjectId) {
-    return <ProjectDetail projectId={viewProjectId} onBack={() => setViewProjectId(null)} isInline={true} />
+    return (
+      <ProjectDetail
+        projectId={viewProjectId}
+        onBack={() => setViewProjectId(null)}
+        isInline={true}
+      />
+    )
   }
 
   return (
@@ -263,7 +274,7 @@ const handlePrevItem = () => {
               <Descriptions.Item label="Total Items">
                 {(dataset.totalItems ?? 0).toLocaleString()}
               </Descriptions.Item>
-<Descriptions.Item label="Created At">
+              <Descriptions.Item label="Created At">
                 {formatDate(dataset.createdAt)}
               </Descriptions.Item>
             </Descriptions>
@@ -329,61 +340,83 @@ const handlePrevItem = () => {
             <Spin />
           </div>
         ) : dataItems.length === 0 ? (
-          <Empty 
+          <Empty
             description={<span className="text-gray-500">No data items found</span>}
             className="my-10"
-image={Empty.PRESENTED_IMAGE_SIMPLE}
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
           />
         ) : (
           <>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
-              {dataItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((item, index) => (
-                <div 
-                  key={item.dataItemId || item.id || item.itemId || `item-${index}`} 
-                  className="relative group rounded-xl overflow-hidden border border-white/5 bg-[#231e31] aspect-square flex flex-col cursor-pointer transition-all hover:border-emerald-500/30"
-                  onClick={() => handleItemClick(item)}
-                >
-                  {/* Thumbnail / Image preview */}
-                  <div className="flex-1 bg-black/40 overflow-hidden relative">
-                    {item.imageUrl || item.url || item.previewUrl || item.path ? (
-                      <img 
-                        src={item.imageUrl || item.url || item.previewUrl || item.path} 
-                        alt={item.name || item.filename || item.fileName || item.title || 'Data Item'} 
-                        className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          if (!target.src.includes('picsum.photos')) {
-                            target.src = `https://picsum.photos/seed/${item.id || item.dataItemId || index}/200/200`;
+              {dataItems
+                .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                .map((item, index) => (
+                  <div
+                    key={item.dataItemId || item.id || item.itemId || `item-${index}`}
+                    className="relative group rounded-xl overflow-hidden border border-white/5 bg-[#231e31] aspect-square flex flex-col cursor-pointer transition-all hover:border-emerald-500/30"
+                    onClick={() => handleItemClick(item)}
+                  >
+                    {/* Thumbnail / Image preview */}
+                    <div className="flex-1 bg-black/40 overflow-hidden relative">
+                      {item.imageUrl || item.url || item.previewUrl || item.path ? (
+                        <img
+                          src={item.imageUrl || item.url || item.previewUrl || item.path}
+                          alt={
+                            item.name || item.filename || item.fileName || item.title || 'Data Item'
                           }
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-600 bg-gray-900/50">
-                        <PictureOutlined className="text-3xl opacity-50" />
+                          className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement
+                            if (!target.src.includes('picsum.photos')) {
+                              target.src = `https://picsum.photos/seed/${item.id || item.dataItemId || index}/200/200`
+                            }
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-600 bg-gray-900/50">
+                          <PictureOutlined className="text-3xl opacity-50" />
+                        </div>
+                      )}
+
+                      {/* Status Badge */}
+                      {item.labeled !== undefined && (
+                        <div className="absolute top-2 right-2">
+                          <div
+                            className={`w-2.5 h-2.5 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.5)] ${item.labeled ? 'bg-emerald-500' : 'bg-gray-400'}`}
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Details */}
+                    <div className="p-3 border-t border-white/5 bg-[#2a2438]">
+                      <div
+                        className="text-xs text-gray-300 truncate font-mono"
+                        title={
+                          item.name ||
+                          item.filename ||
+                          item.fileName ||
+                          item.title ||
+                          `Item ${index + 1}`
+                        }
+                      >
+                        {item.name ||
+                          item.filename ||
+                          item.fileName ||
+                          item.title ||
+                          item.dataItemId ||
+                          item.id ||
+                          item.itemId ||
+                          `Item ${index + 1}`}
                       </div>
-                    )}
-                    
-                    {/* Status Badge */}
-                    {item.labeled !== undefined && (
-                      <div className="absolute top-2 right-2">
-                        <div className={`w-2.5 h-2.5 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.5)] ${item.labeled ? 'bg-emerald-500' : 'bg-gray-400'}`} />
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Details */}
-                  <div className="p-3 border-t border-white/5 bg-[#2a2438]">
-                    <div className="text-xs text-gray-300 truncate font-mono" title={item.name || item.filename || item.fileName || item.title || `Item ${index + 1}`}>
-                      {item.name || item.filename || item.fileName || item.title || item.dataItemId || item.id || item.itemId || `Item ${index + 1}`}
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
-            
+
             <div className="flex justify-end pt-4 border-t border-gray-800">
               <Pagination
-current={currentPage}
+                current={currentPage}
                 pageSize={itemsPerPage}
                 total={dataItems.length}
                 onChange={setCurrentPage}
@@ -407,9 +440,11 @@ current={currentPage}
           <div className="flex justify-between items-center border-b border-white/5 pb-4 mb-6">
             <h2 className="text-white text-xl font-bold font-display flex items-center gap-2">
               <DatabaseOutlined className="text-emerald-400" />
-              {selectedItem ? (selectedItem.name || selectedItem.filename || 'Item Details') : 'Item Details'}
+              {selectedItem
+                ? selectedItem.name || selectedItem.filename || 'Item Details'
+                : 'Item Details'}
             </h2>
-            <button 
+            <button
               onClick={handleModalClose}
               className="text-gray-400 hover:text-white transition-colors flex items-center justify-center"
             >
@@ -429,40 +464,60 @@ current={currentPage}
 
               <div className="bg-black/40 w-full h-80 rounded-xl flex items-center justify-center overflow-hidden border border-white/5 relative group/item">
                 <div className="absolute inset-y-0 left-0 flex items-center p-2 z-10">
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); handlePrevItem(); }}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handlePrevItem()
+                    }}
                     className="w-10 h-10 rounded-full bg-black/40 text-white hover:bg-violet-500/80 transition-all flex items-center justify-center backdrop-blur-md border border-white/10 opacity-0 group-hover/item:opacity-100"
                   >
                     <span className="material-symbols-outlined">chevron_left</span>
                   </button>
                 </div>
 
-                {selectedItem.imageUrl || selectedItem.url || selectedItem.previewUrl || selectedItem.path ? (
-                   <Image 
-                     src={selectedItem.imageUrl || selectedItem.url || selectedItem.previewUrl || selectedItem.path} 
-                     alt={selectedItem.name || selectedItem.filename || selectedItem.fileName || selectedItem.title || 'Item'} 
-                     className="max-w-full max-h-full object-contain"
-rootClassName="w-full h-full flex items-center justify-center"
-                     onError={(e) => {
-                       const target = e.target as HTMLImageElement;
-                       if (!target.src.includes('picsum.photos')) {
-                         target.src = `https://picsum.photos/seed/${selectedItem.id || selectedItem.dataItemId || 'err'}/400/300`;
-                       }
-                     }}
-                   />
+                {selectedItem.imageUrl ||
+                selectedItem.url ||
+                selectedItem.previewUrl ||
+                selectedItem.path ? (
+                  <Image
+                    src={
+                      selectedItem.imageUrl ||
+                      selectedItem.url ||
+                      selectedItem.previewUrl ||
+                      selectedItem.path
+                    }
+                    alt={
+                      selectedItem.name ||
+                      selectedItem.filename ||
+                      selectedItem.fileName ||
+                      selectedItem.title ||
+                      'Item'
+                    }
+                    className="max-w-full max-h-full object-contain"
+                    rootClassName="w-full h-full flex items-center justify-center"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement
+                      if (!target.src.includes('picsum.photos')) {
+                        target.src = `https://picsum.photos/seed/${selectedItem.id || selectedItem.dataItemId || 'err'}/400/300`
+                      }
+                    }}
+                  />
                 ) : (
                   <PictureOutlined className="text-5xl text-gray-600 opacity-50" />
                 )}
 
                 <div className="absolute inset-y-0 right-0 flex items-center p-2 z-10">
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); handleNextItem(); }}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleNextItem()
+                    }}
                     className="w-10 h-10 rounded-full bg-black/40 text-white hover:bg-violet-500/80 transition-all flex items-center justify-center backdrop-blur-md border border-white/10 opacity-0 group-hover/item:opacity-100"
                   >
                     <span className="material-symbols-outlined">chevron_right</span>
                   </button>
                 </div>
-                
+
                 {/* Visual loading mask for image if applicable */}
                 {itemDetailLoading && (
                   <div className="absolute inset-0 bg-black/20 backdrop-blur-[1px] flex items-center justify-center pointer-events-none">
@@ -470,7 +525,7 @@ rootClassName="w-full h-full flex items-center justify-center"
                   </div>
                 )}
               </div>
-              
+
               <div className="bg-[#231e31]/50 border border-white/5 rounded-xl p-4">
                 <Descriptions
                   column={1}
@@ -486,15 +541,23 @@ rootClassName="w-full h-full flex items-center justify-center"
                     </span>
                   </Descriptions.Item>
                   <Descriptions.Item label="Filename">
-                    {selectedItem.name || selectedItem.filename || selectedItem.fileName || selectedItem.title || 'N/A'}
+                    {selectedItem.name ||
+                      selectedItem.filename ||
+                      selectedItem.fileName ||
+                      selectedItem.title ||
+                      'N/A'}
                   </Descriptions.Item>
                   <Descriptions.Item label="Status">
                     <div className="flex items-center gap-2">
-                      <div className={`w-2.5 h-2.5 rounded-full ${selectedItem.labeled ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-gray-500'}`} />
-                      <span className={`text-xs font-medium ${selectedItem.labeled ? 'text-emerald-400' : 'text-gray-400'}`}>
+                      <div
+                        className={`w-2.5 h-2.5 rounded-full ${selectedItem.labeled ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-gray-500'}`}
+                      />
+                      <span
+                        className={`text-xs font-medium ${selectedItem.labeled ? 'text-emerald-400' : 'text-gray-400'}`}
+                      >
                         {selectedItem.labeled ? 'Completed' : 'Pending'}
                       </span>
-</div>
+                    </div>
                   </Descriptions.Item>
                 </Descriptions>
               </div>

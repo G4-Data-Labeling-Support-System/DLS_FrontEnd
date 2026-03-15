@@ -94,9 +94,7 @@ export const LabelCard: React.FC<LabelCardProps> = ({
         </div>
       )}
 
-      {description && (
-        <p className="text-gray-400 text-xs line-clamp-2 mb-4">{description}</p>
-      )}
+      {description && <p className="text-gray-400 text-xs line-clamp-2 mb-4">{description}</p>}
 
       <div className="grid grid-cols-2 gap-2 bg-[#231e31] p-3 rounded-lg mt-auto">
         <div>

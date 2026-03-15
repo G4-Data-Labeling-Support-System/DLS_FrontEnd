@@ -16,10 +16,7 @@ const DatasetDetailPage: React.FC = () => {
 
   return (
     <div className="p-6">
-      <DatasetDetail
-        datasetId={id}
-        onBack={() => navigate('/manager/datasets')}
-      />
+      <DatasetDetail datasetId={id} onBack={() => navigate('/manager/datasets')} />
     </div>
   )
 }

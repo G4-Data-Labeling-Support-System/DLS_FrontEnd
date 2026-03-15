@@ -2,7 +2,7 @@
  * Utility to compress images on the client side using Canvas.
  * This helps reduce payload size for large dataset uploads.
  */
-export const compressImage = async (file: File, maxWidth = 1920, quality = 0.8): Promise<File> => {
+export const compressImage = async (file: File, maxWidth = 1280, quality = 0.6): Promise<File> => {
   // Only compress images
   if (!file.type.startsWith('image/')) {
     return file;

@@ -15,7 +15,9 @@ import { CreateProjectModal } from '@/features/manager/components/dashboard/Crea
 const ManagerDashboardPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const [createAssignmentOpen, setCreateAssignmentOpen] = useState(false)
-  const [editingAssignment, setEditingAssignment] = useState<GetAssignmentsParams | undefined>(undefined)
+  const [editingAssignment, setEditingAssignment] = useState<GetAssignmentsParams | undefined>(
+    undefined
+  )
   const [assignmentRefreshTrigger, setAssignmentRefreshTrigger] = useState(0)
 
   const [createProjectOpen, setCreateProjectOpen] = useState(false)
@@ -142,7 +144,7 @@ const ManagerDashboardPage: React.FC = () => {
             onSuccess={() => {
               handleCloseModal()
               setSearchParams({ tab: 'assignment' })
-              setAssignmentRefreshTrigger(prev => prev + 1)
+              setAssignmentRefreshTrigger((prev) => prev + 1)
             }}
           />
         </div>

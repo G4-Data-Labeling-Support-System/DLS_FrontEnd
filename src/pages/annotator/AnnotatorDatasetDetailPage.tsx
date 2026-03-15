@@ -31,7 +31,7 @@ interface DatasetItem {
 }
 
 export default function AnnotatorDatasetDetailPage() {
-  const { projectId, datasetId } = useParams<{ projectId: string, datasetId: string }>()
+  const { projectId, datasetId } = useParams<{ projectId: string; datasetId: string }>()
   const navigate = useNavigate()
 
   const [activeTab, setActiveTab] = useState<TabType>('detail')
@@ -50,10 +50,14 @@ export default function AnnotatorDatasetDetailPage() {
         const data = response.data?.data || response.data || []
         const datasets = Array.isArray(data) ? data : [data]
         const matchedDataset = datasets.find((d: Dataset) => d.datasetId === datasetId)
-        
+
         if (matchedDataset) {
           setDataset(matchedDataset)
-          if (matchedDataset.dataitems && Array.isArray(matchedDataset.dataitems) && matchedDataset.dataitems.length > 0) {
+          if (
+            matchedDataset.dataitems &&
+            Array.isArray(matchedDataset.dataitems) &&
+            matchedDataset.dataitems.length > 0
+          ) {
             setItems(matchedDataset.dataitems)
           }
         } else {
@@ -68,9 +72,7 @@ export default function AnnotatorDatasetDetailPage() {
     }
 
     fetchDatasetDetail()
-  }, [datasetId])
-
-
+  }, [datasetId, projectId])
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A'
@@ -117,15 +119,15 @@ export default function AnnotatorDatasetDetailPage() {
           onClick={() => navigate(PATH_ANNOTATOR.project)}
           className="flex items-center gap-2 text-gray-400 hover:text-white text-sm transition-colors mb-4 group"
         >
-          <span className="material-symbols-outlined text-[16px] group-hover:-translate-x-1 transition-transform">arrow_back</span>
+          <span className="material-symbols-outlined text-[16px] group-hover:-translate-x-1 transition-transform">
+            arrow_back
+          </span>
           Back to Dashboard
         </button>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="material-symbols-outlined text-[18px] text-blue-400">
-                database
-              </span>
+              <span className="material-symbols-outlined text-[18px] text-blue-400">database</span>
               <span className="text-xs font-mono text-blue-400 tracking-widest uppercase">
                 Dataset Detail
               </span>
@@ -172,7 +174,9 @@ export default function AnnotatorDatasetDetailPage() {
         {activeTab === 'detail' && (
           <>
             {/* Info Panel */}
-            <div className={`glass-panel border ${themeClasses.borders.violet10} rounded-2xl p-6 h-fit shadow-xl`}>
+            <div
+              className={`glass-panel border ${themeClasses.borders.violet10} rounded-2xl p-6 h-fit shadow-xl`}
+            >
               <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                 <span className="material-symbols-outlined text-[18px] text-violet-400">info</span>
                 Information
@@ -182,7 +186,9 @@ export default function AnnotatorDatasetDetailPage() {
                   <label className="text-xs text-gray-500 font-mono uppercase tracking-wider block mb-1">
                     Project
                   </label>
-                  <p className="text-sm text-gray-200 font-medium">{dataset.project?.projectName || 'No Project Assigned'}</p>
+                  <p className="text-sm text-gray-200 font-medium">
+                    {dataset.project?.projectName || 'No Project Assigned'}
+                  </p>
                 </div>
                 <div className="bg-black/20 p-3 rounded-lg border border-white/5">
                   <label className="text-xs text-gray-500 font-mono uppercase tracking-wider block mb-1">
@@ -197,23 +203,31 @@ export default function AnnotatorDatasetDetailPage() {
                     <label className="text-[10px] text-gray-500 font-mono uppercase tracking-wider block mb-1">
                       Total Items
                     </label>
-                    <p className="text-lg text-white font-bold">{dataset.totalItems || items.length}</p>
+                    <p className="text-lg text-white font-bold">
+                      {dataset.totalItems || items.length}
+                    </p>
                   </div>
                   <div className="flex-1 bg-black/20 p-3 rounded-lg border border-white/5">
                     <label className="text-[10px] text-gray-500 font-mono uppercase tracking-wider block mb-1">
                       Created At
                     </label>
-                    <p className="text-sm text-gray-300 font-medium mt-1">{formatDate(dataset.createdAt)}</p>
+                    <p className="text-sm text-gray-300 font-medium mt-1">
+                      {formatDate(dataset.createdAt)}
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Items GridPanel */}
-            <div className={`glass-panel border ${themeClasses.borders.violet10} rounded-2xl p-6 md:col-span-2 flex flex-col shadow-xl min-h-[500px]`}>
+            <div
+              className={`glass-panel border ${themeClasses.borders.violet10} rounded-2xl p-6 md:col-span-2 flex flex-col shadow-xl min-h-[500px]`}
+            >
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[18px] text-blue-400">grid_view</span>
+                  <span className="material-symbols-outlined text-[18px] text-blue-400">
+                    grid_view
+                  </span>
                   Data Items
                 </h3>
                 <span className="text-xs font-mono bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20 text-blue-400 font-medium">
@@ -227,7 +241,9 @@ export default function AnnotatorDatasetDetailPage() {
                     image_not_supported
                   </span>
                   <p className="text-gray-400 text-sm">No data items found in this dataset.</p>
-                  <p className="text-gray-500 text-xs mt-2">Upload images via the manager interface.</p>
+                  <p className="text-gray-500 text-xs mt-2">
+                    Upload images via the manager interface.
+                  </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 overflow-y-auto max-h-[600px] pr-2 custom-scrollbar">
@@ -274,9 +290,7 @@ export default function AnnotatorDatasetDetailPage() {
 
         {activeTab === 'activity' && (
           <div className="md:col-span-3 glass-panel border border-white/5 rounded-2xl p-16 text-center text-gray-400 italic bg-black/20 shadow-xl flex flex-col items-center justify-center">
-             <span className="material-symbols-outlined text-5xl mb-4 opacity-20">
-                history
-             </span>
+            <span className="material-symbols-outlined text-5xl mb-4 opacity-20">history</span>
             <h3 className="text-white text-lg font-medium not-italic mb-2">Activity Stream</h3>
             <p>Activity logs and historical actions for this dataset will be displayed here.</p>
           </div>

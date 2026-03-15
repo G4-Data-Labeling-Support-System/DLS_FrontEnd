@@ -106,7 +106,7 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
 
   const handleUploadChange = (info: UploadChangeParam<UploadFile & { preview?: string }>) => {
     let newFileList = [...info.fileList]
-    
+
     // performance: only generate preview for the first 12 files (unless expanded) to avoid browser lag
     const limit = showAllPreviews ? newFileList.length : 12
     newFileList = newFileList.map((file, index) => {
@@ -166,7 +166,7 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
       if (values.compressImages && !isEdit) {
         const totalFiles = files.length
         message.loading({ content: `Compressing 0/${totalFiles} images...`, key: 'compressing', duration: 0 })
-        
+
         const compressedResults: File[] = []
         for (let i = 0; i < files.length; i++) {
           try {
@@ -186,9 +186,9 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
 
       const totalSize = files.reduce((acc, f) => acc + f.size, 0)
 
-      if (files.length < 30) {
+      if (files.length < 10) {
         message.warning({
-          content: `Please upload at least 30 images (Current: ${files.length}).`,
+          content: `Please upload at least 10 images.`,
           key: 'min_imgs_val'
         })
         setLoading(false)
@@ -218,9 +218,9 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
     } catch (error: unknown) {
       setUploadProgress(0)
       if (error && typeof error === 'object' && 'errorFields' in error) return
-      
+
       let errorMessage = 'Unknown error'
-      
+
       if (axios.isAxiosError(error)) {
         console.error('🚢 API ERROR: CREATE/UPDATE DATASET', {
           error: error,
@@ -228,11 +228,13 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
           responseStatus: error.response?.status,
           code: error.code
         })
-        
+
         errorMessage = error.response?.data?.message || error.message
-        
+
         if (error.message === 'Network Error' || error.code === 'ERR_NETWORK' || error.code === 'ERR_CONNECTION_RESET') {
           errorMessage = 'Network Error: Connection reset. This often happens because the upload is very large or takes too long. Please stay on the page until upload completes.'
+        } else if (error.response?.status === 502 || error.code === 'ERR_BAD_RESPONSE') {
+          errorMessage = 'Server Error (502 Bad Gateway). The upload might be too large for the server to process at once. Try uploading fewer images (e.g., 5-10) or ensure compression is enabled.'
         }
       } else if (error instanceof Error) {
         errorMessage = error.message
@@ -343,7 +345,7 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
             {!isEdit && (
               <div className="space-y-4">
                 <label className="text-white/90 font-medium block text-sm mb-2">
-                  Image Uploads (Required - Min 30)
+                  Image Uploads
                 </label>
                 <div className="rounded-xl overflow-hidden bg-[#1a1625]/30 border border-dashed border-white/20 hover:border-violet-500/50 transition-all group">
                   <Dragger
@@ -399,7 +401,7 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
                           </div>
                         ))}
                         {fileList.length > 12 && !showAllPreviews && (
-                          <div 
+                          <div
                             className="aspect-square rounded-lg bg-gray-800/50 border border-white/5 flex items-center justify-center cursor-pointer hover:bg-violet-500/20 transition-colors"
                             onClick={() => setShowAllPreviews(true)}
                           >
@@ -407,12 +409,12 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
                           </div>
                         )}
                         {showAllPreviews && fileList.length > 12 && (
-                           <div 
-                           className="aspect-square rounded-lg bg-gray-800/50 border border-white/5 flex items-center justify-center cursor-pointer hover:bg-violet-500/20 transition-colors"
-                           onClick={() => setShowAllPreviews(false)}
-                         >
-                           <span className="text-[10px] text-violet-400 font-bold">Show less</span>
-                         </div>
+                          <div
+                            className="aspect-square rounded-lg bg-gray-800/50 border border-white/5 flex items-center justify-center cursor-pointer hover:bg-violet-500/20 transition-colors"
+                            onClick={() => setShowAllPreviews(false)}
+                          >
+                            <span className="text-[10px] text-violet-400 font-bold">Show less</span>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -422,7 +424,7 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
                 <div className="p-4 rounded-xl bg-violet-500/5 border border-violet-500/10">
                   <p className="text-gray-400 text-[11px] leading-relaxed m-0">
                     <span className="text-violet-400 font-bold mr-1">TIP:</span>
-                    A dataset must contain at least <span className="text-violet-400 font-bold">30 images</span> for initial creation. You can upload individual files or entire folders.
+                    You can upload individual files or entire folders. Compression is applied to ensure server reliability.
                   </p>
                 </div>
 
@@ -432,9 +434,9 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
                       <span>Uploading Data...</span>
                       <span>{uploadProgress}%</span>
                     </div>
-                    <Progress 
-                      percent={uploadProgress} 
-                      showInfo={false} 
+                    <Progress
+                      percent={uploadProgress}
+                      showInfo={false}
                       strokeColor={{ '0%': '#8b5cf6', '100%': '#d946ef' }}
                       railColor="rgba(255,255,255,0.05)"
                       size="small"

@@ -58,11 +58,17 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
       className="bg-[#1A1625] border border-violet-500/20 rounded-xl overflow-hidden hover:bg-violet-500/10 hover:border-fuchsia-500/50 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(139,92,246,0.15)] transition-all duration-500 flex flex-col h-full cursor-pointer relative pt-4 mt-3"
       onClick={onClick}
     >
-      {(assignmentName as any)?.projectName || (assignmentName as any)?.project_name ? (
+      {assignmentName &&
+      typeof assignmentName === 'object' &&
+      ('projectName' in (assignmentName as object) ||
+        'project_name' in (assignmentName as object)) ? (
         <div className="absolute -top-3 left-4 z-10">
           <div className="bg-violet-500/20 border border-violet-500/30 text-violet-300 text-[10px] font-bold px-3 py-1 rounded-full backdrop-blur-sm shadow-lg flex items-center gap-1.5 transition-all group-hover:bg-violet-500/30 group-hover:border-violet-500/50">
             <div className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
-            {(assignmentName as any).projectName || (assignmentName as any).project_name}
+            {String(
+              (assignmentName as Record<string, unknown>).projectName ||
+                (assignmentName as Record<string, unknown>).project_name
+            )}
           </div>
         </div>
       ) : null}

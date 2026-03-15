@@ -33,7 +33,10 @@ const datasetApi = {
       throw error
     }
   },
-  createDataset(data: { projectId: string; datasetName: string; description?: string; files?: File[] }, onUploadProgress?: (progressEvent: AxiosProgressEvent) => void) {
+  createDataset(
+    data: { projectId: string; datasetName: string; description?: string; files?: File[] },
+    onUploadProgress?: (progressEvent: AxiosProgressEvent) => void
+  ) {
     try {
       const url = ENDPOINTS.DATASETS.CREATE
       const formData = new FormData()

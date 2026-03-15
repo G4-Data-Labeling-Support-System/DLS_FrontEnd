@@ -27,7 +27,22 @@ interface Task {
   assignmentId: string
 }
 
-export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId, onBack, onEdit }) => {
+interface Task {
+  taskId: string
+  completedCount: number
+  createdAt: string
+  taskName: string
+  reviewStatus: string
+  taskStatus: string
+  taskType: string
+  assignmentId: string
+}
+
+export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
+  assignmentId,
+  onBack,
+  onEdit
+}) => {
   const { message } = App.useApp()
   const [assignment, setAssignment] = useState<GetAssignmentsParams | null>(null)
   const [projectName, setProjectName] = useState<string | null>(null)
@@ -41,7 +56,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId
   const viewDatasetId = searchParams.get('viewDatasetId')
 
   const setViewProjectId = (id: string | null) => {
-    setSearchParams(prev => {
+    setSearchParams((prev) => {
       const next = new URLSearchParams(prev)
       if (id) {
         next.set('viewProjectId', id)
@@ -53,7 +68,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId
   }
 
   const setViewDatasetId = (id: string | null) => {
-    setSearchParams(prev => {
+    setSearchParams((prev) => {
       const next = new URLSearchParams(prev)
       if (id) {
         next.set('viewDatasetId', id)
@@ -74,8 +89,8 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId
         const data = response.data?.data || response.data
 
         if (data && isMounted) {
-          const extractedProjectId = data.projectId || data.project?.id || data.project?.projectId;
-          const extractedDatasetId = data.datasetId || data.dataset?.id || data.dataset?.datasetId;
+          const extractedProjectId = data.projectId || data.project?.id || data.project?.projectId
+          const extractedDatasetId = data.datasetId || data.dataset?.id || data.dataset?.datasetId
 
           setAssignment({
             assignmentId: String(data.assignmentId || data.id),
@@ -90,10 +105,20 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId
             datasetId: extractedDatasetId ? String(extractedDatasetId) : undefined,
             createdAt: data.createdAt ? String(data.createdAt) : undefined,
             updatedAt: data.updatedAt ? String(data.updatedAt) : undefined,
-            assignedTo: data.assignedTo || data.user_id || data.annotatorId ? String(data.assignedTo || data.user_id || data.annotatorId) : undefined,
-            reviewedBy: data.reviewedBy || data.reviewerId ? String(data.reviewedBy || data.reviewerId) : undefined,
-            dueDate: data.dueDate || data.due_date ? String(data.dueDate || data.due_date) : undefined,
-            assignedBy: data.assignedBy || data.creatorId ? String(data.assignedBy || data.creatorId) : undefined
+            assignedTo:
+              data.assignedTo || data.user_id || data.annotatorId
+                ? String(data.assignedTo || data.user_id || data.annotatorId)
+                : undefined,
+            reviewedBy:
+              data.reviewedBy || data.reviewerId
+                ? String(data.reviewedBy || data.reviewerId)
+                : undefined,
+            dueDate:
+              data.dueDate || data.due_date ? String(data.dueDate || data.due_date) : undefined,
+            assignedBy:
+              data.assignedBy || data.creatorId
+                ? String(data.assignedBy || data.creatorId)
+                : undefined
           })
 
           // Fetch associated project name if projectId exists
@@ -207,7 +232,13 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId
   }
 
   if (viewProjectId) {
-    return <ProjectDetail projectId={viewProjectId} onBack={() => setViewProjectId(null)} isInline={true} />
+    return (
+      <ProjectDetail
+        projectId={viewProjectId}
+        onBack={() => setViewProjectId(null)}
+        isInline={true}
+      />
+    )
   }
 
   if (viewDatasetId) {
