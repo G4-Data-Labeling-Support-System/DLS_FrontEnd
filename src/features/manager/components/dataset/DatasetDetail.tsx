@@ -476,9 +476,9 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
                 </div>
 
                 {selectedItem.imageUrl ||
-                selectedItem.url ||
-                selectedItem.previewUrl ||
-                selectedItem.path ? (
+                  selectedItem.url ||
+                  selectedItem.previewUrl ||
+                  selectedItem.path ? (
                   <Image
                     src={
                       selectedItem.imageUrl ||

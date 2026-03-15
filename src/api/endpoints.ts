@@ -83,7 +83,8 @@ export const ENDPOINTS = {
   },
 
   DATAITEMS: {
-    BY_DATASET: (datasetId: string) => `/dataitems/datasets/${datasetId}`
+    BY_DATASET: (datasetId: string) => `/dataitems/datasets/${datasetId}`,
+    DELETE: (id: string) => `/images/delete/${id}`
   },
 
   TASKS: {

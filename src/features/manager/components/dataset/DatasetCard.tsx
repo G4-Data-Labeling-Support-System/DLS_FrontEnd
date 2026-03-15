@@ -1,5 +1,5 @@
 import React from 'react'
-import { Card, Button, Typography, Dropdown, type MenuProps } from 'antd'
+import { Card, Button, Typography, Dropdown, Tag, type MenuProps } from 'antd'
 import { MoreOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons'
 import type { GetDatasetsParams } from '@/api/DatasetApi'
 
@@ -15,10 +15,13 @@ export const DatasetCard: React.FC<DatasetCardProps> = ({
   datasetName,
   totalItems,
   createdAt,
+  dataItemStatus,
   onEdit,
   onDelete,
   onClick
 }) => {
+  const currentStatus = dataItemStatus
+
   const items: MenuProps['items'] = [
     { key: '1', label: 'View Details', icon: <EyeOutlined />, onClick: onClick },
     { key: '2', label: 'Edit Dataset', icon: <EditOutlined />, onClick: onEdit },
@@ -31,6 +34,23 @@ export const DatasetCard: React.FC<DatasetCardProps> = ({
     }
   ]
 
+  const getStatusColor = (s?: string) => {
+    switch (s?.toUpperCase()) {
+      case 'ACTIVE':
+      case 'ASSIGNED':
+        return 'processing'
+      case 'COMPLETED':
+        return 'success'
+      case 'PAUSED':
+        return 'warning'
+      case 'ARCHIVE':
+      case 'UNASSIGNED':
+        return 'error'
+      default:
+        return 'default'
+    }
+  }
+
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A'
     return new Date(dateString).toLocaleString('vi-VN')
@@ -42,14 +62,14 @@ export const DatasetCard: React.FC<DatasetCardProps> = ({
       onClick={onClick}
     >
       {datasetName &&
-      typeof datasetName === 'object' &&
-      ('projectName' in (datasetName as object) || 'project_name' in (datasetName as object)) ? (
+        typeof datasetName === 'object' &&
+        ('projectName' in (datasetName as object) || 'project_name' in (datasetName as object)) ? (
         <div className="absolute -top-3 left-4 z-10">
           <div className="bg-violet-500/20 border border-violet-500/30 text-violet-300 text-[10px] font-bold px-3 py-1 rounded-full backdrop-blur-sm shadow-lg flex items-center gap-1.5 transition-all group-hover:bg-violet-500/30 group-hover:border-violet-500/50">
             <div className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
             {String(
               (datasetName as Record<string, unknown>).projectName ||
-                (datasetName as Record<string, unknown>).project_name
+              (datasetName as Record<string, unknown>).project_name
             )}
           </div>
         </div>
@@ -63,8 +83,15 @@ export const DatasetCard: React.FC<DatasetCardProps> = ({
           >
             {datasetName || 'Unnamed Dataset'}
           </Title>
-          <div className="inline-block px-2 py-0.5 bg-[#2d2640] text-gray-300 text-[10px] font-bold rounded tracking-wide whitespace-nowrap">
-            {totalItems || 0} Items
+          <div className="flex items-center gap-2">
+            <div className="inline-block px-2 py-0.5 bg-[#2d2640] text-gray-300 text-[10px] font-bold rounded tracking-wide whitespace-nowrap">
+              {totalItems || 0} Items
+            </div>
+            {currentStatus && (
+              <Tag color={getStatusColor(currentStatus)} className="m-0 text-[10px] px-1.5 py-0 font-medium whitespace-nowrap border-0 rounded">
+                {currentStatus.toUpperCase()}
+              </Tag>
+            )}
           </div>
         </div>
         <div onClick={(e) => e.stopPropagation()}>

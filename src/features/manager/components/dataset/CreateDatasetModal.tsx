@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { App, Form, Input, Select, Upload, Button, Progress, Checkbox } from 'antd'
+import { App, Form, Input, Upload, Button, Progress, Checkbox } from 'antd'
 import { DeleteOutlined, InboxOutlined } from '@ant-design/icons'
 import type { UploadFile } from 'antd/es/upload/interface'
 import type { UploadChangeParam } from 'antd/es/upload'
@@ -36,11 +36,11 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
   const { message } = App.useApp()
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
-  const [fetching, setFetching] = useState(false)
   const [projects, setProjects] = useState<GetProjectsParams[]>([])
   const [fileList, setFileList] = useState<(UploadFile & { preview?: string })[]>([])
   const [uploadProgress, setUploadProgress] = useState(0)
   const [showAllPreviews, setShowAllPreviews] = useState(false)
+  const [deletedItemIds, setDeletedItemIds] = useState<string[]>([])
 
   const fileListRef = useRef(fileList)
   useEffect(() => {
@@ -51,7 +51,6 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
   useEffect(() => {
     const fetchDetails = async () => {
       if (open && isEdit && initialData?.datasetId) {
-        setFetching(true)
         try {
           const res = await datasetApi.getDatasetById(initialData.datasetId)
           const data = res.data?.data || res.data
@@ -62,15 +61,32 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
               projectId: data.projectId || data.project?.id
             })
           }
+
+          // Fetch dataset items to populate fileList
+          const itemsRes = await datasetApi.getDatasetItems(initialData.datasetId)
+          const items = itemsRes.data?.data || itemsRes.data || []
+          if (Array.isArray(items)) {
+            const initialFileList = items.map((item: { dataItemId?: string | number; id?: string | number; itemId?: string | number; name?: string; filename?: string; fileName?: string; title?: string; content?: string; url?: string; imageUrl?: string; previewUrl?: string; file_path?: string; path?: string }) => {
+              const url = item.content || item.url || item.imageUrl || item.previewUrl || item.file_path || item.path || ''
+              return {
+                uid: String(item.dataItemId || item.id || item.itemId || Math.random()),
+                name: item.name || item.filename || item.fileName || item.title || 'Existing File',
+                status: 'done' as const,
+                url: url,
+                thumbUrl: url,
+                originFileObj: undefined
+              }
+            }).filter(f => !!f.url)
+            setFileList(initialFileList)
+          }
         } catch (error) {
           console.error('Failed to fetch dataset details:', error)
           message.error('Failed to refresh dataset details.')
-        } finally {
-          setFetching(false)
         }
       } else if (open && !isEdit) {
         form.resetFields()
         setFileList([])
+        setDeletedItemIds([])
         if (initialProjectId) {
           form.setFieldsValue({ projectId: initialProjectId })
         }
@@ -87,8 +103,7 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
         const response = await projectApi.getProjects()
         const data = response.data?.data || response.data || []
         if (Array.isArray(data)) {
-          // Robust normalization similar to AllProjects.tsx
-          const normalizedProjects = data.map((p: any) => {
+          const normalizedProjects = data.map((p: { project?: { projectId?: string | number; id?: string | number; project_id?: string | number; projectName?: string; name?: string; project_name?: string; projectStatus?: string; status?: string; project_status?: string }; projectId?: string | number; id?: string | number; project_id?: string | number; projectName?: string; name?: string; project_name?: string; projectStatus?: string; status?: string; project_status?: string }) => {
             const projectInfo = p.project || p
             return {
               projectId: String(projectInfo.projectId || projectInfo.id || projectInfo.project_id || p.projectId || p.id || p.project_id || ''),
@@ -116,7 +131,6 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
   const handleUploadChange = (info: UploadChangeParam<UploadFile & { preview?: string }>) => {
     let newFileList = [...info.fileList]
 
-    // performance: only generate preview for the first 12 files (unless expanded) to avoid browser lag
     const limit = showAllPreviews ? newFileList.length : 12
     newFileList = newFileList.map((file, index) => {
       if (index < limit && !file.preview && file.originFileObj) {
@@ -127,7 +141,6 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
     setFileList(newFileList)
   }
 
-  // Generate missing previews when expanding
   useEffect(() => {
     if (showAllPreviews && fileList.some(f => !f.preview && f.originFileObj)) {
       setFileList(prev => prev.map(file => {
@@ -141,8 +154,14 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
 
   const handleRemoveFile = (uid: string) => {
     setFileList((prev) => {
-      const newFile = prev.find((item) => item.uid === uid)
-      if (newFile?.preview) URL.revokeObjectURL(newFile.preview)
+      const fileToRemove = prev.find((f) => f.uid === uid)
+      if (fileToRemove) {
+        if (fileToRemove.preview) URL.revokeObjectURL(fileToRemove.preview)
+        // If it's an existing file (no originFileObj), track its ID for backend deletion
+        if (!fileToRemove.originFileObj && isEdit) {
+          setDeletedItemIds((prevDeleted) => [...prevDeleted, uid])
+        }
+      }
       return prev.filter((item) => item.uid !== uid)
     })
   }
@@ -150,6 +169,7 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
   const handleCancel = () => {
     form.resetFields()
     setFileList([])
+    setDeletedItemIds([])
     onCancel()
   }
 
@@ -158,17 +178,38 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
       const values = await form.validateFields()
       setLoading(true)
       if (isEdit && initialData?.datasetId) {
+        // 1. Delete items that were explicitly removed
+        if (deletedItemIds.length > 0) {
+          await Promise.all(
+            deletedItemIds.map((id) =>
+              datasetApi.deleteItem(id).catch((err) => {
+                console.error(`Failed to delete item ${id}:`, err)
+                return null
+              })
+            )
+          )
+        }
+
+        // 2. Filter out items that are marked as done (existing) to get current list strings
+        const currentFiles = fileList
+          .filter((f) => !f.originFileObj)
+          .map((f) => f.url || f.thumbUrl || '')
+          .filter(Boolean)
+
+        // 3. Update dataset metadata
         await datasetApi.updateDataset(initialData.datasetId, {
+          projectId: values.projectId,
           datasetName: values.datasetName,
-          description: values.description
+          description: values.description,
+          files: currentFiles
         })
+
         message.success('Dataset updated successfully!')
         if (onSuccess) onSuccess(initialData.datasetId)
         handleCancel()
         return
       }
 
-      // Check if project is inactive
       if (values.projectId) {
         const selectedProject = projects.find(p => String(p.projectId) === String(values.projectId))
         if (selectedProject && selectedProject.projectStatus?.toUpperCase() === 'INACTIVE') {
@@ -239,22 +280,8 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
       if (error && typeof error === 'object' && 'errorFields' in error) return
 
       let errorMessage = 'Unknown error'
-
       if (axios.isAxiosError(error)) {
-        console.error('🚢 API ERROR: CREATE/UPDATE DATASET', {
-          error: error,
-          responseData: error.response?.data,
-          responseStatus: error.response?.status,
-          code: error.code
-        })
-
         errorMessage = error.response?.data?.message || error.message
-
-        if (error.message === 'Network Error' || error.code === 'ERR_NETWORK' || error.code === 'ERR_CONNECTION_RESET') {
-          errorMessage = 'Network Error: Connection reset. This often happens because the upload is very large or takes too long. Please stay on the page until upload completes.'
-        } else if (error.response?.status === 502 || error.code === 'ERR_BAD_RESPONSE') {
-          errorMessage = 'Server Error (502 Bad Gateway). The upload might be too large for the server to process at once. Try uploading fewer images (e.g., 5-10) or ensure compression is enabled.'
-        }
       } else if (error instanceof Error) {
         errorMessage = error.message
       }
@@ -312,29 +339,6 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
                 />
               </Form.Item>
 
-              {!isEdit && (
-                <Form.Item
-                  name="projectId"
-                  label={<span className="text-white/90">Select Project</span>}
-                  rules={[{ required: true, message: 'Please select a project' }]}
-                >
-                  <Select
-                    size="large"
-                    placeholder="Select a project for this dataset"
-                    className="w-full"
-                    classNames={{ popup: { root: "!bg-[#1a1625] !border !border-white/10 [&_.ant-select-item]:!text-gray-300 [&_.ant-select-item-option-active]:!bg-violet-500/20 [&_.ant-select-item-option-selected]:!bg-violet-500/40 [&_.ant-select-item-option-selected]:!text-white" } }}
-                    loading={projects.length === 0 && open && !fetching}
-                    showSearch
-                    optionFilterProp="children"
-                    disabled={!!initialProjectId}
-                    options={projects.map((p) => ({
-                      label: p.projectName || 'Unnamed Project',
-                      value: p.projectId
-                    }))}
-                  />
-                </Form.Item>
-              )}
-
               <Form.Item
                 name="description"
                 label={<span className="text-white/90">Description</span>}
@@ -346,137 +350,120 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
                 />
               </Form.Item>
 
-              {!isEdit && (
-                <Form.Item
-                  name="compressImages"
-                  valuePropName="checked"
-                  initialValue={true}
-                >
-                  <Checkbox className="!text-gray-400 [&_.ant-checkbox-inner]:!bg-[#1a1625] [&_.ant-checkbox-inner]:!border-white/10">
-                    <span className="text-xs">
-                      Compress images before upload (Recommended for <span className="text-violet-400 font-bold">reliability</span>)
-                    </span>
-                  </Checkbox>
-                </Form.Item>
-              )}
+              <Form.Item
+                name="compressImages"
+                valuePropName="checked"
+                initialValue={true}
+              >
+                <Checkbox className="!text-gray-400 [&_.ant-checkbox-inner]:!bg-[#1a1625] [&_.ant-checkbox-inner]:!border-white/10">
+                  <span className="text-xs">
+                    Compress images before upload (Recommended for <span className="text-violet-400 font-bold">reliability</span>)
+                  </span>
+                </Checkbox>
+              </Form.Item>
             </div>
 
-            {!isEdit && (
-              <div className="space-y-4">
-                <label className="text-white/90 font-medium block text-sm mb-2">
-                  Image Uploads
-                </label>
-                <div className="rounded-xl overflow-hidden bg-[#1a1625]/30 border border-dashed border-white/20 hover:border-violet-500/50 transition-all group">
-                  <Dragger
-                    multiple
-                    directory
-                    name="file"
-                    beforeUpload={() => false}
-                    fileList={fileList}
-                    onChange={handleUploadChange}
-                    showUploadList={false}
-                    className="!border-0 !bg-transparent p-4"
-                  >
-                    <div className="flex flex-col items-center justify-center py-4">
-                      <InboxOutlined className="text-violet-500 text-3xl mb-2" />
-                      <p className="text-white font-medium text-xs mb-1">Click or drag images or folders</p>
-                    </div>
-                  </Dragger>
+            <div className="space-y-4">
+              <label className="text-white/90 font-medium block text-sm mb-2">
+                Image Uploads
+              </label>
+              <div className="rounded-xl overflow-hidden bg-[#1a1625]/30 border border-dashed border-white/20 hover:border-violet-500/50 transition-all group">
+                <Dragger
+                  multiple
+                  directory
+                  name="file"
+                  beforeUpload={() => false}
+                  fileList={fileList}
+                  onChange={handleUploadChange}
+                  showUploadList={false}
+                  className="!border-0 !bg-transparent p-4"
+                >
+                  <div className="flex flex-col items-center justify-center py-4">
+                    <InboxOutlined className="text-violet-500 text-3xl mb-2" />
+                    <p className="text-white font-medium text-xs mb-1">Click or drag images or folders</p>
+                  </div>
+                </Dragger>
 
-                  {fileList.length > 0 && (
-                    <div className="px-4 pb-4 pt-2 border-t border-white/5 max-h-[150px] overflow-y-auto">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-[10px] font-bold text-gray-400 uppercase">
-                          Preview ({fileList.length}) - Total: {(fileList.reduce((acc, f) => acc + (f.size || 0), 0) / (1024 * 1024)).toFixed(2)} MB
-                        </span>
-                        <span
-                          className="text-[10px] text-violet-500 font-bold cursor-pointer hover:text-white"
-                          onClick={() => setFileList([])}
+                {fileList.length > 0 && (
+                  <div className="px-4 pb-4 pt-2 border-t border-white/5 max-h-[150px] overflow-y-auto">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase">
+                        Preview ({fileList.length}) - Total: {(fileList.reduce((acc, f) => acc + (f.size || 0), 0) / (1024 * 1024)).toFixed(2)} MB
+                      </span>
+                      <span
+                        className="text-[10px] text-violet-500 font-bold cursor-pointer hover:text-white"
+                        onClick={() => setFileList([])}
+                      >
+                        Clear all
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      {(showAllPreviews ? fileList : fileList.slice(0, 12)).map((file) => (
+                        <div
+                          key={file.uid}
+                          className="aspect-square rounded-lg bg-gray-800 border border-white/10 relative group/thumb overflow-hidden"
                         >
-                          Clear all
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-4 gap-2">
-                        {(showAllPreviews ? fileList : fileList.slice(0, 12)).map((file) => (
                           <div
-                            key={file.uid}
-                            className="aspect-square rounded-lg bg-gray-800 border border-white/10 relative group/thumb overflow-hidden"
+                            className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover/thumb:opacity-100 transition-opacity cursor-pointer z-10"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleRemoveFile(file.uid)
+                            }}
                           >
-                            <div
-                              className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover/thumb:opacity-100 transition-opacity cursor-pointer z-10"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleRemoveFile(file.uid)
-                              }}
-                            >
-                              <DeleteOutlined className="text-red-400 text-xs" />
-                            </div>
-                            <div
-                              className="w-full h-full bg-cover bg-center"
-                              style={{
-                                backgroundImage: `url('${file.preview || file.thumbUrl || file.url || ''}')`
-                              }}
-                            />
+                            <DeleteOutlined className="text-red-400 text-xs" />
                           </div>
-                        ))}
-                        {fileList.length > 12 && !showAllPreviews && (
                           <div
-                            className="aspect-square rounded-lg bg-gray-800/50 border border-white/5 flex items-center justify-center cursor-pointer hover:bg-violet-500/20 transition-colors"
-                            onClick={() => setShowAllPreviews(true)}
-                          >
-                            <span className="text-[10px] text-violet-400 font-bold">+{fileList.length - 12} more</span>
-                          </div>
-                        )}
-                        {showAllPreviews && fileList.length > 12 && (
-                          <div
-                            className="aspect-square rounded-lg bg-gray-800/50 border border-white/5 flex items-center justify-center cursor-pointer hover:bg-violet-500/20 transition-colors"
-                            onClick={() => setShowAllPreviews(false)}
-                          >
-                            <span className="text-[10px] text-violet-400 font-bold">Show less</span>
-                          </div>
-                        )}
-                      </div>
+                            className="w-full h-full bg-cover bg-center"
+                            style={{
+                              backgroundImage: `url('${file.preview || file.thumbUrl || file.url || ''}')`
+                            }}
+                          />
+                        </div>
+                      ))}
+                      {fileList.length > 12 && !showAllPreviews && (
+                        <div
+                          className="aspect-square rounded-lg bg-gray-800/50 border border-white/5 flex items-center justify-center cursor-pointer hover:bg-violet-500/20 transition-colors"
+                          onClick={() => setShowAllPreviews(true)}
+                        >
+                          <span className="text-[10px] text-violet-400 font-bold">+{fileList.length - 12} more</span>
+                        </div>
+                      )}
+                      {showAllPreviews && fileList.length > 12 && (
+                        <div
+                          className="aspect-square rounded-lg bg-gray-800/50 border border-white/5 flex items-center justify-center cursor-pointer hover:bg-violet-500/20 transition-colors"
+                          onClick={() => setShowAllPreviews(false)}
+                        >
+                          <span className="text-[10px] text-violet-400 font-bold">Show less</span>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-
-                <div className="p-4 rounded-xl bg-violet-500/5 border border-violet-500/10">
-                  <p className="text-gray-400 text-[11px] leading-relaxed m-0">
-                    <span className="text-violet-400 font-bold mr-1">TIP:</span>
-                    You can upload individual files or entire folders. Compression is applied to ensure server reliability.
-                  </p>
-                </div>
-
-                {uploadProgress > 0 && (
-                  <div className="pt-2">
-                    <div className="flex justify-between text-[10px] text-fuchsia-400 font-bold mb-1 uppercase tracking-wider">
-                      <span>Uploading Data...</span>
-                      <span>{uploadProgress}%</span>
-                    </div>
-                    <Progress
-                      percent={uploadProgress}
-                      showInfo={false}
-                      strokeColor={{ '0%': '#8b5cf6', '100%': '#d946ef' }}
-                      railColor="rgba(255,255,255,0.05)"
-                      size="small"
-                    />
                   </div>
                 )}
               </div>
-            )}
 
-            {isEdit && (
-              <div className="flex items-center justify-center h-full">
-                <div className="p-6 rounded-xl bg-violet-500/5 border border-violet-500/10 w-full">
-                  <h4 className="text-violet-300 font-bold text-xs uppercase tracking-wider mb-2">
-                    Manager Information
-                  </h4>
-                  <p className="text-gray-400 text-xs leading-relaxed m-0">
-                    Updating a dataset's name and description doesn't affect existing items. Project assignment cannot be changed after creation.
-                  </p>
-                </div>
+              <div className="p-4 rounded-xl bg-violet-500/5 border border-violet-500/10">
+                <p className="text-gray-400 text-[11px] leading-relaxed m-0">
+                  <span className="text-violet-400 font-bold mr-1">TIP:</span>
+                  You can upload individual files or entire folders. Compression is applied to ensure server reliability.
+                </p>
               </div>
-            )}
+
+              {uploadProgress > 0 && (
+                <div className="pt-2">
+                  <div className="flex justify-between text-[10px] text-fuchsia-400 font-bold mb-1 uppercase tracking-wider">
+                    <span>Uploading Data...</span>
+                    <span>{uploadProgress}%</span>
+                  </div>
+                  <Progress
+                    percent={uploadProgress}
+                    showInfo={false}
+                    strokeColor={{ '0%': '#8b5cf6', '100%': '#d946ef' }}
+                    railColor="rgba(255,255,255,0.05)"
+                    size="small"
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="flex justify-end gap-3 pt-6 mt-8 border-t border-white/5">

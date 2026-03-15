@@ -9,6 +9,8 @@ export interface GetDatasetsParams {
   description?: string
   totalItems?: number
   createdAt?: string
+  dataItemStatus?: string
+  files?: string[]
 }
 
 const datasetApi = {
@@ -86,7 +88,7 @@ const datasetApi = {
       throw error
     }
   },
-  async updateDataset(id: string, datasetData: GetDatasetsParams) {
+  async updateDataset(id: string, datasetData: { projectId?: string; datasetName: string; description?: string; files?: string[] }) {
     try {
       const url = ENDPOINTS.DATASETS.UPDATE(id)
       const response = await axiosClient.put(url, datasetData)
@@ -101,9 +103,18 @@ const datasetApi = {
       const url = ENDPOINTS.DATASETS.DETAIL
         ? ENDPOINTS.DATASETS.DETAIL(id)
         : `${ENDPOINTS.DATASETS.LIST}/${id}`
-      return axiosClient.delete(url)
+      return axiosClient.patch(url)
     } catch (error) {
       console.error('Failed to delete dataset', error)
+      throw error
+    }
+  },
+  deleteItem(id: string) {
+    try {
+      const url = ENDPOINTS.DATAITEMS.DELETE(id)
+      return axiosClient.delete(url)
+    } catch (error) {
+      console.error('Failed to delete dataset item', error)
       throw error
     }
   }

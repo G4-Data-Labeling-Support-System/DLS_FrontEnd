@@ -30,6 +30,7 @@ import {
   useProjectMembers,
   useInvalidateProjectDetail
 } from '@/features/manager/hooks/useProjectDetail'
+import datasetApi from '@/api/DatasetApi'
 import { DatasetCard } from '../dataset/DatasetCard'
 import { CreateDatasetModal } from '../dataset/CreateDatasetModal'
 import { DatasetDetail } from '../dataset/DatasetDetail'
@@ -84,6 +85,12 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
   const [deletingAssignment, setDeletingAssignment] = useState(false)
   const [deletingAssignmentId, setDeletingAssignmentId] = useState<string | null>(null)
   const [deletingAssignmentName, setDeletingAssignmentName] = useState('')
+
+  // Edit/Delete state for datasets
+  const [deleteDatasetModalOpen, setDeleteDatasetModalOpen] = useState(false)
+  const [deletingDataset, setDeletingDataset] = useState(false)
+  const [deletingDatasetId, setDeletingDatasetId] = useState<string | null>(null)
+  const [deletingDatasetName, setDeletingDatasetName] = useState('')
 
   // Assignment detail view via URL search params or local state for inline usage
   const [localAssignmentId, setLocalAssignmentId] = useState<string | null>(null)
@@ -206,6 +213,31 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
       message.error('Failed to delete assignment')
     } finally {
       setDeletingAssignment(false)
+    }
+  }
+
+  const handleDeleteDataset = (dataset: { datasetId: string; datasetName?: string }) => {
+    const id = String(dataset.datasetId)
+    const name = String(dataset.datasetName || 'this dataset')
+    setDeletingDatasetId(id)
+    setDeletingDatasetName(name)
+    setDeleteDatasetModalOpen(true)
+  }
+
+  const confirmDeleteDataset = async () => {
+    if (!deletingDatasetId) return
+    setDeletingDataset(true)
+    try {
+      await datasetApi.deleteDataset(deletingDatasetId)
+      message.success('Dataset deleted successfully!')
+      setDeleteDatasetModalOpen(false)
+      setDeletingDatasetId(null)
+      setDeletingDatasetName('')
+      invalidateProjectDetail(projectId)
+    } catch {
+      message.error('Failed to delete dataset')
+    } finally {
+      setDeletingDataset(false)
     }
   }
 
@@ -460,11 +492,12 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
               className="flex-1 overflow-y-auto pr-1 custom-scrollbar"
             >
               <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-                {datasets.map((dataset: { datasetId: string; datasetName?: string; totalItems?: number; createdAt?: string }) => (
+                {datasets.map((dataset: { datasetId: string; datasetName?: string; totalItems?: number; createdAt?: string; dataItemStatus?: string }) => (
                   <DatasetCard
                     key={dataset.datasetId}
                     {...dataset}
                     onClick={() => setSelectedDatasetId(dataset.datasetId)}
+                    onDelete={() => handleDeleteDataset(dataset)}
                   />
                 ))}
               </div>
@@ -515,13 +548,13 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
             >
               <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                 {assignments.map((assignment: GetAssignmentsParams, index: number) => (
-                    <AssignmentCard
-                      key={assignment.assignmentId || index}
-                      {...assignment}
-                      onClick={() => setSelectedAssignmentId(assignment.assignmentId!)}
-                      onEdit={() => handleEditAssignment(assignment)}
-                      onDelete={() => handleDeleteAssignment(assignment)}
-                    />
+                  <AssignmentCard
+                    key={assignment.assignmentId || index}
+                    {...assignment}
+                    onClick={() => setSelectedAssignmentId(assignment.assignmentId!)}
+                    onEdit={() => handleEditAssignment(assignment)}
+                    onDelete={() => handleDeleteAssignment(assignment)}
+                  />
                 ))}
               </div>
             </div>
@@ -666,6 +699,57 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
               className="bg-red-600 hover:bg-red-500 border-none"
             >
               Delete Assignment
+            </Button>
+          </div>
+        </div>
+      </GlassModal>
+
+      <GlassModal
+        open={deleteDatasetModalOpen}
+        onCancel={() => {
+          setDeleteDatasetModalOpen(false)
+          setDeletingDatasetId(null)
+          setDeletingDatasetName('')
+        }}
+        destroyOnHidden
+        width={480}
+      >
+        <div className="px-8 pt-10 pb-8">
+          <div className="text-center pb-6 mb-6">
+            <div className="flex justify-center mb-4">
+              <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center">
+                <ExclamationCircleOutlined className="text-red-500 text-2xl" />
+              </div>
+            </div>
+            <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
+              Delete Dataset
+            </h2>
+            <p className="text-white/50 text-sm">
+              Are you sure you want to delete{' '}
+              <span className="text-white/80 font-medium">{deletingDatasetName}</span>? This action
+              cannot be undone.
+            </p>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
+            <Button
+              onClick={() => {
+                setDeleteDatasetModalOpen(false)
+                setDeletingDatasetId(null)
+                setDeletingDatasetName('')
+              }}
+              className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
+            >
+              Cancel
+            </Button>
+            <Button
+              danger
+              type="primary"
+              loading={deletingDataset}
+              onClick={confirmDeleteDataset}
+              className="bg-red-600 hover:bg-red-500 border-none"
+            >
+              Delete Dataset
             </Button>
           </div>
         </div>
