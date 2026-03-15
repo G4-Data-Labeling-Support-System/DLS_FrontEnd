@@ -19,8 +19,9 @@ import assignmentApi, { type GetAssignmentsParams } from '@/api/AssignmentApi'
 import guidelineApi from '@/api/GuidelineApi'
 import { AssignmentDetail } from './AssignmentDetail'
 import { CreateAssignmentModal } from './CreateAssignmentModal'
+import { CreateProjectModal } from './CreateProjectModal'
 import { AssignmentCard } from './AssignmentCard'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import {
     useProjectById,
     useAssignmentsByProject,
@@ -59,9 +60,9 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack,
 
     const [isCreateAssignmentModalVisible, setIsCreateAssignmentModalVisible] = useState(false)
     const [isCreateDatasetModalVisible, setIsCreateDatasetModalVisible] = useState(false)
+    const [isEditProjectModalVisible, setIsEditProjectModalVisible] = useState(false)
     const hasShownFirstAssignmentModal = useRef(false)
     const [guidelineForm] = Form.useForm()
-    const navigate = useNavigate()
     const [searchParams, setSearchParams] = useSearchParams()
 
     // Edit/Delete state for guidelines
@@ -272,7 +273,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack,
                     type="primary"
                     icon={<EditOutlined />}
                     className="bg-violet-600 hover:bg-violet-500 border-none"
-                    onClick={() => navigate(`/manager/projects/edit/${project.projectId}`)}
+                    onClick={() => setIsEditProjectModalVisible(true)}
                 >
                     Edit
                 </Button>
@@ -538,6 +539,16 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack,
                 onCancel={() => setIsCreateDatasetModalVisible(false)}
                 onSuccess={() => {
                     setIsCreateDatasetModalVisible(false)
+                    invalidateProjectDetail(projectId)
+                }}
+            />
+
+            <CreateProjectModal
+                open={isEditProjectModalVisible}
+                editId={projectId}
+                onCancel={() => setIsEditProjectModalVisible(false)}
+                onSuccess={() => {
+                    setIsEditProjectModalVisible(false)
                     invalidateProjectDetail(projectId)
                 }}
             />

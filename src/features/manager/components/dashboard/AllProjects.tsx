@@ -59,7 +59,7 @@ export const AllProjects: React.FC<AllProjectsProps> = ({
           const projectInfo = (p.project as Record<string, unknown>) || p
           const mapped: GetProjectsParams = {}
 
-          const pid = projectInfo.projectId || projectInfo.id || p.id || p.projectId
+          const pid = projectInfo.projectId || projectInfo.id || projectInfo.project_id || p.projectId || p.id || p.project_id
           if (pid) {
             mapped.projectId = String(pid)
           }
@@ -78,12 +78,12 @@ export const AllProjects: React.FC<AllProjectsProps> = ({
             mapped.description = String(projectInfo.description || p.description)
           }
 
-          const pcreated = projectInfo.createdAt || projectInfo.created_at || projectInfo.Created_at || p.createdAt || p.created_at || p.Created_at || projectInfo.createdDate || p.createdDate
+          const pcreated = projectInfo.created_at || projectInfo.createdAt || projectInfo.Created_at || p.created_at || p.createdAt || p.Created_at || projectInfo.createdDate || p.createdDate
           if (pcreated) {
             mapped.createdAt = String(pcreated)
           }
 
-          const pupdated = projectInfo.updatedAt || projectInfo.updated_at || p.updatedAt || p.updated_at
+          const pupdated = projectInfo.updated_at || projectInfo.updatedAt || p.updated_at || p.updatedAt
           if (pupdated) {
             mapped.updatedAt = String(pupdated)
           }
