@@ -273,6 +273,18 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
+        element: <Navigate to="/reviewer/project" replace />
+      },
+      {
+        path: 'project',
+        element: (
+          <LazyPage>
+            <ReviewerDashboardPage />
+          </LazyPage>
+        )
+      },
+      {
+        path: 'project/:assignmentId',
         element: (
           <LazyPage>
             <ReviewerDashboardPage />
@@ -284,6 +296,30 @@ export const router = createBrowserRouter([
         element: (
           <LazyPage>
             <ReviewerDashboardPage />
+          </LazyPage>
+        )
+      },
+      {
+        path: 'assignment/:assignmentId',
+        element: (
+          <LazyPage>
+            <ReviewerDashboardPage />
+          </LazyPage>
+        )
+      },
+      {
+        path: 'task/:taskId',
+        element: (
+          <LazyPage>
+            <TaskDetailPage />
+          </LazyPage>
+        )
+      },
+      {
+        path: 'task/:taskId/annotate',
+        element: (
+          <LazyPage>
+            <AnnotationPage />
           </LazyPage>
         )
       },

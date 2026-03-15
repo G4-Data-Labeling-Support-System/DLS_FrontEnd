@@ -5,10 +5,10 @@ import {
   type DashboardTabType
 } from '@/features/manager/components/dashboard/DashboardTabs'
 import { useLocation, useNavigate } from 'react-router-dom'
-import AssignmentHeader from '../annotator/components/AssignmentHeader'
-import GuidelineSection from '../annotator/components/GuidelineSection'
-import TasksSection from '../annotator/components/TaskSection'
-import AnnotatorProjectDetail from '../annotator/components/AnnotationProjectDetail'
+import AssignmentHeader from './components/AssignmentHeader'
+import GuidelineSection from './components/GuidelineSection'
+import TasksSection from './components/TaskSection'
+import AnnotatorProjectDetail from './components/AnnotationProjectDetail'
 import assignmentApi from '@/api/AssignmentApi'
 import guidelineApi from '@/api/GuidelineApi'
 import projectApi from '@/api/ProjectApi'
@@ -154,7 +154,7 @@ export default function ReviewerDashboardPage() {
           let hasFetchedProject = false
           try {
             // Try to fetch reviewer's assignments
-            const assignRes = await assignmentApi.getAssignmentsByAnnotator(user.id)
+            const assignRes = await assignmentApi.getAssignmentsByReviewer(user.id)
             const assignsList = assignRes.data?.data || assignRes.data || []
 
             if (assignsList.length > 0) {
