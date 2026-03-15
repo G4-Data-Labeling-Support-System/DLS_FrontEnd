@@ -120,8 +120,8 @@ export default function AnnotatorDashboardPage() {
             const guidelinesList = guidelineRes.data?.data || guidelineRes.data || []
             const activeGuide = Array.isArray(guidelinesList)
               ? (guidelinesList.find(
-                  (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
-                ) ??
+                (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
+              ) ??
                 guidelinesList[0] ??
                 null)
               : guidelinesList
@@ -177,8 +177,8 @@ export default function AnnotatorDashboardPage() {
                   const guidelinesList = guidelineRes.data?.data || guidelineRes.data || []
                   const activeGuide = Array.isArray(guidelinesList)
                     ? (guidelinesList.find(
-                        (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
-                      ) ??
+                      (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
+                    ) ??
                       guidelinesList[0] ??
                       null)
                     : guidelinesList
@@ -222,8 +222,8 @@ export default function AnnotatorDashboardPage() {
                     const guidelinesList = guidelineRes.data?.data || guidelineRes.data || []
                     const activeGuide = Array.isArray(guidelinesList)
                       ? (guidelinesList.find(
-                          (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
-                        ) ??
+                        (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
+                      ) ??
                         guidelinesList[0] ??
                         null)
                       : guidelinesList

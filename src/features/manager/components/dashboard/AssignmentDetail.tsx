@@ -6,6 +6,7 @@ import projectApi from '@/api/ProjectApi'
 import datasetApi from '@/api/DatasetApi'
 import { ProjectDetail } from './ProjectDetail'
 import { DatasetDetail } from '../dataset/DatasetDetail'
+import { ManagerTaskDetail } from './ManagerTaskDetail'
 import { useSearchParams } from 'react-router-dom'
 
 const { Title } = Typography
@@ -54,6 +55,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
 
   const viewProjectId = searchParams.get('viewProjectId')
   const viewDatasetId = searchParams.get('viewDatasetId')
+  const viewTaskId = searchParams.get('viewTaskId')
 
   const setViewProjectId = (id: string | null) => {
     setSearchParams((prev) => {
@@ -74,6 +76,18 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
         next.set('viewDatasetId', id)
       } else {
         next.delete('viewDatasetId')
+      }
+      return next
+    })
+  }
+
+  const setViewTaskId = (id: string | null) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      if (id) {
+        next.set('viewTaskId', id)
+      } else {
+        next.delete('viewTaskId')
       }
       return next
     })
@@ -245,6 +259,13 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
     return <DatasetDetail datasetId={viewDatasetId} onBack={() => setViewDatasetId(null)} />
   }
 
+  if (viewTaskId) {
+    const selectedTask = tasks.find((t) => t.taskId === viewTaskId)
+    if (selectedTask) {
+      return <ManagerTaskDetail task={selectedTask} />
+    }
+  }
+
   return (
     <div className="w-full animate-fade-in">
       <div className="flex justify-between items-start mb-6">
@@ -312,7 +333,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
         </Descriptions>
       </Card>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-1 mb-6 mt-1">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 mb-6 mt-1">
         <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
           <div className="flex items-center justify-between mb-4">
             <span className="text-white text-lg font-display flex items-center gap-2">
@@ -397,21 +418,16 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
               {tasks.map((task) => (
                 <div
                   key={task.taskId}
-                  className="flex items-center justify-between bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-emerald-500/30 transition-all group"
+                  onClick={() => setViewTaskId(task.taskId)}
+                  className="flex items-center justify-between bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-emerald-500/30 transition-all group cursor-pointer"
                 >
                   <div className="flex flex-col gap-1 min-w-0">
-                    <span className="text-white font-bold text-sm truncate">
+                    <span className="text-white font-bold text-sm truncate group-hover:text-emerald-400 transition-colors">
                       {task.taskName || 'Unspecified Name'}
                     </span>
                     <span className="text-gray-500 text-xs font-mono">ID: {task.taskId}</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <Tag
-                      color={getStatusColor(task.taskStatus || task.reviewStatus)}
-                      className="m-0 text-xs px-2 py-0.5"
-                    >
-                      {(task.taskStatus || task.reviewStatus || 'UNKNOWN').toUpperCase()}
-                    </Tag>
                     {task.createdAt && (
                       <span className="text-gray-500 text-xs hidden md:inline">
                         {new Date(task.createdAt).toLocaleDateString('vi-VN')}

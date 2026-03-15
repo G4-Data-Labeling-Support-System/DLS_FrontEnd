@@ -88,6 +88,7 @@ export const ENDPOINTS = {
 
   TASKS: {
     BY_ASSIGNMENT: (assignmentId: string) => `/tasks/assignments/${assignmentId}`,
-    DETAIL: (taskId: string) => `/tasks/${taskId}`
+    DETAIL: (taskId: string) => `/tasks/${taskId}`,
+    DATA_ITEMS: (taskId: string) => `/tasks/${taskId}/taskDataitems`
   }
 } as const
