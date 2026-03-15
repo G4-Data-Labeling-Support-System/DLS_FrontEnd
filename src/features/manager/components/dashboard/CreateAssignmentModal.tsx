@@ -162,35 +162,32 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
         assignmentStatus: 'ASSIGNED'
       }
 
-      if (isEditMode && initialData?.assignmentId) {
-        await assignmentApi.updateAssignment(initialData.assignmentId, payload)
-        message.success('Assignment updated successfully!')
-      } else {
-        const createPayload = {
-          ...payload,
-          assignedBy: values.assignedBy,
-          datasetId: values.datasetId
-        }
-        await assignmentApi.createAssignmentForProject(resolvedProjectId!, createPayload)
-        message.success('Assignment created successfully!')
-      }
+            if (isEditMode && initialData?.assignmentId) {
+                await assignmentApi.updateAssignment(initialData.assignmentId, payload)
+                message.success('Assignment updated successfully!')
+            } else {
+                const createPayload = {
+                    ...payload,
+                    assignedBy: values.assignedBy,
+                    datasetId: values.datasetId
+                }
+                await assignmentApi.createAssignmentForProject(resolvedProjectId!, createPayload)
+                message.success('Assignment created successfully!')
+            }
 
-      form.resetFields()
-      onSuccess()
-    } catch (error) {
-      if (error && typeof error === 'object' && 'errorFields' in error) {
-        // validation error, do nothing
-      } else {
-        console.error(
-          isEditMode ? 'Failed to update assignment' : 'Failed to create assignment',
-          error
-        )
-        message.error(isEditMode ? 'Failed to update assignment' : 'Failed to create assignment')
-      }
-    } finally {
-      setIsSubmitting(false)
+            form.resetFields()
+            onSuccess()
+        } catch (error) {
+            if (error && typeof error === 'object' && 'errorFields' in error) {
+                // validation error, do nothing
+            } else {
+                console.error(isEditMode ? 'Failed to update assignment' : 'Failed to create assignment', error)
+                message.error(isEditMode ? 'Failed to update assignment' : 'Failed to create assignment')
+            }
+        } finally {
+            setIsSubmitting(false)
+        }
     }
-  }
 
   const handleCancel = () => {
     form.resetFields()

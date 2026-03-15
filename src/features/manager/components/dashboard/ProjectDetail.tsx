@@ -15,19 +15,17 @@ import {
   Select,
   DatePicker
 } from 'antd'
+import dayjs from 'dayjs'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
-import {
-  EditOutlined,
-  MoreOutlined,
-  DeleteOutlined,
-  ExclamationCircleOutlined
-} from '@ant-design/icons'
-import assignmentApi from '@/api/AssignmentApi'
+import { EditOutlined, MoreOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
+import assignmentApi, { type GetAssignmentsParams } from '@/api/AssignmentApi'
 import guidelineApi from '@/api/GuidelineApi'
 import { userApi } from '@/api/userApi'
 import { AssignmentDetail } from './AssignmentDetail'
 import { CreateAssignmentModal } from './CreateAssignmentModal'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { CreateProjectModal } from './CreateProjectModal'
+import { AssignmentCard } from './AssignmentCard'
+import { useSearchParams } from 'react-router-dom'
 import {
   useProjectById,
   useAssignmentsByProject,
@@ -37,7 +35,7 @@ import {
 } from '@/features/manager/hooks/useProjectDetail'
 import { DatasetCard } from '../dataset/DatasetCard'
 import { CreateDatasetModal } from '../dataset/CreateDatasetModal'
-import dayjs from 'dayjs'
+import { DatasetDetail } from '../dataset/DatasetDetail'
 
 const { Title } = Typography
 
@@ -68,10 +66,10 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
 
   const [isCreateAssignmentModalVisible, setIsCreateAssignmentModalVisible] = useState(false)
   const [isCreateDatasetModalVisible, setIsCreateDatasetModalVisible] = useState(false)
+  const [isEditProjectModalVisible, setIsEditProjectModalVisible] = useState(false)
   const hasShownFirstAssignmentModal = useRef(false)
   const [guidelineForm] = Form.useForm()
   const [assignmentEditForm] = Form.useForm()
-  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
 
   // Edit/Delete state for guidelines
@@ -93,8 +91,11 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
 
   // Assignment detail view via URL search params or local state for inline usage
   const [localAssignmentId, setLocalAssignmentId] = useState<string | null>(null)
+  const [localDatasetId, setLocalDatasetId] = useState<string | null>(null)
   const urlAssignmentId = searchParams.get('assignmentId')
+  const urlDatasetId = searchParams.get('datasetId')
   const selectedAssignmentId = isInline ? localAssignmentId : urlAssignmentId
+  const selectedDatasetId = isInline ? localDatasetId : urlDatasetId
 
   const setSelectedAssignmentId = (id: string | null) => {
     if (isInline) {
@@ -105,6 +106,20 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
         params.set('assignmentId', id)
       } else {
         params.delete('assignmentId')
+      }
+      setSearchParams(params)
+    }
+  }
+
+  const setSelectedDatasetId = (id: string | null) => {
+    if (isInline) {
+      setLocalDatasetId(id)
+    } else {
+      const params = new URLSearchParams(searchParams)
+      if (id) {
+        params.set('datasetId', id)
+      } else {
+        params.delete('datasetId')
       }
       setSearchParams(params)
     }
@@ -293,6 +308,16 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
       <AssignmentDetail
         assignmentId={selectedAssignmentId}
         onBack={() => setSelectedAssignmentId(null)}
+        onEdit={(asn) => handleEditAssignment(asn as Record<string, unknown>)}
+      />
+    )
+  }
+
+  if (selectedDatasetId) {
+    return (
+      <DatasetDetail
+        datasetId={selectedDatasetId}
+        onBack={() => setSelectedDatasetId(null)}
       />
     )
   }
@@ -325,7 +350,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
           type="primary"
           icon={<EditOutlined />}
           className="bg-violet-600 hover:bg-violet-500 border-none"
-          onClick={() => navigate(`/manager/projects/edit/${project.projectId}`)}
+          onClick={() => setIsEditProjectModalVisible(true)}
         >
           Edit
         </Button>
@@ -464,8 +489,11 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
-        <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-6 mt-1">
+        <Card
+          className="bg-[#1A1625] border-gray-800 rounded-xl h-[600px]"
+          styles={{ body: { height: '100%', display: 'flex', flexDirection: 'column', padding: '24px' } }}
+        >
           <div className="flex items-center justify-between mb-4">
             <span className="text-white text-lg font-display flex items-center gap-2">
               <span className="material-symbols-outlined text-fuchsia-400">database</span>
@@ -496,28 +524,26 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
               className="my-8"
             />
           ) : (
-            <div className="overflow-y-auto pr-1" style={{ maxHeight: '500px' }}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {datasets.map(
-                  (dataset: {
-                    datasetId: string
-                    datasetName?: string
-                    totalItems?: number
-                    createdAt?: string
-                  }) => (
-                    <DatasetCard
-                      key={dataset.datasetId}
-                      {...dataset}
-                      onClick={() => navigate(`/manager/datasets/${dataset.datasetId}`)}
-                    />
-                  )
-                )}
+            <div
+              className="flex-1 overflow-y-auto pr-1 custom-scrollbar"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                {datasets.map((dataset: { datasetId: string; datasetName?: string; totalItems?: number; createdAt?: string }) => (
+                  <DatasetCard
+                    key={dataset.datasetId}
+                    {...dataset}
+                    onClick={() => setSelectedDatasetId(dataset.datasetId)}
+                  />
+                ))}
               </div>
             </div>
           )}
         </Card>
 
-        <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
+        <Card
+          className="bg-[#1A1625] border-gray-800 rounded-xl h-[600px]"
+          styles={{ body: { height: '100%', display: 'flex', flexDirection: 'column', padding: '24px' } }}
+        >
           <div className="flex items-center justify-between mb-4">
             <span className="text-white text-lg font-display flex items-center gap-2">
               <span className="material-symbols-outlined text-blue-400">assignment</span>
@@ -534,7 +560,10 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
                 type="primary"
                 size="small"
                 className="bg-violet-600 hover:bg-violet-500 border-none"
-                onClick={() => setIsCreateAssignmentModalVisible(true)}
+                onClick={() => {
+                  setEditingAssignment(null)
+                  setIsCreateAssignmentModalVisible(true)
+                }}
               >
                 + New
               </Button>
@@ -548,83 +577,28 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
               className="my-8"
             />
           ) : (
-            <div className="overflow-y-auto pr-1" style={{ maxHeight: '500px' }}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {assignments.map((assignment: Record<string, unknown>, index: number) => (
-                  <div
-                    key={(assignment.assignmentId as string) || index}
-                    className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-blue-500/30 transition-colors cursor-pointer"
-                    onClick={() => setSelectedAssignmentId(String(assignment.assignmentId))}
-                  >
-                    <div className="flex justify-between items-start">
-                      <h4
-                        className="text-white font-bold text-sm truncate pr-2"
-                        title={(assignment.assignmentName as string) || (assignment.name as string)}
-                      >
-                        {(assignment.assignmentName as string) ||
-                          (assignment.name as string) ||
-                          'Unnamed Assignment'}
-                      </h4>
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        <Tag
-                          color={getStatusColor(
-                            (assignment.status as string) || (assignment.assignmentStatus as string)
-                          )}
-                          className="m-0 text-[10px] px-1.5 py-0"
-                        >
-                          {(assignment.status as string) ||
-                            (assignment.assignmentStatus as string) ||
-                            'UNKNOWN'}
-                        </Tag>
-                        <Dropdown
-                          menu={{
-                            items: [
-                              {
-                                key: 'edit',
-                                label: 'Edit',
-                                icon: <EditOutlined />,
-                                onClick: (info) => {
-                                  info.domEvent.stopPropagation()
-                                  handleEditAssignment(assignment)
-                                }
-                              },
-                              {
-                                key: 'delete',
-                                label: 'Delete',
-                                icon: <DeleteOutlined />,
-                                danger: true,
-                                onClick: (info) => {
-                                  info.domEvent.stopPropagation()
-                                  handleDeleteAssignment(assignment)
-                                }
-                              }
-                            ]
-                          }}
-                          trigger={['click']}
-                          placement="bottomRight"
-                        >
-                          <Button
-                            type="text"
-                            size="small"
-                            icon={<MoreOutlined />}
-                            className="text-gray-400 hover:text-white"
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                        </Dropdown>
-                      </div>
-                    </div>
-                    <div className="text-gray-400 text-xs line-clamp-2 mt-1 min-h-[32px]">
-                      {(assignment.description as string) ||
-                        (assignment.descriptionAssignment as string) ||
-                        'No description provided.'}
-                    </div>
-                    <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/5">
-                      <span className="text-gray-500 text-xs">
-                        {formatDate(assignment.createdAt as string)}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+            <div
+              className="flex-1 overflow-y-auto pr-1 custom-scrollbar"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                {assignments.map((assignment: Record<string, unknown>, index: number) => {
+                  const mapped: GetAssignmentsParams = {
+                    assignmentId: String(assignment.assignmentId || assignment.id),
+                    assignmentName: String(assignment.assignmentName || assignment.name),
+                    status: String(assignment.status || assignment.assignmentStatus),
+                    createdAt: String(assignment.createdAt),
+                    updatedAt: String(assignment.updatedAt)
+                  }
+                  return (
+                    <AssignmentCard
+                      key={mapped.assignmentId || index}
+                      {...mapped}
+                      onClick={() => setSelectedAssignmentId(mapped.assignmentId!)}
+                      onEdit={() => handleEditAssignment(assignment)}
+                      onDelete={() => handleDeleteAssignment(assignment)}
+                    />
+                  )
+                })}
               </div>
             </div>
           )}
@@ -643,10 +617,20 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
 
       <CreateDatasetModal
         open={isCreateDatasetModalVisible}
-        projectId={projectId}
+        initialProjectId={projectId}
         onCancel={() => setIsCreateDatasetModalVisible(false)}
         onSuccess={() => {
           setIsCreateDatasetModalVisible(false)
+          invalidateProjectDetail(projectId)
+        }}
+      />
+
+      <CreateProjectModal
+        open={isEditProjectModalVisible}
+        editId={projectId}
+        onCancel={() => setIsEditProjectModalVisible(false)}
+        onSuccess={() => {
+          setIsEditProjectModalVisible(false)
           invalidateProjectDetail(projectId)
         }}
       />

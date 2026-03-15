@@ -8,12 +8,14 @@ import { DatasetTabs, type DatasetTabType } from '@/features/manager/components/
 import { AllLabels } from '@/features/manager/components/dashboard/AllLabels'
 import { LabelQuickActions } from '@/features/manager/components/dashboard/LabelQuickActions'
 import { DatasetDetail } from '@/features/manager/components/dataset/DatasetDetail'
+import { CreateDatasetModal } from '@/features/manager/components/dataset/CreateDatasetModal'
 
 const DatasetManagementPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const [datasets, setDatasets] = useState<GetDatasetsParams[]>([])
   const [loading, setLoading] = useState(false)
   const [openCreateLabelModal, setOpenCreateLabelModal] = useState(false)
+  const [openCreateDatasetModal, setOpenCreateDatasetModal] = useState(false)
 
   const selectedDatasetId = searchParams.get('datasetId')
   const selectedLabelId = searchParams.get('labelId')
@@ -96,38 +98,44 @@ const DatasetManagementPage: React.FC = () => {
     [setSearchParams]
   )
 
-  useEffect(() => {
-    const fetchDatasets = async () => {
-      setLoading(true)
-      try {
-        const response = await datasetApi.getDatasets()
-        const rawData = response.data?.data || response.data?.content || response.data || []
+  const fetchDatasets = useCallback(async () => {
+    setLoading(true)
+    try {
+      const response = await datasetApi.getDatasets()
+      const rawData = response.data?.data || response.data?.content || response.data || []
 
-        if (Array.isArray(rawData)) {
-          const mappedDatasets: GetDatasetsParams[] = rawData
-            .map(
-              (d: Record<string, unknown>) =>
-                ({
-                  datasetId: String(d.id || d.datasetId || ''),
-                  datasetName: String(d.name || d.datasetName || ''),
-                  totalItems: Number(d.itemCount || d.totalItems) || 0,
-                  createdAt: String(d.createdAt || d.created_at || d.createdDate || ''),
-                  description: String(d.description || '')
-                }) as unknown as GetDatasetsParams
-            )
-            .filter((d) => d.datasetId && d.datasetId !== 'undefined' && d.datasetId !== 'null')
-          setDatasets(mappedDatasets)
-        } else {
-          setDatasets([])
-        }
-      } catch (error) {
-        console.error('Error fetching datasets:', error)
-      } finally {
-        setLoading(false)
+      if (Array.isArray(rawData)) {
+        const mappedDatasets: GetDatasetsParams[] = rawData
+          .map(
+            (d: Record<string, unknown>) =>
+              ({
+                datasetId: String(d.id || d.datasetId || ''),
+                datasetName: String(d.name || d.datasetName || ''),
+                totalItems: Number(d.itemCount || d.totalItems) || 0,
+                createdAt: String(d.createdAt || d.created_at || d.createdDate || ''),
+                description: String(d.description || '')
+              }) as unknown as GetDatasetsParams
+          )
+          .filter((d) => d.datasetId && d.datasetId !== 'undefined' && d.datasetId !== 'null')
+        setDatasets(mappedDatasets)
+      } else {
+        setDatasets([])
       }
+    } catch (error) {
+      console.error('Error fetching datasets:', error)
+    } finally {
+      setLoading(false)
     }
-    fetchDatasets()
   }, [])
+
+  useEffect(() => {
+    fetchDatasets()
+  }, [fetchDatasets])
+
+  const handleCreateSuccess = () => {
+    setOpenCreateDatasetModal(false)
+    fetchDatasets()
+  }
 
   return (
     <div className="p-6">
@@ -141,11 +149,12 @@ const DatasetManagementPage: React.FC = () => {
               loading={loading}
               selectedDatasetId={selectedDatasetId}
               onDatasetSelect={setSelectedDatasetId}
+              onCreate={() => setOpenCreateDatasetModal(true)}
             />
           </div>
 
           <div className="xl:col-span-1 xl:sticky xl:top-6 space-y-6">
-            <DatasetQuickActions />
+            <DatasetQuickActions onCreateDataset={() => setOpenCreateDatasetModal(true)} />
           </div>
         </div>
       )}
@@ -188,6 +197,12 @@ const DatasetManagementPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      <CreateDatasetModal
+        open={openCreateDatasetModal}
+        onCancel={() => setOpenCreateDatasetModal(false)}
+        onSuccess={handleCreateSuccess}
+      />
     </div>
   )
 }

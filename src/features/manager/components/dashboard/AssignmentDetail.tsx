@@ -16,6 +16,28 @@ interface AssignmentDetailProps {
   onEdit?: (assignment: GetAssignmentsParams) => void
 }
 
+interface Task {
+  taskId: string
+  completedCount: number
+  createdAt: string
+  taskName: string
+  reviewStatus: string
+  taskStatus: string
+  taskType: string
+  assignmentId: string
+}
+
+interface Task {
+  taskId: string
+  completedCount: number
+  createdAt: string
+  taskName: string
+  reviewStatus: string
+  taskStatus: string
+  taskType: string
+  assignmentId: string
+}
+
 export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
   assignmentId,
   onBack,
@@ -26,6 +48,8 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
   const [projectName, setProjectName] = useState<string | null>(null)
   const [datasetName, setDatasetName] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [tasksLoading, setTasksLoading] = useState<boolean>(false)
   const [searchParams, setSearchParams] = useSearchParams()
 
   const viewProjectId = searchParams.get('viewProjectId')
@@ -136,8 +160,28 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
       }
     }
 
+    const fetchTasks = async () => {
+      try {
+        setTasksLoading(true)
+        const response = await assignmentApi.getTasksByAssignmentId(assignmentId)
+        const data = response.data?.data || response.data || []
+        if (isMounted) {
+          setTasks(Array.isArray(data) ? data : [])
+        }
+      } catch (error) {
+        console.error('Error fetching tasks:', error)
+        // We don't necessarily want to block the whole view if tasks fail,
+        // but it's good to log it.
+      } finally {
+        if (isMounted) {
+          setTasksLoading(false)
+        }
+      }
+    }
+
     if (assignmentId) {
       fetchDetail()
+      fetchTasks()
     }
 
     return () => {
@@ -154,6 +198,12 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
       case 'PAUSED':
         return 'warning'
       case 'ARCHIVE':
+        return 'error'
+      case 'PENDING':
+        return 'default'
+      case 'IN_PROGRESS':
+        return 'processing'
+      case 'REJECTED':
         return 'error'
       default:
         return 'default'
@@ -313,6 +363,67 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
           )}
         </Card>
       </div>
+
+      <Card
+        className="bg-[#1A1625] border-gray-800 rounded-xl mb-6 flex flex-col"
+        styles={{ body: { padding: '24px', flex: 1, display: 'flex', flexDirection: 'column' } }}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-white text-lg font-display flex items-center gap-2">
+            <span className="material-symbols-outlined text-emerald-400">task</span>
+            Assignment Tasks
+          </span>
+          <Tag
+            color="#10b981"
+            className="border-0 bg-emerald-600/20 text-emerald-300 font-bold px-3 rounded-full"
+          >
+            {tasks.length} Tasks
+          </Tag>
+        </div>
+
+        {tasksLoading ? (
+          <div className="w-full h-32 flex justify-center items-center">
+            <Spin />
+          </div>
+        ) : tasks.length === 0 ? (
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description={<span className="text-gray-500">No Data</span>}
+            className="my-4"
+          />
+        ) : (
+          <div className="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+            <div className="grid grid-cols-1 gap-3">
+              {tasks.map((task) => (
+                <div
+                  key={task.taskId}
+                  className="flex items-center justify-between bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-emerald-500/30 transition-all group"
+                >
+                  <div className="flex flex-col gap-1 min-w-0">
+                    <span className="text-white font-bold text-sm truncate">
+                      {task.taskName || 'Unspecified Name'}
+                    </span>
+                    <span className="text-gray-500 text-xs font-mono">ID: {task.taskId}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Tag
+                      color={getStatusColor(task.taskStatus || task.reviewStatus)}
+                      className="m-0 text-xs px-2 py-0.5"
+                    >
+                      {(task.taskStatus || task.reviewStatus || 'UNKNOWN').toUpperCase()}
+                    </Tag>
+                    {task.createdAt && (
+                      <span className="text-gray-500 text-xs hidden md:inline">
+                        {new Date(task.createdAt).toLocaleDateString('vi-VN')}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </Card>
 
       <style>{`
                 .custom-descriptions .ant-descriptions-title {

@@ -55,15 +55,17 @@ export const DatasetCard: React.FC<DatasetCardProps> = ({
         </div>
       ) : null}
       <div className="flex justify-between items-start mb-2">
-        <div className="flex-1 pr-2">
+        <div className="flex-1 pr-2 flex items-center gap-2">
           <Title
             level={5}
-            className="!text-white !m-0 !text-sm leading-tight line-clamp-2"
+            className="!text-white !m-0 !text-sm leading-tight line-clamp-1"
             title={datasetName}
           >
             {datasetName || 'Unnamed Dataset'}
           </Title>
-          <div className="text-gray-400 text-xs mt-1">v1</div>
+          <div className="inline-block px-2 py-0.5 bg-[#2d2640] text-gray-300 text-[10px] font-bold rounded tracking-wide whitespace-nowrap">
+            {totalItems || 0} Items
+          </div>
         </div>
         <div onClick={(e) => e.stopPropagation()}>
           <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
@@ -76,11 +78,6 @@ export const DatasetCard: React.FC<DatasetCardProps> = ({
         </div>
       </div>
 
-      <div className="mb-4">
-        <div className="inline-block px-2 py-1 ml-2 bg-[#2d2640] text-gray-300 text-[10px] font-bold rounded tracking-wide">
-          {totalItems || 0} Items
-        </div>
-      </div>
 
       <div className="grid grid-cols-1 gap-2 bg-[#231e31] p-3 rounded-lg mt-auto">
         <div>

@@ -10,7 +10,11 @@ import { PATH_MANAGER } from '@/routes/paths'
 
 const { Title } = Typography
 
-export const QuickActions = () => {
+interface QuickActionsProps {
+  onCreateProject?: () => void
+}
+
+export const QuickActions: React.FC<QuickActionsProps> = ({ onCreateProject }) => {
   const navigate = useNavigate()
 
   return (
@@ -27,7 +31,7 @@ export const QuickActions = () => {
           type="primary"
           size="large"
           className="w-full h-12 flex items-center justify-center bg-fuchsia-600 hover:bg-fuchsia-500 border-none shadow-[0_0_15px_rgba(192,38,211,0.4)]"
-          onClick={() => navigate(PATH_MANAGER.createProject)}
+          onClick={onCreateProject}
         >
           <PlusCircleFilled className="text-lg mr-2" />
           CREATE PROJECT

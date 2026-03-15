@@ -10,6 +10,7 @@ import {
   DashboardTabs,
   type DashboardTabType
 } from '@/features/manager/components/dashboard/DashboardTabs'
+import { CreateProjectModal } from '@/features/manager/components/dashboard/CreateProjectModal'
 
 const ManagerDashboardPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -18,6 +19,10 @@ const ManagerDashboardPage: React.FC = () => {
     undefined
   )
   const [assignmentRefreshTrigger, setAssignmentRefreshTrigger] = useState(0)
+
+  const [createProjectOpen, setCreateProjectOpen] = useState(false)
+  const [editProjectId, setEditProjectId] = useState<string | undefined>(undefined)
+  const [projectRefreshTrigger, setProjectRefreshTrigger] = useState(0)
 
   const tabParam = searchParams.get('tab')
   const activeTab: DashboardTabType =
@@ -51,6 +56,18 @@ const ManagerDashboardPage: React.FC = () => {
     setEditingAssignment(undefined)
   }
 
+  const handleCloseProjectModal = () => {
+    setCreateProjectOpen(false)
+    setEditProjectId(undefined)
+  }
+
+  const handleCreateProjectSuccess = () => {
+    handleCloseProjectModal()
+    // Always refresh the project list and reset selection to go back to list view
+    setSearchParams({ tab: 'project' })
+    setProjectRefreshTrigger(prev => prev + 1)
+  }
+
   return (
     <div className="p-6">
       {/* Custom Tab Navigation */}
@@ -63,13 +80,34 @@ const ManagerDashboardPage: React.FC = () => {
             <AllProjects
               selectedProjectId={selectedProjectId}
               onProjectSelect={handleProjectSelect}
+              refreshTrigger={projectRefreshTrigger}
+              onEdit={(id: string) => {
+                setEditProjectId(id)
+                setCreateProjectOpen(true)
+              }}
+              onCreate={() => {
+                setEditProjectId(undefined)
+                setCreateProjectOpen(true)
+              }}
             />
           </div>
 
           {/* Quick Actions - Sticky Sidebar (1 col) */}
           <div className="xl:col-span-1 xl:sticky xl:top-6 space-y-6">
-            <QuickActions />
+            <QuickActions
+              onCreateProject={() => {
+                setEditProjectId(undefined)
+                setCreateProjectOpen(true)
+              }}
+            />
           </div>
+
+          <CreateProjectModal
+            open={createProjectOpen}
+            onCancel={handleCloseProjectModal}
+            onSuccess={handleCreateProjectSuccess}
+            editId={editProjectId}
+          />
         </div>
       )}
 

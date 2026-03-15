@@ -3,19 +3,25 @@ import { Space, Typography, Spin, Input, Select, Empty, App, Button } from 'antd
 import { SearchOutlined, PlusOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import { ProjectCard } from './ProjectCard'
 import { ProjectDetail } from './ProjectDetail'
-import { Link, useNavigate } from 'react-router-dom'
-import { PATH_MANAGER } from '@/routes/paths'
-import { GlassModal } from '@/shared/components/ui/GlassModal'
-
 import projectApi, { type GetProjectsParams } from '@/api/ProjectApi'
+import { GlassModal } from '@/shared/components/ui/GlassModal'
 const { Title } = Typography
 
 interface AllProjectsProps {
   selectedProjectId?: string | null
   onProjectSelect?: (id: string | null) => void
+  refreshTrigger?: number
+  onEdit?: (id: string) => void
+  onCreate?: () => void
 }
 
-export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onProjectSelect }) => {
+export const AllProjects: React.FC<AllProjectsProps> = ({
+  selectedProjectId,
+  onProjectSelect,
+  refreshTrigger,
+  onEdit,
+  onCreate
+}) => {
   const { message: messageApi } = App.useApp()
   // Khai báo state sử dụng mảng của GetProjectsParams
   const [projects, setProjects] = useState<GetProjectsParams[]>([])
@@ -31,8 +37,6 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
   const [canceling, setCanceling] = useState(false)
   const [cancelingProjectId, setCancelingProjectId] = useState<string | null>(null)
   const [cancelingProjectName, setCancelingProjectName] = useState('')
-  const navigate = useNavigate()
-
   const currentProjectId = selectedProjectId !== undefined ? selectedProjectId : internalProjectId
   const handleProjectSelect = (id: string | null) => {
     if (onProjectSelect) {
@@ -55,7 +59,7 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
           const projectInfo = (p.project as Record<string, unknown>) || p
           const mapped: GetProjectsParams = {}
 
-          const pid = projectInfo.projectId || projectInfo.id || p.id || p.projectId
+          const pid = projectInfo.projectId || projectInfo.id || projectInfo.project_id || p.projectId || p.id || p.project_id
           if (pid) {
             mapped.projectId = String(pid)
           }
@@ -99,8 +103,7 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
             mapped.createdAt = String(pcreated)
           }
 
-          const pupdated =
-            projectInfo.updatedAt || projectInfo.updated_at || p.updatedAt || p.updated_at
+          const pupdated = projectInfo.updated_at || projectInfo.updatedAt || p.updated_at || p.updatedAt
           if (pupdated) {
             mapped.updatedAt = String(pupdated)
           }
@@ -121,7 +124,7 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
 
   useEffect(() => {
     fetchProjects()
-  }, [])
+  }, [refreshTrigger])
 
   const handleDelete = (id?: string) => {
     if (!id) return
@@ -150,9 +153,11 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
   }
 
   const handleEdit = (id?: string) => {
-    if (!id) return
-    navigate(`/manager/projects/edit/${id}`)
+    if (!id || !onEdit) return
+    onEdit(id)
   }
+
+  // Removed handleCreateProjectSuccess as it is now in the parent
 
   const handleCancelProject = (id?: string) => {
     if (!id) return
@@ -261,8 +266,11 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
             })}
 
           {/* Start New Project Card */}
-          <Link to={PATH_MANAGER.createProject} className="block group">
-            <div className="h-full min-h-[180px] border-2 border-dashed border-gray-700 rounded-xl flex flex-col items-center justify-center gap-4 bg-[#1A1625]/30 hover:bg-[#1A1625] hover:border-violet-500 transition-all cursor-pointer">
+          <div
+            className="block group cursor-pointer"
+            onClick={onCreate}
+          >
+            <div className="h-full min-h-[180px] border-2 border-dashed border-gray-700 rounded-xl flex flex-col items-center justify-center gap-4 bg-[#1A1625]/30 hover:bg-[#1A1625] hover:border-violet-500 transition-all">
               <div className="w-12 h-12 rounded-full bg-[#231e31] group-hover:bg-violet-600 flex items-center justify-center transition-colors">
                 <PlusOutlined className="text-gray-400 group-hover:text-white text-xl" />
               </div>
@@ -270,7 +278,7 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
                 Start New Project
               </span>
             </div>
-          </Link>
+          </div>
         </div>
       )}
 

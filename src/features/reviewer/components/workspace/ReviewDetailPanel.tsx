@@ -129,7 +129,7 @@ export const ReviewDetailPanel: React.FC<ReviewDetailPanelProps> = ({
                           percent={obj.confidence}
                           showInfo={false}
                           strokeColor={obj.color}
-                          trailColor="#1A1625"
+                          railColor="#1A1625"
                           size="small"
                           className="!m-0 [&_.ant-progress-bg]:!h-1"
                         />
