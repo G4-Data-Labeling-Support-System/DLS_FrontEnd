@@ -149,7 +149,9 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
         ? projectId
         : values.projectId || initialData?.projectId
       if (!resolvedProjectId && !isEditMode) {
+        message.destroy()
         message.error('Please select a project')
+        setIsSubmitting(false)
         return
       }
 
@@ -162,32 +164,49 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
         assignmentStatus: 'ASSIGNED'
       }
 
-            if (isEditMode && initialData?.assignmentId) {
-                await assignmentApi.updateAssignment(initialData.assignmentId, payload)
-                message.success('Assignment updated successfully!')
-            } else {
-                const createPayload = {
-                    ...payload,
-                    assignedBy: values.assignedBy,
-                    datasetId: values.datasetId
-                }
-                await assignmentApi.createAssignmentForProject(resolvedProjectId!, createPayload)
-                message.success('Assignment created successfully!')
-            }
-
-            form.resetFields()
-            onSuccess()
-        } catch (error) {
-            if (error && typeof error === 'object' && 'errorFields' in error) {
-                // validation error, do nothing
-            } else {
-                console.error(isEditMode ? 'Failed to update assignment' : 'Failed to create assignment', error)
-                message.error(isEditMode ? 'Failed to update assignment' : 'Failed to create assignment')
-            }
-        } finally {
-            setIsSubmitting(false)
+      if (isEditMode && initialData?.assignmentId) {
+        await assignmentApi.updateAssignment(initialData.assignmentId, payload)
+        message.success('Assignment updated successfully!')
+      } else {
+        const createPayload = {
+          ...payload,
+          assignedBy: values.assignedBy,
+          datasetId: values.datasetId
         }
+        await assignmentApi.createAssignmentForProject(resolvedProjectId!, createPayload)
+        message.success('Assignment created successfully!')
+      }
+
+      form.resetFields()
+      onSuccess()
+    } catch (error: any) {
+      if (error && typeof error === 'object' && 'errorFields' in error) {
+        return
+      }
+      console.error(isEditMode ? 'Failed to update assignment' : 'Failed to create assignment', error)
+
+      // Map API errors to form fields
+      // const apiErrors = error?.response?.data?.errors
+      // if (apiErrors && typeof apiErrors === 'object') {
+      //     const fieldErrors = Object.entries(apiErrors).map(([key, messages]) => {
+      //         // Map API field names to form field names if they differ
+      //         let fieldName = key
+      //         if (key === 'reviewedBy') fieldName = 'reviewerId'
+
+      //         return {
+      //             name: fieldName,
+      //             errors: Array.isArray(messages) ? messages : [String(messages)]
+      //         }
+      //     })
+      //     form.setFields(fieldErrors)
+      // }
+
+      const apiError = error?.response?.data?.message || error?.message || (isEditMode ? 'Failed to update assignment' : 'Failed to create assignment')
+      message.error(apiError)
+    } finally {
+      setIsSubmitting(false)
     }
+  }
 
   const handleCancel = () => {
     form.resetFields()

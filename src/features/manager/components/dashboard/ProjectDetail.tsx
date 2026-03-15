@@ -31,6 +31,7 @@ import {
   useAssignmentsByProject,
   useGuidelinesByProject,
   useDatasetsByProject,
+  useProjectMembers,
   useInvalidateProjectDetail
 } from '@/features/manager/hooks/useProjectDetail'
 import { DatasetCard } from '../dataset/DatasetCard'
@@ -60,9 +61,15 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
     useAssignmentsByProject(projectId)
   const { data: guidelines = [], isLoading: guidelinesLoading } = useGuidelinesByProject(projectId)
   const { data: datasets = [], isLoading: datasetsLoading } = useDatasetsByProject(projectId)
+  const { data: members = [], isLoading: membersLoading } = useProjectMembers(projectId)
   const invalidateProjectDetail = useInvalidateProjectDetail()
 
-  const loading = projectLoading || assignmentsLoading || guidelinesLoading || datasetsLoading
+  const loading =
+    projectLoading ||
+    assignmentsLoading ||
+    guidelinesLoading ||
+    datasetsLoading ||
+    membersLoading
 
   const [isCreateAssignmentModalVisible, setIsCreateAssignmentModalVisible] = useState(false)
   const [isCreateDatasetModalVisible, setIsCreateDatasetModalVisible] = useState(false)
@@ -77,7 +84,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
   const [isGuidelineEditModalVisible, setIsGuidelineEditModalVisible] = useState(false)
 
   // Edit/Delete state for assignments
-  const [editingAssignment, setEditingAssignment] = useState<Record<string, unknown> | null>(null)
+  const [editingAssignment, setEditingAssignment] = useState<GetAssignmentsParams | null>(null)
   const [isAssignmentEditModalVisible, setIsAssignmentEditModalVisible] = useState(false)
   const [deleteAssignmentModalOpen, setDeleteAssignmentModalOpen] = useState(false)
   const [deletingAssignment, setDeletingAssignment] = useState(false)
@@ -229,15 +236,15 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
     )
   }
 
-  const handleEditAssignment = (assignment: Record<string, unknown>) => {
+  const handleEditAssignment = (assignment: GetAssignmentsParams) => {
     setEditingAssignment(assignment)
     assignmentEditForm.setFieldsValue({
-      assignmentName: assignment.assignmentName || assignment.name,
+      assignmentName: assignment.assignmentName,
       assignedTo: assignment.assignedTo,
-      reviewedBy: assignment.reviewedBy || assignment.reviewerId,
-      description: assignment.description || assignment.descriptionAssignment,
-      dueDate: assignment.dueDate ? dayjs(assignment.dueDate as string) : null,
-      assignmentStatus: assignment.assignmentStatus || assignment.status
+      reviewedBy: assignment.reviewedBy,
+      description: assignment.description,
+      dueDate: assignment.dueDate ? dayjs(assignment.dueDate) : null,
+      assignmentStatus: assignment.status
     })
     setIsAssignmentEditModalVisible(true)
     fetchUsersForEdit()
@@ -265,9 +272,9 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
     }
   }
 
-  const handleDeleteAssignment = (assignment: Record<string, unknown>) => {
+  const handleDeleteAssignment = (assignment: GetAssignmentsParams) => {
     const assignmentId = String(assignment.assignmentId)
-    const name = String(assignment.assignmentName || assignment.name || 'this assignment')
+    const name = String(assignment.assignmentName || 'this assignment')
     setDeletingAssignmentId(assignmentId)
     setDeletingAssignmentName(name)
     setDeleteAssignmentModalOpen(true)
@@ -390,31 +397,42 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
                 {formatDate(project.updatedAt as string)}
               </Descriptions.Item>
               <Descriptions.Item label="Members">
-                <div className="flex -space-x-2 overflow-hidden py-1">
-                  {(project.users || [])
-                    .slice(0, 5)
-                    .map(
+                <div className="max-h-[120px] overflow-y-auto pr-2 custom-scrollbar space-y-2 py-1">
+                  {members.length > 0 ? (
+                    members.map(
                       (
-                        user: { avatar?: string; fullName?: string; username?: string },
+                        member: {
+                          user: {
+                            coverImage?: string
+                            username?: string
+                            role?: string
+                          }
+                        },
                         i: number
                       ) => (
-                        <Avatar
-                          key={i}
-                          size="small"
-                          className="border-2 border-[#1A1625]"
-                          src={
-                            user.avatar ||
-                            `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName || user.username || 'U')}&background=random`
-                          }
-                        />
+                        <div key={i} className="flex items-center gap-3">
+                          <Avatar
+                            size="small"
+                            className="border border-violet-500/30"
+                            src={
+                              member.user.coverImage ||
+                              `https://ui-avatars.com/api/?name=${encodeURIComponent(member.user.username || 'U')}&background=random`
+                            }
+                          />
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium text-gray-200">
+                              {member.user.username || 'Unknown User'}
+                            </span>
+                            {member.user.role && (
+                              <span className="text-[10px] text-gray-500 uppercase tracking-wider">
+                                {member.user.role}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       )
-                    )}
-                  {(project.users?.length || 0) > 5 && (
-                    <div className="flex items-center justify-center w-6 h-6 rounded-full bg-violet-600 text-[10px] font-bold text-white border-2 border-[#1A1625]">
-                      +{(project.users?.length || 0) - 5}
-                    </div>
-                  )}
-                  {(project.users?.length || 0) === 0 && (
+                    )
+                  ) : (
                     <span className="text-gray-600 italic text-sm">No members yet</span>
                   )}
                 </div>
@@ -489,7 +507,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-6 mt-1">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 mb-6 mt-1">
         <Card
           className="bg-[#1A1625] border-gray-800 rounded-xl h-[600px]"
           styles={{ body: { height: '100%', display: 'flex', flexDirection: 'column', padding: '24px' } }}
@@ -581,24 +599,15 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
               className="flex-1 overflow-y-auto pr-1 custom-scrollbar"
             >
               <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-                {assignments.map((assignment: Record<string, unknown>, index: number) => {
-                  const mapped: GetAssignmentsParams = {
-                    assignmentId: String(assignment.assignmentId || assignment.id),
-                    assignmentName: String(assignment.assignmentName || assignment.name),
-                    status: String(assignment.status || assignment.assignmentStatus),
-                    createdAt: String(assignment.createdAt),
-                    updatedAt: String(assignment.updatedAt)
-                  }
-                  return (
+                {assignments.map((assignment: GetAssignmentsParams, index: number) => (
                     <AssignmentCard
-                      key={mapped.assignmentId || index}
-                      {...mapped}
-                      onClick={() => setSelectedAssignmentId(mapped.assignmentId!)}
+                      key={assignment.assignmentId || index}
+                      {...assignment}
+                      onClick={() => setSelectedAssignmentId(assignment.assignmentId!)}
                       onEdit={() => handleEditAssignment(assignment)}
                       onDelete={() => handleDeleteAssignment(assignment)}
                     />
-                  )
-                })}
+                ))}
               </div>
             </div>
           )}
