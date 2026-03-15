@@ -271,7 +271,10 @@ export default function AnnotatorDashboardPage() {
               <AnnotationProjectDetail project={projectDetail} />
               {guideline && <GuidelineSection guideline={guideline.content} />}
               <div className="md:col-span-2">
-                <AnnotatorDatasetCard projectId={projectDetail.id} />
+                <AnnotatorDatasetCard 
+                  projectId={projectDetail.id} 
+                  assignmentId={assignmentId}
+                />
               </div>
             </div>
           </>

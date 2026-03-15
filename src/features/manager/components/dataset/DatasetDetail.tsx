@@ -3,6 +3,7 @@ import { App, Spin, Typography, Card, Descriptions, Empty, Pagination, Image } f
 import { FolderOutlined, DatabaseOutlined, PictureOutlined } from '@ant-design/icons'
 import datasetApi from '@/api/DatasetApi'
 import projectApi from '@/api/ProjectApi'
+import { labelApi } from '@/api/LabelApi'
 import { ProjectDetail } from '../dashboard/ProjectDetail'
 import { useSearchParams } from 'react-router-dom'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
@@ -16,6 +17,13 @@ interface DatasetDetailData {
   description?: string
   totalItems?: number
   createdAt?: string
+}
+
+interface Label {
+  labelId: string
+  labelName: string
+  color: string
+  description?: string
 }
 
 interface DatasetDetailProps {
@@ -42,6 +50,7 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
   const { message } = App.useApp()
   const [dataset, setDataset] = useState<DatasetDetailData | null>(null)
   const [projectName, setProjectName] = useState<string | null>(null)
+  const [labels, setLabels] = useState<Label[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [dataItems, setDataItems] = useState<DataItem[]>([])
   const [itemsLoading, setItemsLoading] = useState<boolean>(false)
@@ -128,7 +137,21 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
           if (isMounted) setItemsLoading(false)
         }
       }
+
+      const fetchLabels = async () => {
+        try {
+          const response = await labelApi.getLabelsByDatasetId(datasetId)
+          const data = response.data?.data || response.data || []
+          if (isMounted) {
+            setLabels(Array.isArray(data) ? data : [data])
+          }
+        } catch (error) {
+          console.error('Error fetching labels:', error)
+        }
+      }
+
       fetchItems()
+      fetchLabels()
     }
 
     return () => {
@@ -299,7 +322,7 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 mb-6 mt-1">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 mt-1">
         <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
           <div className="flex items-center justify-between mb-4">
             <span className="text-white text-lg font-display flex items-center gap-2">
@@ -320,6 +343,38 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
           ) : (
             <div className="text-gray-500 italic py-4 text-center">No associated project</div>
           )}
+        </Card>
+
+        <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-white text-lg font-display flex items-center gap-2">
+              <span className="material-symbols-outlined text-emerald-400">label</span>
+              Dataset Labels
+            </span>
+          </div>
+          <div className="space-y-3 max-h-[150px] overflow-y-auto custom-scrollbar pr-2">
+            {labels.length === 0 ? (
+              <div className="text-gray-500 italic py-4 text-center">No labels defined</div>
+            ) : (
+              labels.map((label) => (
+                <div
+                  key={label.labelId}
+                  className="flex items-center gap-3 bg-[#231e31] p-3 rounded-lg border border-white/5"
+                >
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: label.color || '#6366f1' }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-white font-medium truncate">{label.labelName}</p>
+                    {label.description && (
+                      <p className="text-[10px] text-gray-500 truncate">{label.description}</p>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </Card>
       </div>
 
