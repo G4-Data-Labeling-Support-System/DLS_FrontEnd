@@ -46,7 +46,19 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
       try {
         const res = await projectApi.getProjects()
         const data = res.data?.data || res.data
-        setProjects(Array.isArray(data) ? data : [])
+        const projectList = Array.isArray(data) ? data : []
+
+        // Robust normalization similar to AllProjects.tsx
+        const normalizedProjects = projectList.map((p: any) => {
+          const projectInfo = p.project || p
+          return {
+            projectId: String(projectInfo.projectId || projectInfo.id || projectInfo.project_id || p.projectId || p.id || p.project_id || ''),
+            projectName: String(projectInfo.projectName || projectInfo.name || projectInfo.project_name || p.projectName || p.name || p.project_name || ''),
+            projectStatus: String(projectInfo.projectStatus || projectInfo.status || projectInfo.project_status || p.projectStatus || p.status || p.project_status || '')
+          }
+        })
+
+        setProjects(normalizedProjects.filter((p: any) => p.projectStatus?.toUpperCase() !== 'INACTIVE'))
       } catch (error) {
         console.error(error)
         message.error('Failed to load projects.')
@@ -154,6 +166,16 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
         message.error('Please select a project')
         setIsSubmitting(false)
         return
+      }
+
+      // Check if project is inactive
+      if (resolvedProjectId) {
+        const selectedProject = projects.find(p => String(p.projectId || p.id) === String(resolvedProjectId))
+        if (selectedProject && (selectedProject.projectStatus as string)?.toUpperCase() === 'INACTIVE') {
+          message.error('Cannot create assignment for an inactive project.')
+          setIsSubmitting(false)
+          return
+        }
       }
 
       const payload: Partial<GetAssignmentsParams> = {

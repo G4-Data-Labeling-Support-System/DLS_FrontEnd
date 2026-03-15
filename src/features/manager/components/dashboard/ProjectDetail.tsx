@@ -270,6 +270,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
           icon={<EditOutlined />}
           className="bg-violet-600 hover:bg-violet-500 border-none"
           onClick={() => setIsEditProjectModalVisible(true)}
+          disabled={project.projectStatus?.toUpperCase() === 'INACTIVE'}
         >
           Edit
         </Button>
@@ -441,6 +442,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
                 size="small"
                 className="bg-violet-600 hover:bg-violet-500 border-none"
                 onClick={() => setIsCreateDatasetModalVisible(true)}
+                disabled={project.projectStatus?.toUpperCase() === 'INACTIVE'}
               >
                 + New
               </Button>
@@ -494,6 +496,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
                   setEditingAssignment(null)
                   setIsCreateAssignmentModalVisible(true)
                 }}
+                disabled={project.projectStatus?.toUpperCase() === 'INACTIVE'}
               >
                 + New
               </Button>

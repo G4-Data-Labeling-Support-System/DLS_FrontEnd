@@ -84,10 +84,19 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
     const fetchProjects = async () => {
       if (!open) return
       try {
-        const response = await projectApi.getProjects({ projectStatus: 'ACTIVE' })
+        const response = await projectApi.getProjects()
         const data = response.data?.data || response.data || []
         if (Array.isArray(data)) {
-          setProjects(data)
+          // Robust normalization similar to AllProjects.tsx
+          const normalizedProjects = data.map((p: any) => {
+            const projectInfo = p.project || p
+            return {
+              projectId: String(projectInfo.projectId || projectInfo.id || projectInfo.project_id || p.projectId || p.id || p.project_id || ''),
+              projectName: String(projectInfo.projectName || projectInfo.name || projectInfo.project_name || p.projectName || p.name || p.project_name || ''),
+              projectStatus: String(projectInfo.projectStatus || projectInfo.status || projectInfo.project_status || p.projectStatus || p.status || p.project_status || '')
+            }
+          })
+          setProjects(normalizedProjects.filter((p: any) => p.projectStatus?.toUpperCase() !== 'INACTIVE'))
         }
       } catch (error) {
         console.error('Failed to fetch projects list:', error)
@@ -157,6 +166,16 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
         if (onSuccess) onSuccess(initialData.datasetId)
         handleCancel()
         return
+      }
+
+      // Check if project is inactive
+      if (values.projectId) {
+        const selectedProject = projects.find(p => String(p.projectId) === String(values.projectId))
+        if (selectedProject && selectedProject.projectStatus?.toUpperCase() === 'INACTIVE') {
+          message.error('Cannot create dataset for an inactive project.')
+          setLoading(false)
+          return
+        }
       }
 
       let files = fileList
