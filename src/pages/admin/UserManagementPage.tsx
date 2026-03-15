@@ -12,10 +12,11 @@ import {
   EditOutlined,
   DeleteOutlined,
   MoreOutlined,
-  CheckCircleOutlined
+  CheckCircleOutlined,
+  CloseCircleOutlined
 } from '@ant-design/icons'
 import { App, Dropdown, type MenuProps } from 'antd'
-import { useUsers, useDeleteUser, useActivateUser } from '@/features/admin/hooks/useUsers'
+import { useUsers, useDeleteUser, useActivateUser, useDeactivateUser } from '@/features/admin/hooks/useUsers'
 
 export default function UserManagement() {
   const { message } = App.useApp()
@@ -26,6 +27,7 @@ export default function UserManagement() {
   })
   const { data: rawUsers, isLoading } = useUsers()
   const deleteUserMutation = useDeleteUser()
+  const deactivateUserMutation = useDeactivateUser()
   const activateUserMutation = useActivateUser()
 
   // [Logic: Safety Check] Kiểm tra cấu trúc trả về từ API
@@ -63,42 +65,61 @@ export default function UserManagement() {
       },
       isUserActive
         ? {
-            key: 'delete',
-            label: 'Remove User',
-            icon: <DeleteOutlined />,
-            danger: true,
-            onClick: () => {
-              const userId = user.userId || user.id
-              if (window.confirm(`Are you sure you want to deactivate ${user.username}?`)) {
-                deleteUserMutation.mutate(userId, {
-                  onSuccess: () => {
-                    message.success(`User ${user.username} has been deactivated.`)
-                  },
-                  onError: (error) => {
-                    message.error(`Failed to deactivate user: ${error.message || 'Unknown error'}`)
-                  }
-                })
-              }
+          key: 'deactivate',
+          label: 'Inactive User',
+          icon: <CloseCircleOutlined style={{ color: '#f59e0b' }} />,
+          danger: false,
+          onClick: () => {
+            const userId = user.userId || user.id
+            if (window.confirm(`Are you sure you want to deactivate ${user.username || user.fullName}?`)) {
+              deactivateUserMutation.mutate(userId, {
+                onSuccess: () => {
+                  message.success(`User ${user.username || user.fullName} has been deactivated.`)
+                },
+                onError: (error) => {
+                  message.error(`Failed to deactivate user: ${error.message || 'Unknown error'}`)
+                }
+              })
             }
           }
+        }
         : {
-            key: 'activate',
-            label: 'Activate User',
-            icon: <CheckCircleOutlined style={{ color: '#10b981' }} />,
-            onClick: () => {
-              const userId = user.userId || user.id
-              if (window.confirm(`Are you sure you want to activate ${user.username}?`)) {
-                activateUserMutation.mutate(userId, {
-                  onSuccess: () => {
-                    message.success(`User ${user.username} has been activated.`)
-                  },
-                  onError: (error) => {
-                    message.error(`Failed to activate user: ${error.message || 'Unknown error'}`)
-                  }
-                })
-              }
+          key: 'activate',
+          label: 'Activate User',
+          icon: <CheckCircleOutlined style={{ color: '#10b981' }} />,
+          onClick: () => {
+            const userId = user.userId || user.id
+            if (window.confirm(`Are you sure you want to activate ${user.username || user.fullName}?`)) {
+              activateUserMutation.mutate(userId, {
+                onSuccess: () => {
+                  message.success(`User ${user.username || user.fullName} has been activated.`)
+                },
+                onError: (error) => {
+                  message.error(`Failed to activate user: ${error.message || 'Unknown error'}`)
+                }
+              })
             }
           }
+        },
+      {
+        key: 'delete',
+        label: 'Remove User',
+        icon: <DeleteOutlined />,
+        danger: true,
+        onClick: () => {
+          const userId = user.userId || user.id
+          if (window.confirm(`Are you sure you want to permanently delete ${user.username || user.fullName}? This cannot be undone.`)) {
+            deleteUserMutation.mutate(userId, {
+              onSuccess: () => {
+                message.success(`User ${user.username || user.fullName} has been permanently removed.`)
+              },
+              onError: (error) => {
+                message.error(`Failed to remove user: ${error.message || 'Unknown error'}`)
+              }
+            })
+          }
+        }
+      }
     ]
   }
 
@@ -328,15 +349,14 @@ export default function UserManagement() {
                       <td className="px-6 py-4">
                         <span
                           className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold
-                                                ${
-                                                  roleLower === 'annotator'
-                                                    ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
-                                                    : roleLower === 'reviewer'
-                                                      ? 'border-amber-500/20 bg-amber-500/10 text-amber-400'
-                                                      : roleLower === 'manager'
-                                                        ? 'border-purple-500/20 bg-purple-500/10 text-purple-400'
-                                                        : 'border-red-500/20 bg-red-500/10 text-red-400'
-                                                }`}
+                                                ${roleLower === 'annotator'
+                              ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
+                              : roleLower === 'reviewer'
+                                ? 'border-amber-500/20 bg-amber-500/10 text-amber-400'
+                                : roleLower === 'manager'
+                                  ? 'border-purple-500/20 bg-purple-500/10 text-purple-400'
+                                  : 'border-red-500/20 bg-red-500/10 text-red-400'
+                            }`}
                         >
                           {displayRole}
                         </span>
@@ -399,10 +419,10 @@ export default function UserManagement() {
         userData={
           successModal.data
             ? {
-                name: successModal.data.fullName,
-                email: successModal.data.email,
-                role: successModal.data.role
-              }
+              name: successModal.data.fullName,
+              email: successModal.data.email,
+              role: successModal.data.role
+            }
             : undefined
         }
       />
