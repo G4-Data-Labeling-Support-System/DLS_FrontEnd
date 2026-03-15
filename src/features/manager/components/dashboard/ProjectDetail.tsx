@@ -11,16 +11,12 @@ import {
   App,
   Form,
   Input,
-  Dropdown,
-  Select,
-  DatePicker
+  Dropdown
 } from 'antd'
-import dayjs from 'dayjs'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
 import { EditOutlined, MoreOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import assignmentApi, { type GetAssignmentsParams } from '@/api/AssignmentApi'
 import guidelineApi from '@/api/GuidelineApi'
-import { userApi } from '@/api/userApi'
 import { AssignmentDetail } from './AssignmentDetail'
 import { CreateAssignmentModal } from './CreateAssignmentModal'
 import { CreateProjectModal } from './CreateProjectModal'
@@ -76,7 +72,6 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
   const [isEditProjectModalVisible, setIsEditProjectModalVisible] = useState(false)
   const hasShownFirstAssignmentModal = useRef(false)
   const [guidelineForm] = Form.useForm()
-  const [assignmentEditForm] = Form.useForm()
   const [searchParams, setSearchParams] = useSearchParams()
 
   // Edit/Delete state for guidelines
@@ -85,16 +80,10 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
 
   // Edit/Delete state for assignments
   const [editingAssignment, setEditingAssignment] = useState<GetAssignmentsParams | null>(null)
-  const [isAssignmentEditModalVisible, setIsAssignmentEditModalVisible] = useState(false)
   const [deleteAssignmentModalOpen, setDeleteAssignmentModalOpen] = useState(false)
   const [deletingAssignment, setDeletingAssignment] = useState(false)
   const [deletingAssignmentId, setDeletingAssignmentId] = useState<string | null>(null)
   const [deletingAssignmentName, setDeletingAssignmentName] = useState('')
-
-  // User lists for assignment edit
-  const [editAnnotators, setEditAnnotators] = useState<Record<string, unknown>[]>([])
-  const [editReviewers, setEditReviewers] = useState<Record<string, unknown>[]>([])
-  const [editUsersLoading, setEditUsersLoading] = useState(false)
 
   // Assignment detail view via URL search params or local state for inline usage
   const [localAssignmentId, setLocalAssignmentId] = useState<string | null>(null)
@@ -189,88 +178,11 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
     }
   }
 
-  // --- Assignment Edit/Delete ---
-  const fetchUsersForEdit = async () => {
-    setEditUsersLoading(true)
-    try {
-      const userRes = await userApi.getUsers()
-      const allUsers = (
-        Array.isArray(userRes)
-          ? userRes
-          : (userRes as unknown as { data?: Record<string, unknown>[] })?.data || []
-      ) as Record<string, unknown>[]
-
-      setEditAnnotators(
-        allUsers.filter((u) => {
-          const role = String(u.role || u.userRole || '').toUpperCase()
-          return role.includes('ANNOTATOR')
-        })
-      )
-      setEditReviewers(
-        allUsers.filter((u) => {
-          const role = String(u.role || u.userRole || '').toUpperCase()
-          return role.includes('REVIEWER')
-        })
-      )
-    } catch (error) {
-      console.error('Failed to fetch users for edit', error)
-    } finally {
-      setEditUsersLoading(false)
-    }
-  }
-
-  const renderEditUserOption = (u: Record<string, unknown>) => {
-    const userId = String(u.userId || u.id || '')
-    const name = (u.fullName as string) || (u.username as string) || (u.name as string) || 'Unknown'
-    const avatarSrc =
-      (u.avatar as string) ||
-      (u.coverImage as string) ||
-      `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`
-    return (
-      <Select.Option key={userId} value={userId}>
-        <div className="flex items-center gap-2">
-          <Avatar src={avatarSrc} size="small" />
-          <span>{name}</span>
-        </div>
-      </Select.Option>
-    )
-  }
-
   const handleEditAssignment = (assignment: GetAssignmentsParams) => {
     setEditingAssignment(assignment)
-    assignmentEditForm.setFieldsValue({
-      assignmentName: assignment.assignmentName,
-      assignedTo: assignment.assignedTo,
-      reviewedBy: assignment.reviewedBy,
-      description: assignment.description,
-      dueDate: assignment.dueDate ? dayjs(assignment.dueDate) : null,
-      assignmentStatus: assignment.status
-    })
-    setIsAssignmentEditModalVisible(true)
-    fetchUsersForEdit()
+    setIsCreateAssignmentModalVisible(true)
   }
 
-  const handleAssignmentEditSubmit = async () => {
-    try {
-      const values = await assignmentEditForm.validateFields()
-      const assignmentId = String(editingAssignment?.assignmentId)
-      await assignmentApi.updateAssignment(assignmentId, {
-        assignmentName: values.assignmentName,
-        assignedTo: values.assignedTo,
-        reviewedBy: values.reviewedBy,
-        description: values.description,
-        dueDate: values.dueDate ? values.dueDate.toISOString() : undefined,
-        assignmentStatus: values.assignmentStatus
-      })
-      message.success('Assignment updated successfully!')
-      setIsAssignmentEditModalVisible(false)
-      setEditingAssignment(null)
-      assignmentEditForm.resetFields()
-      invalidateProjectDetail(projectId)
-    } catch {
-      message.error('Failed to update assignment')
-    }
-  }
 
   const handleDeleteAssignment = (assignment: GetAssignmentsParams) => {
     const assignmentId = String(assignment.assignmentId)
@@ -617,9 +529,14 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
       <CreateAssignmentModal
         open={isCreateAssignmentModalVisible}
         projectId={projectId}
-        onCancel={() => setIsCreateAssignmentModalVisible(false)}
+        initialData={editingAssignment || undefined}
+        onCancel={() => {
+          setIsCreateAssignmentModalVisible(false)
+          setEditingAssignment(null)
+        }}
         onSuccess={() => {
           setIsCreateAssignmentModalVisible(false)
+          setEditingAssignment(null)
           invalidateProjectDetail(projectId)
         }}
       />
@@ -699,97 +616,6 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
         </div>
       </GlassModal>
 
-      {/* Assignment Edit Modal */}
-      <GlassModal
-        open={isAssignmentEditModalVisible}
-        onCancel={() => {
-          setIsAssignmentEditModalVisible(false)
-          setEditingAssignment(null)
-          assignmentEditForm.resetFields()
-        }}
-        destroyOnHidden
-        width={600}
-      >
-        <div className="px-8 pt-10 pb-8">
-          <div className="text-center border-b border-white/5 pb-6 mb-6">
-            <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
-              Edit Assignment
-            </h2>
-          </div>
-          <Form form={assignmentEditForm} layout="vertical">
-            <Form.Item
-              label="Assignment Name"
-              name="assignmentName"
-              rules={[{ required: true, message: 'Please enter assignment name' }]}
-            >
-              <Input placeholder="Enter assignment name" />
-            </Form.Item>
-            <Form.Item label="Assigned To" name="assignedTo">
-              <Select
-                placeholder="Select annotator"
-                allowClear
-                showSearch
-                optionFilterProp="children"
-                loading={editUsersLoading}
-              >
-                {editAnnotators.map(renderEditUserOption)}
-              </Select>
-            </Form.Item>
-            <Form.Item label="Reviewed By" name="reviewedBy">
-              <Select
-                placeholder="Select reviewer"
-                allowClear
-                showSearch
-                optionFilterProp="children"
-                loading={editUsersLoading}
-              >
-                {editReviewers.map(renderEditUserOption)}
-              </Select>
-            </Form.Item>
-            <Form.Item label="Description" name="description">
-              <Input.TextArea placeholder="Enter description" rows={3} />
-            </Form.Item>
-            <Form.Item label="Due Date" name="dueDate">
-              <DatePicker
-                className="w-full"
-                showTime
-                format="DD/MM/YYYY HH:mm"
-                placeholder="Select due date"
-              />
-            </Form.Item>
-            <Form.Item label="Status" name="assignmentStatus">
-              <Select
-                placeholder="Select status"
-                options={[
-                  { value: 'ASSIGNED', label: 'Assigned' },
-                  { value: 'ACTIVE', label: 'Active' },
-                  { value: 'COMPLETED', label: 'Completed' },
-                  { value: 'PAUSED', label: 'Paused' }
-                ]}
-              />
-            </Form.Item>
-            <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
-              <Button
-                onClick={() => {
-                  setIsAssignmentEditModalVisible(false)
-                  setEditingAssignment(null)
-                  assignmentEditForm.resetFields()
-                }}
-                className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="primary"
-                onClick={handleAssignmentEditSubmit}
-                className="bg-violet-600 hover:bg-violet-500 border-none"
-              >
-                Save
-              </Button>
-            </div>
-          </Form>
-        </div>
-      </GlassModal>
 
       <GlassModal
         open={deleteAssignmentModalOpen}

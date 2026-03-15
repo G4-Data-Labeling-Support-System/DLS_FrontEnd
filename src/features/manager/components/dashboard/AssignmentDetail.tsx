@@ -278,7 +278,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
               color={getStatusColor(assignment.status)}
               className="m-0 font-medium text-sm px-3 py-1"
             >
-              {assignment.status || 'UNKNOWN'}
+              {assignment.status}
             </Tag>
           </div>
         </div>

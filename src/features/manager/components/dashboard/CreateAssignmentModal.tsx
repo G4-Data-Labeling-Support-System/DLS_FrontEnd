@@ -115,11 +115,11 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
           assignmentName: initialData.assignmentName,
           assignedTo: initialData.assignedTo,
           reviewerId: initialData.reviewedBy || initialData.reviewerId,
-          description: initialData.description,
+          description: initialData.description || initialData.descriptionAssignment,
           dueDate: initialData.dueDate ? dayjs(initialData.dueDate) : undefined,
           datasetId: initialData.datasetId,
           projectId: initialData.projectId,
-          assignedBy: initialData.assignedBy
+          assignedBy: initialData.assignedBy,
         })
         if (initialData.projectId) {
           setSelectedProjectId(initialData.projectId)
@@ -130,7 +130,8 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
           const managerId =
             (currentUser as unknown as Record<string, unknown>).userId || currentUser.id
           form.setFieldsValue({
-            assignedBy: managerId
+            assignedBy: managerId,
+            assignmentStatus: 'ASSIGNED'
           })
         }
         if (projectId) {
@@ -155,23 +156,31 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
         return
       }
 
-      const payload = {
+      const payload: Partial<GetAssignmentsParams> = {
         assignmentName: values.assignmentName,
         assignedTo: values.assignedTo,
         reviewedBy: values.reviewerId,
         description: values.description,
         dueDate: values.dueDate ? values.dueDate.toISOString() : undefined,
-        assignmentStatus: 'ASSIGNED'
       }
 
       if (isEditMode && initialData?.assignmentId) {
-        await assignmentApi.updateAssignment(initialData.assignmentId, payload)
+        const updatePayload = {
+          ...payload,
+          projectId: initialData.projectId,
+          datasetId: initialData.datasetId,
+          assignmentStatus: initialData.assignmentStatus || initialData.status,
+          totalItems: initialData.totalItems,
+          completedItems: initialData.completedItems
+        }
+        await assignmentApi.updateAssignment(initialData.assignmentId, updatePayload)
         message.success('Assignment updated successfully!')
       } else {
         const createPayload = {
           ...payload,
           assignedBy: values.assignedBy,
-          datasetId: values.datasetId
+          datasetId: values.datasetId,
+          assignmentStatus: 'ASSIGNED'
         }
         await assignmentApi.createAssignmentForProject(resolvedProjectId!, createPayload)
         message.success('Assignment created successfully!')
@@ -179,7 +188,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
 
       form.resetFields()
       onSuccess()
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error && typeof error === 'object' && 'errorFields' in error) {
         return
       }
@@ -201,7 +210,10 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
       //     form.setFields(fieldErrors)
       // }
 
-      const apiError = error?.response?.data?.message || error?.message || (isEditMode ? 'Failed to update assignment' : 'Failed to create assignment')
+      const apiError =
+        (error as Record<string, any>)?.response?.data?.message ||
+        (error as Error)?.message ||
+        (isEditMode ? 'Failed to update assignment' : 'Failed to create assignment')
       message.error(apiError)
     } finally {
       setIsSubmitting(false)
@@ -396,6 +408,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
           >
             <DatePicker className="w-full" style={{ width: '100%' }} />
           </Form.Item>
+
 
           <Form.Item label="Description" name="description">
             <Input.TextArea placeholder="Enter description" rows={4} />
