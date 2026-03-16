@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { Tooltip, Spin } from 'antd'
 import assignmentApi from '@/api/AssignmentApi'
+import taskApi from '@/api/TaskApi'
 
 interface Shape {
   type: 'bounding_box' | 'polygon'
@@ -67,7 +68,7 @@ export default function AnnotationPage() {
       setLoading(true)
       try {
         // 1. Fetch task items
-        const taskRes = await assignmentApi.getTaskById(taskId)
+        const taskRes = await taskApi.getTaskById(taskId)
         const items = taskRes.data?.data || taskRes.data || []
         setDataItems(Array.isArray(items) ? items : [])
 

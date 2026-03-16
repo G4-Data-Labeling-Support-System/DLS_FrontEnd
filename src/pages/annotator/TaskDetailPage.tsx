@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { StatusStyle as getTaskStatusStyle } from '@/features/annotator'
-import assignmentApi from '@/api/AssignmentApi'
+import taskApi from '@/api/TaskApi'
 import type { Task } from '@/features/annotator/components/TaskSection'
 
 interface DataItem {
@@ -34,7 +34,7 @@ export default function TaskDetailPage() {
         const assignmentId = location.state?.assignmentId || taskId
 
         // 1. Fetch task details
-        const tasksRes = await assignmentApi.getTasksByAssignmentId(assignmentId)
+        const tasksRes = await taskApi.getTasksByAssignmentId(assignmentId)
         const tasksData = tasksRes.data?.data || tasksRes.data || []
 
         let currentTask = Array.isArray(tasksData)
@@ -52,7 +52,7 @@ export default function TaskDetailPage() {
         setTask(currentTask)
 
         // 2. Fetch data items using taskId directly
-        const itemsRes = await assignmentApi.getTaskById(taskId)
+        const itemsRes = await taskApi.getTaskById(taskId)
         const itemsData = itemsRes.data?.data || itemsRes.data || []
         setDataItems(Array.isArray(itemsData) ? itemsData : [])
       } catch (err) {
