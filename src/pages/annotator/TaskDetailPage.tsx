@@ -32,7 +32,7 @@ export default function TaskDetailPage() {
         const assignmentId = location.state?.assignmentId || taskId
 
         // 1. Fetch task details
-        const tasksRes = await assignmentApi.getTasksByAssignmentId(assignmentId)
+        const tasksRes = await taskApi.getTasksByAssignmentId(assignmentId)
         const tasksData = tasksRes.data?.data || tasksRes.data || []
 
         let currentTask = Array.isArray(tasksData)

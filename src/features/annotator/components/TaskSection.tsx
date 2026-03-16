@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import TaskCard from './TaskCard'
-import assignmentApi from '@/api/AssignmentApi'
+import taskApi from '@/api/TaskApi'
 
 /** Groups tasks by their batchLabel */
 export interface Task {
@@ -15,6 +15,9 @@ export interface Task {
   taskStatus?: string
   status?: string
   annotationStatus?: string
+  completedItems?: number
+  totalItems?: number
+  reviewStatus?: string
   [key: string]: string | number | boolean | undefined | object | null
 }
 
@@ -42,7 +45,7 @@ export default function TasksSection({
       try {
         setLoading(true)
         setError(null)
-        const response = await assignmentApi.getTasksByAssignmentId(assignmentId)
+        const response = await taskApi.getTasksByAssignmentId(assignmentId)
         const rawData = response.data?.data || response.data || []
 
         if (Array.isArray(rawData)) {
@@ -50,7 +53,8 @@ export default function TasksSection({
             ...t,
             id: String(t.taskId || t.id || ''),
             name: String(t.taskName || t.name || ''),
-            batchLabel: String(t.batchLabel || t.taskType || 'Unbatched')
+            batchLabel: String(t.batchLabel || t.taskType || 'Unbatched'),
+            taskStatus: String(t.task_status || t.taskStatus || t.status || 'PENDING')
           }))
           setTasks(mappedTasks)
         }
@@ -67,12 +71,28 @@ export default function TasksSection({
 
   // 1. Filter tasks based on search and status
   const filteredTasks = useMemo(() => {
-    return tasks.filter((task) => {
+    const filtered = tasks.filter((task) => {
       const name = (task.name || task.filename || '').toLowerCase()
-      const status = (task.taskStatus || task.status || 'PENDING').toUpperCase()
+      const taskStatus = (task.taskStatus || task.status || task.reviewStatus || 'PENDING').toUpperCase()
       const matchesSearch = name.includes(searchTerm.toLowerCase())
-      const matchesStatus = statusFilter === 'ALL' || status === statusFilter
+      const matchesStatus = statusFilter === 'ALL' || taskStatus === statusFilter
       return matchesSearch && matchesStatus
+    })
+
+    // Sort by TASK-XX number
+    return filtered.sort((a, b) => {
+      const aName = a.name || a.filename || ''
+      const bName = b.name || b.filename || ''
+      
+      const aMatch = aName.match(/TASK-(\d+)/i)
+      const bMatch = bName.match(/TASK-(\d+)/i)
+      
+      if (aMatch && bMatch) {
+        return parseInt(aMatch[1]) - parseInt(bMatch[1])
+      }
+      
+      // Fallback for non-matching names
+      return aName.localeCompare(bName, undefined, { numeric: true, sensitivity: 'base' })
     })
   }, [tasks, searchTerm, statusFilter])
 

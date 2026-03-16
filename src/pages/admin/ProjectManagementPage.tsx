@@ -1,10 +1,6 @@
-import { useState } from 'react'
 import { themeClasses } from '@/styles'
-import AddProjectModal from '../../features/admin/components/AddProjectModal'
 import { Button } from '@/shared/components/ui/Button'
 import {
-  FolderAddOutlined,
-  PlusOutlined,
   DatabaseOutlined,
   DesktopOutlined,
   EditOutlined,
@@ -28,7 +24,6 @@ interface Project {
 
 export default function ProjectManagement() {
   const { message } = App.useApp()
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
 
   const { data: rawProjects, isLoading } = useProjects()
   const deleteProjectMutation = useDeleteProject()
@@ -81,17 +76,7 @@ export default function ProjectManagement() {
             Manage active projects, monitor progress, and access related datasets.
           </p>
         </div>
-        <Button
-          onClick={() => setIsAddModalOpen(true)}
-          variant="primary"
-          className="group relative flex items-center gap-2 overflow-hidden px-5 py-2.5 font-body"
-        >
-          <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity group-hover:opacity-100"></div>
-          <FolderAddOutlined className="text-lg" />
-          <span>Add Project</span>
-        </Button>
       </div>
-
       {/* Stats Cards */}
       <div className="grid gap-5 md:grid-cols-3">
         {/* Total Projects */}
@@ -206,15 +191,6 @@ export default function ProjectManagement() {
             </p>
           </div>
           <div className="flex gap-3">
-            <Button
-              onClick={() => setIsAddModalOpen(true)}
-              variant="primary"
-              className="group relative flex items-center gap-2 overflow-hidden px-4 py-2 font-body text-sm font-semibold"
-            >
-              <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity group-hover:opacity-100"></div>
-              <PlusOutlined className="text-lg" />
-              <span>Add Project</span>
-            </Button>
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -330,9 +306,6 @@ export default function ProjectManagement() {
           </table>
         </div>
       </div>
-
-      {/* Modals */}
-      <AddProjectModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} />
     </div>
   )
 }

@@ -23,7 +23,6 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModa
 
   const handleSubmit = async (values: {
     username: string
-    fullName: string
     email: string
     password?: string
     role: string
@@ -39,7 +38,8 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModa
 
     const payload: User & { password?: string; status: string } = {
       ...values,
-      id: '', // Temporary for cast if needed, but createUser usually returns User
+      id: '',
+      fullName: values.username, // fullName not collected, default to username
       role: roleMapping[values.role] || values.role,
       status: 'ACTIVE',
       coverImage: 'https://placehold.co/400'

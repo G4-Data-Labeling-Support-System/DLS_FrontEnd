@@ -51,7 +51,8 @@ export const ENDPOINTS = {
     BY_ANNOTATOR: (annotatorId: string) => `/assignments/annotators/${annotatorId}`,
     DELETE: (id: string) => `/assignments/${id}`,
     CREATE_BY_PROJECT: (projectId: string) => `/assignments/projects/${projectId}`,
-    LABELS: (assignmentId: string) => `/assignments/${assignmentId}/labels`
+    LABELS: (assignmentId: string) => `/assignments/${assignmentId}/labels`,
+    DATASET: (assignmentId: string) => `/assignments/${assignmentId}/dataset`
   },
 
   ANNOTATIONS: {
@@ -72,7 +73,8 @@ export const ENDPOINTS = {
     DETAIL: (id: string) => `/labels/${id}`,
     CREATE: (datasetId: string) => `/datasets/${datasetId}/labels`,
     UPDATE: (id: string) => `/labels/${id}`,
-    DELETE: (id: string) => `/labels/${id}`
+    DELETE: (id: string) => `/labels/${id}`,
+    BY_DATASET: (datasetId: string) => `/datasets/${datasetId}/labels`
   },
 
   REVIEWER: {
