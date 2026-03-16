@@ -43,17 +43,16 @@ export const DatasetCard: React.FC<DatasetCardProps> = ({
 
   const getStatusColor = (s?: string) => {
     switch (s?.toUpperCase()) {
-      case 'ACTIVE':
-      case 'ASSIGNED':
-        return 'processing'
+      case 'INACTIVE':
+      case 'ARCHIVE':
+        return 'error'
       case 'COMPLETED':
         return 'success'
       case 'PAUSED':
         return 'warning'
-      case 'ARCHIVE':
+      case 'ACTIVE':
+      case 'ASSIGNED':
       case 'UNASSIGNED':
-      case 'INACTIVE':
-        return 'error'
       default:
         return 'default'
     }
@@ -115,7 +114,7 @@ export const DatasetCard: React.FC<DatasetCardProps> = ({
         </div>
       ) : null}
       <div className="flex justify-between items-start mb-2">
-        <div className="flex-1 pr-2 flex items-center gap-2">
+        <div className="flex-1 pr-2">
           <Title
             level={5}
             className="!text-white !m-0 !text-sm leading-tight line-clamp-1"
@@ -123,6 +122,8 @@ export const DatasetCard: React.FC<DatasetCardProps> = ({
           >
             {datasetName || 'Unnamed Dataset'}
           </Title>
+        </div>
+        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center gap-2">
             <div className="inline-block px-2 py-0.5 bg-[#2d2640] text-gray-300 text-[10px] font-bold rounded tracking-wide whitespace-nowrap">
               {totalItems || 0} Items
@@ -133,8 +134,6 @@ export const DatasetCard: React.FC<DatasetCardProps> = ({
               </Tag>
             )}
           </div>
-        </div>
-        <div onClick={(e) => e.stopPropagation()}>
           <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
             <Button
               type="text"

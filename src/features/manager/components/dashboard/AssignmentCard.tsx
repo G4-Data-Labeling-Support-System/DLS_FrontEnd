@@ -106,7 +106,7 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
         </div>
       ) : null}
       <div className="flex justify-between items-start mb-2">
-        <div className="flex-1 pr-2 flex items-center gap-2">
+        <div className="flex-1 pr-2">
           <Title
             level={5}
             className="!text-white !m-0 !text-sm leading-tight line-clamp-1"
@@ -114,11 +114,11 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
           >
             {assignmentName || 'Unnamed Assignment'}
           </Title>
+        </div>
+        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
           <Tag color={getStatusColor(status)} className="m-0 text-[10px] px-1.5 py-0 font-medium whitespace-nowrap">
             {status || 'UNKNOWN'}
           </Tag>
-        </div>
-        <div onClick={(e) => e.stopPropagation()}>
           <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
             <Button
               type="text"

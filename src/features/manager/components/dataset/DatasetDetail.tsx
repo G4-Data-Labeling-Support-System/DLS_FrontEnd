@@ -202,17 +202,16 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
 
   const getStatusColor = (s?: string) => {
     switch (s?.toUpperCase()) {
-      case 'ACTIVE':
-      case 'ASSIGNED':
-        return 'processing'
+      case 'INACTIVE':
+      case 'ARCHIVE':
+        return 'error'
       case 'COMPLETED':
         return 'success'
       case 'PAUSED':
         return 'warning'
-      case 'ARCHIVE':
+      case 'ACTIVE':
+      case 'ASSIGNED':
       case 'UNASSIGNED':
-      case 'INACTIVE':
-        return 'error'
       default:
         return 'default'
     }

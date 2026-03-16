@@ -23,7 +23,6 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   projectName,
   projectStatus,
   createdAt,
-  updatedAt,
   onEdit,
   onDelete,
   onCancelProject,
@@ -80,20 +79,23 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
 
   return (
     <Card
-      className="bg-[#1A1625] border border-violet-500/20 rounded-xl overflow-hidden hover:bg-violet-500/10 hover:border-fuchsia-500/50 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(139,92,246,0.15)] transition-all duration-500 flex flex-col h-full cursor-pointer"
+      className="bg-[#1A1625] border border-violet-500/20 rounded-xl overflow-hidden hover:bg-violet-500/10 hover:border-fuchsia-500/50 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(139,92,246,0.15)] transition-all duration-500 flex flex-col h-full cursor-pointer relative pt-4 mt-3"
       onClick={onClick}
     >
       <div className="flex justify-between items-start mb-2">
         <div className="flex-1 pr-2">
           <Title
             level={5}
-            className="!text-white !m-0 !text-sm leading-tight line-clamp-2"
+            className="!text-white !m-0 !text-sm leading-tight line-clamp-1"
             title={projectName}
           >
             {projectName || 'Unnamed Project'}
           </Title>
         </div>
-        <div onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+          <Tag color={getStatusColor(projectStatus)} className="m-0 text-[10px] px-1.5 py-0 font-medium whitespace-nowrap border-0 rounded">
+            {(projectStatus || 'UNKNOWN').toUpperCase()}
+          </Tag>
           <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
             <Button
               type="text"
@@ -104,20 +106,10 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
         </div>
       </div>
 
-      <div className="mb-4">
-        <Tag color={getStatusColor(projectStatus)} className="m-0 font-medium">
-          {projectStatus || 'UNKNOWN'}
-        </Tag>
-      </div>
-
-      <div className="grid grid-cols-2 gap-2 bg-[#231e31] p-3 rounded-lg mt-auto">
+      <div className="grid grid-cols-1 gap-2 bg-[#231e31] p-3 rounded-lg mt-auto">
         <div>
           <div className="text-[10px] text-gray-500 uppercase tracking-wider">Created At</div>
           <div className="text-gray-300 text-xs font-semibold">{formatDate(createdAt)}</div>
-        </div>
-        <div className="border-l border-gray-700 pl-2">
-          <div className="text-[10px] text-gray-500 uppercase tracking-wider">Updated At</div>
-          <div className="text-gray-300 text-xs font-semibold">{formatDate(updatedAt)}</div>
         </div>
       </div>
     </Card>
