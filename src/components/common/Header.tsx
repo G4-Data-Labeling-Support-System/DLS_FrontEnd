@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, Dropdown, type MenuProps } from 'antd'
+import { Dropdown, type MenuProps } from 'antd'
 import { UserOutlined, LogoutOutlined, SettingOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { BrandLogo } from '@/components/common/BrandLogo'
@@ -57,14 +57,6 @@ export function Header() {
 
         {/* Right side */}
         <div className="flex items-center gap-3">
-          {/* Notification */}
-          <Button
-            type="text"
-            shape="circle"
-            icon={<span className="material-symbols-outlined text-[24px]">notifications</span>}
-            className="text-gray-400 hover:text-white hover:bg-white/10 flex items-center justify-center h-11 w-11"
-          />
-
           {/* User Info & Dropdown */}
           <div className="flex items-center gap-3">
             <div className="flex flex-col items-end text-right mr-1 hidden sm:flex">
