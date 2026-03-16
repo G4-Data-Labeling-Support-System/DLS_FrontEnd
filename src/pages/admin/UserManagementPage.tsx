@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import AddUserModal from '../../features/admin/components/AddUserModal'
 import EditUserModal from '../../features/admin/components/EditUserModal'
 import AddUserSuccessModal from '../../features/admin/components/AddUserSuccessModal'
@@ -10,12 +10,13 @@ import {
   PlusOutlined,
   TeamOutlined,
   EditOutlined,
-  DeleteOutlined,
   MoreOutlined,
-  CheckCircleOutlined
+  CheckCircleOutlined,
+  CloseCircleOutlined
 } from '@ant-design/icons'
 import { App, Dropdown, type MenuProps } from 'antd'
-import { useUsers, useDeleteUser, useActivateUser } from '@/features/admin/hooks/useUsers'
+import { useUsers, useDeactivateUser } from '@/features/admin/hooks/useUsers'
+import assignmentApi from '@/api/AssignmentApi'
 
 export default function UserManagement() {
   const { message } = App.useApp()
@@ -25,8 +26,29 @@ export default function UserManagement() {
     isOpen: false
   })
   const { data: rawUsers, isLoading } = useUsers()
-  const deleteUserMutation = useDeleteUser()
-  const activateUserMutation = useActivateUser()
+  const deactivateUserMutation = useDeactivateUser()
+  const [taskCountMap, setTaskCountMap] = useState<Record<string, number>>({})
+
+  // Fetch all assignments once, then group by assignedTo to show task count per user
+  useEffect(() => {
+    const fetchTaskCounts = async () => {
+      try {
+        const res = await assignmentApi.getAssignments()
+        const assignments: Record<string, unknown>[] =
+          res.data?.data ?? res.data ?? []
+        if (!Array.isArray(assignments)) return
+        const countMap: Record<string, number> = {}
+        assignments.forEach((a) => {
+          const userId = String(a.assignedTo || a.annotatorId || a.userId || '')
+          if (userId) countMap[userId] = (countMap[userId] || 0) + 1
+        })
+        setTaskCountMap(countMap)
+      } catch {
+        // silently fail - task count is non-critical
+      }
+    }
+    fetchTaskCounts()
+  }, [])
 
   // [Logic: Safety Check] Kiểm tra cấu trúc trả về từ API
   // React Query có thể trả về array trực tiếp hoặc object chứa data (VD: response.data)
@@ -35,12 +57,13 @@ export default function UserManagement() {
     : (rawUsers as unknown as { data: User[] })?.data || []
   // console.log("Users API Response:", rawUsers, "Parsed Users:", users);
 
-  const activeUsersCount = users.filter(
-    (u: User) =>
-      (u.userRole || u.role || '').toUpperCase() === 'ACTIVE' ||
-      u.userStatus?.toUpperCase() === 'ACTIVE' ||
-      (u.status || '').toUpperCase() === 'ACTIVE'
-  ).length
+  // Chỉ hiển thị Active users trên bảng
+  const displayedUsers = users.filter((u: User) => {
+    const status = (u.userStatus || u.status || '').toUpperCase()
+    return status === 'ACTIVE'
+  })
+
+  const activeUsersCount = displayedUsers.length
   const inactiveUsersCount = users.length - activeUsersCount
 
   const handleUserCreateSuccess = (data: User) => {
@@ -49,8 +72,6 @@ export default function UserManagement() {
   }
 
   const getActionItems = (user: User): MenuProps['items'] => {
-    const rawStatus = user.userStatus || user.status || 'Active'
-    const isUserActive = rawStatus.toUpperCase() === 'ACTIVE'
 
     return [
       {
@@ -61,44 +82,25 @@ export default function UserManagement() {
           setEditModal({ isOpen: true, data: user })
         }
       },
-      isUserActive
-        ? {
-            key: 'delete',
-            label: 'Remove User',
-            icon: <DeleteOutlined />,
-            danger: true,
-            onClick: () => {
-              const userId = user.userId || user.id
-              if (window.confirm(`Are you sure you want to deactivate ${user.username}?`)) {
-                deleteUserMutation.mutate(userId, {
-                  onSuccess: () => {
-                    message.success(`User ${user.username} has been deactivated.`)
-                  },
-                  onError: (error) => {
-                    message.error(`Failed to deactivate user: ${error.message || 'Unknown error'}`)
-                  }
-                })
+      {
+        key: 'deactivate',
+        label: <span className="text-red-500 font-semibold">Inactive User</span>,
+        icon: <CloseCircleOutlined style={{ color: '#ef4444' }} />,
+        danger: true,
+        onClick: () => {
+          const userId = user.userId || user.id
+          if (window.confirm(`Are you sure you want to deactivate ${user.username || user.fullName}?`)) {
+            deactivateUserMutation.mutate(userId, {
+              onSuccess: () => {
+                message.success(`User ${user.username || user.fullName} has been deactivated.`)
+              },
+              onError: (error) => {
+                message.error(`Failed to deactivate user: ${error.message || 'Unknown error'}`)
               }
-            }
+            })
           }
-        : {
-            key: 'activate',
-            label: 'Activate User',
-            icon: <CheckCircleOutlined style={{ color: '#10b981' }} />,
-            onClick: () => {
-              const userId = user.userId || user.id
-              if (window.confirm(`Are you sure you want to activate ${user.username}?`)) {
-                activateUserMutation.mutate(userId, {
-                  onSuccess: () => {
-                    message.success(`User ${user.username} has been activated.`)
-                  },
-                  onError: (error) => {
-                    message.error(`Failed to activate user: ${error.message || 'Unknown error'}`)
-                  }
-                })
-              }
-            }
-          }
+        }
+      }
     ]
   }
 
@@ -208,7 +210,7 @@ export default function UserManagement() {
             <div
               className={`h-10 w-10 rounded-lg bg-gray-500/10 flex items-center justify-center text-gray-400`}
             >
-              <DeleteOutlined className="text-xl" />
+              <CloseCircleOutlined className="text-xl" />
             </div>
           </div>
           <div className="mt-4">
@@ -272,14 +274,14 @@ export default function UserManagement() {
                     Loading users...
                   </td>
                 </tr>
-              ) : users?.length === 0 ? (
+              ) : displayedUsers?.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                    No users found.
+                    No active users found.
                   </td>
                 </tr>
               ) : (
-                users?.map((user: User) => {
+                displayedUsers?.map((user: User) => {
                   // Handle backend field difference and normalize
                   const rawRole = user.userRole || user.role || 'Unknown'
                   const roleLower = rawRole.toLowerCase()
@@ -328,15 +330,14 @@ export default function UserManagement() {
                       <td className="px-6 py-4">
                         <span
                           className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold
-                                                ${
-                                                  roleLower === 'annotator'
-                                                    ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
-                                                    : roleLower === 'reviewer'
-                                                      ? 'border-amber-500/20 bg-amber-500/10 text-amber-400'
-                                                      : roleLower === 'manager'
-                                                        ? 'border-purple-500/20 bg-purple-500/10 text-purple-400'
-                                                        : 'border-red-500/20 bg-red-500/10 text-red-400'
-                                                }`}
+                                                ${roleLower === 'annotator'
+                              ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
+                              : roleLower === 'reviewer'
+                                ? 'border-amber-500/20 bg-amber-500/10 text-amber-400'
+                                : roleLower === 'manager'
+                                  ? 'border-purple-500/20 bg-purple-500/10 text-purple-400'
+                                  : 'border-red-500/20 bg-red-500/10 text-red-400'
+                            }`}
                         >
                           {displayRole}
                         </span>
@@ -354,7 +355,18 @@ export default function UserManagement() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="font-bold text-white text-[15px]">0</span>
+                        {(() => {
+                          const count = taskCountMap[userId] || 0
+                          return (
+                            <span className={`inline-flex items-center justify-center min-w-[28px] h-7 px-2 rounded-full text-xs font-bold
+                              ${count > 0
+                                ? 'bg-violet-500/10 text-violet-400 border border-violet-500/20'
+                                : 'bg-white/5 text-gray-500 border border-white/10'
+                              }`}>
+                              {count}
+                            </span>
+                          )
+                        })()}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <Dropdown
@@ -399,10 +411,10 @@ export default function UserManagement() {
         userData={
           successModal.data
             ? {
-                name: successModal.data.fullName,
-                email: successModal.data.email,
-                role: successModal.data.role
-              }
+              name: successModal.data.fullName,
+              email: successModal.data.email,
+              role: successModal.data.role
+            }
             : undefined
         }
       />

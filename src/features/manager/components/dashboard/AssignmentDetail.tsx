@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { App, Spin, Typography, Card, Button, Descriptions, Tag, Empty } from 'antd'
 import { EditOutlined, FolderOutlined, DatabaseOutlined } from '@ant-design/icons'
 import assignmentApi, { type GetAssignmentsParams } from '@/api/AssignmentApi'
+import taskApi from '@/api/TaskApi'
 import projectApi from '@/api/ProjectApi'
 import datasetApi from '@/api/DatasetApi'
 import { ProjectDetail } from './ProjectDetail'
@@ -163,7 +164,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
     const fetchTasks = async () => {
       try {
         setTasksLoading(true)
-        const response = await assignmentApi.getTasksByAssignmentId(assignmentId)
+        const response = await taskApi.getTasksByAssignmentId(assignmentId)
         const data = response.data?.data || response.data || []
         if (isMounted) {
           setTasks(Array.isArray(data) ? data : [])

@@ -38,6 +38,8 @@ const AnnotationPage = lazy(() => import('@/pages/annotator/AnnotationPage'))
 // Reviewer pages
 const ReviewerLayout = lazy(() => import('@/components/layout/ReviewerLayout'))
 const ReviewerWorkspacePage = lazy(() => import('@/pages/reviewer/ReviewerWorkspacePage'))
+const ReviewerTaskDetailPage = lazy(() => import('@/pages/reviewer/TaskDetailPage'))
+const ReviewerAnnotationPage = lazy(() => import('@/pages/reviewer/AnnotationPage'))
 
 export const router = createBrowserRouter([
   {
@@ -241,6 +243,10 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
+        element: <Navigate to="/reviewer/review" replace />
+      },
+      {
+        path: 'review',
         element: (
           <LazyPage>
             <ReviewerDashboardPage />
@@ -248,7 +254,55 @@ export const router = createBrowserRouter([
         )
       },
       {
-        path: 'workspace',
+        path: 'project',
+        element: (
+          <LazyPage>
+            <ReviewerDashboardPage />
+          </LazyPage>
+        )
+      },
+      {
+        path: 'project/:assignmentId',
+        element: (
+          <LazyPage>
+            <ReviewerDashboardPage />
+          </LazyPage>
+        )
+      },
+      {
+        path: 'assignment',
+        element: (
+          <LazyPage>
+            <ReviewerDashboardPage />
+          </LazyPage>
+        )
+      },
+      {
+        path: 'assignment/:assignmentId',
+        element: (
+          <LazyPage>
+            <ReviewerDashboardPage />
+          </LazyPage>
+        )
+      },
+      {
+        path: 'task/:taskId',
+        element: (
+          <LazyPage>
+            <ReviewerTaskDetailPage />
+          </LazyPage>
+        )
+      },
+      {
+        path: 'task/:taskId/annotate',
+        element: (
+          <LazyPage>
+            <ReviewerAnnotationPage />
+          </LazyPage>
+        )
+      },
+      {
+        path: 'workspace/:projectId',
         element: (
           <LazyPage>
             <ReviewerWorkspacePage />
