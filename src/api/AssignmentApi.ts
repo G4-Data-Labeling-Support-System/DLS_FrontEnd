@@ -124,6 +124,15 @@ const assignmentApi = {
       console.error('Failed to fetch labels for assignment', error)
       throw error
     }
+  },
+  getDatasetByAssignmentId(assignmentId: string) {
+    try {
+      const url = ENDPOINTS.ASSIGNMENTS.DATASET(assignmentId)
+      return axiosClient.get(url)
+    } catch (error) {
+      console.error('Failed to fetch dataset for assignment', error)
+      throw error
+    }
   }
 }
 

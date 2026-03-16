@@ -72,16 +72,26 @@ export default function AnnotationPage() {
         const items = taskRes.data?.data || taskRes.data || []
         setDataItems(Array.isArray(items) ? items : [])
 
-        // 2. Fetch labels if assignmentId is available
-        if (assignmentId) {
-          const labelsRes = await assignmentApi.getLabelsByAssignmentId(assignmentId)
-          const labelsData = labelsRes.data?.data || labelsRes.data || []
-          if (Array.isArray(labelsData)) {
-            setLabels(labelsData)
-            if (labelsData.length > 0) {
-              setCurrentLabel(labelsData[0])
-              setSelectedLabels([labelsData[0].labelName])
+        // Try to recover assignmentId from task if missing (e.g., on refresh)
+        let effectiveAssignmentId = assignmentId
+        if (!effectiveAssignmentId && items.length > 0) {
+          effectiveAssignmentId = items[0].assignmentId
+        }
+
+        // 2. Fetch labels if effectiveAssignmentId is available
+        if (effectiveAssignmentId) {
+          try {
+            const labelsRes = await assignmentApi.getLabelsByAssignmentId(effectiveAssignmentId)
+            const labelsData = labelsRes.data?.data || labelsRes.data || []
+            if (Array.isArray(labelsData)) {
+              setLabels(labelsData)
+              if (labelsData.length > 0) {
+                setCurrentLabel(labelsData[0])
+                setSelectedLabels([labelsData[0].labelName])
+              }
             }
+          } catch (labelErr) {
+            console.error('Failed to fetch labels for assignment:', labelErr)
           }
         }
       } catch (err) {
