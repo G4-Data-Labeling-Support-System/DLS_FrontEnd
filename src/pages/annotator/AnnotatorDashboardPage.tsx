@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
-import assignmentApi from '@/api/AssignmentApi'
+import assignmentApi, { type GetAssignmentsParams } from '@/api/AssignmentApi'
 import guidelineApi from '@/api/GuidelineApi'
 import projectApi from '@/api/ProjectApi'
 import { themeClasses } from '@/styles'
@@ -17,6 +17,7 @@ import {
   AnnotatorDatasetCard,
   MOCK_TEST_TASK
 } from '@/features/annotator'
+import { AssignmentCard } from '@/features/manager/components/dashboard/AssignmentCard'
 
 // ============ Types ============
 interface AssignmentTask {
@@ -71,6 +72,7 @@ export default function AnnotatorDashboardPage() {
   }
 
   const [assignment, setAssignment] = useState<Assignment | null>(null)
+  const [annotatorAssignments, setAnnotatorAssignments] = useState<GetAssignmentsParams[]>([])
   const [projectDetail, setProjectDetail] = useState<ProjectDetail | null>(null)
   const [guideline, setGuideline] = useState<Guideline | null>(null)
   const [loading, setLoading] = useState(true)
@@ -129,8 +131,9 @@ export default function AnnotatorDashboardPage() {
             // Also fetch the project details for the project tab
             const projectRes = await projectApi.getProjectById(projectIdToFetch)
             const rawProj = projectRes.data?.data || projectRes.data
+
             const pStatus = (rawProj.projectStatus || rawProj.status || '').toUpperCase()
-            
+
             if (pStatus && pStatus !== 'INACTIVE') {
               setProjectDetail({
                 ...rawProj,
@@ -152,8 +155,10 @@ export default function AnnotatorDashboardPage() {
             try {
               const assignRes = await assignmentApi.getAssignmentsByAnnotator(user.id)
               const assignsList = assignRes.data?.data || assignRes.data || []
+              setAnnotatorAssignments(assignsList)
 
               if (assignsList.length > 0) {
+                // If there's at least one assignment, try to fetch its project info for the "Project" tab default view
                 for (const rawAssign of assignsList) {
                   const pId = rawAssign.projectId || rawAssign.project?.projectId || rawAssign.project?.id
                   if (pId && !String(pId).startsWith('PROJ-MOCK')) {
@@ -162,32 +167,12 @@ export default function AnnotatorDashboardPage() {
                     const pStatus = (rawP.projectStatus || rawP.status || '').toUpperCase()
 
                     if (pStatus && pStatus !== 'INACTIVE') {
-                      const actualTasks2 = Array.isArray(rawAssign.tasks) ? rawAssign.tasks : []
-                      const fallbackTasks2 = actualTasks2.length > 0 ? actualTasks2 : [MOCK_TEST_TASK]
-                      const calcCompleted2 = actualTasks2.filter(
-                        (t: Record<string, unknown>) =>
-                          t.taskStatus === 'COMPLETED' || t.annotationStatus === 'COMPLETED'
-                      ).length
-
-                const projectIdToFetch = normAssign.projectId
-                if (projectIdToFetch && !projectIdToFetch.startsWith('PROJ-MOCK')) {
-                  const guidelineRes = await guidelineApi.getGuidelines(projectIdToFetch)
-                  const guidelinesList = guidelineRes.data?.data || guidelineRes.data || []
-                  const activeGuide = Array.isArray(guidelinesList)
-                    ? (guidelinesList.find(
-                      (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
-                    ) ??
-                      guidelinesList[0] ??
-                      null)
-                    : guidelinesList
-                  setGuideline(activeGuide)
-
                       const guidelineRes = await guidelineApi.getGuidelines(pId)
                       const guidelinesList = guidelineRes.data?.data || guidelineRes.data || []
                       const activeGuide = Array.isArray(guidelinesList)
                         ? (guidelinesList.find(
-                            (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
-                          ) ??
+                          (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
+                        ) ??
                           guidelinesList[0] ??
                           null)
                         : guidelinesList
@@ -231,17 +216,20 @@ export default function AnnotatorDashboardPage() {
                           status: rawProj.projectStatus || rawProj.status
                         })
 
-                    const guidelineRes = await guidelineApi.getGuidelines(firstProjId)
-                    const guidelinesList = guidelineRes.data?.data || guidelineRes.data || []
-                    const activeGuide = Array.isArray(guidelinesList)
-                      ? (guidelinesList.find(
-                        (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
-                      ) ??
-                        guidelinesList[0] ??
-                        null)
-                      : guidelinesList
-                    setGuideline(activeGuide)
-                    hasFetchedProject = true
+                        const guidelineRes = await guidelineApi.getGuidelines(firstProjId)
+                        const guidelinesList = guidelineRes.data?.data || guidelineRes.data || []
+                        const activeGuide = Array.isArray(guidelinesList)
+                          ? (guidelinesList.find(
+                            (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
+                          ) ??
+                            guidelinesList[0] ??
+                            null)
+                          : guidelinesList
+                        setGuideline(activeGuide)
+                        hasFetchedProject = true
+                        break
+                      }
+                    }
                   }
                 }
               } catch (err) {
@@ -284,8 +272,8 @@ export default function AnnotatorDashboardPage() {
               <AnnotationProjectDetail project={projectDetail} />
               {guideline && <GuidelineSection guideline={guideline.content} />}
               <div className="md:col-span-2">
-                <AnnotatorDatasetCard 
-                  projectId={projectDetail.id} 
+                <AnnotatorDatasetCard
+                  projectId={projectDetail.id}
                   assignmentId={assignmentId}
                 />
               </div>
@@ -298,29 +286,34 @@ export default function AnnotatorDashboardPage() {
         ))}
 
       {activeTab === 'assignment' &&
-        (!assignment && loading ? (
-          <div className="text-center text-gray-400 py-20">Loading assignment...</div>
-        ) : error || !assignment ? (
-          <div className="text-center text-red-400 py-20">{error ?? 'No assignment found.'}</div>
+        (loading && !assignment && annotatorAssignments.length === 0 ? (
+          <div className="text-center text-gray-400 py-20">Loading...</div>
+        ) : assignmentId && assignment ? (
+          <div className="rounded-2xl grid md:grid-cols-2 sm:grid-cols-1 gap-6">
+            <AssignmentHeader assignment={assignment} />
+            {guideline && <GuidelineSection guideline={guideline.content ?? ''} />}
+            {assignment.tasks && (
+              <div className={`${themeClasses.backgrounds.card} border ${themeClasses.borders.violet10} rounded-2xl p-6 md:col-span-2`}>
+                <TasksSection tasks={assignment.tasks} assignmentId={assignment.id} />
+              </div>
+            )}
+          </div>
+        ) : annotatorAssignments.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {annotatorAssignments
+              .filter(a => a.status?.toUpperCase() !== 'CANCELLED')
+              .map((a, idx) => (
+                <AssignmentCard
+                  key={a.assignmentId || idx}
+                  {...a}
+                  onClick={() => navigate(`/annotator/assignment/${a.assignmentId}`)}
+                />
+              ))}
+          </div>
         ) : (
-          <>
-            <div className="rounded-2xl grid md:grid-cols-2 sm:grid-cols-1 gap-6">
-              {/* Assignment Header */}
-              <AssignmentHeader assignment={assignment} />
-
-              {/* Guideline Section */}
-              {guideline && <GuidelineSection guideline={guideline.content ?? ''} />}
-
-              {/* Tasks Section */}
-              {assignment.tasks && (
-                <div
-                  className={`${themeClasses.backgrounds.card} border ${themeClasses.borders.violet10} rounded-2xl p-6 md:col-span-2`}
-                >
-                  <TasksSection tasks={assignment.tasks} assignmentId={assignment.id} />
-                </div>
-              )}
-            </div>
-          </>
+          <div className="text-center text-gray-400 py-20 bg-[#1A1625]/40 rounded-xl border border-dashed border-gray-700">
+            {error ?? 'No assignments found.'}
+          </div>
         ))}
     </div>
   )

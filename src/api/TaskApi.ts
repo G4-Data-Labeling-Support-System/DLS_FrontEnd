@@ -30,6 +30,16 @@ const taskApi = {
       console.error(`Failed to fetch task detail for taskId: ${taskId}`, error)
       throw error
     }
+  },
+
+  getTasksByAssignmentId(assignmentId: string) {
+    try {
+      const url = ENDPOINTS.TASKS.BY_ASSIGNMENT(assignmentId)
+      return axiosClient.get(url)
+    } catch (error) {
+      console.error(`Failed to fetch tasks for assignmentId: ${assignmentId}`, error)
+      throw error
+    }
   }
 }
 

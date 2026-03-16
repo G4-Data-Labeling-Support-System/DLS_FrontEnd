@@ -7,7 +7,7 @@ import projectApi from '@/api/ProjectApi'
 import datasetApi from '@/api/DatasetApi'
 import { ProjectDetail } from './ProjectDetail'
 import { DatasetDetail } from '../dataset/DatasetDetail'
-import { ManagerTaskDetail } from './ManagerTaskDetail'
+import { TaskDetail } from '@/pages/annotator/TaskDetailPage'
 import { useSearchParams } from 'react-router-dom'
 
 const { Title } = Typography
@@ -178,7 +178,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
     const fetchTasks = async () => {
       try {
         setTasksLoading(true)
-        const response = await assignmentApi.getTasksByAssignmentId(assignmentId)
+        const response = await taskApi.getTasksByAssignmentId(assignmentId)
         const rawData = response.data?.data || response.data || []
         if (isMounted && Array.isArray(rawData)) {
           const mappedTasks: Task[] = rawData.map((t: Record<string, unknown>) => ({
@@ -268,7 +268,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
     const selectedTask = tasks.find((t) => String(t.taskId) === String(viewTaskId))
     if (selectedTask) {
       return (
-        <ManagerTaskDetail 
+        <TaskDetail 
           task={{
             ...selectedTask,
             assignmentName: assignment.assignmentName
