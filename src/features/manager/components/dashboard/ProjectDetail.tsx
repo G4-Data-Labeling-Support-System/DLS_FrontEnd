@@ -460,7 +460,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
                 color="#3b82f6"
                 className="border-0 bg-blue-600/20 text-blue-300 font-bold px-3 rounded-full"
               >
-                {assignments.length} Assignments
+                {assignments.filter((a) => a.status?.toUpperCase() !== 'CANCELLED').length} Assignments
               </Tag>
               <Button
                 type="primary"
@@ -488,15 +488,17 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
               className="flex-1 overflow-y-auto pr-1 custom-scrollbar"
             >
               <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-                {assignments.map((assignment: GetAssignmentsParams, index: number) => (
-                  <AssignmentCard
-                    key={assignment.assignmentId || index}
-                    {...assignment}
-                    variant="compact"
-                    onClick={() => setSelectedAssignmentId(assignment.assignmentId!)}
-                    onEdit={() => handleEditAssignment(assignment)}
-                  />
-                ))}
+                {assignments
+                  .filter((a) => a.status?.toUpperCase() !== 'CANCELLED')
+                  .map((assignment: GetAssignmentsParams, index: number) => (
+                    <AssignmentCard
+                      key={assignment.assignmentId || index}
+                      {...assignment}
+                      variant="compact"
+                      onClick={() => setSelectedAssignmentId(assignment.assignmentId!)}
+                      onEdit={() => handleEditAssignment(assignment)}
+                    />
+                  ))}
               </div>
             </div>
           )}

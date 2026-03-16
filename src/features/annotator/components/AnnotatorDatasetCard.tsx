@@ -10,6 +10,7 @@ interface Dataset {
   description?: string
   totalItems?: number
   createdAt?: string
+  datasetStatus?: string
   dataitems?: DatasetItem[]
 }
 
@@ -61,9 +62,12 @@ export default function AnnotatorDatasetCard({ projectId }: AnnotatorDatasetCard
     fetchDatasets()
   }, [projectId])
 
-  const filteredDatasets = datasets.filter((d) =>
-    d.datasetName.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredDatasets = datasets.filter((d) => {
+    const status = (d.datasetStatus || '').toUpperCase()
+    return (
+      status !== 'INACTIVE' && d.datasetName.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  })
 
   const totalPages = Math.ceil(filteredDatasets.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
