@@ -17,12 +17,13 @@ export const DatasetCard: React.FC<DatasetCardProps> = ({
   totalItems,
   createdAt,
   dataItemStatus,
+  datasetStatus,
   onEdit,
   onDelete,
   onClick,
   variant = 'default'
 }) => {
-  const currentStatus = dataItemStatus
+  const currentStatus = datasetStatus || dataItemStatus
 
   const items: MenuProps['items'] = [
     { key: '1', label: 'View Details', icon: <EyeOutlined />, onClick: onClick },
@@ -51,6 +52,7 @@ export const DatasetCard: React.FC<DatasetCardProps> = ({
         return 'warning'
       case 'ARCHIVE':
       case 'UNASSIGNED':
+      case 'INACTIVE':
         return 'error'
       default:
         return 'default'

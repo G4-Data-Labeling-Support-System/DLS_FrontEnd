@@ -10,6 +10,7 @@ export interface GetDatasetsParams {
   totalItems?: number
   createdAt?: string
   dataItemStatus?: string
+  datasetStatus?: string
   files?: string[]
 }
 

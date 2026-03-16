@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { App, Spin, Typography, Card, Descriptions, Empty, Pagination, Image, Button } from 'antd'
+import { App, Spin, Typography, Card, Descriptions, Empty, Pagination, Image, Button, Tag } from 'antd'
 import { FolderOutlined, DatabaseOutlined, PictureOutlined, EditOutlined } from '@ant-design/icons'
 import datasetApi from '@/api/DatasetApi'
 import projectApi from '@/api/ProjectApi'
@@ -17,6 +17,7 @@ interface DatasetDetailData {
   description?: string
   totalItems?: number
   createdAt?: string
+  datasetStatus?: string
 }
 
 interface DatasetDetailProps {
@@ -82,7 +83,8 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
           description: data.description ? String(data.description) : undefined,
           projectId: extractedProjectId ? String(extractedProjectId) : undefined,
           totalItems: Number(data.totalItems || data.itemCount) || 0,
-          createdAt: data.createdAt ? String(data.createdAt) : undefined
+          createdAt: data.createdAt ? String(data.createdAt) : undefined,
+          datasetStatus: String(data.datasetStatus || data.status || data.dataset_status || '')
         })
 
         if (extractedProjectId) {
@@ -198,6 +200,24 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
     return new Date(dateString).toLocaleString('vi-VN')
   }
 
+  const getStatusColor = (s?: string) => {
+    switch (s?.toUpperCase()) {
+      case 'ACTIVE':
+      case 'ASSIGNED':
+        return 'processing'
+      case 'COMPLETED':
+        return 'success'
+      case 'PAUSED':
+        return 'warning'
+      case 'ARCHIVE':
+      case 'UNASSIGNED':
+      case 'INACTIVE':
+        return 'error'
+      default:
+        return 'default'
+    }
+  }
+
   if (loading) {
     return (
       <div className="w-full h-64 flex justify-center items-center">
@@ -274,6 +294,14 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
               </Descriptions.Item>
               <Descriptions.Item label="Created At">
                 {formatDate(dataset.createdAt)}
+              </Descriptions.Item>
+              <Descriptions.Item label="Status">
+                <Tag
+                  color={getStatusColor(dataset.datasetStatus)}
+                  className="m-0 font-medium px-2 py-0 border-0 rounded"
+                >
+                  {(dataset.datasetStatus || 'UNKNOWN').toUpperCase()}
+                </Tag>
               </Descriptions.Item>
             </Descriptions>
           </div>
