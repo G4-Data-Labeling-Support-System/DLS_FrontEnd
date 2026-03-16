@@ -1,20 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { StatusStyle as getTaskStatusStyle } from '@/features/annotator'
-import taskApi from '@/api/TaskApi'
+import assignmentApi from '@/api/AssignmentApi'
+import { useTaskDetail } from '@/features/annotator/hooks/useTaskDetail'
+import type { TaskDataItem } from '@/api/TaskApi'
 import type { Task } from '@/features/annotator/components/TaskSection'
 
-interface DataItem {
-  itemId?: string
-  id?: string
-  url?: string
-  previewUrl?: string
-  fileName?: string
-  filename?: string
-  fileFormat?: string
-  dataType?: string
-  uploadedAt?: string
-}
 
 export default function TaskDetailPage() {
   const { taskId } = useParams<{ taskId: string }>()
@@ -22,9 +13,16 @@ export default function TaskDetailPage() {
   const navigate = useNavigate()
 
   const [task, setTask] = useState<Task | null>(null)
-  const [dataItems, setDataItems] = useState<DataItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  const {
+    data: taskDataItemsResponse,
+    isLoading: itemsLoading,
+    error: itemsError
+  } = useTaskDetail(taskId)
+
+  const dataItems = taskDataItemsResponse?.data || taskDataItemsResponse || []
 
   useEffect(() => {
     async function fetchData() {
@@ -49,12 +47,8 @@ export default function TaskDetailPage() {
           throw new Error('Task not found')
         }
 
-        setTask(currentTask)
 
-        // 2. Fetch data items using taskId directly
-        const itemsRes = await taskApi.getTaskById(taskId)
-        const itemsData = itemsRes.data?.data || itemsRes.data || []
-        setDataItems(Array.isArray(itemsData) ? itemsData : [])
+        setTask(currentTask)
       } catch (err) {
         console.error('Failed to load task details:', err)
         setError('Failed to load task details from the server.')
@@ -65,7 +59,7 @@ export default function TaskDetailPage() {
     fetchData()
   }, [taskId, location.state?.assignmentId])
 
-  if (loading) {
+  if (loading || itemsLoading) {
     return (
       <div className="w-full flex-1 flex items-center justify-center min-h-[50vh]">
         <div className="flex flex-col items-center gap-4 animate-pulse pt-20">
@@ -76,11 +70,13 @@ export default function TaskDetailPage() {
     )
   }
 
-  if (error || !task) {
+  if (error || itemsError || !task) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
         <span className="material-symbols-outlined text-red-500 text-5xl opacity-80">error</span>
-        <span className="text-red-400 font-medium">{error || 'Task not found.'}</span>
+        <span className="text-red-400 font-medium">
+          {error || (itemsError as Error)?.message || 'Task not found.'}
+        </span>
         <button
           onClick={() => navigate(-1)}
           className="text-white text-sm font-bold px-6 py-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors"
@@ -176,9 +172,9 @@ export default function TaskDetailPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {dataItems.map((item, index) => (
+                    {dataItems.map((item: TaskDataItem, index: number) => (
                       <tr
-                        key={item.itemId || item.id || index}
+                        key={item.id || index}
                         className="group cursor-pointer"
                         onClick={() =>
                           navigate(`/annotator/task/${task.taskId || task.id}/annotate`, {
@@ -192,7 +188,7 @@ export default function TaskDetailPage() {
                               {item.url || item.previewUrl ? (
                                 <img
                                   src={item.url || item.previewUrl}
-                                  alt={item.fileName || item.filename}
+                                  alt={item.filename}
                                   className="w-full h-full object-cover"
                                 />
                               ) : (
@@ -202,7 +198,7 @@ export default function TaskDetailPage() {
                               )}
                             </div>
                             <span className="text-sm font-medium text-gray-200 truncate max-w-[150px]">
-                              {item.fileName || item.filename || 'Unknown'}
+                              {item.filename || 'Unknown'}
                             </span>
                           </div>
                         </td>
@@ -251,9 +247,8 @@ function DetailItem({
     <div className="flex flex-col gap-1">
       <span className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">{label}</span>
       <span
-        className={`text-sm text-gray-200 ${isMono ? 'font-mono' : 'font-medium'} ${
-          isCapitalize ? 'capitalize' : ''
-        }`}
+        className={`text-sm text-gray-200 ${isMono ? 'font-mono' : 'font-medium'} ${isCapitalize ? 'capitalize' : ''
+          }`}
       >
         {value}
       </span>

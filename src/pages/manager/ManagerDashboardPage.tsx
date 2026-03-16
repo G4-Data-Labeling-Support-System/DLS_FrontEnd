@@ -12,13 +12,18 @@ import {
 } from '@/features/manager/components/dashboard/DashboardTabs'
 import { CreateProjectModal } from '@/features/manager/components/dashboard/CreateProjectModal'
 
+import {
+  useInvalidateAssignments
+} from '@/features/manager/hooks/useProjectDetail'
+
 const ManagerDashboardPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
+  const invalidateAssignments = useInvalidateAssignments()
+
   const [createAssignmentOpen, setCreateAssignmentOpen] = useState(false)
   const [editingAssignment, setEditingAssignment] = useState<GetAssignmentsParams | undefined>(
     undefined
   )
-  const [assignmentRefreshTrigger, setAssignmentRefreshTrigger] = useState(0)
 
   const [createProjectOpen, setCreateProjectOpen] = useState(false)
   const [editProjectId, setEditProjectId] = useState<string | undefined>(undefined)
@@ -122,7 +127,6 @@ const ManagerDashboardPage: React.FC = () => {
                 setEditingAssignment(asn)
                 setCreateAssignmentOpen(true)
               }}
-              refreshTrigger={assignmentRefreshTrigger}
             />
           </div>
 
@@ -144,7 +148,7 @@ const ManagerDashboardPage: React.FC = () => {
             onSuccess={() => {
               handleCloseModal()
               setSearchParams({ tab: 'assignment' })
-              setAssignmentRefreshTrigger((prev) => prev + 1)
+              invalidateAssignments()
             }}
           />
         </div>

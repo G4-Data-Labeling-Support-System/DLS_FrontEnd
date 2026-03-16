@@ -119,8 +119,8 @@ export default function AnnotatorDashboardPage() {
             const guidelinesList = guidelineRes.data?.data || guidelineRes.data || []
             const activeGuide = Array.isArray(guidelinesList)
               ? (guidelinesList.find(
-                  (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
-                ) ??
+                (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
+              ) ??
                 guidelinesList[0] ??
                 null)
               : guidelinesList
@@ -169,20 +169,18 @@ export default function AnnotatorDashboardPage() {
                           t.taskStatus === 'COMPLETED' || t.annotationStatus === 'COMPLETED'
                       ).length
 
-                      const normAssign = {
-                        ...rawAssign,
-                        id: rawAssign.assignmentId || rawAssign.id,
-                        name: rawAssign.assignmentName || rawAssign.name || rawAssign.title,
-                        status: rawAssign.assignmentStatus || rawAssign.status,
-                        description: rawAssign.descriptionAssignment || rawAssign.description,
-                        projectId: pId,
-                        tasks: fallbackTasks2,
-                        completedTasks:
-                          actualTasks2.length > 0 ? calcCompleted2 : (rawAssign.completedTasks ?? 0),
-                        totalTasks:
-                          actualTasks2.length > 0 ? actualTasks2.length : rawAssign.totalTasks || 1
-                      }
-                      setAssignment(normAssign)
+                const projectIdToFetch = normAssign.projectId
+                if (projectIdToFetch && !projectIdToFetch.startsWith('PROJ-MOCK')) {
+                  const guidelineRes = await guidelineApi.getGuidelines(projectIdToFetch)
+                  const guidelinesList = guidelineRes.data?.data || guidelineRes.data || []
+                  const activeGuide = Array.isArray(guidelinesList)
+                    ? (guidelinesList.find(
+                      (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
+                    ) ??
+                      guidelinesList[0] ??
+                      null)
+                    : guidelinesList
+                  setGuideline(activeGuide)
 
                       const guidelineRes = await guidelineApi.getGuidelines(pId)
                       const guidelinesList = guidelineRes.data?.data || guidelineRes.data || []
@@ -233,20 +231,17 @@ export default function AnnotatorDashboardPage() {
                           status: rawProj.projectStatus || rawProj.status
                         })
 
-                        const guidelineRes = await guidelineApi.getGuidelines(firstProjId)
-                        const guidelinesList = guidelineRes.data?.data || guidelineRes.data || []
-                        const activeGuide = Array.isArray(guidelinesList)
-                          ? (guidelinesList.find(
-                              (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
-                            ) ??
-                            guidelinesList[0] ??
-                            null)
-                          : guidelinesList
-                        setGuideline(activeGuide)
-                        hasFetchedProject = true
-                        break
-                      }
-                    }
+                    const guidelineRes = await guidelineApi.getGuidelines(firstProjId)
+                    const guidelinesList = guidelineRes.data?.data || guidelineRes.data || []
+                    const activeGuide = Array.isArray(guidelinesList)
+                      ? (guidelinesList.find(
+                        (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
+                      ) ??
+                        guidelinesList[0] ??
+                        null)
+                      : guidelinesList
+                    setGuideline(activeGuide)
+                    hasFetchedProject = true
                   }
                 }
               } catch (err) {

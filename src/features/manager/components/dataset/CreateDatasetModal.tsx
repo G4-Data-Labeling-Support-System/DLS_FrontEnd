@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { App, Form, Input, Select, Upload, Button, Progress, Checkbox } from 'antd'
+import { App, Form, Input, Upload, Button, Progress, Checkbox, Select, Segmented, Spin } from 'antd'
 import { DeleteOutlined, InboxOutlined } from '@ant-design/icons'
 import type { UploadFile } from 'antd/es/upload/interface'
 import type { UploadChangeParam } from 'antd/es/upload'
 import axios, { type AxiosProgressEvent } from 'axios'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
-import datasetApi from '@/api/DatasetApi'
+import datasetApi, { type GetDatasetsParams } from '@/api/DatasetApi'
 import projectApi, { type GetProjectsParams } from '@/api/ProjectApi'
+import assignmentApi from '@/api/AssignmentApi'
 import { compressImage } from '@/shared/utils/imageCompression'
 
 const { Dragger } = Upload
@@ -36,11 +37,15 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
   const { message } = App.useApp()
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
-  const [fetching, setFetching] = useState(false)
   const [projects, setProjects] = useState<GetProjectsParams[]>([])
   const [fileList, setFileList] = useState<(UploadFile & { preview?: string })[]>([])
   const [uploadProgress, setUploadProgress] = useState(0)
   const [showAllPreviews, setShowAllPreviews] = useState(false)
+  const [deletedItemIds, setDeletedItemIds] = useState<string[]>([])
+  const [uploadMode, setUploadMode] = useState<'file' | 'folder'>('file')
+  const [fetchingDetails, setFetchingDetails] = useState(false)
+  const [originalData, setOriginalData] = useState<GetDatasetsParams | null>(null)
+  const [hasAssignments, setHasAssignments] = useState(false)
 
   const fileListRef = useRef(fileList)
   useEffect(() => {
@@ -51,26 +56,97 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
   useEffect(() => {
     const fetchDetails = async () => {
       if (open && isEdit && initialData?.datasetId) {
-        setFetching(true)
         try {
+          setFetchingDetails(true)
           const res = await datasetApi.getDatasetById(initialData.datasetId)
           const data = res.data?.data || res.data
           if (data) {
+            setOriginalData(data)
+            const pId = data.projectId || data.project?.id || data.project_id
             form.setFieldsValue({
               datasetName: data.datasetName || data.name,
               description: data.description,
-              projectId: data.projectId || data.project?.id
+              projectId: pId
             })
+
+            // Ensure the project name is visible in the Select immediately
+            const projectInfo = data.project || {}
+            const resolvedPId = String(pId || projectInfo.projectId || projectInfo.project_id || '')
+            const resolvedPName = String(projectInfo.projectName || projectInfo.name || projectInfo.project_name || '')
+            
+            if (resolvedPId) {
+              setProjects(prev => {
+                const existing = prev.find(p => p.projectId === resolvedPId)
+                if (existing && existing.projectName && existing.projectName !== 'undefined' && existing.projectName !== 'Fetching...') return prev
+                
+                const newProj: GetProjectsParams = {
+                  projectId: resolvedPId,
+                  projectName: (resolvedPName && resolvedPName !== 'undefined') ? resolvedPName : 'Fetching...',
+                  projectStatus: String(projectInfo.projectStatus || projectInfo.status || 'ACTIVE')
+                }
+                
+                if (existing) {
+                  return prev.map(p => p.projectId === resolvedPId ? newProj : p)
+                }
+                return [...prev, newProj]
+              })
+
+              // If name was missing from the nested object, fetch it explicitly
+              if (!resolvedPName || resolvedPName === 'undefined') {
+                try {
+                  const projRes = await projectApi.getProjectById(resolvedPId)
+                  const projData = projRes.data?.data || projRes.data
+                  if (projData) {
+                    const fetchedProj = {
+                      projectId: String(projData.projectId || projData.id || resolvedPId),
+                      projectName: String(projData.projectName || projData.name || ''),
+                      projectStatus: String(projData.projectStatus || projData.status || 'ACTIVE')
+                    }
+                    setProjects(prev => prev.map(p => p.projectId === resolvedPId ? fetchedProj : p))
+                  }
+                } catch (err) {
+                  console.error('Failed to resolve project name:', err)
+                }
+              }
+            }
+            // Check if dataset has any assignments
+            try {
+              const assignRes = await assignmentApi.getAssignments({ datasetId: initialData.datasetId })
+              const assignments = assignRes.data?.data || assignRes.data || []
+              setHasAssignments(Array.isArray(assignments) && assignments.length > 0)
+            } catch (assignErr) {
+              console.error('Failed to check assignments for dataset:', assignErr)
+            }
+          }
+
+          // Fetch dataset items to populate fileList
+          const itemsRes = await datasetApi.getDatasetItems(initialData.datasetId)
+          const items = itemsRes.data?.data || itemsRes.data || []
+          if (Array.isArray(items)) {
+            const initialFileList = items.map((item: { dataItemId?: string | number; id?: string | number; itemId?: string | number; name?: string; filename?: string; fileName?: string; title?: string; content?: string; url?: string; imageUrl?: string; previewUrl?: string; file_path?: string; path?: string }) => {
+              const url = item.content || item.url || item.imageUrl || item.previewUrl || item.file_path || item.path || ''
+              return {
+                uid: String(item.dataItemId || item.id || item.itemId || Math.random()),
+                name: item.name || item.filename || item.fileName || item.title || 'Existing File',
+                status: 'done' as const,
+                url: url,
+                thumbUrl: url,
+                originFileObj: undefined
+              }
+            }).filter(f => !!f.url)
+            setFileList(initialFileList)
           }
         } catch (error) {
           console.error('Failed to fetch dataset details:', error)
           message.error('Failed to refresh dataset details.')
         } finally {
-          setFetching(false)
+          setFetchingDetails(false)
         }
       } else if (open && !isEdit) {
         form.resetFields()
         setFileList([])
+        setDeletedItemIds([])
+        setHasAssignments(false)
         if (initialProjectId) {
           form.setFieldsValue({ projectId: initialProjectId })
         }
@@ -84,10 +160,18 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
     const fetchProjects = async () => {
       if (!open) return
       try {
-        const response = await projectApi.getProjects({ projectStatus: 'ACTIVE' })
+        const response = await projectApi.getProjects()
         const data = response.data?.data || response.data || []
         if (Array.isArray(data)) {
-          setProjects(data)
+          const normalizedProjects = data.map((p: { project?: { projectId?: string | number; id?: string | number; project_id?: string | number; projectName?: string; name?: string; project_name?: string; projectStatus?: string; status?: string; project_status?: string }; projectId?: string | number; id?: string | number; project_id?: string | number; projectName?: string; name?: string; project_name?: string; projectStatus?: string; status?: string; project_status?: string }) => {
+            const projectInfo = p.project || p
+            return {
+              projectId: String(projectInfo.projectId || projectInfo.id || projectInfo.project_id || p.projectId || p.id || p.project_id || ''),
+              projectName: String(projectInfo.projectName || projectInfo.name || projectInfo.project_name || p.projectName || p.name || p.project_name || ''),
+              projectStatus: String(projectInfo.projectStatus || projectInfo.status || projectInfo.project_status || p.projectStatus || p.status || p.project_status || '')
+            }
+          })
+          setProjects(normalizedProjects.filter((p: GetProjectsParams) => p.projectStatus?.toUpperCase() !== 'INACTIVE'))
         }
       } catch (error) {
         console.error('Failed to fetch projects list:', error)
@@ -107,7 +191,6 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
   const handleUploadChange = (info: UploadChangeParam<UploadFile & { preview?: string }>) => {
     let newFileList = [...info.fileList]
 
-    // performance: only generate preview for the first 12 files (unless expanded) to avoid browser lag
     const limit = showAllPreviews ? newFileList.length : 12
     newFileList = newFileList.map((file, index) => {
       if (index < limit && !file.preview && file.originFileObj) {
@@ -118,7 +201,6 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
     setFileList(newFileList)
   }
 
-  // Generate missing previews when expanding
   useEffect(() => {
     if (showAllPreviews && fileList.some(f => !f.preview && f.originFileObj)) {
       setFileList(prev => prev.map(file => {
@@ -132,8 +214,14 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
 
   const handleRemoveFile = (uid: string) => {
     setFileList((prev) => {
-      const newFile = prev.find((item) => item.uid === uid)
-      if (newFile?.preview) URL.revokeObjectURL(newFile.preview)
+      const fileToRemove = prev.find((f) => f.uid === uid)
+      if (fileToRemove) {
+        if (fileToRemove.preview) URL.revokeObjectURL(fileToRemove.preview)
+        // If it's an existing file (no originFileObj), track its ID for backend deletion
+        if (!fileToRemove.originFileObj && isEdit) {
+          setDeletedItemIds((prevDeleted) => [...prevDeleted, uid])
+        }
+      }
       return prev.filter((item) => item.uid !== uid)
     })
   }
@@ -141,6 +229,7 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
   const handleCancel = () => {
     form.resetFields()
     setFileList([])
+    setDeletedItemIds([])
     onCancel()
   }
 
@@ -149,14 +238,45 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
       const values = await form.validateFields()
       setLoading(true)
       if (isEdit && initialData?.datasetId) {
+        // 1. Delete items that were explicitly removed
+        if (deletedItemIds.length > 0) {
+          await Promise.all(
+            deletedItemIds.map((id) =>
+              datasetApi.deleteItem(id).catch((err) => {
+                console.error(`Failed to delete item ${id}:`, err)
+                return null
+              })
+            )
+          )
+        }
+
+        // 2. Filter out items that are marked as done (existing) to get current list strings
+        const currentFiles = fileList
+          .filter((f) => !f.originFileObj)
+          .map((f) => f.url || f.thumbUrl || '')
+          .filter(Boolean)
+
+        // 3. Update dataset metadata
         await datasetApi.updateDataset(initialData.datasetId, {
-          datasetName: values.datasetName,
-          description: values.description
+          projectId: values.projectId || originalData?.projectId,
+          datasetName: values.datasetName || originalData?.datasetName,
+          description: values.description || originalData?.description,
+          files: currentFiles
         })
+
         message.success('Dataset updated successfully!')
         if (onSuccess) onSuccess(initialData.datasetId)
         handleCancel()
         return
+      }
+
+      if (values.projectId) {
+        const selectedProject = projects.find(p => String(p.projectId) === String(values.projectId))
+        if (selectedProject && selectedProject.projectStatus?.toUpperCase() === 'INACTIVE') {
+          message.error('Cannot create dataset for an inactive project.')
+          setLoading(false)
+          return
+        }
       }
 
       let files = fileList
@@ -220,22 +340,8 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
       if (error && typeof error === 'object' && 'errorFields' in error) return
 
       let errorMessage = 'Unknown error'
-
       if (axios.isAxiosError(error)) {
-        console.error('🚢 API ERROR: CREATE/UPDATE DATASET', {
-          error: error,
-          responseData: error.response?.data,
-          responseStatus: error.response?.status,
-          code: error.code
-        })
-
         errorMessage = error.response?.data?.message || error.message
-
-        if (error.message === 'Network Error' || error.code === 'ERR_NETWORK' || error.code === 'ERR_CONNECTION_RESET') {
-          errorMessage = 'Network Error: Connection reset. This often happens because the upload is very large or takes too long. Please stay on the page until upload completes.'
-        } else if (error.response?.status === 502 || error.code === 'ERR_BAD_RESPONSE') {
-          errorMessage = 'Server Error (502 Bad Gateway). The upload might be too large for the server to process at once. Try uploading fewer images (e.g., 5-10) or ensure compression is enabled.'
-        }
       } else if (error instanceof Error) {
         errorMessage = error.message
       }
@@ -257,77 +363,80 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
       width={800}
       destroyOnHidden
     >
-      <div className="px-8 pt-10 pb-8">
-        <div className="text-center border-b border-white/5 pb-6 mb-8">
-          <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
-            {isEdit ? 'Edit Dataset' : 'Create New Dataset'}
-          </h2>
-          <p className="text-gray-400 text-sm">
-            {isEdit
-              ? 'Update the details below to modify your dataset.'
-              : 'Fill in the details below to create a new dataset for your project.'}
-          </p>
+      {fetchingDetails ? (
+        <div className="h-[400px] flex flex-col items-center justify-center gap-4">
+          <Spin size="large" />
+          <p className="text-violet-400 font-medium animate-pulse">Fetching latest dataset information...</p>
         </div>
+      ) : (
+        <div className="px-8 pt-10 pb-8">
+          <div className="text-center border-b border-white/5 pb-6 mb-8">
+            <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
+              {isEdit ? 'Edit Dataset' : 'Create New Dataset'}
+            </h2>
+            <p className="text-gray-400 text-sm">
+              {isEdit
+                ? 'Update the details below to modify your dataset.'
+                : 'Fill in the details below to create a new dataset for your project.'}
+            </p>
+          </div>
 
-        <Form
-          form={form}
-          layout="vertical"
-          className="mt-6"
-          initialValues={{
-            datasetName: initialData?.datasetName,
-            description: initialData?.description,
-            projectId: initialProjectId || initialData?.projectId
-          }}
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <Form.Item
-                name="datasetName"
-                label={<span className="text-white/90">Dataset Name</span>}
-                rules={[{ required: true, message: 'Please enter dataset name' }]}
-              >
-                <Input
-                  size="large"
-                  placeholder="e.g. Image_Training_Set_Alpha"
-                  className="!bg-[#1a1625] !border-white/10 !text-white placeholder:!text-gray-600 focus:!border-violet-500 hover:!border-violet-500/50"
-                />
-              </Form.Item>
-
-              {!isEdit && (
+          <Form
+            form={form}
+            layout="vertical"
+            className="mt-6"
+            initialValues={{
+              datasetName: initialData?.datasetName,
+              description: initialData?.description,
+              projectId: initialProjectId || initialData?.projectId
+            }}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
                 <Form.Item
                   name="projectId"
-                  label={<span className="text-white/90">Select Project</span>}
+                  label={<span className="text-white/90">Project</span>}
                   rules={[{ required: true, message: 'Please select a project' }]}
                 >
                   <Select
                     size="large"
-                    placeholder="Select a project for this dataset"
-                    className="w-full"
-                    classNames={{ popup: { root: "!bg-[#1a1625] !border !border-white/10 [&_.ant-select-item]:!text-gray-300 [&_.ant-select-item-option-active]:!bg-violet-500/20 [&_.ant-select-item-option-selected]:!bg-violet-500/40 [&_.ant-select-item-option-selected]:!text-white" } }}
-                    loading={projects.length === 0 && open && !fetching}
+                    placeholder="Select a project"
+                    className="!bg-[#1a1625] !border-white/10 !text-white placeholder:!text-gray-600"
+                    disabled={!!initialProjectId || (isEdit && hasAssignments)}
                     showSearch
                     optionFilterProp="children"
-                    disabled={!!initialProjectId}
-                    options={projects.map((p) => ({
-                      label: p.projectName || 'Unnamed Project',
-                      value: p.projectId
-                    }))}
+                  >
+                    {projects.map((p) => (
+                      <Select.Option key={p.projectId} value={p.projectId}>
+                        {p.projectName}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+
+                <Form.Item
+                  name="datasetName"
+                  label={<span className="text-white/90">Dataset Name</span>}
+                  rules={[{ required: true, message: 'Please enter dataset name' }]}
+                >
+                  <Input
+                    size="large"
+                    placeholder="e.g. Image_Training_Set_Alpha"
+                    className="!bg-[#1a1625] !border-white/10 !text-white placeholder:!text-gray-600 focus:!border-violet-500 hover:!border-violet-500/50"
                   />
                 </Form.Item>
-              )}
 
-              <Form.Item
-                name="description"
-                label={<span className="text-white/90">Description</span>}
-              >
-                <Input.TextArea
-                  rows={4}
-                  placeholder="Briefly describe the purpose of this dataset..."
-                  className="!bg-[#1a1625] !border-white/10 !text-white placeholder:!text-gray-600 resize-none focus:!border-violet-500 hover:!border-violet-500/50"
-                />
-              </Form.Item>
+                <Form.Item
+                  name="description"
+                  label={<span className="text-white/90">Description</span>}
+                >
+                  <Input.TextArea
+                    rows={4}
+                    placeholder="Briefly describe the purpose of this dataset..."
+                    className="!bg-[#1a1625] !border-white/10 !text-white placeholder:!text-gray-600 resize-none focus:!border-violet-500 hover:!border-violet-500/50"
+                  />
+                </Form.Item>
 
-              {!isEdit && (
                 <Form.Item
                   name="compressImages"
                   valuePropName="checked"
@@ -339,18 +448,27 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
                     </span>
                   </Checkbox>
                 </Form.Item>
-              )}
-            </div>
+              </div>
 
-            {!isEdit && (
               <div className="space-y-4">
-                <label className="text-white/90 font-medium block text-sm mb-2">
-                  Image Uploads
-                </label>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-white/90 font-medium block text-sm">
+                    Image Uploads
+                  </label>
+                  <Segmented
+                    options={[
+                      { label: 'Files', value: 'file' },
+                      { label: 'Folder', value: 'folder' }
+                    ]}
+                    value={uploadMode}
+                    onChange={(val) => setUploadMode(val as 'file' | 'folder')}
+                    className="!bg-[#1a1625] !border-white/10 [&_.ant-segmented-item-selected]:!bg-violet-600 [&_.ant-segmented-item-selected]:!text-white [&_.ant-segmented-item]:text-gray-400"
+                  />
+                </div>
                 <div className="rounded-xl overflow-hidden bg-[#1a1625]/30 border border-dashed border-white/20 hover:border-violet-500/50 transition-all group">
                   <Dragger
                     multiple
-                    directory
+                    directory={uploadMode === 'folder'}
                     name="file"
                     beforeUpload={() => false}
                     fileList={fileList}
@@ -360,7 +478,11 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
                   >
                     <div className="flex flex-col items-center justify-center py-4">
                       <InboxOutlined className="text-violet-500 text-3xl mb-2" />
-                      <p className="text-white font-medium text-xs mb-1">Click or drag images or folders</p>
+                      <p className="text-white font-medium text-xs mb-1">
+                        {uploadMode === 'folder'
+                          ? 'Click or drag folder here'
+                          : 'Click or drag images here'}
+                      </p>
                     </div>
                   </Dragger>
 
@@ -444,40 +566,28 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
                   </div>
                 )}
               </div>
-            )}
+            </div>
 
-            {isEdit && (
-              <div className="flex items-center justify-center h-full">
-                <div className="p-6 rounded-xl bg-violet-500/5 border border-violet-500/10 w-full">
-                  <h4 className="text-violet-300 font-bold text-xs uppercase tracking-wider mb-2">
-                    Manager Information
-                  </h4>
-                  <p className="text-gray-400 text-xs leading-relaxed m-0">
-                    Updating a dataset's name and description doesn't affect existing items. Project assignment cannot be changed after creation.
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="flex justify-end gap-3 pt-6 mt-8 border-t border-white/5">
-            <Button
-              onClick={handleCancel}
-              className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="primary"
-              loading={loading}
-              onClick={onFinish}
-              className="bg-fuchsia-600 hover:bg-fuchsia-500 border-none px-8 shadow-[0_0_15px_rgba(192,38,211,0.3)]"
-            >
-              {isEdit ? 'Update Dataset' : 'Create Dataset'}
-            </Button>
-          </div>
-        </Form>
-      </div>
+            <div className="flex justify-end gap-3 pt-6 mt-8 border-t border-white/5">
+              <Button
+                onClick={handleCancel}
+                className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="primary"
+                loading={loading}
+                disabled={fetchingDetails}
+                onClick={onFinish}
+                className="bg-fuchsia-600 hover:bg-fuchsia-500 border-none px-8 shadow-[0_0_15px_rgba(192,38,211,0.3)]"
+              >
+                {isEdit ? 'Update Dataset' : 'Create Dataset'}
+              </Button>
+            </div>
+          </Form>
+        </div>
+      )}
     </GlassModal>
   )
 }
