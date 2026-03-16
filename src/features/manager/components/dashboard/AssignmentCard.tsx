@@ -9,6 +9,7 @@ interface AssignmentCardProps extends GetAssignmentsParams {
   onEdit?: () => void
   onDelete?: () => void
   onClick?: () => void
+  variant?: 'default' | 'compact'
 }
 
 export const AssignmentCard: React.FC<AssignmentCardProps> = ({
@@ -18,18 +19,23 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
   updatedAt,
   onEdit,
   onDelete,
-  onClick
+  onClick,
+  variant = 'default'
 }) => {
   const items: MenuProps['items'] = [
     { key: '1', label: 'View Details', icon: <EyeOutlined />, onClick: onClick },
     { key: '2', label: 'Edit Assignment', icon: <EditOutlined />, onClick: onEdit },
-    { type: 'divider' },
-    {
-      key: '4',
-      label: <span className="text-red-500">Delete Assignment</span>,
-      icon: <DeleteOutlined className="text-red-500" />,
-      onClick: onDelete
-    }
+    ...(onDelete
+      ? [
+          { type: 'divider' as const },
+          {
+            key: '4',
+            label: <span className="text-red-500">Delete Assignment</span>,
+            icon: <DeleteOutlined className="text-red-500" />,
+            onClick: onDelete
+          }
+        ]
+      : [])
   ]
 
   // Status mapping using Assignment specific logic
@@ -51,6 +57,33 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A'
     return new Date(dateString).toLocaleString('vi-VN')
+  }
+
+  if (variant === 'compact') {
+    return (
+      <div
+        className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-blue-500/30 transition-colors cursor-pointer group"
+        onClick={onClick}
+      >
+        <div className="flex justify-between items-start">
+          <h4
+            className="text-white font-bold text-sm truncate pr-2"
+            title={assignmentName || 'Unnamed Assignment'}
+          >
+            {assignmentName || 'Unnamed Assignment'}
+          </h4>
+        </div>
+        <div className="flex items-center gap-2 mt-1">
+          <Tag
+            color={getStatusColor(status)}
+            className="m-0 text-[10px] px-1.5 py-0 font-medium whitespace-nowrap"
+          >
+            {status || 'UNKNOWN'}
+          </Tag>
+          <span className="text-gray-500 text-[10px]">{formatDate(createdAt)}</span>
+        </div>
+      </div>
+    )
   }
 
   return (

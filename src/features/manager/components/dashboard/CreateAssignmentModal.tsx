@@ -16,6 +16,25 @@ interface CreateAssignmentModalProps {
   onSuccess: () => void
 }
 
+interface NormalizedProject {
+  projectId: string
+  projectName: string
+  projectStatus: string
+}
+
+interface RawProjectData {
+  projectId?: string | number
+  id?: string | number
+  project_id?: string | number
+  projectName?: string
+  name?: string
+  project_name?: string
+  projectStatus?: string
+  status?: string
+  project_status?: string
+  project?: RawProjectData
+}
+
 export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
   open,
   projectId,
@@ -30,7 +49,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
   const [annotators, setAnnotators] = useState<Record<string, unknown>[]>([])
   const [reviewers, setReviewers] = useState<Record<string, unknown>[]>([])
   const [datasets, setDatasets] = useState<Record<string, unknown>[]>([])
-  const [projects, setProjects] = useState<Record<string, unknown>[]>([])
+  const [projects, setProjects] = useState<NormalizedProject[]>([])
   const [selectedProjectId, setSelectedProjectId] = useState<string>(projectId || '')
   const [loading, setLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -49,16 +68,16 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
         const projectList = Array.isArray(data) ? data : []
 
         // Robust normalization similar to AllProjects.tsx
-        const normalizedProjects = projectList.map((p: any) => {
+        const normalizedProjects: NormalizedProject[] = projectList.map((p: RawProjectData) => {
           const projectInfo = p.project || p
           return {
-            projectId: String(projectInfo.projectId || projectInfo.id || projectInfo.project_id || p.projectId || p.id || p.project_id || ''),
-            projectName: String(projectInfo.projectName || projectInfo.name || projectInfo.project_name || p.projectName || p.name || p.project_name || ''),
-            projectStatus: String(projectInfo.projectStatus || projectInfo.status || projectInfo.project_status || p.projectStatus || p.status || p.project_status || '')
+            projectId: String(projectInfo.projectId || projectInfo.id || projectInfo.project_id || ''),
+            projectName: String(projectInfo.projectName || projectInfo.name || projectInfo.project_name || ''),
+            projectStatus: String(projectInfo.projectStatus || projectInfo.status || projectInfo.project_status || '')
           }
         })
 
-        setProjects(normalizedProjects.filter((p: any) => p.projectStatus?.toUpperCase() !== 'INACTIVE'))
+        setProjects(normalizedProjects.filter((p: NormalizedProject) => p.projectStatus?.toUpperCase() !== 'INACTIVE'))
       } catch (error) {
         console.error(error)
         message.error('Failed to load projects.')
@@ -170,7 +189,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
 
       // Check if project is inactive
       if (resolvedProjectId) {
-        const selectedProject = projects.find(p => String(p.projectId || p.id) === String(resolvedProjectId))
+        const selectedProject = projects.find(p => String(p.projectId) === String(resolvedProjectId))
         if (selectedProject && (selectedProject.projectStatus as string)?.toUpperCase() === 'INACTIVE') {
           message.error('Cannot create assignment for an inactive project.')
           setIsSubmitting(false)
@@ -233,7 +252,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
       // }
 
       const apiError =
-        (error as Record<string, any>)?.response?.data?.message ||
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
         (error as Error)?.message ||
         (isEditMode ? 'Failed to update assignment' : 'Failed to create assignment')
       message.error(apiError)
@@ -312,12 +331,12 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
                 optionFilterProp="children"
                 onChange={handleProjectChange}
               >
-                {projects.map((p: Record<string, unknown>) => (
+                {projects.map((p: NormalizedProject) => (
                   <Select.Option
-                    key={(p.projectId as string) || (p.id as string)}
-                    value={(p.projectId as string) || (p.id as string)}
+                    key={p.projectId}
+                    value={p.projectId}
                   >
-                    {(p.projectName as string) || (p.name as string)}
+                    {p.projectName}
                   </Select.Option>
                 ))}
               </Select>

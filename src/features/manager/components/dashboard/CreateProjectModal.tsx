@@ -141,13 +141,13 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
       message.success(editId ? 'Project updated successfully!' : 'Project created successfully!')
       onSuccess(currentProjectId || '', projectPayload)
       form.resetFields()
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error && typeof error === 'object' && 'errorFields' in error) {
         return
       }
 
       console.error('API Error:', error)
-      const apiError = error?.response?.data?.message || error?.message || (editId ? 'Failed to update project' : 'Failed to create project')
+      const apiError = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || (error as Error)?.message || (editId ? 'Failed to update project' : 'Failed to create project')
       message.error(apiError)
     } finally {
       setLoading(false)
