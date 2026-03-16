@@ -112,7 +112,6 @@ export default function AnnotatorDashboardPage() {
             totalTasks: actualTasks.length > 0 ? actualTasks.length : assignmentData.totalTasks || 1
           }
           setAssignment(normAssignment)
-
           // Fetch associated Guideline
           const projectIdToFetch = normAssignment.projectId
           if (projectIdToFetch && !projectIdToFetch.startsWith('PROJ-MOCK')) {
@@ -130,12 +129,20 @@ export default function AnnotatorDashboardPage() {
             // Also fetch the project details for the project tab
             const projectRes = await projectApi.getProjectById(projectIdToFetch)
             const rawProj = projectRes.data?.data || projectRes.data
-            setProjectDetail({
-              ...rawProj,
-              id: rawProj.projectId || rawProj.id,
-              name: rawProj.projectName || rawProj.name,
-              status: rawProj.projectStatus || rawProj.status
-            })
+            const pStatus = (rawProj.projectStatus || rawProj.status || '').toUpperCase()
+            
+            if (pStatus && pStatus !== 'INACTIVE') {
+              setProjectDetail({
+                ...rawProj,
+                id: rawProj.projectId || rawProj.id,
+                name: rawProj.projectName || rawProj.name,
+                status: rawProj.projectStatus || rawProj.status
+              })
+            } else {
+              setAssignment(null)
+              setProjectDetail(null)
+              setGuideline(null)
+            }
           }
         } else {
           // No assignmentId (e.g., viewing normal dashboard screen)
@@ -147,52 +154,57 @@ export default function AnnotatorDashboardPage() {
               const assignsList = assignRes.data?.data || assignRes.data || []
 
               if (assignsList.length > 0) {
-                const rawAssign = assignsList[0]
-                const actualTasks2 = Array.isArray(rawAssign.tasks) ? rawAssign.tasks : []
-                const fallbackTasks2 = actualTasks2.length > 0 ? actualTasks2 : [MOCK_TEST_TASK]
-                const calcCompleted2 = actualTasks2.filter(
-                  (t: Record<string, unknown>) =>
-                    t.taskStatus === 'COMPLETED' || t.annotationStatus === 'COMPLETED'
-                ).length
+                for (const rawAssign of assignsList) {
+                  const pId = rawAssign.projectId || rawAssign.project?.projectId || rawAssign.project?.id
+                  if (pId && !String(pId).startsWith('PROJ-MOCK')) {
+                    const pRes = await projectApi.getProjectById(pId)
+                    const rawP = pRes.data?.data || pRes.data
+                    const pStatus = (rawP.projectStatus || rawP.status || '').toUpperCase()
 
-                const normAssign = {
-                  ...rawAssign,
-                  id: rawAssign.assignmentId || rawAssign.id,
-                  name: rawAssign.assignmentName || rawAssign.name || rawAssign.title,
-                  status: rawAssign.assignmentStatus || rawAssign.status,
-                  description: rawAssign.descriptionAssignment || rawAssign.description,
-                  projectId:
-                    rawAssign.projectId || rawAssign.project?.projectId || rawAssign.project?.id,
-                  tasks: fallbackTasks2,
-                  completedTasks:
-                    actualTasks2.length > 0 ? calcCompleted2 : (rawAssign.completedTasks ?? 0),
-                  totalTasks:
-                    actualTasks2.length > 0 ? actualTasks2.length : rawAssign.totalTasks || 1
-                }
-                setAssignment(normAssign)
+                    if (pStatus && pStatus !== 'INACTIVE') {
+                      const actualTasks2 = Array.isArray(rawAssign.tasks) ? rawAssign.tasks : []
+                      const fallbackTasks2 = actualTasks2.length > 0 ? actualTasks2 : [MOCK_TEST_TASK]
+                      const calcCompleted2 = actualTasks2.filter(
+                        (t: Record<string, unknown>) =>
+                          t.taskStatus === 'COMPLETED' || t.annotationStatus === 'COMPLETED'
+                      ).length
 
-                const projectIdToFetch = normAssign.projectId
-                if (projectIdToFetch && !projectIdToFetch.startsWith('PROJ-MOCK')) {
-                  const guidelineRes = await guidelineApi.getGuidelines(projectIdToFetch)
-                  const guidelinesList = guidelineRes.data?.data || guidelineRes.data || []
-                  const activeGuide = Array.isArray(guidelinesList)
-                    ? (guidelinesList.find(
-                        (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
-                      ) ??
-                      guidelinesList[0] ??
-                      null)
-                    : guidelinesList
-                  setGuideline(activeGuide)
+                      const normAssign = {
+                        ...rawAssign,
+                        id: rawAssign.assignmentId || rawAssign.id,
+                        name: rawAssign.assignmentName || rawAssign.name || rawAssign.title,
+                        status: rawAssign.assignmentStatus || rawAssign.status,
+                        description: rawAssign.descriptionAssignment || rawAssign.description,
+                        projectId: pId,
+                        tasks: fallbackTasks2,
+                        completedTasks:
+                          actualTasks2.length > 0 ? calcCompleted2 : (rawAssign.completedTasks ?? 0),
+                        totalTasks:
+                          actualTasks2.length > 0 ? actualTasks2.length : rawAssign.totalTasks || 1
+                      }
+                      setAssignment(normAssign)
 
-                  const projectRes = await projectApi.getProjectById(projectIdToFetch)
-                  const rawProj = projectRes.data?.data || projectRes.data
-                  setProjectDetail({
-                    ...rawProj,
-                    id: rawProj.projectId || rawProj.id,
-                    name: rawProj.projectName || rawProj.name,
-                    status: rawProj.projectStatus || rawProj.status
-                  })
-                  hasFetchedProject = true
+                      const guidelineRes = await guidelineApi.getGuidelines(pId)
+                      const guidelinesList = guidelineRes.data?.data || guidelineRes.data || []
+                      const activeGuide = Array.isArray(guidelinesList)
+                        ? (guidelinesList.find(
+                            (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
+                          ) ??
+                          guidelinesList[0] ??
+                          null)
+                        : guidelinesList
+                      setGuideline(activeGuide)
+
+                      setProjectDetail({
+                        ...rawP,
+                        id: rawP.projectId || rawP.id,
+                        name: rawP.projectName || rawP.name,
+                        status: rawP.projectStatus || rawP.status
+                      })
+                      hasFetchedProject = true
+                      break
+                    }
+                  }
                 }
               }
             } catch (err: unknown) {
@@ -206,29 +218,35 @@ export default function AnnotatorDashboardPage() {
                 const projectsList = projectsRes.data?.data || projectsRes.data || []
 
                 if (projectsList.length > 0) {
-                  const firstProjRaw = projectsList[0]
-                  const firstProjId = firstProjRaw.projectId || firstProjRaw.id
-                  if (firstProjId && !String(firstProjId).startsWith('PROJ-MOCK')) {
-                    const detailRes = await projectApi.getProjectById(firstProjId)
-                    const rawProj = detailRes.data?.data || detailRes.data
-                    setProjectDetail({
-                      ...rawProj,
-                      id: rawProj.projectId || rawProj.id,
-                      name: rawProj.projectName || rawProj.name,
-                      status: rawProj.projectStatus || rawProj.status
-                    })
+                  for (const firstProjRaw of projectsList) {
+                    const firstProjId = firstProjRaw.projectId || firstProjRaw.id
+                    if (firstProjId && !String(firstProjId).startsWith('PROJ-MOCK')) {
+                      const detailRes = await projectApi.getProjectById(firstProjId)
+                      const rawProj = detailRes.data?.data || detailRes.data
+                      const pStatus = (rawProj.projectStatus || rawProj.status || '').toUpperCase()
 
-                    const guidelineRes = await guidelineApi.getGuidelines(firstProjId)
-                    const guidelinesList = guidelineRes.data?.data || guidelineRes.data || []
-                    const activeGuide = Array.isArray(guidelinesList)
-                      ? (guidelinesList.find(
-                          (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
-                        ) ??
-                        guidelinesList[0] ??
-                        null)
-                      : guidelinesList
-                    setGuideline(activeGuide)
-                    hasFetchedProject = true
+                      if (pStatus && pStatus !== 'INACTIVE') {
+                        setProjectDetail({
+                          ...rawProj,
+                          id: rawProj.projectId || rawProj.id,
+                          name: rawProj.projectName || rawProj.name,
+                          status: rawProj.projectStatus || rawProj.status
+                        })
+
+                        const guidelineRes = await guidelineApi.getGuidelines(firstProjId)
+                        const guidelinesList = guidelineRes.data?.data || guidelineRes.data || []
+                        const activeGuide = Array.isArray(guidelinesList)
+                          ? (guidelinesList.find(
+                              (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
+                            ) ??
+                            guidelinesList[0] ??
+                            null)
+                          : guidelinesList
+                        setGuideline(activeGuide)
+                        hasFetchedProject = true
+                        break
+                      }
+                    }
                   }
                 }
               } catch (err) {
@@ -237,7 +255,7 @@ export default function AnnotatorDashboardPage() {
             }
 
             if (!hasFetchedProject) {
-              setError('No data found for this user.')
+              setError('No project and no assignment found for this user.')
             }
           }
         }
@@ -280,7 +298,7 @@ export default function AnnotatorDashboardPage() {
           </>
         ) : (
           <div className="text-center text-gray-400 py-10 glass-panel rounded-2xl">
-            No project found.
+            {error ?? 'No project found.'}
           </div>
         ))}
 
@@ -288,7 +306,7 @@ export default function AnnotatorDashboardPage() {
         (!assignment && loading ? (
           <div className="text-center text-gray-400 py-20">Loading assignment...</div>
         ) : error || !assignment ? (
-          <div className="text-center text-red-400 py-20">{error ?? 'Assignment not found'}</div>
+          <div className="text-center text-red-400 py-20">{error ?? 'No assignment found.'}</div>
         ) : (
           <>
             <div className="rounded-2xl grid md:grid-cols-2 sm:grid-cols-1 gap-6">
