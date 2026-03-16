@@ -96,19 +96,6 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModa
             />
           </Form.Item>
 
-          {/* Full Name Field - NEW */}
-          <Form.Item
-            name="fullName"
-            label={<span className="text-gray-300 font-medium">Full Name</span>}
-            rules={[{ required: true, message: 'Please enter full name' }]}
-          >
-            <Input
-              size="large"
-              prefix={<UserOutlined className="text-gray-500" />}
-              placeholder="e.g. John Doe"
-            />
-          </Form.Item>
-
           {/* Email Address Field */}
           <Form.Item
             name="email"

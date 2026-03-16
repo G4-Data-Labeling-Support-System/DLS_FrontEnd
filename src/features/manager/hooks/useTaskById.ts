@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import taskApi from '@/api/TaskApi'
 
-export const useTaskDetail = (taskId: string | undefined) => {
+export const useTaskById = (taskId: string | undefined) => {
   return useQuery({
-    queryKey: ['taskDetail', taskId],
+    queryKey: ['taskDetailById', taskId],
     queryFn: async () => {
-      const response = await taskApi.getTaskDataItems(taskId!)
-      return response.data?.data || response.data || []
+      const response = await taskApi.getTaskById(taskId!)
+      return response.data?.data || response.data
     },
     enabled: !!taskId,
     staleTime: 1000 * 60 * 5, // 5 minutes

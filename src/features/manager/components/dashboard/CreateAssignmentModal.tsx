@@ -124,7 +124,12 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
           const datasetRes = await datasetApi.getDatasetsByProjectId(currentPid)
           const datasetsData = datasetRes.data?.data || datasetRes.data
           const dsArray = Array.isArray(datasetsData) ? datasetsData : []
-          setDatasets(dsArray)
+          setDatasets(
+            dsArray.filter((d: Record<string, unknown>) => {
+              const status = String(d.datasetStatus || d.status || d.dataset_status || '').toUpperCase()
+              return status !== 'INACTIVE'
+            })
+          )
         } else {
           setDatasets([])
         }
@@ -194,6 +199,19 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
           message.error('Cannot create assignment for an inactive project.')
           setIsSubmitting(false)
           return
+        }
+      }
+
+      // Check if dataset is inactive (only for create mode as dataset is fixed in edit mode)
+      if (!isEditMode && values.datasetId) {
+        const selectedDataset = datasets.find(d => String(d.datasetId || d.id) === String(values.datasetId))
+        if (selectedDataset) {
+          const dsStatus = String(selectedDataset.datasetStatus || selectedDataset.status || selectedDataset.dataset_status || '').toUpperCase()
+          if (dsStatus === 'INACTIVE') {
+            message.error('Cannot create assignment with an inactive dataset.')
+            setIsSubmitting(false)
+            return
+          }
         }
       }
 
@@ -278,7 +296,12 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
       const datasetRes = await datasetApi.getDatasetsByProjectId(value)
       const datasetsData = datasetRes.data?.data || datasetRes.data
       const dsArray = Array.isArray(datasetsData) ? datasetsData : []
-      setDatasets(dsArray)
+      setDatasets(
+        dsArray.filter((d: Record<string, unknown>) => {
+          const status = String(d.datasetStatus || d.status || d.dataset_status || '').toUpperCase()
+          return status !== 'INACTIVE'
+        })
+      )
     } catch (error) {
       console.error(error)
       message.error('Failed to load datasets for selected project.')

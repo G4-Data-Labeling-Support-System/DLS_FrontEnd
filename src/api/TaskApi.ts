@@ -12,13 +12,22 @@ export interface TaskDataItem {
 }
 
 const taskApi = {
-  async getTaskDataItems(taskId: string) {
+  getTaskDataItems(taskId: string) {
     try {
       const url = ENDPOINTS.TASKS.DATA_ITEMS(taskId)
-      const response = await axiosClient.get(url)
-      return response.data
+      return axiosClient.get(url)
     } catch (error) {
       console.error(`Failed to fetch task data items for taskId: ${taskId}`, error)
+      throw error
+    }
+  },
+
+  getTaskById(taskId: string) {
+    try {
+      const url = ENDPOINTS.TASKS.DETAIL(taskId)
+      return axiosClient.get(url)
+    } catch (error) {
+      console.error(`Failed to fetch task detail for taskId: ${taskId}`, error)
       throw error
     }
   }

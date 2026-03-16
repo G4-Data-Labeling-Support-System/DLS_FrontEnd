@@ -1,10 +1,22 @@
 import React from 'react'
-import { Card, Table, Descriptions, Tag, Typography, Spin, Empty } from 'antd'
+import { Card, Table, Descriptions, Tag, Typography, Spin } from 'antd'
 import { DatabaseOutlined, InfoCircleOutlined } from '@ant-design/icons'
 import { useTaskDetail } from '@/features/annotator/hooks/useTaskDetail'
-import type { TaskDataItem } from '@/api/TaskApi'
 
 const { Title, Text } = Typography
+
+interface TaskDataItemRecord {
+  dataItemId: string
+  taskDataItemStatus?: string
+  dataItem: {
+    fileName: string
+    url: string
+    fileFormat: string
+    dataType: string
+    uploadedAt: string
+    previewUrl?: string
+  }
+}
 
 interface ManagerTaskDetailProps {
   task: {
@@ -14,6 +26,7 @@ interface ManagerTaskDetailProps {
     reviewStatus?: string
     taskType?: string
     assignmentId?: string
+    assignmentName?: string
     completedCount?: number
     totalItems?: number
     createdAt?: string
@@ -22,144 +35,180 @@ interface ManagerTaskDetailProps {
 
 export const ManagerTaskDetail: React.FC<ManagerTaskDetailProps> = ({ task }) => {
   const {
-    data: taskDataItemsResponse,
+    data: dataItems = [],
     isLoading: itemsLoading,
     error: itemsError
   } = useTaskDetail(task.taskId)
 
-  const dataItems = taskDataItemsResponse?.data || taskDataItemsResponse || []
-
-  const getStatusColor = (status?: string) => {
-    switch (status?.toUpperCase()) {
-      case 'COMPLETED':
-        return 'success'
-      case 'IN_PROGRESS':
-        return 'processing'
-      case 'PENDING':
-        return 'default'
-      case 'REJECTED':
-        return 'error'
-      default:
-        return 'default'
-    }
-  }
-
   const columns = [
     {
       title: 'Preview',
-      dataIndex: 'url',
       key: 'preview',
-      width: 80,
-      render: (url: string, record: TaskDataItem) => (
-        <div className="w-10 h-10 rounded border border-white/10 overflow-hidden bg-black/40 flex items-center justify-center">
-          {url || record.previewUrl ? (
-            <img src={url || record.previewUrl} alt="preview" className="w-full h-full object-cover" />
+      width: '10%',
+      render: (_: string, record: TaskDataItemRecord) => (
+        <div className="w-10 h-10 rounded-lg border border-white/5 overflow-hidden bg-black/20 flex items-center justify-center transition-all hover:border-violet-500/30">
+          {record.dataItem.url || record.dataItem.previewUrl ? (
+            <img src={record.dataItem.url || record.dataItem.previewUrl} alt="preview" className="w-full h-full object-cover" />
           ) : (
-            <span className="material-symbols-outlined text-gray-500 text-sm">image</span>
+            <span className="material-symbols-outlined text-gray-600 text-sm">image</span>
           )}
         </div>
       )
     },
     {
       title: 'Filename',
-      dataIndex: 'filename',
       key: 'filename',
-      render: (text: string) => <Text className="text-gray-200">{text || 'Unknown'}</Text>
+      width: '30%',
+      render: (_: unknown, record: TaskDataItemRecord) => (
+        <Text className="text-gray-200 font-medium truncate block max-w-[200px]" title={record.dataItem.fileName}>
+          {record.dataItem.fileName}
+        </Text>
+      )
     },
     {
       title: 'Format',
-      dataIndex: 'fileFormat',
       key: 'fileFormat',
-      render: (text: string) => <Tag color="blue">{text || 'N/A'}</Tag>
+      width: '18%',
+      render: (_: unknown, record: TaskDataItemRecord) => (
+        <Tag className="bg-blue-500/10 border-blue-500/20 text-blue-400 font-medium rounded-md px-2 py-0.5">
+          {record.dataItem.fileFormat}
+        </Tag>
+      )
     },
     {
       title: 'Data Type',
-      dataIndex: 'dataType',
       key: 'dataType',
-      render: (text: string) => <Tag color="cyan">{text || 'UNKNOWN'}</Tag>
+      width: '18%',
+      render: (_: unknown, record: TaskDataItemRecord) => (
+        <Tag className="bg-emerald-500/10 border-emerald-500/20 text-emerald-400 font-medium rounded-md px-2 py-0.5">
+          {record.dataItem.dataType}
+        </Tag>
+      )
     },
     {
       title: 'Uploaded At',
-      dataIndex: 'uploadedAt',
       key: 'uploadedAt',
-      render: (text: string) => (text ? new Date(text).toLocaleDateString() : 'N/A')
+      width: '24%',
+      render: (_: unknown, record: TaskDataItemRecord) => (
+        <Text className="text-gray-400 text-sm">
+          {record.dataItem.uploadedAt ? new Date(record.dataItem.uploadedAt).toLocaleDateString() : 'N/A'}
+        </Text>
+      )
     }
   ]
 
   return (
-    <div className="w-full animate-fade-in">
-      <div className="flex items-center gap-4 mb-6">
+    <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <Title level={4} className="!text-white !m-0">
+          <Title level={4} className="!text-white !m-0 !font-bold tracking-tight">
             Task Details: {task.taskName || task.taskId}
           </Title>
-          <Text className="text-gray-500 font-mono text-xs">ID: {task.taskId}</Text>
+          <div className="flex items-center gap-2 mt-1">
+            <div className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse" />
+            <Text className="text-gray-500 font-mono text-xs select-all">ID: {task.taskId}</Text>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
-        <div className="lg:col-span-1">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-2">
+        {/* Task Metadata Card */}
+        <div className="lg:col-span-4 lg:sticky lg:top-6 h-fit">
           <Card
-            className="bg-[#1A1625] border-gray-800 rounded-xl"
+            className="bg-[#1A1625]/80 backdrop-blur-xl border-white/5 rounded-2xl shadow-2xl overflow-hidden group"
             title={
-              <span className="text-white flex items-center gap-2">
-                <InfoCircleOutlined className="text-violet-400" />
-                Task Metadata
-              </span>
+              <div className="py-1">
+                <span className="text-white flex items-center gap-2.5 font-semibold text-base">
+                  <div className="p-2 rounded-lg bg-violet-500/10 group-hover:bg-violet-500/20 transition-colors">
+                    <InfoCircleOutlined className="text-violet-400" />
+                  </div>
+                  Task Metadata
+                </span>
+              </div>
             }
           >
             <Descriptions
               column={1}
               size="small"
-              styles={{
-                label: { color: '#9ca3af', fontWeight: 500 },
-                content: { color: '#d1d5db' }
-              }}
+              className="mt-2"
             >
-              <Descriptions.Item label="Status">
-                <Tag color={getStatusColor(task.taskStatus || task.reviewStatus)}>
+              <Descriptions.Item
+                label={<span className="text-gray-400 font-medium">Status</span>}
+              >
+                <Tag className={`
+                  rounded-full px-3 py-0.5 border-none font-semibold text-[10px] tracking-wider uppercase
+                  ${task.taskStatus === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-400' :
+                    task.taskStatus === 'IN_PROGRESS' ? 'bg-blue-500/10 text-blue-400' :
+                      'bg-gray-500/10 text-gray-400'}
+                `}>
                   {(task.taskStatus || task.reviewStatus || 'PENDING').toUpperCase()}
                 </Tag>
               </Descriptions.Item>
-              <Descriptions.Item label="Type">{task.taskType || 'N/A'}</Descriptions.Item>
-              <Descriptions.Item label="Assignment ID">{task.assignmentId || 'N/A'}</Descriptions.Item>
-              <Descriptions.Item label="Progress">
-                {task.completedCount || 0} items completed
+              <Descriptions.Item label={<span className="text-gray-400 font-medium">Assignment</span>}>
+                <span className="text-gray-200 font-medium">{task.assignmentName || 'N/A'}</span>
               </Descriptions.Item>
-              <Descriptions.Item label="Created At">
-                {task.createdAt ? new Date(task.createdAt).toLocaleString() : 'N/A'}
+              <Descriptions.Item label={<span className="text-gray-400 font-medium">Progress</span>}>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-200 font-bold">
+                    {dataItems.filter((item: TaskDataItemRecord) => item.taskDataItemStatus?.toUpperCase() === 'COMPLETED').length}
+                  </span>
+                  <span className="text-gray-500">/</span>
+                  <span className="text-gray-500">{dataItems.length} items</span>
+                </div>
+              </Descriptions.Item>
+              <Descriptions.Item label={<span className="text-gray-400 font-medium">Created</span>}>
+                <span className="text-gray-400 text-xs">
+                  {task.createdAt ? new Date(task.createdAt).toLocaleString() : 'N/A'}
+                </span>
               </Descriptions.Item>
             </Descriptions>
           </Card>
         </div>
 
-        <div className="lg:col-span-2">
+        {/* Task Data Items Table Card */}
+        <div className="lg:col-span-8">
           <Card
-            className="bg-[#1A1625] border-gray-800 rounded-xl"
+            className="bg-[#1A1625]/80 backdrop-blur-xl border-white/5 rounded-2xl shadow-2xl overflow-hidden"
             title={
-              <div className="flex items-center justify-between">
-                <span className="text-white flex items-center gap-2">
-                  <DatabaseOutlined className="text-emerald-400" />
-                  Task Data Items
+              <div className="flex items-center justify-between py-1">
+                <span className="text-white flex items-center gap-2.5 font-semibold text-base">
+                  <div className="p-2 rounded-lg bg-emerald-500/10">
+                    <DatabaseOutlined className="text-emerald-400" />
+                  </div>
+                  Data Items
                 </span>
-                <Tag color="green">{dataItems.length} Items</Tag>
+                <div className="flex items-center gap-2 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                  <span className="text-emerald-400 font-bold text-xs uppercase tracking-tighter">
+                    {dataItems.length} Records
+                  </span>
+                </div>
               </div>
             }
           >
             {itemsLoading ? (
-              <div className="py-20 text-center">
-                <Spin tip="Loading data items..." />
+              <div className="py-32 flex flex-col items-center gap-4">
+                <Spin indicator={<div className="w-12 h-12 rounded-full border-4 border-violet-500/20 border-t-violet-500 animate-spin" />} />
+                <span className="text-gray-500 font-medium tracking-widest text-[10px] uppercase">Retrieving Dataset...</span>
               </div>
             ) : itemsError ? (
-              <Empty description={<span className="text-red-400">Error loading data items</span>} />
+              <div className="py-20 flex flex-col items-center gap-3">
+                <div className="p-4 rounded-full bg-red-500/10">
+                  <InfoCircleOutlined className="text-red-400 text-2xl" />
+                </div>
+                <span className="text-red-400/80 font-medium">Failed to synchronize task data</span>
+              </div>
             ) : (
               <Table
                 columns={columns}
-                dataSource={dataItems}
-                rowKey={(record, index) => record.id?.toString() || index?.toString() || ''}
-                pagination={{ pageSize: 5 }}
-                className="custom-ant-table"
-                size="middle"
+                dataSource={dataItems as TaskDataItemRecord[]}
+                rowKey={(record) => record.dataItemId || Math.random().toString()}
+                pagination={{
+                  pageSize: 5,
+                  className: "custom-pagination px-4"
+                }}
+                className="manager-task-table"
+                size="large"
               />
             )}
           </Card>
@@ -167,40 +216,48 @@ export const ManagerTaskDetail: React.FC<ManagerTaskDetailProps> = ({ task }) =>
       </div>
 
       <style>{`
-        .custom-ant-table .ant-table {
+        .manager-task-table .ant-table {
           background: transparent !important;
-          color: #d1d5db !important;
         }
-        .custom-ant-table .ant-table-thead > tr > th {
-          background: #231e31 !important;
-          color: #9ca3af !important;
-          border-bottom: 1px solid #2d263b !important;
+        .manager-task-table .ant-table-thead > tr > th {
+          background: #231e31/40 !important;
+          color: #6b7280 !important;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
           font-size: 11px;
           text-transform: uppercase;
-          letter-spacing: 0.05em;
+          letter-spacing: 0.1em;
+          font-weight: 700;
+          padding: 16px 20px !important;
         }
-        .custom-ant-table .ant-table-tbody > tr > td {
-          border-bottom: 1px solid #2d263b !important;
+        .manager-task-table .ant-table-tbody > tr > td {
+          border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
           background: transparent !important;
-          color: #d1d5db !important;
+          padding: 16px 20px !important;
         }
-        .custom-ant-table .ant-table-tbody > tr:hover > td {
+        .manager-task-table .ant-table-tbody > tr:hover > td {
           background: rgba(255, 255, 255, 0.02) !important;
         }
-        .custom-ant-table .ant-pagination-item, 
-        .custom-ant-table .ant-pagination-prev, 
-        .custom-ant-table .ant-pagination-next {
-          background: #231e31 !important;
-          border-color: #2d263b !important;
+        .custom-pagination.ant-pagination .ant-pagination-item {
+          background: rgba(255, 255, 255, 0.03);
+          border-color: rgba(255, 255, 255, 0.05);
+          border-radius: 8px;
         }
-        .custom-ant-table .ant-pagination-item a {
-          color: #9ca3af !important;
+        .custom-pagination.ant-pagination .ant-pagination-item a {
+          color: #9ca3af;
         }
-        .custom-ant-table .ant-pagination-item-active {
-          border-color: #7c3aed !important;
+        .custom-pagination.ant-pagination .ant-pagination-item-active {
+          background: rgba(139, 92, 246, 0.1);
+          border-color: #8b5cf6;
         }
-        .custom-ant-table .ant-pagination-item-active a {
-          color: #7c3aed !important;
+        .custom-pagination.ant-pagination .ant-pagination-item-active a {
+          color: #a78bfa;
+        }
+        .custom-pagination.ant-pagination .ant-pagination-prev button,
+        .custom-pagination.ant-pagination .ant-pagination-next button {
+          background: rgba(255, 255, 255, 0.03);
+          border-color: rgba(255, 255, 255, 0.05);
+          color: #9ca3af;
+          border-radius: 8px;
         }
       `}</style>
     </div>

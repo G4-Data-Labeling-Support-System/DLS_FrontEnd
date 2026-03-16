@@ -178,9 +178,13 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
       try {
         setTasksLoading(true)
         const response = await assignmentApi.getTasksByAssignmentId(assignmentId)
-        const data = response.data?.data || response.data || []
-        if (isMounted) {
-          setTasks(Array.isArray(data) ? data : [])
+        const rawData = response.data?.data || response.data || []
+        if (isMounted && Array.isArray(rawData)) {
+          const mappedTasks: Task[] = rawData.map((t: Record<string, unknown>) => ({
+            ...t,
+            taskId: String(t.taskId || t.id || '')
+          })) as Task[]
+          setTasks(mappedTasks)
         }
       } catch (error) {
         console.error('Error fetching tasks:', error)
@@ -260,9 +264,16 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
   }
 
   if (viewTaskId) {
-    const selectedTask = tasks.find((t) => t.taskId === viewTaskId)
+    const selectedTask = tasks.find((t) => String(t.taskId) === String(viewTaskId))
     if (selectedTask) {
-      return <ManagerTaskDetail task={selectedTask} />
+      return (
+        <ManagerTaskDetail 
+          task={{
+            ...selectedTask,
+            assignmentName: assignment.assignmentName
+          }} 
+        />
+      )
     }
   }
 
