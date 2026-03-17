@@ -89,10 +89,29 @@ const datasetApi = {
       throw error
     }
   },
-  async updateDataset(id: string, datasetData: { projectId?: string; datasetName: string; description?: string; files?: string[] }) {
+  async updateDataset(
+    id: string,
+    data: { projectId?: string; datasetName?: string; description?: string; files?: File[] },
+    onUploadProgress?: (progressEvent: AxiosProgressEvent) => void
+  ) {
     try {
       const url = ENDPOINTS.DATASETS.UPDATE(id)
-      const response = await axiosClient.put(url, datasetData)
+      const formData = new FormData()
+      
+      if (data.projectId) formData.append('projectId', data.projectId)
+      if (data.datasetName) formData.append('datasetName', data.datasetName)
+      if (data.description) formData.append('description', data.description)
+      
+      if (data.files) {
+        data.files.forEach((file) => {
+          formData.append('files', file)
+        })
+      }
+
+      const response = await axiosClient.put(url, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress
+      })
       return response
     } catch (error) {
       console.error('Failed to update dataset', error)
