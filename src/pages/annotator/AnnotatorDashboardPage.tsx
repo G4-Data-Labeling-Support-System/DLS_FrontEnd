@@ -169,18 +169,6 @@ export default function AnnotatorDashboardPage() {
                           t.taskStatus === 'COMPLETED' || t.annotationStatus === 'COMPLETED'
                       ).length
 
-                const projectIdToFetch = normAssign.projectId
-                if (projectIdToFetch && !projectIdToFetch.startsWith('PROJ-MOCK')) {
-                  const guidelineRes = await guidelineApi.getGuidelines(projectIdToFetch)
-                  const guidelinesList = guidelineRes.data?.data || guidelineRes.data || []
-                  const activeGuide = Array.isArray(guidelinesList)
-                    ? (guidelinesList.find(
-                      (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
-                    ) ??
-                      guidelinesList[0] ??
-                      null)
-                    : guidelinesList
-                  setGuideline(activeGuide)
 
                       const guidelineRes = await guidelineApi.getGuidelines(pId)
                       const guidelinesList = guidelineRes.data?.data || guidelineRes.data || []
@@ -242,9 +230,12 @@ export default function AnnotatorDashboardPage() {
                       : guidelinesList
                     setGuideline(activeGuide)
                     hasFetchedProject = true
+                    break
                   }
                 }
-              } catch (err) {
+              }
+            }
+          } catch (err) {
                 console.error('Failed to fetch fallback projects', err)
               }
             }
