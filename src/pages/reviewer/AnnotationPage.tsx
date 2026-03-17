@@ -1,8 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { Tooltip, Spin } from 'antd'
-import assignmentApi from '@/api/AssignmentApi'
-import taskApi from '@/api/TaskApi'
+import { Tooltip } from 'antd'
 
 interface Shape {
   type: 'bounding_box' | 'polygon'
@@ -18,39 +16,68 @@ interface Shape {
   isPreview?: boolean
 }
 
-interface Label {
-  labelId: string
-  labelName: string
-  color: string
-  description?: string
-}
+const MOCK_DATA_ITEMS = [
+  {
+    id: 'item-1',
+    filename: 'medical_scan_01.png',
+    url: 'https://picsum.photos/seed/scan1/800/600',
+    dataType: 'Image',
+    geometry: {
+      type: 'polygon',
+      coordinates: [
+        [10, 20],
+        [30, 40],
+        [50, 60]
+      ]
+    }
+  },
+  {
+    id: 'item-2',
+    filename: 'medical_scan_02.png',
+    url: 'https://picsum.photos/seed/scan2/800/600',
+    dataType: 'Image',
+    geometry: {
+      type: 'bounding_box',
+      x: 100,
+      y: 150,
+      width: 200,
+      height: 180
+    }
+  },
+  {
+    id: 'item-3',
+    filename: 'medical_scan_03.png',
+    url: 'https://picsum.photos/seed/scan3/800/600',
+    dataType: 'Image',
+    geometry: {
+      type: 'point',
+      x: 450,
+      y: 320
+    }
+  }
+]
 
-interface DataItem {
-  itemId: string
-  fileName: string
-  url: string
-  fileFormat: string
-  dataType: string
-}
+const AVAILABLE_LABELS = [
+  { name: 'Car', color: '#8b5cf6' },
+  { name: 'People', color: '#f43f5e' },
+  { name: 'Tree', color: '#10b981' },
+  { name: 'Sign', color: '#f59e0b' },
+  { name: 'Building', color: '#3b82f6' },
+  { name: 'Road', color: '#6366f1' }
+]
 
 export default function AnnotationPage() {
   const { taskId } = useParams<{ taskId: string }>()
   const navigate = useNavigate()
   const location = useLocation()
 
-  // Get starting index and assignmentId from state if passed
-  const state = location.state as { startIndex?: number; assignmentId?: string } | null
+  // Get starting index from state if passed, otherwise 0
+  const state = location.state as { startIndex?: number } | null
   const startIdx = state?.startIndex || 0
-  const assignmentId = state?.assignmentId
-
-  const [dataItems, setDataItems] = useState<DataItem[]>([])
-  const [labels, setLabels] = useState<Label[]>([])
   const [currentIndex, setCurrentIndex] = useState(startIdx)
-  const [selectedLabels, setSelectedLabels] = useState<string[]>([])
-  const [currentLabel, setCurrentLabel] = useState<Label | null>(null)
+  const [selectedLabels, setSelectedLabels] = useState<string[]>([AVAILABLE_LABELS[0].name])
+  const [currentLabel, setCurrentLabel] = useState(AVAILABLE_LABELS[0])
   const [comment, setComment] = useState('This is a preliminary scan observation.')
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
   // Zoom and Tool States
   const [zoom, setZoom] = useState(1)
@@ -62,50 +89,10 @@ export default function AnnotationPage() {
   const [currentShape, setCurrentShape] = useState<Shape | null>(null)
   const [shapes, setShapes] = useState<Shape[]>([])
 
-  useEffect(() => {
-    async function fetchData() {
-      if (!taskId) return
-      setLoading(true)
-      try {
-        // 1. Fetch task items
-        const taskRes = await taskApi.getTaskById(taskId)
-        const items = taskRes.data?.data || taskRes.data || []
-        setDataItems(Array.isArray(items) ? items : [])
+  const currentItem = MOCK_DATA_ITEMS[currentIndex]
+  const totalItems = MOCK_DATA_ITEMS.length
 
-        // Try to recover assignmentId from task if missing (e.g., on refresh)
-        let effectiveAssignmentId = assignmentId
-        if (!effectiveAssignmentId && items.length > 0) {
-          effectiveAssignmentId = items[0].assignmentId
-        }
-
-        // 2. Fetch labels if effectiveAssignmentId is available
-        if (effectiveAssignmentId) {
-          try {
-            const labelsRes = await assignmentApi.getLabelsByAssignmentId(effectiveAssignmentId)
-            const labelsData = labelsRes.data?.data || labelsRes.data || []
-            if (Array.isArray(labelsData)) {
-              setLabels(labelsData)
-              if (labelsData.length > 0) {
-                setCurrentLabel(labelsData[0])
-                setSelectedLabels([labelsData[0].labelName])
-              }
-            }
-          } catch (labelErr) {
-            console.error('Failed to fetch labels for assignment:', labelErr)
-          }
-        }
-      } catch (err) {
-        console.error('Failed to load annotation data:', err)
-        setError('Failed to load annotation data. Please try again.')
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchData()
-  }, [taskId, assignmentId])
-
-  const currentItem = dataItems[currentIndex]
-  const totalItems = dataItems.length
+  // Reset zoom and tools when changing image is now handled in handleNext/handlePrevious
 
   const handleWheel = (e: React.WheelEvent) => {
     const delta = e.deltaY > 0 ? -0.1 : 0.1
@@ -126,8 +113,6 @@ export default function AnnotationPage() {
       return
     }
 
-    if (!currentLabel) return
-
     const rect = e.currentTarget.getBoundingClientRect()
     const x = (e.clientX - rect.left) / zoom
     const y = (e.clientY - rect.top) / zoom
@@ -138,10 +123,11 @@ export default function AnnotationPage() {
         setCurrentShape({
           type: 'polygon',
           points: [[x, y]],
-          label: currentLabel.labelName,
+          label: currentLabel.name,
           color: currentLabel.color
         })
       } else if (currentShape && currentShape.points) {
+        // Add more points - strip preview if exists
         const points = currentShape.isPreview
           ? currentShape.points.slice(0, -1)
           : currentShape.points
@@ -160,7 +146,7 @@ export default function AnnotationPage() {
         height: 0,
         startX: x,
         startY: y,
-        label: currentLabel.labelName,
+        label: currentLabel.name,
         color: currentLabel.color
       })
     }
@@ -198,6 +184,7 @@ export default function AnnotationPage() {
 
     if (tool === 'polygon' && currentShape && currentShape.points) {
       const points = [...currentShape.points]
+      // If already has a preview point (from previous mouse move), replace it
       if (points.length > 1 && currentShape.isPreview) {
         points[points.length - 1] = [x, y]
       } else {
@@ -220,8 +207,10 @@ export default function AnnotationPage() {
     }
   }
 
+  // Close polygon or handle double click simulation
   const finishPolygon = () => {
     if (tool === 'polygon' && currentShape && currentShape.points) {
+      // Remove preview point if exists
       const finalPoints = currentShape.isPreview
         ? currentShape.points.slice(0, -1)
         : currentShape.points
@@ -266,38 +255,12 @@ export default function AnnotationPage() {
     }
   }
 
-  const toggleLabel = (labelObj: Label) => {
+  const toggleLabel = (labelObj: (typeof AVAILABLE_LABELS)[0]) => {
     setCurrentLabel(labelObj)
     setSelectedLabels((prev) =>
-      prev.includes(labelObj.labelName)
-        ? prev.filter((l) => l !== labelObj.labelName)
-        : [...prev, labelObj.labelName]
-    )
-  }
-
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen bg-[#0f0e17] gap-4">
-        <Spin size="large" />
-        <span className="text-violet-400 font-mono text-sm animate-pulse">
-          Loading annotation workspace...
-        </span>
-      </div>
-    )
-  }
-
-  if (error || !currentItem) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen bg-[#0f0e17] gap-4">
-        <span className="material-symbols-outlined text-red-500 text-5xl">error</span>
-        <span className="text-red-400 font-medium">{error || 'No data items found.'}</span>
-        <button
-          onClick={() => navigate(-1)}
-          className="mt-4 px-6 py-2 bg-white/5 border border-white/10 rounded-xl text-white hover:bg-white/10 transition-all"
-        >
-          Go Back
-        </button>
-      </div>
+      prev.includes(labelObj.name)
+        ? prev.filter((l) => l !== labelObj.name)
+        : [...prev, labelObj.name]
     )
   }
 
@@ -307,7 +270,7 @@ export default function AnnotationPage() {
       <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-[#16161a]">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate(`/reviewer/task/${taskId}`)}
             className="p-1.5 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors cursor-pointer"
           >
             <span className="material-symbols-outlined text-[20px]">arrow_back</span>
@@ -317,7 +280,9 @@ export default function AnnotationPage() {
             <span className="text-[10px] font-bold uppercase tracking-widest text-violet-400">
               Assignment
             </span>
-            <h2 className="text-sm font-bold text-white tracking-tight">Annotation Workspace</h2>
+            <h2 className="text-sm font-bold text-white tracking-tight">
+              Image Classification - Batch A
+            </h2>
           </div>
         </div>
 
@@ -347,7 +312,7 @@ export default function AnnotationPage() {
           >
             <img
               src={currentItem.url}
-              alt={currentItem.fileName}
+              alt={currentItem.filename}
               className="max-w-full max-h-[70vh] object-contain select-none pointer-events-none"
             />
 
@@ -358,6 +323,7 @@ export default function AnnotationPage() {
               onMouseUp={handleMouseUp}
               onDoubleClick={finishPolygon}
             >
+              {/* Existing Shapes */}
               {shapes.map((shape, i) => (
                 <g key={i}>
                   {shape.type === 'bounding_box' ? (
@@ -380,6 +346,7 @@ export default function AnnotationPage() {
                   )}
                 </g>
               ))}
+              {/* Current Shape */}
               {currentShape && (
                 <g>
                   {currentShape.type === 'bounding_box' ? (
@@ -407,7 +374,7 @@ export default function AnnotationPage() {
             </svg>
           </div>
 
-          {/* Tools Overlay */}
+          {/* Tools Overlay - Moved outside scaling container to keep size fixed */}
           <div className="absolute bottom-10 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/80 backdrop-blur-md rounded-2xl border border-white/10 flex items-center gap-2 shadow-2xl z-20">
             <ToolbarButton
               icon="pan_tool"
@@ -440,15 +407,18 @@ export default function AnnotationPage() {
             <ToolbarButton icon="delete" title="Clear All" onClick={handleClearAll} />
           </div>
 
+          {/* Zoom Indicator */}
           <div className="absolute top-6 right-6 px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 flex items-center gap-2">
             <span className="material-symbols-outlined text-[16px] text-gray-400">zoom_in</span>
             <span className="text-xs font-mono text-gray-300">{(zoom * 100).toFixed(0)}%</span>
           </div>
 
+          {/* Image Filename Overlay */}
           <div className="absolute top-6 left-6 px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-white/10">
-            <span className="text-xs font-mono text-gray-300">{currentItem.fileName}</span>
+            <span className="text-xs font-mono text-gray-300">{currentItem.filename}</span>
           </div>
 
+          {/* Pagination Indicator */}
           <div className="absolute bottom-6 left-6 px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 flex items-center gap-2">
             <span className="material-symbols-outlined text-[16px] text-gray-400">
               photo_library
@@ -462,6 +432,7 @@ export default function AnnotationPage() {
         {/* Right: Annotation Sidebar */}
         <div className="w-[380px] border-l border-white/5 bg-[#16161a] flex flex-col overflow-y-auto custom-scrollbar">
           <div className="p-6 flex flex-col gap-8">
+            {/* Labels Section */}
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-[18px] text-violet-400">label</span>
@@ -470,35 +441,31 @@ export default function AnnotationPage() {
                 </span>
               </div>
               <div className="flex flex-wrap gap-2">
-                {labels.length === 0 ? (
-                  <span className="text-xs text-gray-500 italic">No labels available</span>
-                ) : (
-                  labels.map((label) => (
-                    <button
-                      key={label.labelId}
-                      onClick={() => toggleLabel(label)}
-                      className={`
-                                              px-3 py-1.5 rounded-lg text-xs font-bold transition-all border
-                                              ${
-                                                selectedLabels.includes(label.labelName)
-                                                  ? 'bg-white/10 text-white'
-                                                  : 'bg-white/5 border-transparent text-gray-500 hover:bg-white/10 hover:text-gray-300'
-                                              }
-                                          `}
-                      style={{
-                        borderColor: selectedLabels.includes(label.labelName)
-                          ? label.color
-                          : 'transparent',
-                        color: selectedLabels.includes(label.labelName) ? label.color : undefined
-                      }}
-                    >
-                      {label.labelName}
-                    </button>
-                  ))
-                )}
+                {AVAILABLE_LABELS.map((label) => (
+                  <button
+                    key={label.name}
+                    onClick={() => toggleLabel(label)}
+                    className={`
+                                            px-3 py-1.5 rounded-lg text-xs font-bold transition-all border
+                                            ${selectedLabels.includes(label.name)
+                        ? 'bg-white/10 text-white'
+                        : 'bg-white/5 border-transparent text-gray-500 hover:bg-white/10 hover:text-gray-300'
+                      }
+                                        `}
+                    style={{
+                      borderColor: selectedLabels.includes(label.name)
+                        ? label.color
+                        : 'transparent',
+                      color: selectedLabels.includes(label.name) ? label.color : undefined
+                    }}
+                  >
+                    {label.name}
+                  </button>
+                ))}
               </div>
             </div>
 
+            {/* Comment Section */}
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-[18px] text-amber-400">
@@ -516,6 +483,7 @@ export default function AnnotationPage() {
               />
             </div>
 
+            {/* Version Info */}
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-[18px] text-emerald-400">
@@ -531,6 +499,7 @@ export default function AnnotationPage() {
               </div>
             </div>
 
+            {/* Geometry Section */}
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-[18px] text-blue-400">poly</span>
@@ -544,16 +513,16 @@ export default function AnnotationPage() {
                     {
                       active: currentShape
                         ? {
-                            type: currentShape.type,
-                            points: currentShape.points ? currentShape.points.length : undefined,
-                            dimensions:
-                              currentShape.type === 'bounding_box'
-                                ? {
-                                    w: Math.round(currentShape.width || 0),
-                                    h: Math.round(currentShape.height || 0)
-                                  }
-                                : undefined
-                          }
+                          type: currentShape.type,
+                          points: currentShape.points ? currentShape.points.length : undefined,
+                          dimensions:
+                            currentShape.type === 'bounding_box'
+                              ? {
+                                w: Math.round(currentShape.width || 0),
+                                h: Math.round(currentShape.height || 0)
+                              }
+                              : undefined
+                        }
                         : null,
                       session: shapes.map((s) => ({ type: s.type, label: s.label })),
                       raw: shapes

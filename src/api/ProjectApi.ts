@@ -65,6 +65,15 @@ const projectApi = {
       console.error('Failed to update project status', error)
       throw error
     }
+  },
+  getProjectMembers(id: string) {
+    try {
+      const url = ENDPOINTS.PROJECTS.MEMBERS(id)
+      return axiosClient.get(url)
+    } catch (error) {
+      console.error('Failed to fetch project members', error)
+      throw error
+    }
   }
 }
 

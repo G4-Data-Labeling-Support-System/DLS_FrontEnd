@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react'
 import { App, Spin, Typography, Card, Button, Descriptions, Tag, Empty } from 'antd'
 import { EditOutlined, FolderOutlined, DatabaseOutlined } from '@ant-design/icons'
 import assignmentApi, { type GetAssignmentsParams } from '@/api/AssignmentApi'
+import taskApi from '@/api/TaskApi'
 import projectApi from '@/api/ProjectApi'
 import datasetApi from '@/api/DatasetApi'
 import { ProjectDetail } from './ProjectDetail'
 import { DatasetDetail } from '../dataset/DatasetDetail'
+import { TaskDetail } from '@/pages/annotator/TaskDetailPage'
 import { useSearchParams } from 'react-router-dom'
 
 const { Title } = Typography
@@ -54,6 +56,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
 
   const viewProjectId = searchParams.get('viewProjectId')
   const viewDatasetId = searchParams.get('viewDatasetId')
+  const viewTaskId = searchParams.get('viewTaskId')
 
   const setViewProjectId = (id: string | null) => {
     setSearchParams((prev) => {
@@ -74,6 +77,18 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
         next.set('viewDatasetId', id)
       } else {
         next.delete('viewDatasetId')
+      }
+      return next
+    })
+  }
+
+  const setViewTaskId = (id: string | null) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      if (id) {
+        next.set('viewTaskId', id)
+      } else {
+        next.delete('viewTaskId')
       }
       return next
     })
@@ -163,10 +178,14 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
     const fetchTasks = async () => {
       try {
         setTasksLoading(true)
-        const response = await assignmentApi.getTasksByAssignmentId(assignmentId)
-        const data = response.data?.data || response.data || []
-        if (isMounted) {
-          setTasks(Array.isArray(data) ? data : [])
+        const response = await taskApi.getTasksByAssignmentId(assignmentId)
+        const rawData = response.data?.data || response.data || []
+        if (isMounted && Array.isArray(rawData)) {
+          const mappedTasks: Task[] = rawData.map((t: Record<string, unknown>) => ({
+            ...t,
+            taskId: String(t.taskId || t.id || '')
+          })) as Task[]
+          setTasks(mappedTasks)
         }
       } catch (error) {
         console.error('Error fetching tasks:', error)
@@ -245,6 +264,20 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
     return <DatasetDetail datasetId={viewDatasetId} onBack={() => setViewDatasetId(null)} />
   }
 
+  if (viewTaskId) {
+    const selectedTask = tasks.find((t) => String(t.taskId) === String(viewTaskId))
+    if (selectedTask) {
+      return (
+        <TaskDetail 
+          task={{
+            ...selectedTask,
+            assignmentName: assignment.assignmentName
+          }} 
+        />
+      )
+    }
+  }
+
   return (
     <div className="w-full animate-fade-in">
       <div className="flex justify-between items-start mb-6">
@@ -257,7 +290,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
               color={getStatusColor(assignment.status)}
               className="m-0 font-medium text-sm px-3 py-1"
             >
-              {assignment.status || 'UNKNOWN'}
+              {assignment.status}
             </Tag>
           </div>
         </div>
@@ -280,7 +313,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
         )}
       </div>
 
-      <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-6">
+      <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-2">
         <Descriptions
           title={
             <span className="text-white text-lg font-display flex items-center gap-2">
@@ -312,9 +345,9 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
         </Descriptions>
       </Card>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-1 mb-6 mt-1">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 mb-2 mt-2">
         <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-2">
             <span className="text-white text-lg font-display flex items-center gap-2">
               <FolderOutlined className="text-blue-400" />
               Associated Project
@@ -339,7 +372,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
         </Card>
 
         <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-2">
             <span className="text-white text-lg font-display flex items-center gap-2">
               <DatabaseOutlined className="text-fuchsia-400" />
               Assigned Dataset
@@ -365,10 +398,10 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
       </div>
 
       <Card
-        className="bg-[#1A1625] border-gray-800 rounded-xl mb-6 flex flex-col"
+        className="bg-[#1A1625] border-gray-800 rounded-xl mb-2 flex flex-col"
         styles={{ body: { padding: '24px', flex: 1, display: 'flex', flexDirection: 'column' } }}
       >
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-2">
           <span className="text-white text-lg font-display flex items-center gap-2">
             <span className="material-symbols-outlined text-emerald-400">task</span>
             Assignment Tasks
@@ -397,21 +430,16 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
               {tasks.map((task) => (
                 <div
                   key={task.taskId}
-                  className="flex items-center justify-between bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-emerald-500/30 transition-all group"
+                  onClick={() => setViewTaskId(task.taskId)}
+                  className="flex items-center justify-between bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-emerald-500/30 transition-all group cursor-pointer"
                 >
                   <div className="flex flex-col gap-1 min-w-0">
-                    <span className="text-white font-bold text-sm truncate">
+                    <span className="text-white font-bold text-sm truncate group-hover:text-emerald-400 transition-colors">
                       {task.taskName || 'Unspecified Name'}
                     </span>
                     <span className="text-gray-500 text-xs font-mono">ID: {task.taskId}</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <Tag
-                      color={getStatusColor(task.taskStatus || task.reviewStatus)}
-                      className="m-0 text-xs px-2 py-0.5"
-                    >
-                      {(task.taskStatus || task.reviewStatus || 'UNKNOWN').toUpperCase()}
-                    </Tag>
                     {task.createdAt && (
                       <span className="text-gray-500 text-xs hidden md:inline">
                         {new Date(task.createdAt).toLocaleDateString('vi-VN')}

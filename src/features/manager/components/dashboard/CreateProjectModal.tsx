@@ -29,6 +29,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
   const [fetching, setFetching] = useState(false)
   const [currentStep, setCurrentStep] = useState(0)
   const [projectInfo, setProjectInfo] = useState<{ projectName: string; description: string } | null>(null)
+  const [guidelineId, setGuidelineId] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,12 +46,18 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
         const latestGuideline = Array.isArray(guidelines) ? guidelines[0] : guidelines
 
         if (projectData) {
+          const name = projectData.projectName || projectData.name
+          const description = projectData.description
           form.setFieldsValue({
-            projectName: projectData.projectName || projectData.name,
-            description: projectData.description,
+            projectName: name,
+            description: description,
             guidelineTitle: latestGuideline?.title || '',
             guidelineContent: latestGuideline?.content || ''
           })
+          setProjectInfo({ projectName: name, description: description })
+          if (latestGuideline) {
+            setGuidelineId(latestGuideline.guideId || latestGuideline.guide_id || latestGuideline.id)
+          }
         }
       } catch (error) {
         console.error('Error fetching data:', error)
@@ -67,6 +74,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
         form.resetFields()
         setCurrentStep(0)
         setProjectInfo(null)
+        setGuidelineId(null)
       }
     }
   }, [editId, form, open, message])
@@ -93,40 +101,45 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
 
       let currentProjectId = editId
 
-      // 1. Create/Update Project
-      const payload = {
-        ...(editId ? { id: editId, projectId: editId } : {}),
-        projectName: projectInfo?.projectName || values.projectName,
-        description: projectInfo?.description || values.description
+      const projectPayload = {
+        projectName: values.projectName || projectInfo?.projectName,
+        description: values.description || projectInfo?.description
       }
 
-      if (editId) {
-        await projectApi.updateProject(editId, payload)
-      } else {
-        const response = await projectApi.createProject(payload)
-        const createdProject = response.data?.data || response.data
-        currentProjectId = createdProject?.projectId || createdProject?.id
-      }
-
-      if (!currentProjectId) {
-        throw new Error('Failed to identify Project ID')
-      }
-
-      // 2. Create/Update Guidelines
       const typedUser = user as User | null
       const currentUserId = typedUser?.id || typedUser?.userId || ''
 
       const guidelinePayload = {
+        guide_id: guidelineId || undefined,
         title: values.guidelineTitle,
         content: values.guidelineContent,
         user_id: currentUserId,
-        projectId: currentProjectId
+        projectId: '' // Will be set below
       }
 
-      await guidelineApi.createGuideline(currentProjectId, guidelinePayload)
+      if (editId) {
+        // For updates, we can run both in parallel to ensure atomic-like success
+        await Promise.all([
+          projectApi.updateProject(editId, projectPayload),
+          guidelineId
+            ? guidelineApi.updateGuideline(guidelineId, { ...guidelinePayload, projectId: editId })
+            : guidelineApi.createGuideline(editId, { ...guidelinePayload, projectId: editId })
+        ])
+      } else {
+        // For creation, we must run sequentially to get currentProjectId
+        const response = await projectApi.createProject(projectPayload)
+        const createdProject = response.data?.data || response.data
+        currentProjectId = createdProject?.projectId || createdProject?.id
+
+        if (!currentProjectId) {
+          throw new Error('Failed to identify Project ID')
+        }
+
+        await guidelineApi.createGuideline(currentProjectId, { ...guidelinePayload, projectId: currentProjectId })
+      }
 
       message.success(editId ? 'Project updated successfully!' : 'Project created successfully!')
-      onSuccess(currentProjectId, payload)
+      onSuccess(currentProjectId || '', projectPayload)
       form.resetFields()
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'errorFields' in error) {
@@ -134,13 +147,8 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
       }
 
       console.error('API Error:', error)
-      let errorMessage = 'System error. Please try again.'
-
-      if (error instanceof Error && !error.message.includes('Request failed with status code')) {
-        errorMessage = error.message
-      }
-
-      message.error(errorMessage)
+      const apiError = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || (error as Error)?.message || (editId ? 'Failed to update project' : 'Failed to create project')
+      message.error(apiError)
     } finally {
       setLoading(false)
     }
@@ -181,7 +189,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
             <Spin size="large" />
           </div>
         ) : (
-          <Form form={form} layout="vertical" className="mt-6">
+          <Form form={form} layout="vertical" className="mt-6" preserve={true}>
             {currentStep === 0 && (
               <div className="space-y-6">
                 <Form.Item
@@ -191,7 +199,6 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                 >
                   <Input
                     placeholder="e.g. Autonomous Vehicle Perception Phase 2"
-                    disabled={!!editId}
                     className="!bg-[#1a1625] !border-white/10 !text-white placeholder:!text-gray-600 focus:!border-violet-500 hover:!border-violet-500/50"
                   />
                 </Form.Item>

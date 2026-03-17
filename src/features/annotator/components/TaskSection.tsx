@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import TaskCard from './TaskCard'
-import assignmentApi from '@/api/AssignmentApi'
+import taskApi from '@/api/TaskApi'
 
 /** Groups tasks by their batchLabel */
 export interface Task {
@@ -45,7 +45,7 @@ export default function TasksSection({
       try {
         setLoading(true)
         setError(null)
-        const response = await assignmentApi.getTasksByAssignmentId(assignmentId)
+        const response = await taskApi.getTasksByAssignmentId(assignmentId)
         const rawData = response.data?.data || response.data || []
 
         if (Array.isArray(rawData)) {

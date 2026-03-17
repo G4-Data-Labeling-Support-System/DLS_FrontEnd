@@ -113,10 +113,17 @@ const DatasetManagementPage: React.FC = () => {
                 datasetName: String(d.name || d.datasetName || ''),
                 totalItems: Number(d.itemCount || d.totalItems) || 0,
                 createdAt: String(d.createdAt || d.created_at || d.createdDate || ''),
-                description: String(d.description || '')
+                description: String(d.description || ''),
+                datasetStatus: String(d.datasetStatus || d.status || d.dataset_status || '')
               }) as unknown as GetDatasetsParams
           )
-          .filter((d) => d.datasetId && d.datasetId !== 'undefined' && d.datasetId !== 'null')
+            .filter(
+              (d) =>
+                d.datasetId &&
+                d.datasetId !== 'undefined' &&
+                d.datasetId !== 'null' &&
+                d.datasetStatus?.toUpperCase() !== 'INACTIVE'
+            )
         setDatasets(mappedDatasets)
       } else {
         setDatasets([])

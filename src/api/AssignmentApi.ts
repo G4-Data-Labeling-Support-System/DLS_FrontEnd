@@ -13,6 +13,7 @@ interface GetAssignmentsParams {
   totalItems?: number
   completedItems?: number
   description?: string
+  descriptionAssignment?: string
   status?: string
   assignmentStatus?: string
   dueDate?: string
@@ -59,6 +60,18 @@ const assignmentApi = {
       throw error
     }
   },
+  getAssignmentsByReviewer(reviewerId: string) {
+    try {
+      // Giả sử lấy assignments tổng có thể filter theo reviewer
+      // Hiện tại API assignments của Annotator đang dùng `BY_ANNOTATOR`, do backend quyết định
+      // Theo ý người dùng, api này dùng chung với annotator
+      const url = ENDPOINTS.ASSIGNMENTS.BY_ANNOTATOR(reviewerId)
+      return axiosClient.get(url)
+    } catch (error) {
+      console.error('Failed to fetch assignments by reviewer', error)
+      throw error
+    }
+  },
   createAssignment(assignmentData?: GetAssignmentsParams) {
     try {
       const url = ENDPOINTS.ASSIGNMENTS.CREATE_BY_PROJECT(assignmentData?.projectId || '')
@@ -101,24 +114,6 @@ const assignmentApi = {
       return axiosClient.post(url, assignmentData)
     } catch (error) {
       console.error('Failed to create assignment for project', error)
-      throw error
-    }
-  },
-  getTasksByAssignmentId(assignmentId: string) {
-    try {
-      const url = ENDPOINTS.TASKS.BY_ASSIGNMENT(assignmentId)
-      return axiosClient.get(url)
-    } catch (error) {
-      console.error('Failed to fetch tasks for assignment', error)
-      throw error
-    }
-  },
-  getTaskById(taskId: string) {
-    try {
-      const url = ENDPOINTS.TASKS.DETAIL(taskId)
-      return axiosClient.get(url)
-    } catch (error) {
-      console.error('Failed to fetch task elements', error)
       throw error
     }
   },

@@ -114,8 +114,10 @@ const AllDataset: React.FC<AllDatasetProps> = ({
           {datasets
             .filter(
               (ds) =>
-                !searchText ||
-                (ds.datasetName && ds.datasetName.toLowerCase().includes(searchText.toLowerCase()))
+                (!searchText ||
+                  (ds.datasetName &&
+                    ds.datasetName.toLowerCase().includes(searchText.toLowerCase()))) &&
+                ds.datasetStatus?.toUpperCase() !== 'INACTIVE'
             )
             .sort(
               (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()

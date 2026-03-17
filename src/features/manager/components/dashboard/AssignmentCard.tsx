@@ -9,6 +9,7 @@ interface AssignmentCardProps extends GetAssignmentsParams {
   onEdit?: () => void
   onDelete?: () => void
   onClick?: () => void
+  variant?: 'default' | 'compact'
 }
 
 export const AssignmentCard: React.FC<AssignmentCardProps> = ({
@@ -18,18 +19,23 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
   updatedAt,
   onEdit,
   onDelete,
-  onClick
+  onClick,
+  variant = 'default'
 }) => {
   const items: MenuProps['items'] = [
     { key: '1', label: 'View Details', icon: <EyeOutlined />, onClick: onClick },
     { key: '2', label: 'Edit Assignment', icon: <EditOutlined />, onClick: onEdit },
-    { type: 'divider' },
-    {
-      key: '4',
-      label: <span className="text-red-500">Delete Assignment</span>,
-      icon: <DeleteOutlined className="text-red-500" />,
-      onClick: onDelete
-    }
+    ...(onDelete
+      ? [
+          { type: 'divider' as const },
+          {
+            key: '4',
+            label: <span className="text-red-500">Delete Assignment</span>,
+            icon: <DeleteOutlined className="text-red-500" />,
+            onClick: onDelete
+          }
+        ]
+      : [])
   ]
 
   // Status mapping using Assignment specific logic
@@ -53,6 +59,33 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
     return new Date(dateString).toLocaleString('vi-VN')
   }
 
+  if (variant === 'compact') {
+    return (
+      <div
+        className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-blue-500/30 transition-colors cursor-pointer group"
+        onClick={onClick}
+      >
+        <div className="flex justify-between items-start">
+          <h4
+            className="text-white font-bold text-sm truncate pr-2"
+            title={assignmentName || 'Unnamed Assignment'}
+          >
+            {assignmentName || 'Unnamed Assignment'}
+          </h4>
+        </div>
+        <div className="flex items-center gap-2 mt-1">
+          <Tag
+            color={getStatusColor(status)}
+            className="m-0 text-[10px] px-1.5 py-0 font-medium whitespace-nowrap"
+          >
+            {status || 'UNKNOWN'}
+          </Tag>
+          <span className="text-gray-500 text-[10px]">{formatDate(createdAt)}</span>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <Card
       className="bg-[#1A1625] border border-violet-500/20 rounded-xl overflow-hidden hover:bg-violet-500/10 hover:border-fuchsia-500/50 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(139,92,246,0.15)] transition-all duration-500 flex flex-col h-full cursor-pointer relative pt-4 mt-3"
@@ -73,7 +106,7 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
         </div>
       ) : null}
       <div className="flex justify-between items-start mb-2">
-        <div className="flex-1 pr-2 flex items-center gap-2">
+        <div className="flex-1 pr-2">
           <Title
             level={5}
             className="!text-white !m-0 !text-sm leading-tight line-clamp-1"
@@ -81,11 +114,11 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
           >
             {assignmentName || 'Unnamed Assignment'}
           </Title>
+        </div>
+        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
           <Tag color={getStatusColor(status)} className="m-0 text-[10px] px-1.5 py-0 font-medium whitespace-nowrap">
             {status || 'UNKNOWN'}
           </Tag>
-        </div>
-        <div onClick={(e) => e.stopPropagation()}>
           <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
             <Button
               type="text"
