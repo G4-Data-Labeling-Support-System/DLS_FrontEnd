@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from 'react'
-import { App, Spin, Typography, Card, Descriptions, Empty, Pagination, Image } from 'antd'
-import { FolderOutlined, DatabaseOutlined, PictureOutlined } from '@ant-design/icons'
+import React, { useEffect, useState, useCallback } from 'react'
+import { App, Spin, Typography, Card, Descriptions, Empty, Pagination, Image, Button, Tag } from 'antd'
+import { FolderOutlined, DatabaseOutlined, PictureOutlined, EditOutlined } from '@ant-design/icons'
 import datasetApi from '@/api/DatasetApi'
 import projectApi from '@/api/ProjectApi'
 import { labelApi } from '@/api/LabelApi'
 import { ProjectDetail } from '../dashboard/ProjectDetail'
 import { useSearchParams } from 'react-router-dom'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
+import { CreateDatasetModal } from './CreateDatasetModal'
 
 const { Title } = Typography
 
@@ -17,6 +18,7 @@ interface DatasetDetailData {
   description?: string
   totalItems?: number
   createdAt?: string
+  datasetStatus?: string
 }
 
 interface Label {
@@ -58,6 +60,7 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
   const [selectedItem, setSelectedItem] = useState<DataItem | null>(null)
   const [modalVisible, setModalVisible] = useState<boolean>(false)
   const [itemDetailLoading, setItemDetailLoading] = useState<boolean>(false)
+  const [isEditModalVisible, setIsEditModalVisible] = useState<boolean>(false)
   const [searchParams, setSearchParams] = useSearchParams()
   const itemsPerPage = 12
 
@@ -74,90 +77,66 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
     })
   }
 
-  useEffect(() => {
-    let isMounted = true
+  const fetchDetail = useCallback(async () => {
+    try {
+      setLoading(true)
+      const response = await datasetApi.getDatasetById(datasetId)
+      const data = response.data?.data || response.data
 
-    const fetchDetail = async () => {
-      try {
-        setLoading(true)
-        const response = await datasetApi.getDatasetById(datasetId)
-        const data = response.data?.data || response.data
+      if (data) {
+        const extractedProjectId = data.projectId || data.project?.id || data.project?.projectId
 
-        if (data && isMounted) {
-          const extractedProjectId = data.projectId || data.project?.id || data.project?.projectId
+        setDataset({
+          datasetId: String(data.datasetId || data.id),
+          datasetName: String(data.datasetName || data.name || ''),
+          description: data.description ? String(data.description) : undefined,
+          projectId: extractedProjectId ? String(extractedProjectId) : undefined,
+          totalItems: Number(data.totalItems || data.itemCount) || 0,
+          createdAt: data.createdAt ? String(data.createdAt) : undefined,
+          datasetStatus: String(data.datasetStatus || data.status || data.dataset_status || '')
+        })
 
-          setDataset({
-            datasetId: String(data.datasetId || data.id),
-            datasetName: String(data.datasetName || data.name || ''),
-            description: data.description ? String(data.description) : undefined,
-            projectId: extractedProjectId ? String(extractedProjectId) : undefined,
-            totalItems: Number(data.totalItems || data.itemCount) || 0,
-            createdAt: data.createdAt ? String(data.createdAt) : undefined
-          })
-
-          if (extractedProjectId) {
-            try {
-              const projRes = await projectApi.getProjectById(extractedProjectId)
-              const projData = projRes.data?.data || projRes.data
-              if (projData && isMounted) {
-                setProjectName(String(projData.projectName || projData.name || extractedProjectId))
-              }
-            } catch (projErr) {
-              console.error('Failed to fetch associated project details:', projErr)
+        if (extractedProjectId) {
+          try {
+            const projRes = await projectApi.getProjectById(extractedProjectId)
+            const projData = projRes.data?.data || projRes.data
+            if (projData) {
+              setProjectName(String(projData.projectName || projData.name || extractedProjectId))
             }
+          } catch (projErr) {
+            console.error('Failed to fetch associated project details:', projErr)
           }
         }
-      } catch (error) {
-        if (isMounted) {
-          console.error('Error fetching dataset details:', error)
-          message.error('Cannot load dataset details.')
-          onBack()
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false)
-        }
       }
+    } catch (error) {
+      console.error('Error fetching dataset details:', error)
+      message.error('Cannot load dataset details.')
+      onBack()
+    } finally {
+      setLoading(false)
     }
+  }, [datasetId, onBack, message])
 
+  const fetchItems = useCallback(async () => {
+    try {
+      setItemsLoading(true)
+      const response = await datasetApi.getDatasetItems(datasetId)
+      const data = response.data?.data || response.data || []
+      setDataItems(Array.isArray(data) ? data : [data])
+    } catch (error) {
+      console.error('Error fetching data items:', error)
+    } finally {
+      setItemsLoading(false)
+    }
+  }, [datasetId])
+
+  useEffect(() => {
     if (datasetId) {
       fetchDetail()
-
-      const fetchItems = async () => {
-        try {
-          setItemsLoading(true)
-          const response = await datasetApi.getDatasetItems(datasetId)
-          const data = response.data?.data || response.data || []
-          if (isMounted) {
-            setDataItems(Array.isArray(data) ? data : [data])
-          }
-        } catch (error) {
-          console.error('Error fetching data items:', error)
-        } finally {
-          if (isMounted) setItemsLoading(false)
-        }
-      }
-
-      const fetchLabels = async () => {
-        try {
-          const response = await labelApi.getLabelsByDatasetId(datasetId)
-          const data = response.data?.data || response.data || []
-          if (isMounted) {
-            setLabels(Array.isArray(data) ? data : [data])
-          }
-        } catch (error) {
-          console.error('Error fetching labels:', error)
-        }
-      }
-
       fetchItems()
       fetchLabels()
     }
-
-    return () => {
-      isMounted = false
-    }
-  }, [datasetId, onBack, message])
+  }, [datasetId, fetchDetail, fetchItems])
 
   const handleItemClick = async (item: DataItem) => {
     const itemId = item.dataItemId || item.id || item.itemId
@@ -194,7 +173,7 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
   const handleNextItem = () => {
     if (!selectedIdForNav || dataItems.length <= 1) return
     const currentIndex = dataItems.findIndex(
-      (i) => (i.dataItemId || i.id || i.itemId) === selectedIdForNav
+      (i: DataItem) => (i.dataItemId || i.id || i.itemId) === selectedIdForNav
     )
     if (currentIndex < dataItems.length - 1) {
       handleItemClick(dataItems[currentIndex + 1])
@@ -205,7 +184,7 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
   const handlePrevItem = () => {
     if (!selectedIdForNav || dataItems.length <= 1) return
     const currentIndex = dataItems.findIndex(
-      (i) => (i.dataItemId || i.id || i.itemId) === selectedIdForNav
+      (i: DataItem) => (i.dataItemId || i.id || i.itemId) === selectedIdForNav
     )
     if (currentIndex > 0) {
       handleItemClick(dataItems[currentIndex - 1])
@@ -229,6 +208,23 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A'
     return new Date(dateString).toLocaleString('vi-VN')
+  }
+
+  const getStatusColor = (s?: string) => {
+    switch (s?.toUpperCase()) {
+      case 'INACTIVE':
+      case 'ARCHIVE':
+        return 'error'
+      case 'COMPLETED':
+        return 'success'
+      case 'PAUSED':
+        return 'warning'
+      case 'ACTIVE':
+      case 'ASSIGNED':
+      case 'UNASSIGNED':
+      default:
+        return 'default'
+    }
   }
 
   if (loading) {
@@ -268,6 +264,14 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
             </Title>
           </div>
         </div>
+        <Button
+          type="primary"
+          icon={<EditOutlined />}
+          className="bg-violet-600 hover:bg-violet-500 border-none"
+          onClick={() => setIsEditModalVisible(true)}
+        >
+          Edit
+        </Button>
       </div>
 
       {/* Main Info Card */}
@@ -299,6 +303,14 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
               </Descriptions.Item>
               <Descriptions.Item label="Created At">
                 {formatDate(dataset.createdAt)}
+              </Descriptions.Item>
+              <Descriptions.Item label="Status">
+                <Tag
+                  color={getStatusColor(dataset.datasetStatus)}
+                  className="m-0 font-medium px-2 py-0 border-0 rounded"
+                >
+                  {(dataset.datasetStatus || 'UNKNOWN').toUpperCase()}
+                </Tag>
               </Descriptions.Item>
             </Descriptions>
           </div>
@@ -405,7 +417,7 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
               {dataItems
                 .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-                .map((item, index) => (
+                .map((item: DataItem, index: number) => (
                   <div
                     key={item.dataItemId || item.id || item.itemId || `item-${index}`}
                     className="relative group rounded-xl overflow-hidden border border-white/5 bg-[#231e31] aspect-square flex flex-col cursor-pointer transition-all hover:border-emerald-500/30"
@@ -531,9 +543,9 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
                 </div>
 
                 {selectedItem.imageUrl ||
-                selectedItem.url ||
-                selectedItem.previewUrl ||
-                selectedItem.path ? (
+                  selectedItem.url ||
+                  selectedItem.previewUrl ||
+                  selectedItem.path ? (
                   <Image
                     src={
                       selectedItem.imageUrl ||
@@ -628,6 +640,23 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
           )}
         </div>
       </GlassModal>
+
+      <CreateDatasetModal
+        open={isEditModalVisible}
+        onCancel={() => setIsEditModalVisible(false)}
+        isEdit={true}
+        initialData={{
+          datasetId: dataset.datasetId!,
+          datasetName: dataset.datasetName!,
+          description: dataset.description,
+          projectId: dataset.projectId
+        }}
+        onSuccess={() => {
+          setIsEditModalVisible(false)
+          fetchDetail()
+          fetchItems()
+        }}
+      />
 
       <style>{`
         .custom-descriptions .ant-descriptions-title {

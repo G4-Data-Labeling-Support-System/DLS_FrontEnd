@@ -26,7 +26,8 @@ export const ENDPOINTS = {
     DETAIL: (id: string) => `/projects/${id}`,
     CREATE: '/projects',
     DELETE: (id: string) => `/projects/${id}/remove`,
-    STATUS: (id: string) => `/projects/${id}/status`
+    STATUS: (id: string) => `/projects/${id}/status`,
+    MEMBERS: (id: string) => `/projects/${id}/members`
   },
 
   DATASETS: {
@@ -84,11 +85,13 @@ export const ENDPOINTS = {
   },
 
   DATAITEMS: {
-    BY_DATASET: (datasetId: string) => `/dataitems/datasets/${datasetId}`
+    BY_DATASET: (datasetId: string) => `/dataitems/datasets/${datasetId}`,
+    DELETE: (id: string) => `/images/delete/${id}`
   },
 
   TASKS: {
     BY_ASSIGNMENT: (assignmentId: string) => `/tasks/assignments/${assignmentId}`,
-    DETAIL: (taskId: string) => `/tasks/${taskId}`
+    DETAIL: (taskId: string) => `/tasks/${taskId}`,
+    DATA_ITEMS: (taskId: string) => `/tasks/${taskId}/taskDataitems`
   }
 } as const

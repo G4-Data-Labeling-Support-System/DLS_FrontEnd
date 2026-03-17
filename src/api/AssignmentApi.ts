@@ -13,6 +13,7 @@ interface GetAssignmentsParams {
   totalItems?: number
   completedItems?: number
   description?: string
+  descriptionAssignment?: string
   status?: string
   assignmentStatus?: string
   dueDate?: string

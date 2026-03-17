@@ -270,7 +270,7 @@ export const AllProjects: React.FC<AllProjectsProps> = ({
             className="block group cursor-pointer"
             onClick={onCreate}
           >
-            <div className="h-full min-h-[180px] border-2 border-dashed border-gray-700 rounded-xl flex flex-col items-center justify-center gap-4 bg-[#1A1625]/30 hover:bg-[#1A1625] hover:border-violet-500 transition-all">
+            <div className="h-full min-h-[160px] border-2 border-dashed border-gray-700 rounded-xl flex flex-col items-center justify-center gap-4 bg-[#1A1625]/30 hover:bg-[#1A1625] hover:border-violet-500 transition-all">
               <div className="w-12 h-12 rounded-full bg-[#231e31] group-hover:bg-violet-600 flex items-center justify-center transition-colors">
                 <PlusOutlined className="text-gray-400 group-hover:text-white text-xl" />
               </div>
