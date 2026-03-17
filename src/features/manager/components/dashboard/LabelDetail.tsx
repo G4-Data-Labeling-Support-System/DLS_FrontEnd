@@ -138,7 +138,7 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
       </div>
 
       {/* Main Info Card */}
-      <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-6 p-0 overflow-hidden">
+      <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-2 p-0 overflow-hidden">
         <div className="flex flex-col lg:flex-row h-full w-full">
           {/* Left: Label Information */}
           <div className="flex-1 p-6 border-b lg:border-b-0 lg:border-r border-gray-800">
@@ -180,7 +180,7 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
 
           {/* Right: Description */}
           <div className="flex-1 p-6 flex flex-col">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-2">
               <span className="text-white text-lg font-display flex items-center gap-2">
                 <span className="material-symbols-outlined text-green-400">description</span>
                 Description
@@ -197,9 +197,9 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 mb-6 mt-1">
+      <div className="grid grid-cols-1 mb-2 mt-2">
         <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-2">
             <span className="text-white text-lg font-display flex items-center gap-2">
               <DatabaseOutlined className="text-fuchsia-400" />
               Associated Dataset

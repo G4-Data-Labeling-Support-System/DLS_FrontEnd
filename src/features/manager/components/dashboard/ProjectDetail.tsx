@@ -249,7 +249,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
         </Button>
       </div>
 
-      <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-6 p-0 overflow-hidden">
+      <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-2 p-0 overflow-hidden">
         <div className="flex flex-col lg:flex-row h-full w-full">
           <div className="flex-1 p-6 border-b lg:border-b-0 lg:border-r border-gray-800">
             <Descriptions
@@ -393,12 +393,12 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 mb-6 mt-1">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 mb-2 mt-2">
         <Card
           className="bg-[#1A1625] border-gray-800 rounded-xl h-[600px]"
           styles={{ body: { height: '100%', display: 'flex', flexDirection: 'column', padding: '24px' } }}
         >
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-2">
             <span className="text-white text-lg font-display flex items-center gap-2">
               <span className="material-symbols-outlined text-fuchsia-400">database</span>
               Project Datasets
@@ -450,7 +450,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
           className="bg-[#1A1625] border-gray-800 rounded-xl h-[600px]"
           styles={{ body: { height: '100%', display: 'flex', flexDirection: 'column', padding: '24px' } }}
         >
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-2">
             <span className="text-white text-lg font-display flex items-center gap-2">
               <span className="material-symbols-outlined text-blue-400">assignment</span>
               Project Assignments

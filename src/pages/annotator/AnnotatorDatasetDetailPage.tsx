@@ -52,7 +52,7 @@ export default function AnnotatorDatasetDetailPage() {
       try {
         setLoading(true)
         setError(null)
-        
+
         // Fetch Dataset Detail
         const datasetRes = await datasetApi.getDatasetsByProjectId(projectId)
         const data = datasetRes.data?.data || datasetRes.data || []
@@ -135,15 +135,6 @@ export default function AnnotatorDatasetDetailPage() {
 
       {/* Header & Breadcrumb */}
       <div className="mb-8 relative z-10">
-        <button
-          onClick={() => navigate(PATH_ANNOTATOR.project)}
-          className="flex items-center gap-2 text-gray-400 hover:text-white text-sm transition-colors mb-4 group"
-        >
-          <span className="material-symbols-outlined text-[16px] group-hover:-translate-x-1 transition-transform">
-            arrow_back
-          </span>
-          Back to Dashboard
-        </button>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
