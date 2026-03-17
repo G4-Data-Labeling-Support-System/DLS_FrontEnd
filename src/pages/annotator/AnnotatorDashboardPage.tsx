@@ -232,9 +232,7 @@ export default function AnnotatorDashboardPage() {
                     }
                   }
                 }
-              }
-            }
-          } catch (err) {
+              } catch (err) {
                 console.error('Failed to fetch fallback projects', err)
               }
             }
