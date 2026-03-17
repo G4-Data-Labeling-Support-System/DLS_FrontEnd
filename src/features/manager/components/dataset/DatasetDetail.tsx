@@ -3,11 +3,11 @@ import { App, Spin, Typography, Card, Descriptions, Empty, Pagination, Image, Bu
 import { FolderOutlined, DatabaseOutlined, PictureOutlined, EditOutlined } from '@ant-design/icons'
 import datasetApi from '@/api/DatasetApi'
 import projectApi from '@/api/ProjectApi'
-import { labelApi } from '@/api/LabelApi'
 import { ProjectDetail } from '../dashboard/ProjectDetail'
 import { useSearchParams } from 'react-router-dom'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
 import { CreateDatasetModal } from './CreateDatasetModal'
+import { labelApi } from '@/api/LabelApi'
 
 const { Title } = Typography
 
@@ -130,13 +130,23 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
     }
   }, [datasetId])
 
+  const fetchLabels = useCallback(async () => {
+    try {
+      const response = await labelApi.getLabelsByDatasetId(datasetId)
+      const data = response.data?.data || response.data || []
+      setLabels(Array.isArray(data) ? data : [data])
+    } catch (error) {
+      console.error('Error fetching labels:', error)
+    }
+  }, [datasetId])
+
   useEffect(() => {
     if (datasetId) {
       fetchDetail()
       fetchItems()
       fetchLabels()
     }
-  }, [datasetId, fetchDetail, fetchItems])
+  }, [datasetId, fetchDetail, fetchItems, fetchLabels])
 
   const handleItemClick = async (item: DataItem) => {
     const itemId = item.dataItemId || item.id || item.itemId
@@ -275,7 +285,7 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
       </div>
 
       {/* Main Info Card */}
-      <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-6 p-0 overflow-hidden">
+      <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-2 p-0 overflow-hidden">
         <div className="flex flex-col lg:flex-row h-full w-full">
           {/* Left: Dataset Information */}
           <div className="flex-1 p-6 border-b lg:border-b-0 lg:border-r border-gray-800">
@@ -334,7 +344,7 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 mt-1">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2 mt-2">
         <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
           <div className="flex items-center justify-between mb-4">
             <span className="text-white text-lg font-display flex items-center gap-2">
@@ -391,7 +401,7 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
       </div>
 
       {/* Data Items Section */}
-      <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-6 flex flex-col">
+      <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-2 flex flex-col">
         <div className="flex items-center justify-between mb-6">
           <span className="text-white text-lg font-display flex items-center gap-2">
             <DatabaseOutlined className="text-emerald-400" />
@@ -414,7 +424,7 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
           />
         ) : (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 mb-6">
               {dataItems
                 .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
                 .map((item: DataItem, index: number) => (

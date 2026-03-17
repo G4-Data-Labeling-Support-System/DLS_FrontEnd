@@ -313,7 +313,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
         )}
       </div>
 
-      <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-6">
+      <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-2">
         <Descriptions
           title={
             <span className="text-white text-lg font-display flex items-center gap-2">
@@ -345,9 +345,9 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
         </Descriptions>
       </Card>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 mb-6 mt-1">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 mb-2 mt-2">
         <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-2">
             <span className="text-white text-lg font-display flex items-center gap-2">
               <FolderOutlined className="text-blue-400" />
               Associated Project
@@ -372,7 +372,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
         </Card>
 
         <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-2">
             <span className="text-white text-lg font-display flex items-center gap-2">
               <DatabaseOutlined className="text-fuchsia-400" />
               Assigned Dataset
@@ -398,10 +398,10 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
       </div>
 
       <Card
-        className="bg-[#1A1625] border-gray-800 rounded-xl mb-6 flex flex-col"
+        className="bg-[#1A1625] border-gray-800 rounded-xl mb-2 flex flex-col"
         styles={{ body: { padding: '24px', flex: 1, display: 'flex', flexDirection: 'column' } }}
       >
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-2">
           <span className="text-white text-lg font-display flex items-center gap-2">
             <span className="material-symbols-outlined text-emerald-400">task</span>
             Assignment Tasks
