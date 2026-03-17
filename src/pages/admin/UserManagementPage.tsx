@@ -7,24 +7,27 @@ import type { User } from '@/shared/types/api.types'
 import { Button } from '@/shared/components/ui/Button'
 import {
   UserAddOutlined,
-  PlusOutlined,
   TeamOutlined,
   EditOutlined,
   MoreOutlined,
   CheckCircleOutlined,
-  CloseCircleOutlined
+  CloseCircleOutlined,
+  SearchOutlined
 } from '@ant-design/icons'
-import { App, Dropdown, type MenuProps } from 'antd'
+import { App, Dropdown, Input, type MenuProps } from 'antd'
 import { useUsers, useDeactivateUser } from '@/features/admin/hooks/useUsers'
 import assignmentApi from '@/api/AssignmentApi'
+import { useAuthStore } from '@/store/auth.store'
 
 export default function UserManagement() {
   const { message } = App.useApp()
+  const { user: currentUser } = useAuthStore()
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false)
   const [editModal, setEditModal] = useState<{ isOpen: boolean; data?: User }>({ isOpen: false })
   const [successModal, setSuccessModal] = useState<{ isOpen: boolean; data?: User }>({
     isOpen: false
   })
+  const [searchTerm, setSearchTerm] = useState('')
   const { data: rawUsers, isLoading } = useUsers()
   const deactivateUserMutation = useDeactivateUser()
   const [taskCountMap, setTaskCountMap] = useState<Record<string, number>>({})
@@ -57,13 +60,25 @@ export default function UserManagement() {
     : (rawUsers as unknown as { data: User[] })?.data || []
   // console.log("Users API Response:", rawUsers, "Parsed Users:", users);
 
-  // Chỉ hiển thị Active users trên bảng
+  // Lọc users theo status và search term (Client-side)
   const displayedUsers = users.filter((u: User) => {
     const status = (u.userStatus || u.status || '').toUpperCase()
-    return status === 'ACTIVE'
+    if (status !== 'ACTIVE') return false
+    
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase()
+      const matchesName = (u.fullName || '').toLowerCase().includes(term) || (u.username || '').toLowerCase().includes(term)
+      const matchesEmail = (u.email || '').toLowerCase().includes(term)
+      // Tìm bằng user ID nếu users nhập ID số
+      const matchesId = String(u.userId || u.id).includes(term)
+      return matchesName || matchesEmail || matchesId
+    }
+
+    return true
   })
 
-  const activeUsersCount = displayedUsers.length
+  const totalActiveUsers = users.filter((u: User) => (u.userStatus || u.status || '').toUpperCase() === 'ACTIVE')
+  const activeUsersCount = totalActiveUsers.length
   const inactiveUsersCount = users.length - activeUsersCount
 
   const handleUserCreateSuccess = (data: User) => {
@@ -72,8 +87,10 @@ export default function UserManagement() {
   }
 
   const getActionItems = (user: User): MenuProps['items'] => {
+    const isCurrentUser =
+      String(user.userId || user.id) === String(currentUser?.userId || currentUser?.id)
 
-    return [
+    const items: MenuProps['items'] = [
       {
         key: 'edit',
         label: 'Edit User',
@@ -81,8 +98,11 @@ export default function UserManagement() {
         onClick: () => {
           setEditModal({ isOpen: true, data: user })
         }
-      },
-      {
+      }
+    ]
+
+    if (!isCurrentUser) {
+      items.push({
         key: 'deactivate',
         label: <span className="text-red-500 font-semibold">Inactive User</span>,
         icon: <CloseCircleOutlined style={{ color: '#ef4444' }} />,
@@ -100,8 +120,10 @@ export default function UserManagement() {
             })
           }
         }
-      }
-    ]
+      })
+    }
+
+    return items
   }
 
   return (
@@ -243,15 +265,15 @@ export default function UserManagement() {
             </p>
           </div>
           <div className="flex gap-3">
-            <Button
-              onClick={() => setIsAddUserModalOpen(true)}
-              variant="primary"
-              className="group relative flex items-center gap-2 overflow-hidden px-4 py-2 font-body text-sm font-semibold"
-            >
-              <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity group-hover:opacity-100"></div>
-              <PlusOutlined className="text-lg" />
-              <span>Add User</span>
-            </Button>
+            <Input
+              placeholder="Search user by name, email, or ID..."
+              prefix={<SearchOutlined className="text-gray-400" />}
+              allowClear
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="bg-white/5 border-white/10 text-white w-64 md:w-80 h-10 rounded-lg hover:border-violet-500/50 focus:border-violet-500 focus:bg-white/10"
+              style={{ color: 'white' }}
+            />
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -298,7 +320,7 @@ export default function UserManagement() {
                   return (
                     <tr
                       key={userId}
-                      className={`group transition-colors hover:${themeClasses.backgrounds.whiteAlpha5}`}
+                      className={`group hover:${themeClasses.backgrounds.whiteAlpha5}`}
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
