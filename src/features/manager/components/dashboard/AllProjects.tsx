@@ -54,7 +54,7 @@ export const AllProjects: React.FC<AllProjectsProps> = ({
         return {
           projectId: String(p.projectId),
           projectName: String(p.projectName),
-          projectStatus: String(p.projectStatus),
+          projectStatus: String(p.projectStatus || p.status || ''),
           description: p.description ? String(p.description) : undefined,
           createdAt: p.createdAt ? String(p.createdAt) : undefined,
           updatedAt: p.updatedAt ? String(p.updatedAt) : undefined,
