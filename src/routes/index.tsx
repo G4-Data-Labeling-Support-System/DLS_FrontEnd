@@ -302,7 +302,7 @@ export const router = createBrowserRouter([
         )
       },
       {
-        path: 'workspace/:projectId',
+        path: 'workspace/:projectId/:assignmentId',
         element: (
           <LazyPage>
             <ReviewerWorkspacePage />

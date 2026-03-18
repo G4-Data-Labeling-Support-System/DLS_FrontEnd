@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { App, Spin } from 'antd'
 import type { AxiosError } from 'axios'
 
@@ -14,6 +14,7 @@ import { ReviewerLoadingState } from '@/features/reviewer/components/workspace/R
 import { ApproveModal } from '@/features/reviewer/components/workspace/ApproveModal'
 import { RejectModal } from '@/features/reviewer/components/workspace/RejectModal'
 import { reviewerApi, type ReviewerItem, type ReviewerItemDetail } from '@/api/ReviewerApi'
+import taskApi from '@/api/TaskApi'
 import { LoadingOutlined } from '@ant-design/icons'
 
 // ⚡ Cache for item details - prevents refetching
@@ -21,8 +22,13 @@ const detailCache = new Map<string, ReviewerItemDetail>()
 
 const ReviewerWorkspacePage: React.FC = () => {
   const { message } = App.useApp()
-  const { projectId } = useParams()
+  const { assignmentId } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
+
+  // Get query params
+  const queryParams = new URLSearchParams(location.search)
+  const initialSelectedTaskId = queryParams.get('taskId')
 
   // State
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -85,7 +91,7 @@ const ReviewerWorkspacePage: React.FC = () => {
       } catch (error) {
         // Silent fail for prefetch
         const axiosError = error as AxiosError
-        if (axiosError.name !== 'AbortError') {
+        if (axiosError?.name !== 'AbortError') {
           // console.debug('Prefetch failed for next item:', error);
         }
       }
@@ -95,32 +101,62 @@ const ReviewerWorkspacePage: React.FC = () => {
 
   // 📥 Fetch Items on mount
   useEffect(() => {
-    if (!projectId) return
+    if (!assignmentId) return
 
     const fetchItems = async () => {
       setLoadingItems(true)
       try {
-        const data = await reviewerApi.getProjectItems(projectId)
-        if (Array.isArray(data)) {
-          setItems(data)
-          if (data.length > 0) {
-            setSelectedId(data[0].id)
-          }
+        // 1. Fetch tasks from assignment
+        const tasksRes = await taskApi.getTasksByAssignmentId(assignmentId)
+        const tasksList = tasksRes.data?.data || tasksRes.data || []
+        
+        if (Array.isArray(tasksList) && tasksList.length > 0) {
+           const finalDataItems: ReviewerItem[] = []
+           // 2. Fetch data items for each task
+           for (const t of tasksList) {
+             const tId = t.taskId || t.id
+             if (tId) {
+                try {
+                   const diRes = await taskApi.getTaskDataItems(tId)
+                   const diList = diRes.data?.data || diRes.data || []
+                   
+                   // Map backend data to UI format
+                   const diItems = Array.isArray(diList) ? diList.map(di => ({
+                     id: String(di.id || di.itemId || tId), 
+                     filename: String(di.filename || di.fileName || di.name || 'Unknown File'),
+                     status: (String(t.annotationStatus || t.taskStatus).toLowerCase() as 'approved' | 'rejected' | 'pending') || 'pending',
+                     imageUrl: String(di.url || di.previewUrl || 'https://picsum.photos/seed/placeholder/800/600'),
+                     lastModified: String(di.uploadedAt || t.updatedAt || new Date().toISOString())
+                   })) : []
+                   
+                   finalDataItems.push(...diItems)
+                } catch (errTask) {
+                   console.error(`Failed to load data items for task ${tId}`, errTask)
+                }
+             }
+           }
+           
+           setItems(finalDataItems)
+           if (finalDataItems.length > 0) {
+              const matchedItem = initialSelectedTaskId ? finalDataItems.find(i => String(i.id) === String(initialSelectedTaskId) || String(i.filename).includes(initialSelectedTaskId)) : undefined
+              setSelectedId(matchedItem ? matchedItem.id : finalDataItems[0].id)
+           } else {
+              message.warning('Tasks found but no images inside.')
+           }
         } else {
           setItems([])
-          // console.error("API returned non-array for project items:", data);
-          message.warning('No items found in project')
+          message.warning('No tasks found in this assignment')
         }
-      } catch {
+      } catch (err) {
+        console.error('Error fetching items via taskApi:', err)
         message.error('Failed to load dataset items')
-        // console.error('Error fetching items:', error);
       } finally {
         setLoadingItems(false)
       }
     }
 
     fetchItems()
-  }, [projectId, message])
+  }, [assignmentId, message])
 
   // 📥 Fetch Detail with cache and prefetch
   useEffect(() => {

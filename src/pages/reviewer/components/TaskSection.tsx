@@ -17,7 +17,7 @@ function groupTasksByBatch(tasks: Task[]): Record<string, Task[]> {
   }, {})
 }
 
-export default function TasksSection({ tasks }: { tasks: Task[] }) {
+export default function TasksSection({ tasks, assignment }: { tasks: Task[]; assignment?: Record<string, any> }) {
   const grouped = groupTasksByBatch(tasks)
 
   return (
@@ -49,7 +49,12 @@ export default function TasksSection({ tasks }: { tasks: Task[] }) {
             {/* 3-column grid of cards on lg screens */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {batchTasks.map((task) => (
-                <TaskCard key={`${batchLabel}-${task.id}`} task={task} />
+                <TaskCard 
+                  key={`${batchLabel}-${task.id}`} 
+                  task={task} 
+                  assignmentId={assignment?.id || assignment?.assignmentId} 
+                  projectId={assignment?.projectId || assignment?.project?.id || assignment?.project?.projectId} 
+                />
               ))}
             </div>
           </div>

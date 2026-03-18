@@ -215,6 +215,12 @@ export default function ReviewerDashboardPage() {
 
             if (assignsList.length > 0) {
               const rawAssign = assignsList[0]
+              const actualTasks = Array.isArray(rawAssign.tasks) ? rawAssign.tasks : []
+              const completedCount = actualTasks.filter(
+                (t: Record<string, unknown>) =>
+                  t.taskStatus === 'COMPLETED' || t.annotationStatus === 'COMPLETED'
+              ).length
+
               const normAssign = {
                 ...rawAssign,
                 id: rawAssign.assignmentId || rawAssign.id,
@@ -223,12 +229,9 @@ export default function ReviewerDashboardPage() {
                 description: rawAssign.descriptionAssignment || rawAssign.description,
                 projectId:
                   rawAssign.projectId || rawAssign.project?.projectId || rawAssign.project?.id,
-                tasks:
-                  rawAssign.tasks && rawAssign.tasks.length > 0
-                    ? rawAssign.tasks
-                    : MOCK_DATA.assignment.tasks,
-                completedTasks: rawAssign.completedTasks ?? MOCK_DATA.assignment.completedTasks,
-                totalTasks: rawAssign.totalTasks || MOCK_DATA.assignment.totalTasks
+                tasks: actualTasks,
+                completedTasks: actualTasks.length > 0 ? completedCount : (rawAssign.completedTasks ?? 0),
+                totalTasks: actualTasks.length > 0 ? actualTasks.length : (rawAssign.totalTasks || 0)
               }
               setAssignment(normAssign)
 
@@ -329,7 +332,7 @@ export default function ReviewerDashboardPage() {
             >
               <div className="absolute top-0 right-0 w-64 h-64 bg-violet-600/5 blur-[100px] -z-10" />
               <div className="absolute bottom-0 left-0 w-64 h-64 bg-fuchsia-600/5 blur-[100px] -z-10" />
-              <TasksSection tasks={assignment?.tasks || []} />
+              <TasksSection tasks={assignment?.tasks || []} assignment={assignment} />
             </div>
           )}
         </div>
