@@ -112,9 +112,9 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
             options={[
               { value: 'ALL', label: 'All Statuses' },
               { value: 'ASSIGNED', label: 'Assigned' },
-              { value: 'COMPLETED', label: 'Completed' },
               { value: 'IN_PROGRESS', label: 'In Progress' },
-              { value: 'REVIEWING', label: 'Reviewing' }
+              { value: 'REVIEWING', label: 'Reviewing' },
+              { value: 'COMPLETED', label: 'Completed' }
             ]}
           />
           <Input
@@ -145,6 +145,7 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
             .filter(
               (a) =>
                 a.status?.toUpperCase() !== 'CANCELLED' &&
+                a.status?.toUpperCase() !== 'INACTIVE' &&
                 (statusFilter === 'ALL' || (a.status && a.status.toUpperCase() === statusFilter))
             )
             .sort(

@@ -148,9 +148,10 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task, onItemClick }) => 
                   rounded-full px-3 py-0.5 border-none font-semibold text-[10px] tracking-wider uppercase
                   ${task.taskStatus === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-400' :
                     task.taskStatus === 'IN_PROGRESS' ? 'bg-blue-500/10 text-blue-400' :
-                      'bg-gray-500/10 text-gray-400'}
+                      task.taskStatus === 'INACTIVE' ? 'bg-red-500/10 text-red-400' :
+                        'bg-gray-500/10 text-gray-400'}
                 `}>
-                  {(task.taskStatus || task.reviewStatus || 'PENDING').toUpperCase()}
+                  {(task.taskStatus || task.reviewStatus || 'NOT_STARTED').toUpperCase()}
                 </Tag>
               </Descriptions.Item>
               <Descriptions.Item label={<span className="text-gray-400 font-medium">Assignment</span>}>

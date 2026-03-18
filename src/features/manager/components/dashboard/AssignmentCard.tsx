@@ -41,14 +41,14 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
   // Status mapping using Assignment specific logic
   const getStatusColor = (status?: string) => {
     switch (status?.toUpperCase()) {
-      case 'ACTIVE':
+      case 'ASSIGNED':
+        return 'default'
+      case 'IN_PROGRESS':
         return 'processing'
+      case 'REVIEWING':
+        return 'warning'
       case 'COMPLETED':
         return 'success'
-      case 'PAUSED':
-        return 'warning'
-      case 'ARCHIVE':
-        return 'error'
       default:
         return 'default'
     }

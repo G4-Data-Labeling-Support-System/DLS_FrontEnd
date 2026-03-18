@@ -16,7 +16,7 @@ interface Task {
 export default function TaskCard({ task }: { task: Task }) {
   const navigate = useNavigate()
   if (!task.id) return null // Guard against missing ID
-  const taskStatus = task.taskStatus || task.status || 'PENDING'
+  const taskStatus = task.taskStatus || task.status || 'NOT_STARTED'
   const taskName = task.name || task.filename || 'Untitled Task'
 
   const statusStyle = getTaskStatusStyle(taskStatus)

@@ -50,22 +50,15 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   // Hàm chọn màu cho Tag trạng thái
   const getStatusColor = (status?: string) => {
     switch (status?.toUpperCase()) {
-      case 'ACTIVE':
-        return 'processing'
-      case 'INPROGRESS':
-        return 'gold'
-      case 'COMPLETED':
-        return 'success'
-      case 'PAUSED':
-        return 'warning'
-      case 'ARCHIVE':
-        return 'error'
-      case 'INACTIVE':
-        return 'error'
-      case 'CANCELLED':
-        return 'error'
       case 'NOT_STARTED':
         return 'default'
+      case 'IN_PROGRESS':
+        return 'processing'
+      case 'COMPLETED':
+        return 'success'
+      case 'INACTIVE':
+      case 'CANCELLED':
+        return 'error'
       default:
         return 'default'
     }
