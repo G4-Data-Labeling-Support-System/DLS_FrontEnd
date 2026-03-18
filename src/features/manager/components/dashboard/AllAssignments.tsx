@@ -114,7 +114,8 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
               { value: 'ASSIGNED', label: 'Assigned' },
               { value: 'IN_PROGRESS', label: 'In Progress' },
               { value: 'REVIEWING', label: 'Reviewing' },
-              { value: 'COMPLETED', label: 'Completed' }
+              { value: 'COMPLETED', label: 'Completed' },
+              { value: 'INACTIVE', label: 'Inactive' }
             ]}
           />
           <Input
@@ -144,13 +145,17 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
             )
             .filter(
               (a) =>
-                a.status?.toUpperCase() !== 'CANCELLED' &&
-                a.status?.toUpperCase() !== 'INACTIVE' &&
-                (statusFilter === 'ALL' || (a.status && a.status.toUpperCase() === statusFilter))
+                statusFilter === 'ALL' || (a.status && a.status.toUpperCase() === statusFilter)
             )
-            .sort(
-              (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-            )
+            .sort((a, b) => {
+              const aIsInactive = a.status?.toUpperCase() === 'INACTIVE'
+              const bIsInactive = b.status?.toUpperCase() === 'INACTIVE'
+
+              if (aIsInactive && !bIsInactive) return 1
+              if (!aIsInactive && bIsInactive) return -1
+
+              return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+            })
             .map((a, index) => {
               const uniqueId = a.assignmentId || String(index)
               return (

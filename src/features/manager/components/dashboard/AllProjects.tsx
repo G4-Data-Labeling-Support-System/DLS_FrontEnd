@@ -212,7 +212,9 @@ export const AllProjects: React.FC<AllProjectsProps> = ({
               { value: 'ALL', label: 'All Statuses' },
               { value: 'NOT_STARTED', label: 'Not Started' },
               { value: 'IN_PROGRESS', label: 'In Progress' },
-              { value: 'COMPLETED', label: 'Completed' }
+              { value: 'COMPLETED', label: 'Completed' },
+              { value: 'CANCELLED', label: 'Cancelled' },
+              { value: 'INACTIVE', label: 'Inactive' }
             ]}
           />
           <Input
@@ -234,7 +236,6 @@ export const AllProjects: React.FC<AllProjectsProps> = ({
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 items-stretch">
           {projects
-            .filter((p) => p.projectStatus?.toUpperCase() !== 'INACTIVE')
             .filter(
               (p) =>
                 !searchText ||
@@ -245,9 +246,15 @@ export const AllProjects: React.FC<AllProjectsProps> = ({
                 statusFilter === 'ALL' ||
                 (p.projectStatus && p.projectStatus.toUpperCase() === statusFilter)
             )
-            .sort(
-              (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-            )
+            .sort((a, b) => {
+              const aIsInactive = a.projectStatus?.toUpperCase() === 'INACTIVE'
+              const bIsInactive = b.projectStatus?.toUpperCase() === 'INACTIVE'
+              
+              if (aIsInactive && !bIsInactive) return 1
+              if (!aIsInactive && bIsInactive) return -1
+              
+              return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+            })
             .map((p) => {
               if (!p.projectId) return null // Bỏ qua nếu data rác không có ID
 

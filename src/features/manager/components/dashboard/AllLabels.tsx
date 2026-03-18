@@ -32,6 +32,7 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
   const [labels, setLabels] = useState<GetLabelsParams[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [searchText, setSearchText] = useState<string>('')
+  const [statusFilter, setStatusFilter] = useState<string>('ALL')
   const [_internalLabelId, setInternalLabelId] = useState<string | null>(null)
 
   const [createModalOpen, setCreateModalOpen] = useState(false)
@@ -282,6 +283,16 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
           All Labels
         </Title>
         <Space>
+          <Select
+            value={statusFilter}
+            onChange={(value) => setStatusFilter(value)}
+            className="w-36"
+            options={[
+              { value: 'ALL', label: 'All Statuses' },
+              { value: 'ACTIVE', label: 'Active' },
+              { value: 'INACTIVE', label: 'Inactive' }
+            ]}
+          />
           <Input
             placeholder="Search labels..."
             prefix={<SearchOutlined className="text-gray-400" />}
@@ -303,12 +314,19 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
           {labels
             .filter(
               (l) =>
-                !searchText ||
-                (l.labelName && l.labelName.toLowerCase().includes(searchText.toLowerCase()))
+                (!searchText ||
+                  (l.labelName && l.labelName.toLowerCase().includes(searchText.toLowerCase()))) &&
+                (statusFilter === 'ALL' || (l.labelStatus && l.labelStatus.toUpperCase() === statusFilter))
             )
-            .sort(
-              (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-            )
+            .sort((a, b) => {
+              const aIsInactive = a.labelStatus?.toUpperCase() === 'INACTIVE'
+              const bIsInactive = b.labelStatus?.toUpperCase() === 'INACTIVE'
+              
+              if (aIsInactive && !bIsInactive) return 1
+              if (!aIsInactive && bIsInactive) return -1
+              
+              return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+            })
             .map((l, index) => {
               const uniqueId = l.labelId || String(index)
               return (

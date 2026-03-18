@@ -1,4 +1,4 @@
-import { App, Spin, Empty, Input, Space, Typography, Button } from 'antd'
+import { App, Spin, Empty, Input, Space, Typography, Button, Select } from 'antd'
 import { PlusOutlined, SearchOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import datasetApi, { type GetDatasetsParams } from '@/api/DatasetApi'
 import { DatasetCard } from './DatasetCard'
@@ -26,6 +26,7 @@ const AllDataset: React.FC<AllDatasetProps> = ({
 }) => {
   const { message } = App.useApp()
   const [searchText, setSearchText] = useState<string>('')
+  const [statusFilter, setStatusFilter] = useState<string>('ALL')
   const [internalDatasetId, setInternalDatasetId] = useState<string | null>(null)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -93,6 +94,16 @@ const AllDataset: React.FC<AllDatasetProps> = ({
           All Datasets
         </Title>
         <Space>
+          <Select
+            value={statusFilter}
+            onChange={(value) => setStatusFilter(value)}
+            className="w-36"
+            options={[
+              { value: 'ALL', label: 'All Statuses' },
+              { value: 'ACTIVE', label: 'Active' },
+              { value: 'INACTIVE', label: 'Inactive' }
+            ]}
+          />
           <Input
             placeholder="Search datasets..."
             prefix={<SearchOutlined className="text-gray-400" />}
@@ -117,11 +128,17 @@ const AllDataset: React.FC<AllDatasetProps> = ({
                 (!searchText ||
                   (ds.datasetName &&
                     ds.datasetName.toLowerCase().includes(searchText.toLowerCase()))) &&
-                ds.datasetStatus?.toUpperCase() !== 'INACTIVE'
+                (statusFilter === 'ALL' || (ds.datasetStatus && ds.datasetStatus.toUpperCase() === statusFilter))
             )
-            .sort(
-              (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-            )
+            .sort((a, b) => {
+              const aIsInactive = a.datasetStatus?.toUpperCase() === 'INACTIVE'
+              const bIsInactive = b.datasetStatus?.toUpperCase() === 'INACTIVE'
+
+              if (aIsInactive && !bIsInactive) return 1
+              if (!aIsInactive && bIsInactive) return -1
+
+              return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+            })
             .map((ds) => {
               const uniqueId = ds.datasetId || ''
               return (

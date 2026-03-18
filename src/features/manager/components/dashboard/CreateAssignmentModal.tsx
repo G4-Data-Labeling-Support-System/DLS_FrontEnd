@@ -77,7 +77,17 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
           }
         })
 
-        setProjects(normalizedProjects.filter((p: NormalizedProject) => p.projectStatus?.toUpperCase() !== 'INACTIVE'))
+        setProjects(
+          normalizedProjects.sort((a, b) => {
+            const aIsInactive = a.projectStatus?.toUpperCase() === 'INACTIVE'
+            const bIsInactive = b.projectStatus?.toUpperCase() === 'INACTIVE'
+
+            if (aIsInactive && !bIsInactive) return 1
+            if (!aIsInactive && bIsInactive) return -1
+
+            return 0
+          })
+        )
       } catch (error) {
         console.error(error)
         message.error('Failed to load projects.')

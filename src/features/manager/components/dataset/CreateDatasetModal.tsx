@@ -156,7 +156,17 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
               projectStatus: String(info.projectStatus)
             }
           })
-          setProjects(normalizedProjects)
+          setProjects(
+            normalizedProjects.sort((a, b) => {
+              const aIsInactive = a.projectStatus?.toUpperCase() === 'INACTIVE'
+              const bIsInactive = b.projectStatus?.toUpperCase() === 'INACTIVE'
+              
+              if (aIsInactive && !bIsInactive) return 1
+              if (!aIsInactive && bIsInactive) return -1
+              
+              return 0
+            })
+          )
         }
       } catch (error) {
         console.error('Fetch projects failed:', error)
