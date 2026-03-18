@@ -97,7 +97,9 @@ export const DatasetCard: React.FC<DatasetCardProps> = ({
 
   return (
     <Card
-      className="bg-[#1A1625] border border-violet-500/20 rounded-xl overflow-hidden hover:bg-violet-500/10 hover:border-fuchsia-500/50 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(139,92,246,0.15)] transition-all duration-500 flex flex-col h-full cursor-pointer relative pt-4 mt-3"
+      className={`bg-[#1A1625] border border-violet-500/20 rounded-xl overflow-hidden hover:bg-violet-500/10 hover:border-fuchsia-500/50 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(139,92,246,0.15)] transition-all duration-500 flex flex-col h-full cursor-pointer relative pt-4 mt-3 ${
+        datasetStatus?.toUpperCase() === 'INACTIVE' ? 'opacity-60 grayscale-[0.5]' : ''
+      }`}
       onClick={onClick}
     >
       {datasetName &&

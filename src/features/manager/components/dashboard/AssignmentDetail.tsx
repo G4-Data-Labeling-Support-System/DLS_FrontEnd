@@ -217,13 +217,13 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
       case 'PAUSED':
         return 'warning'
       case 'ARCHIVE':
+      case 'REJECTED':
+      case 'INACTIVE':
         return 'error'
       case 'PENDING':
         return 'default'
       case 'IN_PROGRESS':
         return 'processing'
-      case 'REJECTED':
-        return 'error'
       default:
         return 'default'
     }
@@ -288,7 +288,9 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
           <div className="mt-2">
             <Tag
               color={getStatusColor(assignment.status)}
-              className="m-0 font-medium text-sm px-3 py-1"
+              className={`m-0 font-medium text-sm px-3 py-1 ${
+                assignment.status?.toUpperCase() === 'INACTIVE' ? 'text-red-500' : ''
+              }`}
             >
               {assignment.status}
             </Tag>

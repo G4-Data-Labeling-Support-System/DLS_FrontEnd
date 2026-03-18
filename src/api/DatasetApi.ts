@@ -98,9 +98,9 @@ const datasetApi = {
       const url = ENDPOINTS.DATASETS.UPDATE(id)
       const formData = new FormData()
       
-      if (data.projectId) formData.append('projectId', data.projectId)
-      if (data.datasetName) formData.append('datasetName', data.datasetName)
-      if (data.description) formData.append('description', data.description)
+      if (data.projectId !== undefined) formData.append('projectId', data.projectId)
+      if (data.datasetName !== undefined) formData.append('datasetName', data.datasetName)
+      if (data.description !== undefined) formData.append('description', data.description)
       
       if (data.files) {
         data.files.forEach((file) => {

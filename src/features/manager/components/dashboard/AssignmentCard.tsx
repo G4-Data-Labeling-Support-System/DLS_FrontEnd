@@ -49,6 +49,8 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
         return 'warning'
       case 'COMPLETED':
         return 'success'
+      case 'INACTIVE':
+        return 'error'
       default:
         return 'default'
     }
@@ -62,7 +64,9 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
   if (variant === 'compact') {
     return (
       <div
-        className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-blue-500/30 transition-colors cursor-pointer group"
+        className={`flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-blue-500/30 transition-colors cursor-pointer group ${
+          status?.toUpperCase() === 'INACTIVE' ? 'opacity-60 grayscale-[0.5]' : ''
+        }`}
         onClick={onClick}
       >
         <div className="flex justify-between items-start">
@@ -76,7 +80,9 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
         <div className="flex items-center gap-2 mt-1">
           <Tag
             color={getStatusColor(status)}
-            className="m-0 text-[10px] px-1.5 py-0 font-medium whitespace-nowrap"
+            className={`m-0 text-[10px] px-1.5 py-0 font-medium whitespace-nowrap ${
+              status?.toUpperCase() === 'INACTIVE' ? 'text-red-500' : ''
+            }`}
           >
             {status || 'UNKNOWN'}
           </Tag>
@@ -88,7 +94,9 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
 
   return (
     <Card
-      className="bg-[#1A1625] border border-violet-500/20 rounded-xl overflow-hidden hover:bg-violet-500/10 hover:border-fuchsia-500/50 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(139,92,246,0.15)] transition-all duration-500 flex flex-col h-full cursor-pointer relative pt-4 mt-3"
+      className={`bg-[#1A1625] border border-violet-500/20 rounded-xl overflow-hidden hover:bg-violet-500/10 hover:border-fuchsia-500/50 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(139,92,246,0.15)] transition-all duration-500 flex flex-col h-full cursor-pointer relative pt-4 mt-3 ${
+        status?.toUpperCase() === 'INACTIVE' ? 'opacity-60 grayscale-[0.5]' : ''
+      }`}
       onClick={onClick}
     >
       {assignmentName &&
@@ -116,7 +124,12 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
           </Title>
         </div>
         <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-          <Tag color={getStatusColor(status)} className="m-0 text-[10px] px-1.5 py-0 font-medium whitespace-nowrap">
+          <Tag
+            color={getStatusColor(status)}
+            className={`m-0 text-[10px] px-1.5 py-0 font-medium whitespace-nowrap ${
+              status?.toUpperCase() === 'INACTIVE' ? 'text-red-500' : ''
+            }`}
+          >
             {status || 'UNKNOWN'}
           </Tag>
           <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
