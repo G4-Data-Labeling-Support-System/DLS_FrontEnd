@@ -270,12 +270,8 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
       }
 
       // 4. API Call
-      const { projectId: selectedProjectId, ...restValues } = values
-      const finalProjectId = (isEdit && hasAssignments) ? (initialData?.projectId || selectedProjectId) : selectedProjectId
-
       const payload = {
-        ...restValues,
-        ...(isEdit && hasAssignments ? { projectId: finalProjectId } : { projectId: selectedProjectId || initialProjectId }),
+        ...values,
         files: filesToUpload.length > 0 ? filesToUpload : undefined
       }
       const res = isEdit
