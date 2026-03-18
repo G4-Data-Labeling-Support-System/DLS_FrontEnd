@@ -63,13 +63,13 @@ const AllDataset: React.FC<AllDatasetProps> = ({
     setDeleting(true)
     try {
       await datasetApi.deleteDataset(deletingDatasetId)
-      message.success('Dataset deleted successfully!')
+      message.success(`${deletingDatasetName} deactivated successfully!`)
       setDeleteModalOpen(false)
       setDeletingDatasetId(null)
       setDeletingDatasetName('')
       window.location.reload()
     } catch {
-      message.error('An error occurred while deleting the dataset.')
+      message.error('An error occurred while deactivating the dataset.')
     } finally {
       setDeleting(false)
     }

@@ -120,10 +120,8 @@ const datasetApi = {
   },
   deleteDataset(id: string) {
     try {
-      const url = ENDPOINTS.DATASETS.DETAIL
-        ? ENDPOINTS.DATASETS.DETAIL(id)
-        : `${ENDPOINTS.DATASETS.LIST}/${id}`
-      return axiosClient.patch(url)
+      const url = ENDPOINTS.DATASETS.DELETE(id)
+      return axiosClient.delete(url)
     } catch (error) {
       console.error('Failed to delete dataset', error)
       throw error
