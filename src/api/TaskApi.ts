@@ -40,6 +40,16 @@ const taskApi = {
       console.error(`Failed to fetch tasks for assignmentId: ${assignmentId}`, error)
       throw error
     }
+  },
+
+  submitAnnotations(payload: { taskId: string; annotations: any[] }) {
+    try {
+      const url = '/annotations/submit'
+      return axiosClient.post(url, payload)
+    } catch (error) {
+      console.error(`Failed to submit annotations for taskId: ${payload.taskId}`, error)
+      throw error
+    }
   }
 }
 

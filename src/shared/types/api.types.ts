@@ -59,7 +59,8 @@ export interface Project {
   projectId: string
   projectName: string
   description?: string
-  status: 'ACTIVE' | 'INACTIVE' | 'ONGOING' | string
+  status?: 'ACTIVE' | 'INACTIVE' | 'ONGOING' | string
+  projectStatus?: string
   createdAt?: string
   updatedAt?: string
 }
@@ -117,4 +118,19 @@ export interface ApiResponse<T> {
   code: number
   message: string
   data: T
+}
+
+export interface AnnotationSubmitItem {
+  annotationConfidence: string
+  annotationData: Record<string, any>
+  annotationStatus: string
+  annotationType: string
+  comment: string
+  dataitemId: string
+  labelIds: string[]
+}
+
+export interface AnnotationSubmitPayload {
+  taskId: string
+  annotations: AnnotationSubmitItem[]
 }

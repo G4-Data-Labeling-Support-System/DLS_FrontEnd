@@ -135,6 +135,13 @@ export default function AnnotatorDatasetDetailPage() {
 
       {/* Header & Breadcrumb */}
       <div className="mb-8 relative z-10">
+        <button
+          onClick={() => navigate(PATH_ANNOTATOR.project)}
+          className="mb-4 px-3 py-1.5 flex items-center gap-2 text-sm text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors w-fit border border-white/10"
+        >
+          <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+          Back to Dashboard
+        </button>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
