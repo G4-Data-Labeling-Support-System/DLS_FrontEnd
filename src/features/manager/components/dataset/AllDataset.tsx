@@ -185,10 +185,10 @@ const AllDataset: React.FC<AllDatasetProps> = ({
               </div>
             </div>
             <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
-              Delete Dataset
+              Deactivate Dataset
             </h2>
             <p className="text-white/50 text-sm">
-              Are you sure you want to delete{' '}
+              Are you sure you want to deactivate{' '}
               <span className="text-white/80 font-medium">{deletingDatasetName}</span>? This action
               cannot be undone.
             </p>
@@ -212,7 +212,7 @@ const AllDataset: React.FC<AllDatasetProps> = ({
               onClick={confirmDelete}
               className="bg-red-600 hover:bg-red-500 border-none"
             >
-              Delete Dataset
+              Deactivate Dataset
             </Button>
           </div>
         </div>

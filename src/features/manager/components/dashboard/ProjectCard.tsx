@@ -1,12 +1,6 @@
 import React from 'react'
 import { Card, Button, Typography, Dropdown, Tag, type MenuProps } from 'antd'
-import {
-  MoreOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  CloseCircleOutlined
-} from '@ant-design/icons'
+import { MoreOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons'
 import type { GetProjectsParams } from '@/api/ProjectApi' // Import type từ API của bạn
 
 const { Title } = Typography
@@ -15,7 +9,6 @@ const { Title } = Typography
 interface ProjectCardProps extends GetProjectsParams {
   onEdit?: () => void
   onDelete?: () => void
-  onCancelProject?: () => void
   onClick?: () => void
 }
 
@@ -25,20 +18,12 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   createdAt,
   onEdit,
   onDelete,
-  onCancelProject,
   onClick
 }) => {
   const items: MenuProps['items'] = [
     { key: '1', label: 'View Details', icon: <EyeOutlined />, onClick: onClick },
     { key: '2', label: 'Edit Project', icon: <EditOutlined />, onClick: onEdit },
     { type: 'divider' },
-    {
-      key: '5',
-      label: <span className="text-orange-500">Cancel Project</span>,
-      icon: <CloseCircleOutlined className="text-orange-500" />,
-      onClick: onCancelProject,
-      disabled: projectStatus === 'CANCELLED'
-    },
     {
       key: '4',
       label: <span className="text-red-500">Deactivate Project</span>,
@@ -57,7 +42,6 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       case 'COMPLETED':
         return 'success'
       case 'INACTIVE':
-      case 'CANCELLED':
         return 'error'
       default:
         return 'default'

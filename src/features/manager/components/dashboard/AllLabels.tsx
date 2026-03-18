@@ -321,10 +321,10 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
             .sort((a, b) => {
               const aIsInactive = a.labelStatus?.toUpperCase() === 'INACTIVE'
               const bIsInactive = b.labelStatus?.toUpperCase() === 'INACTIVE'
-              
+
               if (aIsInactive && !bIsInactive) return 1
               if (!aIsInactive && bIsInactive) return -1
-              
+
               return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
             })
             .map((l, index) => {
@@ -514,10 +514,10 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
               </div>
             </div>
             <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
-              Delete Label
+              Deactivate Label
             </h2>
             <p className="text-white/50 text-sm">
-              Are you sure you want to delete{' '}
+              Are you sure you want to deactivate{' '}
               <span className="text-white/80 font-medium">{deletingLabelName}</span>? This action
               cannot be undone.
             </p>
@@ -541,7 +541,7 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
               onClick={confirmDelete}
               className="bg-red-600 hover:bg-red-500 border-none"
             >
-              Delete Label
+              Deactivate Label
             </Button>
           </div>
         </div>

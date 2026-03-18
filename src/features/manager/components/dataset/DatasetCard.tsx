@@ -30,14 +30,14 @@ export const DatasetCard: React.FC<DatasetCardProps> = ({
     { key: '2', label: 'Edit Dataset', icon: <EditOutlined />, onClick: onEdit },
     ...(onDelete
       ? [
-          { type: 'divider' as const },
-          {
-            key: '4',
-            label: <span className="text-red-500">Delete Dataset</span>,
-            icon: <DeleteOutlined className="text-red-500" />,
-            onClick: onDelete
-          }
-        ]
+        { type: 'divider' as const },
+        {
+          key: '4',
+          label: <span className="text-red-500">Deactivate Dataset</span>,
+          icon: <DeleteOutlined className="text-red-500" />,
+          onClick: onDelete
+        }
+      ]
       : [])
   ]
 

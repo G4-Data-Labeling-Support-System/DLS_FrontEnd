@@ -189,10 +189,10 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
               </div>
             </div>
             <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
-              Delete Assignment
+              Deactivate Assignment
             </h2>
             <p className="text-white/50 text-sm">
-              Are you sure you want to delete{' '}
+              Are you sure you want to deactivate{' '}
               <span className="text-white/80 font-medium">{deletingAssignmentName}</span>? This
               action cannot be undone.
             </p>
@@ -216,7 +216,7 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
               onClick={confirmDelete}
               className="bg-red-600 hover:bg-red-500 border-none"
             >
-              Delete Assignment
+              Deactivate Assignment
             </Button>
           </div>
         </div>

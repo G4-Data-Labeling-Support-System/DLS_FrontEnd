@@ -59,25 +59,26 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
           const res = await datasetApi.getDatasetById(initialData.datasetId)
           const data = res.data?.data || res.data
           if (data) {
-            const pId = data.projectId
+            const pId = String(data.projectId)
             form.setFieldsValue({
-              datasetName: data.datasetName || data.name || data.title,
+              datasetName: data.datasetName,
               description: data.description,
               projectId: pId
             })
 
             // Resolve project info if available in response
-            const projectInfo = data.project || {}
-            const resolvedPId = String(pId || projectInfo.projectId || projectInfo.id || '')
-            const resolvedPName = String(projectInfo.projectName || projectInfo.name || '')
+            const projectInfo = data.project
+            const resolvedPId = String(pId || projectInfo.projectId || projectInfo.id)
+            const resolvedPName = String(projectInfo.projectName || projectInfo.name)
 
-            if (resolvedPId) {
+            const resolvedStatus = String(projectInfo.projectStatus || projectInfo.status)
+            if (resolvedPId && resolvedStatus.toUpperCase() !== 'INACTIVE') {
               setProjects(prev => {
                 if (prev.find(p => p.projectId === resolvedPId)) return prev
                 return [...prev, {
                   projectId: resolvedPId,
                   projectName: resolvedPName || 'Fetching...',
-                  projectStatus: String(projectInfo.projectStatus || 'ACTIVE')
+                  projectStatus: resolvedStatus
                 }]
               })
 
@@ -89,7 +90,7 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
                     setProjects(prev => prev.map(p => p.projectId === resolvedPId ? {
                       projectId: resolvedPId,
                       projectName: projData.projectName || projData.name || '',
-                      projectStatus: projData.projectStatus || 'ACTIVE'
+                      projectStatus: (projData.projectStatus)
                     } : p))
                   }
                 } catch (err) {
@@ -148,24 +149,15 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
         const response = await projectApi.getProjects()
         const data = response.data?.data || response.data || []
         if (Array.isArray(data)) {
-          const normalizedProjects = data.map((p: { project?: GetProjectsParams; projectId?: string; id?: string; projectName?: string; name?: string; projectStatus?: string; status?: string }) => {
-            const info = p.project || p
-            return {
-              projectId: String(info.projectId),
-              projectName: String(info.projectName),
-              projectStatus: String(info.projectStatus)
-            }
-          })
+          const normalizedProjects = data.map((p: { projectId?: string; projectName?: string; projectStatus?: string; status?: string }) => ({
+            projectId: p.projectId,
+            projectName: p.projectName,
+            projectStatus: (p.projectStatus)
+          }))
           setProjects(
-            normalizedProjects.sort((a, b) => {
-              const aIsInactive = a.projectStatus?.toUpperCase() === 'INACTIVE'
-              const bIsInactive = b.projectStatus?.toUpperCase() === 'INACTIVE'
-              
-              if (aIsInactive && !bIsInactive) return 1
-              if (!aIsInactive && bIsInactive) return -1
-              
-              return 0
-            })
+            normalizedProjects.filter(
+              (p) => p.projectStatus?.toUpperCase() !== 'INACTIVE'
+            )
           )
         }
       } catch (error) {
@@ -350,7 +342,9 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
                     optionFilterProp="children"
                   >
                     {projects.map((p) => (
-                      <Select.Option key={p.projectId} value={p.projectId}>{p.projectName}</Select.Option>
+                      <Select.Option key={p.projectId} value={p.projectId}>
+                        {p.projectName}
+                      </Select.Option>
                     ))}
                   </Select>
                 </Form.Item>
