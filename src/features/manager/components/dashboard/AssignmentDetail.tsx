@@ -268,11 +268,11 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
     const selectedTask = tasks.find((t) => String(t.taskId) === String(viewTaskId))
     if (selectedTask) {
       return (
-        <TaskDetail 
+        <TaskDetail
           task={{
             ...selectedTask,
             assignmentName: assignment.assignmentName
-          }} 
+          }}
         />
       )
     }

@@ -27,14 +27,14 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
     { key: '2', label: 'Edit Assignment', icon: <EditOutlined />, onClick: onEdit },
     ...(onDelete
       ? [
-        { type: 'divider' as const },
-        {
-          key: '4',
-          label: <span className="text-red-500">Deactivate Assignment</span>,
-          icon: <DeleteOutlined className="text-red-500" />,
-          onClick: onDelete
-        }
-      ]
+          { type: 'divider' as const },
+          {
+            key: '4',
+            label: <span className="text-red-500">Deactivate Assignment</span>,
+            icon: <DeleteOutlined className="text-red-500" />,
+            onClick: onDelete
+          }
+        ]
       : [])
   ]
 
@@ -100,15 +100,15 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
       onClick={onClick}
     >
       {assignmentName &&
-        typeof assignmentName === 'object' &&
-        ('projectName' in (assignmentName as object) ||
-          'project_name' in (assignmentName as object)) ? (
+      typeof assignmentName === 'object' &&
+      ('projectName' in (assignmentName as object) ||
+        'project_name' in (assignmentName as object)) ? (
         <div className="absolute -top-3 left-4 z-10">
           <div className="bg-violet-500/20 border border-violet-500/30 text-violet-300 text-[10px] font-bold px-3 py-1 rounded-full backdrop-blur-sm shadow-lg flex items-center gap-1.5 transition-all group-hover:bg-violet-500/30 group-hover:border-violet-500/50">
             <div className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
             {String(
               (assignmentName as Record<string, unknown>).projectName ||
-              (assignmentName as Record<string, unknown>).project_name
+                (assignmentName as Record<string, unknown>).project_name
             )}
           </div>
         </div>
@@ -141,7 +141,6 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
           </Dropdown>
         </div>
       </div>
-
 
       <div className="grid grid-cols-2 gap-2 bg-[#231e31] p-3 rounded-lg mt-auto">
         <div>

@@ -190,8 +190,7 @@ export default function ProjectManagement() {
               All projects available in the system ({projects?.length || 0})
             </p>
           </div>
-          <div className="flex gap-3">
-          </div>
+          <div className="flex gap-3"></div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">

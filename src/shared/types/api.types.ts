@@ -122,7 +122,7 @@ export interface ApiResponse<T> {
 
 export interface AnnotationSubmitItem {
   annotationConfidence: string
-  annotationData: Record<string, any>
+  annotationData: Record<string, unknown>
   annotationStatus: string
   annotationType: string
   comment: string

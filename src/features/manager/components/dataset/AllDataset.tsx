@@ -128,7 +128,8 @@ const AllDataset: React.FC<AllDatasetProps> = ({
                 (!searchText ||
                   (ds.datasetName &&
                     ds.datasetName.toLowerCase().includes(searchText.toLowerCase()))) &&
-                (statusFilter === 'ALL' || (ds.datasetStatus && ds.datasetStatus.toUpperCase() === statusFilter))
+                (statusFilter === 'ALL' ||
+                  (ds.datasetStatus && ds.datasetStatus.toUpperCase() === statusFilter))
             )
             .sort((a, b) => {
               const aIsInactive = a.datasetStatus?.toUpperCase() === 'INACTIVE'
@@ -221,12 +222,16 @@ const AllDataset: React.FC<AllDatasetProps> = ({
       <CreateDatasetModal
         open={editModalOpen}
         isEdit={true}
-        initialData={editingDataset ? {
-          datasetId: editingDataset.datasetId!,
-          datasetName: editingDataset.datasetName || '',
-          description: editingDataset.description,
-          projectId: editingDataset.projectId
-        } : undefined}
+        initialData={
+          editingDataset
+            ? {
+                datasetId: editingDataset.datasetId!,
+                datasetName: editingDataset.datasetName || '',
+                description: editingDataset.description,
+                projectId: editingDataset.projectId
+              }
+            : undefined
+        }
         onCancel={() => {
           setEditModalOpen(false)
           setEditingDataset(null)

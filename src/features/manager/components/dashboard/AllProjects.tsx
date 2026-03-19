@@ -57,7 +57,7 @@ export const AllProjects: React.FC<AllProjectsProps> = ({
           projectStatus: String(p.projectStatus || p.status || ''),
           description: p.description ? String(p.description) : undefined,
           createdAt: p.createdAt ? String(p.createdAt) : undefined,
-          updatedAt: p.updatedAt ? String(p.updatedAt) : undefined,
+          updatedAt: p.updatedAt ? String(p.updatedAt) : undefined
         }
       })
       setProjects(mapped)
@@ -104,8 +104,6 @@ export const AllProjects: React.FC<AllProjectsProps> = ({
   }
 
   // Removed handleCreateProjectSuccess as it is now in the parent
-
-
 
   if (loading) {
     return (
@@ -191,10 +189,7 @@ export const AllProjects: React.FC<AllProjectsProps> = ({
             })}
 
           {/* Start New Project Card */}
-          <div
-            className="block group cursor-pointer"
-            onClick={onCreate}
-          >
+          <div className="block group cursor-pointer" onClick={onCreate}>
             <div className="h-full min-h-[160px] border-2 border-dashed border-gray-700 rounded-xl flex flex-col items-center justify-center gap-4 bg-[#1A1625]/30 hover:bg-[#1A1625] hover:border-violet-500 transition-all">
               <div className="w-12 h-12 rounded-full bg-[#231e31] group-hover:bg-violet-600 flex items-center justify-center transition-colors">
                 <PlusOutlined className="text-gray-400 group-hover:text-white text-xl" />
@@ -257,8 +252,6 @@ export const AllProjects: React.FC<AllProjectsProps> = ({
           </div>
         </div>
       </GlassModal>
-
-
     </div>
   )
 }

@@ -11,6 +11,8 @@ export interface TaskDataItem {
   url?: string
 }
 
+import type { AnnotationSubmitItem } from '@/shared/types/api.types'
+
 const taskApi = {
   getTaskDataItems(taskId: string) {
     try {
@@ -42,7 +44,7 @@ const taskApi = {
     }
   },
 
-  submitAnnotations(payload: { taskId: string; annotations: any[] }) {
+  submitAnnotations(payload: { taskId: string; annotations: AnnotationSubmitItem[] }) {
     try {
       const url = '/annotations/submit'
       return axiosClient.post(url, payload)

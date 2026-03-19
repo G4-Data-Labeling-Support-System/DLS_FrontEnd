@@ -95,7 +95,7 @@ export default function AnnotatorDashboardPage() {
           const fallbackTasks = actualTasks.length > 0 ? actualTasks : [MOCK_TEST_TASK]
           const calcCompleted = actualTasks.filter(
             (t: AssignmentTask) =>
-              t.taskStatus === 'COMPLETED' || 
+              t.taskStatus === 'COMPLETED' ||
               ['submitted', 'approved'].includes(t.annotationStatus?.toLowerCase())
           ).length
 
@@ -122,8 +122,8 @@ export default function AnnotatorDashboardPage() {
             const guidelinesList = guidelineRes.data?.data || guidelineRes.data || []
             const activeGuide = Array.isArray(guidelinesList)
               ? (guidelinesList.find(
-                (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
-              ) ??
+                  (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
+                ) ??
                 guidelinesList[0] ??
                 null)
               : guidelinesList
@@ -161,7 +161,8 @@ export default function AnnotatorDashboardPage() {
               if (assignsList.length > 0) {
                 // If there's at least one assignment, try to fetch its project info for the "Project" tab default view
                 for (const rawAssign of assignsList) {
-                  const pId = rawAssign.projectId || rawAssign.project?.projectId || rawAssign.project?.id
+                  const pId =
+                    rawAssign.projectId || rawAssign.project?.projectId || rawAssign.project?.id
                   if (pId && !String(pId).startsWith('PROJ-MOCK')) {
                     const pRes = await projectApi.getProjectById(pId)
                     const rawP = pRes.data?.data || pRes.data
@@ -172,8 +173,8 @@ export default function AnnotatorDashboardPage() {
                       const guidelinesList = guidelineRes.data?.data || guidelineRes.data || []
                       const activeGuide = Array.isArray(guidelinesList)
                         ? (guidelinesList.find(
-                          (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
-                        ) ??
+                            (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
+                          ) ??
                           guidelinesList[0] ??
                           null)
                         : guidelinesList
@@ -221,8 +222,8 @@ export default function AnnotatorDashboardPage() {
                         const guidelinesList = guidelineRes.data?.data || guidelineRes.data || []
                         const activeGuide = Array.isArray(guidelinesList)
                           ? (guidelinesList.find(
-                            (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
-                          ) ??
+                              (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
+                            ) ??
                             guidelinesList[0] ??
                             null)
                           : guidelinesList
@@ -273,10 +274,7 @@ export default function AnnotatorDashboardPage() {
               <AnnotationProjectDetail project={projectDetail} />
               {guideline && <GuidelineSection guideline={guideline.content} />}
               <div className="md:col-span-2">
-                <AnnotatorDatasetCard
-                  projectId={projectDetail.id}
-                  assignmentId={assignmentId}
-                />
+                <AnnotatorDatasetCard projectId={projectDetail.id} assignmentId={assignmentId} />
               </div>
             </div>
           </>
@@ -294,7 +292,9 @@ export default function AnnotatorDashboardPage() {
             <AssignmentHeader assignment={assignment} />
             {guideline && <GuidelineSection guideline={guideline.content ?? ''} />}
             {assignment.tasks && (
-              <div className={`${themeClasses.backgrounds.card} border ${themeClasses.borders.violet10} rounded-2xl p-6 md:col-span-2`}>
+              <div
+                className={`${themeClasses.backgrounds.card} border ${themeClasses.borders.violet10} rounded-2xl p-6 md:col-span-2`}
+              >
                 <TasksSection tasks={assignment.tasks} assignmentId={assignment.id} />
               </div>
             )}
@@ -302,7 +302,7 @@ export default function AnnotatorDashboardPage() {
         ) : annotatorAssignments.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {annotatorAssignments
-              .filter(a => a.status?.toUpperCase() !== 'CANCELLED')
+              .filter((a) => a.status?.toUpperCase() !== 'CANCELLED')
               .map((a, idx) => (
                 <AssignmentCard
                   key={a.assignmentId || idx}

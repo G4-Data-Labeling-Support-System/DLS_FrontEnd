@@ -71,9 +71,15 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
         const normalizedProjects: NormalizedProject[] = projectList.map((p: RawProjectData) => {
           const projectInfo = p.project || p
           return {
-            projectId: String(projectInfo.projectId || projectInfo.id || projectInfo.project_id || ''),
-            projectName: String(projectInfo.projectName || projectInfo.name || projectInfo.project_name || ''),
-            projectStatus: String(projectInfo.projectStatus || projectInfo.status || projectInfo.project_status || '')
+            projectId: String(
+              projectInfo.projectId || projectInfo.id || projectInfo.project_id || ''
+            ),
+            projectName: String(
+              projectInfo.projectName || projectInfo.name || projectInfo.project_name || ''
+            ),
+            projectStatus: String(
+              projectInfo.projectStatus || projectInfo.status || projectInfo.project_status || ''
+            )
           }
         })
 
@@ -136,7 +142,9 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
           const dsArray = Array.isArray(datasetsData) ? datasetsData : []
           setDatasets(
             dsArray.filter((d: Record<string, unknown>) => {
-              const status = String(d.datasetStatus || d.status || d.dataset_status || '').toUpperCase()
+              const status = String(
+                d.datasetStatus || d.status || d.dataset_status || ''
+              ).toUpperCase()
               return status === 'ACTIVE'
             })
           )
@@ -165,7 +173,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
           dueDate: initialData.dueDate ? dayjs(initialData.dueDate) : undefined,
           datasetId: initialData.datasetId,
           projectId: initialData.projectId,
-          assignedBy: initialData.assignedBy,
+          assignedBy: initialData.assignedBy
         })
         if (initialData.projectId) {
           setSelectedProjectId(initialData.projectId)
@@ -204,8 +212,13 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
 
       // Check if project is inactive
       if (resolvedProjectId) {
-        const selectedProject = projects.find(p => String(p.projectId) === String(resolvedProjectId))
-        if (selectedProject && (selectedProject.projectStatus as string)?.toUpperCase() === 'INACTIVE') {
+        const selectedProject = projects.find(
+          (p) => String(p.projectId) === String(resolvedProjectId)
+        )
+        if (
+          selectedProject &&
+          (selectedProject.projectStatus as string)?.toUpperCase() === 'INACTIVE'
+        ) {
           message.error('Cannot create assignment for an inactive project.')
           setIsSubmitting(false)
           return
@@ -214,11 +227,20 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
 
       // Check if dataset is inactive (ensure only active datasets can be selected)
       if (values.datasetId) {
-        const selectedDataset = datasets.find(d => String(d.datasetId || d.id) === String(values.datasetId))
+        const selectedDataset = datasets.find(
+          (d) => String(d.datasetId || d.id) === String(values.datasetId)
+        )
         if (selectedDataset) {
-          const dsStatus = String(selectedDataset.datasetStatus || selectedDataset.status || selectedDataset.dataset_status || '').toUpperCase()
+          const dsStatus = String(
+            selectedDataset.datasetStatus ||
+              selectedDataset.status ||
+              selectedDataset.dataset_status ||
+              ''
+          ).toUpperCase()
           if (dsStatus !== 'ACTIVE') {
-            message.error(`Cannot select a dataset with status '${dsStatus}'. Please select an ACTIVE dataset.`)
+            message.error(
+              `Cannot select a dataset with status '${dsStatus}'. Please select an ACTIVE dataset.`
+            )
             setIsSubmitting(false)
             return
           }
@@ -230,7 +252,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
         assignedTo: values.assignedTo,
         reviewedBy: values.reviewerId,
         description: values.description,
-        dueDate: values.dueDate ? values.dueDate.toISOString() : undefined,
+        dueDate: values.dueDate ? values.dueDate.toISOString() : undefined
       }
 
       if (isEditMode && initialData?.assignmentId) {
@@ -261,7 +283,10 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
       if (error && typeof error === 'object' && 'errorFields' in error) {
         return
       }
-      console.error(isEditMode ? 'Failed to update assignment' : 'Failed to create assignment', error)
+      console.error(
+        isEditMode ? 'Failed to update assignment' : 'Failed to create assignment',
+        error
+      )
 
       // Map API errors to form fields
       // const apiErrors = error?.response?.data?.errors
@@ -365,10 +390,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
                 onChange={handleProjectChange}
               >
                 {projects.map((p: NormalizedProject) => (
-                  <Select.Option
-                    key={p.projectId}
-                    value={p.projectId}
-                  >
+                  <Select.Option key={p.projectId} value={p.projectId}>
                     {p.projectName}
                   </Select.Option>
                 ))}
@@ -480,7 +502,6 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
           >
             <DatePicker className="w-full" style={{ width: '100%' }} />
           </Form.Item>
-
 
           <Form.Item label="Description" name="description">
             <Input.TextArea placeholder="Enter description" rows={4} />

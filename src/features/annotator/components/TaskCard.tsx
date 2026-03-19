@@ -22,7 +22,7 @@ export default function TaskCard({ task, assignmentId }: { task: Task; assignmen
   if (!task.id) return null // Guard against missing ID
   const taskStatus = task.taskStatus || task.status || task.reviewStatus || 'NOT_STARTED'
   const taskName = task.name || task.filename || 'Untitled Task'
-  
+
   const completed = task.completedItems ?? 0
   const total = task.totalItems ?? 0
   const progress = total > 0 ? Math.round((completed / total) * 100) : 0
@@ -73,10 +73,12 @@ export default function TaskCard({ task, assignmentId }: { task: Task; assignmen
       <div className="space-y-1.5">
         <div className="flex justify-between items-center text-[10px]">
           <span className="text-gray-500 font-medium">Progress</span>
-          <span className="text-violet-400 font-bold">{completed}/{total} items</span>
+          <span className="text-violet-400 font-bold">
+            {completed}/{total} items
+          </span>
         </div>
         <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
-          <div 
+          <div
             className="h-full bg-gradient-to-r from-violet-600 to-fuchsia-500 transition-all duration-500 rounded-full"
             style={{ width: `${progress}%` }}
           />

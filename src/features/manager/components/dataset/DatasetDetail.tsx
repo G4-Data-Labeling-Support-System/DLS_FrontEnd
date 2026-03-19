@@ -1,5 +1,16 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { App, Spin, Typography, Card, Descriptions, Empty, Pagination, Image, Button, Tag } from 'antd'
+import {
+  App,
+  Spin,
+  Typography,
+  Card,
+  Descriptions,
+  Empty,
+  Pagination,
+  Image,
+  Button,
+  Tag
+} from 'antd'
 import { FolderOutlined, DatabaseOutlined, PictureOutlined, EditOutlined } from '@ant-design/icons'
 import datasetApi from '@/api/DatasetApi'
 import projectApi from '@/api/ProjectApi'
@@ -460,11 +471,21 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
                       <div className="absolute top-2 right-2">
                         <div
                           className={`w-2.5 h-2.5 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.5)] ${
-                            item.status?.toLowerCase() === 'active' ? 'bg-emerald-500' :
-                            item.status?.toLowerCase() === 'inactive' ? 'bg-red-500' :
-                            item.labeled ? 'bg-emerald-500' : 'bg-gray-400'
+                            item.status?.toLowerCase() === 'active'
+                              ? 'bg-emerald-500'
+                              : item.status?.toLowerCase() === 'inactive'
+                                ? 'bg-red-500'
+                                : item.labeled
+                                  ? 'bg-emerald-500'
+                                  : 'bg-gray-400'
                           }`}
-                          title={item.status ? item.status.toUpperCase() : (item.labeled ? 'COMPLETED' : 'PENDING')}
+                          title={
+                            item.status
+                              ? item.status.toUpperCase()
+                              : item.labeled
+                                ? 'COMPLETED'
+                                : 'PENDING'
+                          }
                         />
                       </div>
                     </div>
@@ -557,9 +578,9 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
                 </div>
 
                 {selectedItem.imageUrl ||
-                  selectedItem.url ||
-                  selectedItem.previewUrl ||
-                  selectedItem.path ? (
+                selectedItem.url ||
+                selectedItem.previewUrl ||
+                selectedItem.path ? (
                   <Image
                     src={
                       selectedItem.imageUrl ||
@@ -632,19 +653,31 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
                     <div className="flex items-center gap-2">
                       <div
                         className={`w-2.5 h-2.5 rounded-full ${
-                          selectedItem.status?.toLowerCase() === 'active' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' :
-                          selectedItem.status?.toLowerCase() === 'inactive' ? 'bg-red-500' :
-                          selectedItem.labeled ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-gray-500'
+                          selectedItem.status?.toLowerCase() === 'active'
+                            ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
+                            : selectedItem.status?.toLowerCase() === 'inactive'
+                              ? 'bg-red-500'
+                              : selectedItem.labeled
+                                ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
+                                : 'bg-gray-500'
                         }`}
                       />
                       <span
                         className={`text-xs font-medium ${
-                          selectedItem.status?.toLowerCase() === 'active' ? 'text-emerald-400' :
-                          selectedItem.status?.toLowerCase() === 'inactive' ? 'text-red-400' :
-                          selectedItem.labeled ? 'text-emerald-400' : 'text-gray-400'
+                          selectedItem.status?.toLowerCase() === 'active'
+                            ? 'text-emerald-400'
+                            : selectedItem.status?.toLowerCase() === 'inactive'
+                              ? 'text-red-400'
+                              : selectedItem.labeled
+                                ? 'text-emerald-400'
+                                : 'text-gray-400'
                         }`}
                       >
-                        {selectedItem.status ? selectedItem.status.toUpperCase() : (selectedItem.labeled ? 'COMPLETED' : 'PENDING')}
+                        {selectedItem.status
+                          ? selectedItem.status.toUpperCase()
+                          : selectedItem.labeled
+                            ? 'COMPLETED'
+                            : 'PENDING'}
                       </span>
                     </div>
                   </Descriptions.Item>

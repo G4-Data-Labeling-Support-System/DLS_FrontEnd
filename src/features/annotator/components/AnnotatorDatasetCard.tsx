@@ -15,7 +15,7 @@ interface Dataset {
   dataitems?: DatasetItem[]
   project?: {
     projectId: string
-    [key: string]: any
+    [key: string]: unknown
   }
 }
 
@@ -35,7 +35,10 @@ interface AnnotatorDatasetCardProps {
   assignmentId?: string
 }
 
-export default function AnnotatorDatasetCard({ projectId, assignmentId }: AnnotatorDatasetCardProps) {
+export default function AnnotatorDatasetCard({
+  projectId,
+  assignmentId
+}: AnnotatorDatasetCardProps) {
   const navigate = useNavigate()
   const [datasets, setDatasets] = useState<Dataset[]>([])
   const [loading, setLoading] = useState(true)
@@ -54,7 +57,7 @@ export default function AnnotatorDatasetCard({ projectId, assignmentId }: Annota
 
       try {
         setLoading(true)
-        let data: any
+        let data: unknown
         if (assignmentId) {
           const response = await assignmentApi.getDatasetByAssignmentId(assignmentId)
           data = response.data?.data || response.data || []
@@ -62,7 +65,7 @@ export default function AnnotatorDatasetCard({ projectId, assignmentId }: Annota
           const response = await datasetApi.getDatasetsByProjectId(projectId)
           data = response.data?.data || response.data || []
         }
-        
+
         setDatasets(Array.isArray(data) ? data : [data])
       } catch (err) {
         console.error('Failed to fetch datasets:', err)
@@ -77,9 +80,7 @@ export default function AnnotatorDatasetCard({ projectId, assignmentId }: Annota
 
   const filteredDatasets = datasets.filter((d) => {
     const status = (d.datasetStatus || '').toUpperCase()
-    return (
-      status !== 'INACTIVE' && d.datasetName.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    return status !== 'INACTIVE' && d.datasetName.toLowerCase().includes(searchTerm.toLowerCase())
   })
 
   const totalPages = Math.ceil(filteredDatasets.length / itemsPerPage)
@@ -181,7 +182,8 @@ export default function AnnotatorDatasetCard({ projectId, assignmentId }: Annota
                     <div className="flex justify-end mb-3">
                       <button
                         onClick={() => {
-                          const targetProjectId = projectId || dataset.project?.projectId || 'unknown'
+                          const targetProjectId =
+                            projectId || dataset.project?.projectId || 'unknown'
                           navigate(
                             PATH_ANNOTATOR.datasetDetail
                               .replace(':projectId', targetProjectId)

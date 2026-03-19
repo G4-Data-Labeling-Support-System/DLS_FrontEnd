@@ -28,7 +28,10 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(false)
   const [currentStep, setCurrentStep] = useState(0)
-  const [projectInfo, setProjectInfo] = useState<{ projectName: string; description: string } | null>(null)
+  const [projectInfo, setProjectInfo] = useState<{
+    projectName: string
+    description: string
+  } | null>(null)
   const [guidelineId, setGuidelineId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -56,7 +59,9 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
           })
           setProjectInfo({ projectName: name, description: description })
           if (latestGuideline) {
-            setGuidelineId(latestGuideline.guideId || latestGuideline.guide_id || latestGuideline.id)
+            setGuidelineId(
+              latestGuideline.guideId || latestGuideline.guide_id || latestGuideline.id
+            )
           }
         }
       } catch (error) {
@@ -135,7 +140,10 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
           throw new Error('Failed to identify Project ID')
         }
 
-        await guidelineApi.createGuideline(currentProjectId, { ...guidelinePayload, projectId: currentProjectId })
+        await guidelineApi.createGuideline(currentProjectId, {
+          ...guidelinePayload,
+          projectId: currentProjectId
+        })
       }
 
       message.success(editId ? 'Project updated successfully!' : 'Project created successfully!')
@@ -147,7 +155,10 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
       }
 
       console.error('API Error:', error)
-      const apiError = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || (error as Error)?.message || (editId ? 'Failed to update project' : 'Failed to create project')
+      const apiError =
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        (error as Error)?.message ||
+        (editId ? 'Failed to update project' : 'Failed to create project')
       message.error(apiError)
     } finally {
       setLoading(false)
@@ -159,18 +170,10 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
     onCancel()
   }
 
-  const steps = [
-    { title: 'Project Info' },
-    { title: 'Guidelines' }
-  ]
+  const steps = [{ title: 'Project Info' }, { title: 'Guidelines' }]
 
   return (
-    <GlassModal
-      open={open}
-      onCancel={handleCancel}
-      destroyOnHidden
-      width={720}
-    >
+    <GlassModal open={open} onCancel={handleCancel} destroyOnHidden width={720}>
       <div className="px-8 pt-10 pb-8">
         <div className="text-center border-b border-white/5 pb-6 mb-8">
           <h2 className="text-white text-2xl font-bold tracking-tight mb-4 font-display">

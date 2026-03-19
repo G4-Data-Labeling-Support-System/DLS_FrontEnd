@@ -61,11 +61,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
   const invalidateProjectDetail = useInvalidateProjectDetail()
 
   const loading =
-    projectLoading ||
-    assignmentsLoading ||
-    guidelinesLoading ||
-    datasetsLoading ||
-    membersLoading
+    projectLoading || assignmentsLoading || guidelinesLoading || datasetsLoading || membersLoading
 
   const [isCreateAssignmentModalVisible, setIsCreateAssignmentModalVisible] = useState(false)
   const [isCreateDatasetModalVisible, setIsCreateDatasetModalVisible] = useState(false)
@@ -179,9 +175,6 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
     setIsCreateAssignmentModalVisible(true)
   }
 
-
-
-
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A'
     return new Date(dateString).toLocaleString('vi-VN')
@@ -206,12 +199,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
   }
 
   if (selectedDatasetId) {
-    return (
-      <DatasetDetail
-        datasetId={selectedDatasetId}
-        onBack={() => setSelectedDatasetId(null)}
-      />
-    )
+    return <DatasetDetail datasetId={selectedDatasetId} onBack={() => setSelectedDatasetId(null)} />
   }
 
   if (!project) {
@@ -396,7 +384,9 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 mb-2 mt-2">
         <Card
           className="bg-[#1A1625] border-gray-800 rounded-xl h-[600px]"
-          styles={{ body: { height: '100%', display: 'flex', flexDirection: 'column', padding: '24px' } }}
+          styles={{
+            body: { height: '100%', display: 'flex', flexDirection: 'column', padding: '24px' }
+          }}
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-white text-lg font-display flex items-center gap-2">
@@ -429,18 +419,24 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
               className="my-8"
             />
           ) : (
-            <div
-              className="flex-1 overflow-y-auto pr-1 custom-scrollbar"
-            >
+            <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
               <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-                {datasets.map((dataset: { datasetId: string; datasetName?: string; totalItems?: number; createdAt?: string; dataItemStatus?: string }) => (
-                  <DatasetCard
-                    key={dataset.datasetId}
-                    {...dataset}
-                    variant="compact"
-                    onClick={() => setSelectedDatasetId(dataset.datasetId)}
-                  />
-                ))}
+                {datasets.map(
+                  (dataset: {
+                    datasetId: string
+                    datasetName?: string
+                    totalItems?: number
+                    createdAt?: string
+                    dataItemStatus?: string
+                  }) => (
+                    <DatasetCard
+                      key={dataset.datasetId}
+                      {...dataset}
+                      variant="compact"
+                      onClick={() => setSelectedDatasetId(dataset.datasetId)}
+                    />
+                  )
+                )}
               </div>
             </div>
           )}
@@ -448,7 +444,9 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
 
         <Card
           className="bg-[#1A1625] border-gray-800 rounded-xl h-[600px]"
-          styles={{ body: { height: '100%', display: 'flex', flexDirection: 'column', padding: '24px' } }}
+          styles={{
+            body: { height: '100%', display: 'flex', flexDirection: 'column', padding: '24px' }
+          }}
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-white text-lg font-display flex items-center gap-2">
@@ -460,7 +458,8 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
                 color="#3b82f6"
                 className="border-0 bg-blue-600/20 text-blue-300 font-bold px-3 rounded-full"
               >
-                {assignments.filter((a) => a.status?.toUpperCase() !== 'CANCELLED').length} Assignments
+                {assignments.filter((a) => a.status?.toUpperCase() !== 'CANCELLED').length}{' '}
+                Assignments
               </Tag>
               <Button
                 type="primary"
@@ -484,9 +483,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
               className="my-8"
             />
           ) : (
-            <div
-              className="flex-1 overflow-y-auto pr-1 custom-scrollbar"
-            >
+            <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
               <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                 {assignments
                   .filter((a) => a.status?.toUpperCase() !== 'CANCELLED')
@@ -594,7 +591,6 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
           </Form>
         </div>
       </GlassModal>
-
 
       <style>{`
                 .custom-descriptions .ant-descriptions-title {

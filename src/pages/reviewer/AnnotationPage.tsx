@@ -447,10 +447,11 @@ export default function AnnotationPage() {
                     onClick={() => toggleLabel(label)}
                     className={`
                                             px-3 py-1.5 rounded-lg text-xs font-bold transition-all border
-                                            ${selectedLabels.includes(label.name)
-                        ? 'bg-white/10 text-white'
-                        : 'bg-white/5 border-transparent text-gray-500 hover:bg-white/10 hover:text-gray-300'
-                      }
+                                            ${
+                                              selectedLabels.includes(label.name)
+                                                ? 'bg-white/10 text-white'
+                                                : 'bg-white/5 border-transparent text-gray-500 hover:bg-white/10 hover:text-gray-300'
+                                            }
                                         `}
                     style={{
                       borderColor: selectedLabels.includes(label.name)
@@ -513,16 +514,16 @@ export default function AnnotationPage() {
                     {
                       active: currentShape
                         ? {
-                          type: currentShape.type,
-                          points: currentShape.points ? currentShape.points.length : undefined,
-                          dimensions:
-                            currentShape.type === 'bounding_box'
-                              ? {
-                                w: Math.round(currentShape.width || 0),
-                                h: Math.round(currentShape.height || 0)
-                              }
-                              : undefined
-                        }
+                            type: currentShape.type,
+                            points: currentShape.points ? currentShape.points.length : undefined,
+                            dimensions:
+                              currentShape.type === 'bounding_box'
+                                ? {
+                                    w: Math.round(currentShape.width || 0),
+                                    h: Math.round(currentShape.height || 0)
+                                  }
+                                : undefined
+                          }
                         : null,
                       session: shapes.map((s) => ({ type: s.type, label: s.label })),
                       raw: shapes

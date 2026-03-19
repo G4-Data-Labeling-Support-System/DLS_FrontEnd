@@ -62,10 +62,12 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
         let activeProjects: GetProjectsParams[] = []
         if (Array.isArray(projData)) {
           activeProjects = projData
-            .map((p: any) => ({
-              projectId: String(p.projectId || p.id || ''),
-              projectName: String(p.projectName || p.name || 'Unknown Project'),
-              projectStatus: String(p.projectStatus || p.status || 'ACTIVE')
+            .map((p: Record<string, unknown>) => ({
+              projectId: String((p.projectId as string) || (p.id as string) || ''),
+              projectName: String(
+                (p.projectName as string) || (p.name as string) || 'Unknown Project'
+              ),
+              projectStatus: String((p.projectStatus as string) || (p.status as string) || 'ACTIVE')
             }))
             .filter((p) => p.projectId && p.projectStatus?.toUpperCase() !== 'INACTIVE')
         }
@@ -89,7 +91,7 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
             const resolvedStatus = String(projectInfo.projectStatus)
 
             // If the current project is NOT in the active projects list, add it
-            if (resolvedPId && !activeProjects.find(p => String(p.projectId) === resolvedPId)) {
+            if (resolvedPId && !activeProjects.find((p) => String(p.projectId) === resolvedPId)) {
               activeProjects = [
                 {
                   projectId: resolvedPId,
@@ -100,24 +102,34 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
               ]
             }
 
-            setHasAssignments(!!(data.assignmentId || (data.assignments && data.assignments.length > 0)))
+            setHasAssignments(
+              !!(data.assignmentId || (data.assignments && data.assignments.length > 0))
+            )
           }
 
           // Fetch items
           const itemsRes = await datasetApi.getDatasetItems(initialData.datasetId)
           const items = itemsRes.data?.data || itemsRes.data || []
           if (Array.isArray(items)) {
-            const initialFileList = items.map((item: any) => {
-              const url = item.content || item.url || item.imageUrl || item.previewUrl || item.path || ''
-              return {
-                uid: String(item.dataItemId || item.id || Math.random()),
-                name: item.name || item.filename || 'Existing File',
-                status: 'done' as const,
-                url: url,
-                thumbUrl: url,
-                originFileObj: undefined
-              }
-            }).filter((f) => !!f.url)
+            const initialFileList = items
+              .map((item: Record<string, unknown>) => {
+                const url =
+                  (item.content as string) ||
+                  (item.url as string) ||
+                  (item.imageUrl as string) ||
+                  (item.previewUrl as string) ||
+                  (item.path as string) ||
+                  ''
+                return {
+                  uid: String((item.dataItemId as string) || (item.id as string) || Math.random()),
+                  name: (item.name as string) || (item.filename as string) || 'Existing File',
+                  status: 'done' as const,
+                  url: url,
+                  thumbUrl: url,
+                  originFileObj: undefined
+                }
+              })
+              .filter((f) => !!f.url)
             setFileList(initialFileList)
           }
         } else if (!isEdit) {
@@ -164,13 +176,15 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
   }
 
   useEffect(() => {
-    if (showAllPreviews && fileList.some(f => !f.preview && f.originFileObj)) {
-      setFileList(prev => prev.map(file => {
-        if (!file.preview && file.originFileObj) {
-          file.preview = URL.createObjectURL(file.originFileObj as Blob)
-        }
-        return file
-      }))
+    if (showAllPreviews && fileList.some((f) => !f.preview && f.originFileObj)) {
+      setFileList((prev) =>
+        prev.map((file) => {
+          if (!file.preview && file.originFileObj) {
+            file.preview = URL.createObjectURL(file.originFileObj as Blob)
+          }
+          return file
+        })
+      )
     }
   }, [showAllPreviews, fileList])
 
@@ -200,10 +214,13 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
       setLoading(true)
 
       // Check if project is in the list
-      const selectedProject = projects.find(p => String(p.projectId) === String(values.projectId))
+      const selectedProject = projects.find((p) => String(p.projectId) === String(values.projectId))
 
       // If updating and project hasn't changed, allow it even if not in the list (could be INACTIVE)
-      const projectIsSame = isEdit && initialData?.projectId && String(initialData.projectId) === String(values.projectId)
+      const projectIsSame =
+        isEdit &&
+        initialData?.projectId &&
+        String(initialData.projectId) === String(values.projectId)
 
       if (!selectedProject && !projectIsSame) {
         message.warning('The selected project is not in the project list.')
@@ -214,7 +231,11 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
       // 1. Process deletions if editing
       if (isEdit && deletedItemIds.length > 0) {
         await Promise.all(
-          deletedItemIds.map((id) => datasetApi.deleteItem(id).catch(err => console.error(`Delete item ${id} failed:`, err)))
+          deletedItemIds.map((id) =>
+            datasetApi
+              .deleteItem(id)
+              .catch((err) => console.error(`Delete item ${id} failed:`, err))
+          )
         )
       }
 
@@ -224,7 +245,11 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
         .filter((f): f is File => !!f)
 
       if (values.compressImages && filesToUpload.length > 0) {
-        message.loading({ content: `Compressing ${filesToUpload.length} images...`, key: 'compressing', duration: 0 })
+        message.loading({
+          content: `Compressing ${filesToUpload.length} images...`,
+          key: 'compressing',
+          duration: 0
+        })
         const compressed = []
         for (const file of filesToUpload) {
           try {
@@ -267,12 +292,19 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
         onSuccess(data?.datasetId || data?.id)
       }
       handleCancel()
-    } catch (error: any) {
+    } catch (error: unknown) {
       setUploadProgress(0)
-      if (error?.errorFields) return
+      if (typeof error === 'object' && error !== null && 'errorFields' in error) return
 
-      const errorMessage = isAxiosError(error) ? (error.response?.data?.message || error.message) : (error.message || 'Unknown error')
-      message.error({ content: `Failed to ${isEdit ? 'update' : 'create'} dataset: ${errorMessage}`, duration: 10 })
+      const errorMessage = isAxiosError(error)
+        ? (error.response?.data?.message as string) || error.message
+        : error instanceof Error
+          ? error.message
+          : 'Unknown error'
+      message.error({
+        content: `Failed to ${isEdit ? 'update' : 'create'} dataset: ${errorMessage}`,
+        duration: 10
+      })
     } finally {
       setLoading(false)
       setUploadProgress(0)
@@ -280,16 +312,13 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
   }
 
   return (
-    <GlassModal
-      open={open}
-      onCancel={handleCancel}
-      width={800}
-      destroyOnHidden
-    >
+    <GlassModal open={open} onCancel={handleCancel} width={800} destroyOnHidden>
       {fetchingDetails ? (
         <div className="h-[400px] flex flex-col items-center justify-center gap-4">
           <Spin size="large" />
-          <p className="text-violet-400 font-medium animate-pulse">Fetching latest dataset information...</p>
+          <p className="text-violet-400 font-medium animate-pulse">
+            Fetching latest dataset information...
+          </p>
         </div>
       ) : (
         <div className="px-8 pt-10 pb-8">
@@ -298,7 +327,9 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
               {isEdit ? 'Edit Dataset' : 'Create New Dataset'}
             </h2>
             <p className="text-gray-400 text-sm">
-              {isEdit ? 'Update the details below to modify your dataset.' : 'Fill in the details below to create a new dataset.'}
+              {isEdit
+                ? 'Update the details below to modify your dataset.'
+                : 'Fill in the details below to create a new dataset.'}
             </p>
           </div>
 
@@ -313,7 +344,11 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
-                <Form.Item name="projectId" label={<span className="text-white/90">Project</span>} rules={[{ required: true, message: 'Please select a project' }]}>
+                <Form.Item
+                  name="projectId"
+                  label={<span className="text-white/90">Project</span>}
+                  rules={[{ required: true, message: 'Please select a project' }]}
+                >
                   <Select
                     size="large"
                     placeholder="Select a project"
@@ -330,12 +365,22 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
                   </Select>
                 </Form.Item>
 
-                <Form.Item name="datasetName" label={<span className="text-white/90">Dataset Name</span>} rules={[{ required: true, message: 'Please enter dataset name' }]}>
+                <Form.Item
+                  name="datasetName"
+                  label={<span className="text-white/90">Dataset Name</span>}
+                  rules={[{ required: true, message: 'Please enter dataset name' }]}
+                >
                   <Input size="large" className="!bg-[#1a1625] !border-white/10 !text-white" />
                 </Form.Item>
 
-                <Form.Item name="description" label={<span className="text-white/90">Description</span>}>
-                  <Input.TextArea rows={4} className="!bg-[#1a1625] !border-white/10 !text-white resize-none" />
+                <Form.Item
+                  name="description"
+                  label={<span className="text-white/90">Description</span>}
+                >
+                  <Input.TextArea
+                    rows={4}
+                    className="!bg-[#1a1625] !border-white/10 !text-white resize-none"
+                  />
                 </Form.Item>
 
                 <Form.Item name="compressImages" valuePropName="checked" initialValue={true}>
@@ -349,37 +394,71 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-white/90 font-medium text-sm">Image Uploads</span>
                   <Segmented
-                    options={[{ label: 'Files', value: 'file' }, { label: 'Folder', value: 'folder' }]}
+                    options={[
+                      { label: 'Files', value: 'file' },
+                      { label: 'Folder', value: 'folder' }
+                    ]}
                     value={uploadMode}
                     onChange={(val) => setUploadMode(val as 'file' | 'folder')}
                     className="!bg-[#1a1625]"
                   />
                 </div>
                 <div className="rounded-xl overflow-hidden bg-[#1a1625]/30 border border-dashed border-white/20 hover:border-violet-500/50 transition-all p-4">
-                  <Dragger multiple directory={uploadMode === 'folder'} beforeUpload={() => false} fileList={fileList} onChange={handleUploadChange} showUploadList={false} className="!bg-transparent">
+                  <Dragger
+                    multiple
+                    directory={uploadMode === 'folder'}
+                    beforeUpload={() => false}
+                    fileList={fileList}
+                    onChange={handleUploadChange}
+                    showUploadList={false}
+                    className="!bg-transparent"
+                  >
                     <div className="flex flex-col items-center py-4">
                       <InboxOutlined className="text-violet-500 text-3xl mb-2" />
-                      <p className="text-white text-xs">{uploadMode === 'folder' ? 'Drag folder here' : 'Drag images here'}</p>
+                      <p className="text-white text-xs">
+                        {uploadMode === 'folder' ? 'Drag folder here' : 'Drag images here'}
+                      </p>
                     </div>
                   </Dragger>
 
                   {fileList.length > 0 && (
                     <div className="mt-4 max-h-[150px] overflow-y-auto">
                       <div className="flex justify-between mb-2">
-                        <span className="text-[10px] text-gray-400 uppercase font-bold">Preview ({fileList.length})</span>
-                        <span className="text-[10px] text-violet-500 font-bold cursor-pointer" onClick={() => setFileList([])}>Clear all</span>
+                        <span className="text-[10px] text-gray-400 uppercase font-bold">
+                          Preview ({fileList.length})
+                        </span>
+                        <span
+                          className="text-[10px] text-violet-500 font-bold cursor-pointer"
+                          onClick={() => setFileList([])}
+                        >
+                          Clear all
+                        </span>
                       </div>
                       <div className="grid grid-cols-4 gap-2">
                         {(showAllPreviews ? fileList : fileList.slice(0, 12)).map((file) => (
-                          <div key={file.uid} className="aspect-square rounded-lg bg-gray-800 border border-white/10 relative group overflow-hidden">
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer z-10" onClick={() => handleRemoveFile(file.uid)}>
+                          <div
+                            key={file.uid}
+                            className="aspect-square rounded-lg bg-gray-800 border border-white/10 relative group overflow-hidden"
+                          >
+                            <div
+                              className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer z-10"
+                              onClick={() => handleRemoveFile(file.uid)}
+                            >
                               <DeleteOutlined className="text-red-400 text-xs" />
                             </div>
-                            <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: `url('${file.preview || file.thumbUrl || file.url || ''}')` }} />
+                            <div
+                              className="w-full h-full bg-cover bg-center"
+                              style={{
+                                backgroundImage: `url('${file.preview || file.thumbUrl || file.url || ''}')`
+                              }}
+                            />
                           </div>
                         ))}
                         {fileList.length > 12 && (
-                          <div className="aspect-square rounded-lg bg-gray-800/50 flex items-center justify-center cursor-pointer text-[10px] text-violet-400 font-bold" onClick={() => setShowAllPreviews(!showAllPreviews)}>
+                          <div
+                            className="aspect-square rounded-lg bg-gray-800/50 flex items-center justify-center cursor-pointer text-[10px] text-violet-400 font-bold"
+                            onClick={() => setShowAllPreviews(!showAllPreviews)}
+                          >
                             {showAllPreviews ? 'Show less' : `+${fileList.length - 12} more`}
                           </div>
                         )}
@@ -394,15 +473,31 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
                       <span>UPLOADING...</span>
                       <span>{uploadProgress}%</span>
                     </div>
-                    <Progress percent={uploadProgress} showInfo={false} strokeColor={{ '0%': '#8b5cf6', '100%': '#d946ef' }} size="small" />
+                    <Progress
+                      percent={uploadProgress}
+                      showInfo={false}
+                      strokeColor={{ '0%': '#8b5cf6', '100%': '#d946ef' }}
+                      size="small"
+                    />
                   </div>
                 )}
               </div>
             </div>
 
             <div className="flex justify-end gap-3 pt-6 mt-8 border-t border-white/5">
-              <Button onClick={handleCancel} className="bg-transparent border-white/10 text-white/70">Cancel</Button>
-              <Button type="primary" loading={loading} disabled={fetchingDetails} onClick={onFinish} className="bg-fuchsia-600 border-none px-8">
+              <Button
+                onClick={handleCancel}
+                className="bg-transparent border-white/10 text-white/70"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="primary"
+                loading={loading}
+                disabled={fetchingDetails}
+                onClick={onFinish}
+                className="bg-fuchsia-600 border-none px-8"
+              >
                 {isEdit ? 'Update Dataset' : 'Create Dataset'}
               </Button>
             </div>

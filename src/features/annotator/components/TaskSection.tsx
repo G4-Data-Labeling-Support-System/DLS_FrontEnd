@@ -73,7 +73,12 @@ export default function TasksSection({
   const filteredTasks = useMemo(() => {
     const filtered = tasks.filter((task) => {
       const name = (task.name || task.filename || '').toLowerCase()
-      const taskStatus = (task.taskStatus || task.status || task.reviewStatus || 'PENDING').toUpperCase()
+      const taskStatus = (
+        task.taskStatus ||
+        task.status ||
+        task.reviewStatus ||
+        'PENDING'
+      ).toUpperCase()
       const matchesSearch = name.includes(searchTerm.toLowerCase())
       const matchesStatus = statusFilter === 'ALL' || taskStatus === statusFilter
       return matchesSearch && matchesStatus
@@ -83,14 +88,14 @@ export default function TasksSection({
     return filtered.sort((a, b) => {
       const aName = a.name || a.filename || ''
       const bName = b.name || b.filename || ''
-      
+
       const aMatch = aName.match(/TASK-(\d+)/i)
       const bMatch = bName.match(/TASK-(\d+)/i)
-      
+
       if (aMatch && bMatch) {
         return parseInt(aMatch[1]) - parseInt(bMatch[1])
       }
-      
+
       // Fallback for non-matching names
       return aName.localeCompare(bName, undefined, { numeric: true, sensitivity: 'base' })
     })

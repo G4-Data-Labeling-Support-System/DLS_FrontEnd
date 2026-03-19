@@ -57,7 +57,11 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task, onItemClick }) => 
       render: (_: string, record: TaskDataItemRecord) => (
         <div className="w-10 h-10 rounded-lg border border-white/5 overflow-hidden bg-black/20 flex items-center justify-center transition-all hover:border-violet-500/30">
           {record.dataItem.url || record.dataItem.previewUrl ? (
-            <img src={record.dataItem.url || record.dataItem.previewUrl} alt="preview" className="w-full h-full object-cover" />
+            <img
+              src={record.dataItem.url || record.dataItem.previewUrl}
+              alt="preview"
+              className="w-full h-full object-cover"
+            />
           ) : (
             <span className="material-symbols-outlined text-gray-600 text-sm">image</span>
           )}
@@ -69,7 +73,10 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task, onItemClick }) => 
       key: 'filename',
       width: '30%',
       render: (_: unknown, record: TaskDataItemRecord) => (
-        <Text className="text-gray-200 font-medium truncate block max-w-[200px]" title={record.dataItem.fileName}>
+        <Text
+          className="text-gray-200 font-medium truncate block max-w-[200px]"
+          title={record.dataItem.fileName}
+        >
           {record.dataItem.fileName}
         </Text>
       )
@@ -100,7 +107,9 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task, onItemClick }) => 
       width: '24%',
       render: (_: unknown, record: TaskDataItemRecord) => (
         <Text className="text-gray-400 text-sm">
-          {record.dataItem.uploadedAt ? new Date(record.dataItem.uploadedAt).toLocaleDateString() : 'N/A'}
+          {record.dataItem.uploadedAt
+            ? new Date(record.dataItem.uploadedAt).toLocaleDateString()
+            : 'N/A'}
         </Text>
       )
     }
@@ -136,31 +145,41 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task, onItemClick }) => 
               </div>
             }
           >
-            <Descriptions
-              column={1}
-              size="small"
-              className="mt-2"
-            >
-              <Descriptions.Item
-                label={<span className="text-gray-400 font-medium">Status</span>}
-              >
-                <Tag className={`
+            <Descriptions column={1} size="small" className="mt-2">
+              <Descriptions.Item label={<span className="text-gray-400 font-medium">Status</span>}>
+                <Tag
+                  className={`
                   rounded-full px-3 py-0.5 border-none font-semibold text-[10px] tracking-wider uppercase
-                  ${task.taskStatus === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-400' :
-                    task.taskStatus === 'IN_PROGRESS' ? 'bg-blue-500/10 text-blue-400' :
-                      task.taskStatus === 'INACTIVE' ? 'bg-red-500/10 text-red-400' :
-                        'bg-gray-500/10 text-gray-400'}
-                `}>
+                  ${
+                    task.taskStatus === 'COMPLETED'
+                      ? 'bg-emerald-500/10 text-emerald-400'
+                      : task.taskStatus === 'IN_PROGRESS'
+                        ? 'bg-blue-500/10 text-blue-400'
+                        : task.taskStatus === 'INACTIVE'
+                          ? 'bg-red-500/10 text-red-400'
+                          : 'bg-gray-500/10 text-gray-400'
+                  }
+                `}
+                >
                   {(task.taskStatus || task.reviewStatus || 'NOT_STARTED').toUpperCase()}
                 </Tag>
               </Descriptions.Item>
-              <Descriptions.Item label={<span className="text-gray-400 font-medium">Assignment</span>}>
+              <Descriptions.Item
+                label={<span className="text-gray-400 font-medium">Assignment</span>}
+              >
                 <span className="text-gray-200 font-medium">{task.assignmentName || 'N/A'}</span>
               </Descriptions.Item>
-              <Descriptions.Item label={<span className="text-gray-400 font-medium">Progress</span>}>
+              <Descriptions.Item
+                label={<span className="text-gray-400 font-medium">Progress</span>}
+              >
                 <div className="flex items-center gap-2">
                   <span className="text-gray-200 font-bold">
-                    {dataItems.filter((item: TaskDataItemRecord) => item.taskDataItemStatus?.toUpperCase() === 'COMPLETED').length}
+                    {
+                      dataItems.filter(
+                        (item: TaskDataItemRecord) =>
+                          item.taskDataItemStatus?.toUpperCase() === 'COMPLETED'
+                      ).length
+                    }
                   </span>
                   <span className="text-gray-500">/</span>
                   <span className="text-gray-500">{dataItems.length} items</span>
@@ -198,8 +217,14 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task, onItemClick }) => 
           >
             {itemsLoading ? (
               <div className="py-32 flex flex-col items-center gap-4">
-                <Spin indicator={<div className="w-12 h-12 rounded-full border-4 border-violet-500/20 border-t-violet-500 animate-spin" />} />
-                <span className="text-gray-500 font-medium tracking-widest text-[10px] uppercase">Retrieving Dataset...</span>
+                <Spin
+                  indicator={
+                    <div className="w-12 h-12 rounded-full border-4 border-violet-500/20 border-t-violet-500 animate-spin" />
+                  }
+                />
+                <span className="text-gray-500 font-medium tracking-widest text-[10px] uppercase">
+                  Retrieving Dataset...
+                </span>
               </div>
             ) : itemsError ? (
               <div className="py-20 flex flex-col items-center gap-3">
@@ -215,7 +240,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task, onItemClick }) => 
                 rowKey={(record) => record.dataItemId || Math.random().toString()}
                 pagination={{
                   pageSize: 5,
-                  className: "custom-pagination px-4"
+                  className: 'custom-pagination px-4'
                 }}
                 className="manager-task-table"
                 size="large"

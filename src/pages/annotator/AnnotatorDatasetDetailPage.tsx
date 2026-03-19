@@ -82,7 +82,6 @@ export default function AnnotatorDatasetDetailPage() {
           console.error('Failed to fetch labels:', labelErr)
           // Don't set global error if only labels fail
         }
-
       } catch (err) {
         console.error('Failed to fetch dataset details:', err)
         setError('Failed to load dataset details.')
@@ -215,7 +214,9 @@ export default function AnnotatorDatasetDetailPage() {
             </h3>
             <div className="space-y-3">
               {labels.length === 0 ? (
-                <p className="text-gray-500 text-sm italic py-2">No labels defined for this dataset.</p>
+                <p className="text-gray-500 text-sm italic py-2">
+                  No labels defined for this dataset.
+                </p>
               ) : (
                 labels.map((label) => (
                   <div
@@ -227,7 +228,9 @@ export default function AnnotatorDatasetDetailPage() {
                       style={{ backgroundColor: label.color || '#6366f1' }}
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-200 font-medium truncate">{label.labelName}</p>
+                      <p className="text-sm text-gray-200 font-medium truncate">
+                        {label.labelName}
+                      </p>
                       {label.description && (
                         <p className="text-[10px] text-gray-500 truncate">{label.description}</p>
                       )}
@@ -245,9 +248,7 @@ export default function AnnotatorDatasetDetailPage() {
         >
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px] text-blue-400">
-                grid_view
-              </span>
+              <span className="material-symbols-outlined text-[18px] text-blue-400">grid_view</span>
               Data Items
             </h3>
             <span className="text-xs font-mono bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20 text-blue-400 font-medium">
@@ -261,9 +262,7 @@ export default function AnnotatorDatasetDetailPage() {
                 image_not_supported
               </span>
               <p className="text-gray-400 text-sm">No data items found in this dataset.</p>
-              <p className="text-gray-500 text-xs mt-2">
-                Upload images via the manager interface.
-              </p>
+              <p className="text-gray-500 text-xs mt-2">Upload images via the manager interface.</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 overflow-y-auto max-h-[600px] pr-2 custom-scrollbar">

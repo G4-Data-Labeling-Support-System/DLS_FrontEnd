@@ -55,7 +55,7 @@ export const handleUnauthorized = (error?: AxiosError) => {
       status: error.response?.status,
       method: error.config?.method?.toUpperCase(),
       data: error.response?.data
-    });
+    })
   }
 
   localStorage.removeItem('accessToken')

@@ -87,7 +87,6 @@ export const useProjectMembers = (projectId: string) => {
   })
 }
 
-
 export const useAllAssignments = () => {
   return useQuery({
     queryKey: ['assignments', 'all'],

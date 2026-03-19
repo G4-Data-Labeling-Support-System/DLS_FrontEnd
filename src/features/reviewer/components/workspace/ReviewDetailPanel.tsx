@@ -83,9 +83,7 @@ export const ReviewDetailPanel: React.FC<ReviewDetailPanelProps> = ({
                         className="bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-lg border-2 border-white/10"
                       />
                       <div>
-                        <Text className="text-white block text-sm font-bold">
-                          {annotator.name}
-                        </Text>
+                        <Text className="text-white block text-sm font-bold">{annotator.name}</Text>
                         <Text className="text-gray-500 text-[10px] uppercase font-black tracking-widest">
                           {annotator.role}
                         </Text>
@@ -93,13 +91,17 @@ export const ReviewDetailPanel: React.FC<ReviewDetailPanelProps> = ({
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div className="bg-black/20 rounded-xl p-2.5 text-center border border-white/5">
-                        <Text className="text-gray-500 text-[10px] block font-black tracking-widest uppercase mb-1">Accuracy</Text>
+                        <Text className="text-gray-500 text-[10px] block font-black tracking-widest uppercase mb-1">
+                          Accuracy
+                        </Text>
                         <Text className="text-emerald-400 font-bold text-sm">
                           {annotator.accuracy}
                         </Text>
                       </div>
                       <div className="bg-black/20 rounded-xl p-2.5 text-center border border-white/5">
-                        <Text className="text-gray-500 text-[10px] block font-black tracking-widest uppercase mb-1">Speed</Text>
+                        <Text className="text-gray-500 text-[10px] block font-black tracking-widest uppercase mb-1">
+                          Speed
+                        </Text>
                         <Text className="text-blue-400 font-bold text-sm">{annotator.speed}</Text>
                       </div>
                     </div>
@@ -124,7 +126,9 @@ export const ReviewDetailPanel: React.FC<ReviewDetailPanelProps> = ({
                             />
                             <Text className="text-gray-200 text-xs font-bold">{obj.label}</Text>
                           </div>
-                          <Text className="text-gray-400 text-[10px] font-mono font-bold">{obj.confidence}%</Text>
+                          <Text className="text-gray-400 text-[10px] font-mono font-bold">
+                            {obj.confidence}%
+                          </Text>
                         </div>
                         <Progress
                           percent={obj.confidence}
@@ -150,7 +154,10 @@ export const ReviewDetailPanel: React.FC<ReviewDetailPanelProps> = ({
             ),
             children: (
               <div className="h-full overflow-y-auto px-2 custom-scrollbar">
-                <Timeline items={historyItems} className="mt-6 [&_.ant-timeline-item-tail]:border-white/10" />
+                <Timeline
+                  items={historyItems}
+                  className="mt-6 [&_.ant-timeline-item-tail]:border-white/10"
+                />
               </div>
             )
           }

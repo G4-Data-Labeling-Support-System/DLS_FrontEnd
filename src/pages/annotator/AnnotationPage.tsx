@@ -250,16 +250,16 @@ export default function AnnotationPage() {
       annotationData: {
         active: currentShape
           ? {
-            type: currentShape.type,
-            points: currentShape.points ? currentShape.points.length : undefined,
-            dimensions:
-              currentShape.type === 'bounding_box'
-                ? {
-                  w: Math.round(currentShape.width || 0),
-                  h: Math.round(currentShape.height || 0)
-                }
-                : undefined
-          }
+              type: currentShape.type,
+              points: currentShape.points ? currentShape.points.length : undefined,
+              dimensions:
+                currentShape.type === 'bounding_box'
+                  ? {
+                      w: Math.round(currentShape.width || 0),
+                      h: Math.round(currentShape.height || 0)
+                    }
+                  : undefined
+            }
           : null,
         session: shapes.map((s) => ({ type: s.type, label: s.label })),
         raw: shapes
@@ -278,7 +278,7 @@ export default function AnnotationPage() {
 
   const saveCurrentToSession = () => {
     if (!currentItem) return
-    const itemId = currentItem.itemId || (currentItem as any).id
+    const itemId = currentItem.itemId || (currentItem as { id?: string }).id
     if (!itemId) return
 
     const newAnnotation = createAnnotationPayload(itemId)
@@ -293,9 +293,12 @@ export default function AnnotationPage() {
     })
   }
 
-  const loadFromSession = (item: DataItem | undefined, annotationsToSearch?: AnnotationSubmitItem[]) => {
+  const loadFromSession = (
+    item: DataItem | undefined,
+    annotationsToSearch?: AnnotationSubmitItem[]
+  ) => {
     if (!item) return
-    const itemId = item.itemId || (item as any).id
+    const itemId = item.itemId || (item as { id?: string }).id
     const sourceAnnotations = annotationsToSearch || sessionAnnotations
     const existing = sourceAnnotations.find((a) => a.dataitemId === itemId)
 
@@ -306,7 +309,7 @@ export default function AnnotationPage() {
     setCurrentShape(null)
 
     if (existing) {
-      setShapes(existing.annotationData.raw || [])
+      setShapes((existing.annotationData.raw as Shape[]) || [])
       setComment(existing.comment || '')
       setSelectedLabels(existing.labelIds || [])
     } else {
@@ -349,7 +352,9 @@ export default function AnnotationPage() {
 
     try {
       setLoading(true)
-      const currentItemId = currentItem?.itemId || (currentItem as any)?.id
+      const currentItemId = (currentItem?.itemId ||
+        (currentItem as { id?: string })?.id ||
+        '') as string
       const currentAnnotation = createAnnotationPayload(currentItemId)
 
       const finalAnnotations = [...sessionAnnotations]
@@ -582,10 +587,11 @@ export default function AnnotationPage() {
                       onClick={() => toggleLabel(label)}
                       className={`
                                               px-3 py-1.5 rounded-lg text-xs font-bold transition-all border
-                                              ${selectedLabels.includes(label.labelId)
-                          ? 'bg-white/10 text-white'
-                          : 'bg-white/5 border-transparent text-gray-500 hover:bg-white/10 hover:text-gray-300'
-                        }
+                                              ${
+                                                selectedLabels.includes(label.labelId)
+                                                  ? 'bg-white/10 text-white'
+                                                  : 'bg-white/5 border-transparent text-gray-500 hover:bg-white/10 hover:text-gray-300'
+                                              }
                                           `}
                       style={{
                         borderColor: selectedLabels.includes(label.labelId)
@@ -630,16 +636,16 @@ export default function AnnotationPage() {
                     {
                       active: currentShape
                         ? {
-                          type: currentShape.type,
-                          points: currentShape.points ? currentShape.points.length : undefined,
-                          dimensions:
-                            currentShape.type === 'bounding_box'
-                              ? {
-                                w: Math.round(currentShape.width || 0),
-                                h: Math.round(currentShape.height || 0)
-                              }
-                              : undefined
-                        }
+                            type: currentShape.type,
+                            points: currentShape.points ? currentShape.points.length : undefined,
+                            dimensions:
+                              currentShape.type === 'bounding_box'
+                                ? {
+                                    w: Math.round(currentShape.width || 0),
+                                    h: Math.round(currentShape.height || 0)
+                                  }
+                                : undefined
+                          }
                         : null,
                       session: shapes.map((s) => ({ type: s.type, label: s.label })),
                       raw: shapes

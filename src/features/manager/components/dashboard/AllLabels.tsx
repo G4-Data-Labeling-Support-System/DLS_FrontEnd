@@ -316,7 +316,8 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
               (l) =>
                 (!searchText ||
                   (l.labelName && l.labelName.toLowerCase().includes(searchText.toLowerCase()))) &&
-                (statusFilter === 'ALL' || (l.labelStatus && l.labelStatus.toUpperCase() === statusFilter))
+                (statusFilter === 'ALL' ||
+                  (l.labelStatus && l.labelStatus.toUpperCase() === statusFilter))
             )
             .sort((a, b) => {
               const aIsInactive = a.labelStatus?.toUpperCase() === 'INACTIVE'

@@ -37,8 +37,7 @@ export default function UserManagement() {
     const fetchTaskCounts = async () => {
       try {
         const res = await assignmentApi.getAssignments()
-        const assignments: Record<string, unknown>[] =
-          res.data?.data ?? res.data ?? []
+        const assignments: Record<string, unknown>[] = res.data?.data ?? res.data ?? []
         if (!Array.isArray(assignments)) return
         const countMap: Record<string, number> = {}
         assignments.forEach((a) => {
@@ -64,10 +63,12 @@ export default function UserManagement() {
   const displayedUsers = users.filter((u: User) => {
     const status = (u.userStatus || u.status || '').toUpperCase()
     if (status !== 'ACTIVE') return false
-    
+
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase()
-      const matchesName = (u.fullName || '').toLowerCase().includes(term) || (u.username || '').toLowerCase().includes(term)
+      const matchesName =
+        (u.fullName || '').toLowerCase().includes(term) ||
+        (u.username || '').toLowerCase().includes(term)
       const matchesEmail = (u.email || '').toLowerCase().includes(term)
       // Tìm bằng user ID nếu users nhập ID số
       const matchesId = String(u.userId || u.id).includes(term)
@@ -77,7 +78,9 @@ export default function UserManagement() {
     return true
   })
 
-  const totalActiveUsers = users.filter((u: User) => (u.userStatus || u.status || '').toUpperCase() === 'ACTIVE')
+  const totalActiveUsers = users.filter(
+    (u: User) => (u.userStatus || u.status || '').toUpperCase() === 'ACTIVE'
+  )
   const activeUsersCount = totalActiveUsers.length
   const inactiveUsersCount = users.length - activeUsersCount
 
@@ -109,7 +112,9 @@ export default function UserManagement() {
         danger: true,
         onClick: () => {
           const userId = user.userId || user.id
-          if (window.confirm(`Are you sure you want to deactivate ${user.username || user.fullName}?`)) {
+          if (
+            window.confirm(`Are you sure you want to deactivate ${user.username || user.fullName}?`)
+          ) {
             deactivateUserMutation.mutate(userId, {
               onSuccess: () => {
                 message.success(`User ${user.username || user.fullName} has been deactivated.`)
@@ -352,14 +357,15 @@ export default function UserManagement() {
                       <td className="px-6 py-4">
                         <span
                           className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold
-                                                ${roleLower === 'annotator'
-                              ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
-                              : roleLower === 'reviewer'
-                                ? 'border-amber-500/20 bg-amber-500/10 text-amber-400'
-                                : roleLower === 'manager'
-                                  ? 'border-purple-500/20 bg-purple-500/10 text-purple-400'
-                                  : 'border-red-500/20 bg-red-500/10 text-red-400'
-                            }`}
+                                                ${
+                                                  roleLower === 'annotator'
+                                                    ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
+                                                    : roleLower === 'reviewer'
+                                                      ? 'border-amber-500/20 bg-amber-500/10 text-amber-400'
+                                                      : roleLower === 'manager'
+                                                        ? 'border-purple-500/20 bg-purple-500/10 text-purple-400'
+                                                        : 'border-red-500/20 bg-red-500/10 text-red-400'
+                                                }`}
                         >
                           {displayRole}
                         </span>
@@ -380,11 +386,14 @@ export default function UserManagement() {
                         {(() => {
                           const count = taskCountMap[userId] || 0
                           return (
-                            <span className={`inline-flex items-center justify-center min-w-[28px] h-7 px-2 rounded-full text-xs font-bold
-                              ${count > 0
-                                ? 'bg-violet-500/10 text-violet-400 border border-violet-500/20'
-                                : 'bg-white/5 text-gray-500 border border-white/10'
-                              }`}>
+                            <span
+                              className={`inline-flex items-center justify-center min-w-[28px] h-7 px-2 rounded-full text-xs font-bold
+                              ${
+                                count > 0
+                                  ? 'bg-violet-500/10 text-violet-400 border border-violet-500/20'
+                                  : 'bg-white/5 text-gray-500 border border-white/10'
+                              }`}
+                            >
                               {count}
                             </span>
                           )
@@ -433,10 +442,10 @@ export default function UserManagement() {
         userData={
           successModal.data
             ? {
-              name: successModal.data.fullName,
-              email: successModal.data.email,
-              role: successModal.data.role
-            }
+                name: successModal.data.fullName,
+                email: successModal.data.email,
+                role: successModal.data.role
+              }
             : undefined
         }
       />

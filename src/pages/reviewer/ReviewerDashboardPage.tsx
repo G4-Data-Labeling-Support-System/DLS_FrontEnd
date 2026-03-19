@@ -149,11 +149,17 @@ const StatsCard: React.FC<{
   gradient: string
   label: string
 }> = ({ title, value, icon, gradient, label }) => (
-  <div className={`glass-panel p-6 rounded-2xl border border-white/5 relative overflow-hidden group`}>
-    <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
+  <div
+    className={`glass-panel p-6 rounded-2xl border border-white/5 relative overflow-hidden group`}
+  >
+    <div
+      className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}
+    />
     <div className="flex justify-between items-start relative z-10">
       <div className="flex flex-col gap-1">
-        <span className="text-[10px] font-black tracking-widest uppercase text-gray-500">{title}</span>
+        <span className="text-[10px] font-black tracking-widest uppercase text-gray-500">
+          {title}
+        </span>
         <span className="text-3xl font-bold text-white tracking-tight">{value}</span>
         <span className="text-[10px] text-gray-400 mt-2 flex items-center gap-1">
           <span className="w-1 h-1 rounded-full bg-emerald-500" /> {label}
@@ -161,7 +167,9 @@ const StatsCard: React.FC<{
       </div>
       <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${gradient} p-[1px]`}>
         <div className="w-full h-full bg-[#16161a] rounded-[11px] flex items-center justify-center">
-          <span className={`material-symbols-outlined text-transparent bg-clip-text bg-gradient-to-br ${gradient}`}>
+          <span
+            className={`material-symbols-outlined text-transparent bg-clip-text bg-gradient-to-br ${gradient}`}
+          >
             {icon}
           </span>
         </div>
@@ -196,8 +204,8 @@ export default function ReviewerDashboardPage() {
     total: assignment?.totalTasks || 0,
     reviewed: assignment?.completedTasks || 0,
     pending: (assignment?.totalTasks || 0) - (assignment?.completedTasks || 0),
-    approved: assignment?.tasks?.filter(t => t.annotationStatus === 'approved').length || 0,
-    rejected: assignment?.tasks?.filter(t => t.annotationStatus === 'rejected').length || 0
+    approved: assignment?.tasks?.filter((t) => t.annotationStatus === 'approved').length || 0,
+    rejected: assignment?.tasks?.filter((t) => t.annotationStatus === 'rejected').length || 0
   }
 
   useEffect(() => {
@@ -238,8 +246,8 @@ export default function ReviewerDashboardPage() {
                 const guidelinesList = guidelineRes.data?.data || guidelineRes.data || []
                 const activeGuide = Array.isArray(guidelinesList)
                   ? (guidelinesList.find(
-                    (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
-                  ) ??
+                      (g: Guideline) => g.status === 'ACTIVE' || g.status === 'active'
+                    ) ??
                     guidelinesList[0] ??
                     null)
                   : guidelinesList
@@ -318,7 +326,7 @@ export default function ReviewerDashboardPage() {
             />
           </div>
 
-          {(!assignment && loading) ? (
+          {!assignment && loading ? (
             <div className="text-center text-gray-400 py-20 flex flex-col items-center gap-4">
               <div className="w-10 h-10 border-4 border-violet-500/20 border-t-violet-500 rounded-full animate-spin"></div>
               <span className="font-mono text-sm animate-pulse">Scanning assignments...</span>

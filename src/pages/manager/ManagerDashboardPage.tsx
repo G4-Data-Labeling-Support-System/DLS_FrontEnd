@@ -12,9 +12,7 @@ import {
 } from '@/features/manager/components/dashboard/DashboardTabs'
 import { CreateProjectModal } from '@/features/manager/components/dashboard/CreateProjectModal'
 
-import {
-  useInvalidateAssignments
-} from '@/features/manager/hooks/useProjectDetail'
+import { useInvalidateAssignments } from '@/features/manager/hooks/useProjectDetail'
 
 const ManagerDashboardPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -70,7 +68,7 @@ const ManagerDashboardPage: React.FC = () => {
     handleCloseProjectModal()
     // Always refresh the project list and reset selection to go back to list view
     setSearchParams({ tab: 'project' })
-    setProjectRefreshTrigger(prev => prev + 1)
+    setProjectRefreshTrigger((prev) => prev + 1)
   }
 
   return (

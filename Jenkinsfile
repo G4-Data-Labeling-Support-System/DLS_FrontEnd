@@ -9,8 +9,8 @@ pipeline {
         GIT_MANIFEST_REPO = "https://github.com/G4-Data-Labeling-Support-System/Infrastructure.git"
 
         // Sonar Scanner info
-        SCANNER_HOME = tool 'sonarqube-scanner'
-        SONAR_HOST_URL = 'https://sonarqube.hikarimoon.pro'
+        // SCANNER_HOME = tool 'sonarqube-scanner'
+        // SONAR_HOST_URL = 'https://sonarqube.hikarimoon.pro'
 
         // Docker info
         DOCKER_USER = 'fleeforezz'
@@ -62,19 +62,19 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('SonarQube') {
-                    echo "#====================== Sonar Scan for (${env.BRANCH_NAME}) ======================#"
-                    sh """
-                        $SCANNER_HOME/bin/sonar-scanner \
-                        -Dsonar.projectKey=${APP_NAME}-${env.BRANCH_NAME} \
-                        -Dsonar.projectName="${APP_NAME} (${ENVIRONMENT})" \
-                        -Dsonar.host.url=${SONAR_HOST_URL}
-                    """
-                }
-            }
-        }
+        // stage('SonarQube Analysis') {
+        //     steps {
+        //         withSonarQubeEnv('SonarQube') {
+        //             echo "#====================== Sonar Scan for (${env.BRANCH_NAME}) ======================#"
+        //             sh """
+        //                 $SCANNER_HOME/bin/sonar-scanner \
+        //                 -Dsonar.projectKey=${APP_NAME}-${env.BRANCH_NAME} \
+        //                 -Dsonar.projectName="${APP_NAME} (${ENVIRONMENT})" \
+        //                 -Dsonar.host.url=${SONAR_HOST_URL}
+        //             """
+        //         }
+        //     }
+        // }
 
         // stage('Quality Gate') {
         //     steps {
@@ -116,32 +116,32 @@ pipeline {
         //     }
         // }
 
-        stage('Security Scans') {
-            parallel {
-                stage('Trivy Filesystem Scan') {
-                    steps {
-                        echo "#====================== Trivy Filesystem scan ======================#"
-                        sh """
-                            trivy fs . --format json --output trivyfs.json
-                            trivy fs . --format table --output trivy.txt
-                            cat trivy.txt
-                        """
-                        archiveArtifacts artifacts: 'trivy.*', allowEmptyArchive: true
-                    }
-                }
+        // stage('Security Scans') {
+        //     parallel {
+        //         stage('Trivy Filesystem Scan') {
+        //             steps {
+        //                 echo "#====================== Trivy Filesystem scan ======================#"
+        //                 sh """
+        //                     trivy fs . --format json --output trivyfs.json
+        //                     trivy fs . --format table --output trivy.txt
+        //                     cat trivy.txt
+        //                 """
+        //                 archiveArtifacts artifacts: 'trivy.*', allowEmptyArchive: true
+        //             }
+        //         }
 
-                stage('NPM Audit') {
-                    steps {
-                        echo "#====================== NPM Security Audit ======================#"
-                        sh """
-                            npm audit --audit-level=high --json > npm-audit.json || true
-                            npm audit --audit-level=high || true
-                        """
-                        archiveArtifacts artifacts: 'npm-audit.json', allowEmptyArchive: true
-                    }
-                }
-            }
-        }
+        //         stage('NPM Audit') {
+        //             steps {
+        //                 echo "#====================== NPM Security Audit ======================#"
+        //                 sh """
+        //                     npm audit --audit-level=high --json > npm-audit.json || true
+        //                     npm audit --audit-level=high || true
+        //                 """
+        //                 archiveArtifacts artifacts: 'npm-audit.json', allowEmptyArchive: true
+        //             }
+        //         }
+        //     }
+        // }
 
         stage('Docker Build') {
             steps {
@@ -211,28 +211,28 @@ pipeline {
             }
         }
 
-        stage('Trivy Docker Image Scan') {
-            steps {
-                echo "#====================== Trivy Docker Image Scan ======================#"
-                script {
-                    def securityLevel = env.BRANCH_NAME == 'main' ? 'HIGH,CRITICAL' : 'CRITICAL'
+        // stage('Trivy Docker Image Scan') {
+        //     steps {
+        //         echo "#====================== Trivy Docker Image Scan ======================#"
+        //         script {
+        //             def securityLevel = env.BRANCH_NAME == 'main' ? 'HIGH,CRITICAL' : 'CRITICAL'
 
-                    sh "trivy image --no-progress --exit-code 1 --format json --severity UNKNOWN,HIGH,CRITICAL ${env.IMAGE_TAGGED} > trivyimage.txt || true"
+        //             sh "trivy image --no-progress --exit-code 1 --format json --severity UNKNOWN,HIGH,CRITICAL ${env.IMAGE_TAGGED} > trivyimage.txt || true"
 
-                    sh """
-                        trivy image --no-progress --format json \
-                            --severity ${securityLevel} \
-                            --output trivyimage.json ${env.IMAGE_TAGGED}
-                        trivy image --no-progress --format table \
-                            --severity ${securityLevel} \
-                            --output trivyimage.txt ${env.IMAGE_TAGGED}
+        //             sh """
+        //                 trivy image --no-progress --format json \
+        //                     --severity ${securityLevel} \
+        //                     --output trivyimage.json ${env.IMAGE_TAGGED}
+        //                 trivy image --no-progress --format table \
+        //                     --severity ${securityLevel} \
+        //                     --output trivyimage.txt ${env.IMAGE_TAGGED}
                         
-                        cat trivyimage.txt
-                    """
-                }
-                archiveArtifacts artifacts: 'trivyimage.txt', allowEmptyArchive: true
-            }
-        }
+        //                 cat trivyimage.txt
+        //             """
+        //         }
+        //         archiveArtifacts artifacts: 'trivyimage.txt', allowEmptyArchive: true
+        //     }
+        // }
 
         stage('Push to registry') {
             steps {

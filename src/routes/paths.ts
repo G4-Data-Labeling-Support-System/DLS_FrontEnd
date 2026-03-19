@@ -21,7 +21,8 @@ export const PATH_MANAGER = {
   editProject: '/manager/projects/edit/:id',
   teamAssignment: '/manager/create-project/team-assignment',
   datasetManagement: '/manager/datasets',
-  datasetDetail: '/manager/datasets/:id'
+  datasetDetail: '/manager/datasets/:id',
+  createDataset: '/manager/datasets/create'
 }
 
 export const PATH_ANNOTATOR = {

@@ -73,7 +73,9 @@ export default function TaskDetailPage() {
               {task.status}
             </span>
           </div>
-          <p className="text-gray-500 text-xs font-mono tracking-wider opacity-60">ID: {taskId || task.id}</p>
+          <p className="text-gray-500 text-xs font-mono tracking-wider opacity-60">
+            ID: {taskId || task.id}
+          </p>
         </div>
 
         <button
@@ -81,7 +83,9 @@ export default function TaskDetailPage() {
           className="bg-violet-600 hover:bg-violet-500 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-xl shadow-violet-900/20 transition-all flex items-center gap-2 group"
         >
           <span>Open Workspace</span>
-          <span className="material-symbols-outlined text-[18px] group-hover:translate-x-0.5 transition-transform">rocket_launch</span>
+          <span className="material-symbols-outlined text-[18px] group-hover:translate-x-0.5 transition-transform">
+            rocket_launch
+          </span>
         </button>
       </div>
 
@@ -112,9 +116,13 @@ export default function TaskDetailPage() {
           <div className="glass-panel rounded-2xl p-6 border border-white/5 bg-gradient-to-br from-emerald-500/5 to-teal-500/5">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                <span className="material-symbols-outlined text-emerald-400 text-[18px]">verified</span>
+                <span className="material-symbols-outlined text-emerald-400 text-[18px]">
+                  verified
+                </span>
               </div>
-              <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">Quality Score</span>
+              <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">
+                Quality Score
+              </span>
             </div>
             <div className="flex items-end gap-2">
               <span className="text-3xl font-bold text-white">98.5</span>
@@ -134,7 +142,9 @@ export default function TaskDetailPage() {
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[20px] text-emerald-400">database</span>
+                  <span className="material-symbols-outlined text-[20px] text-emerald-400">
+                    database
+                  </span>
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-white tracking-tight">Data Items</h3>
@@ -171,19 +181,25 @@ export default function TaskDetailPage() {
                               className="w-full h-full object-cover"
                             />
                             <div className="absolute inset-0 bg-violet-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <span className="material-symbols-outlined text-white text-[16px]">visibility</span>
+                              <span className="material-symbols-outlined text-white text-[16px]">
+                                visibility
+                              </span>
                             </div>
                           </div>
                           <div className="flex flex-col">
                             <span className="text-sm font-bold text-gray-200 group-hover:text-white transition-colors">
                               {item.filename}
                             </span>
-                            <span className="text-[10px] font-mono text-gray-600 group-hover:text-gray-400 transition-colors">ITEM-{item.id.toUpperCase()}</span>
+                            <span className="text-[10px] font-mono text-gray-600 group-hover:text-gray-400 transition-colors">
+                              ITEM-{item.id.toUpperCase()}
+                            </span>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 bg-white/5 border-y border-white/5 group-hover:bg-white/10 group-hover:border-violet-500/30 transition-all">
-                        <span className="text-xs font-mono text-gray-400 bg-white/5 px-2 py-1 rounded-md border border-white/5">{item.fileFormat}</span>
+                        <span className="text-xs font-mono text-gray-400 bg-white/5 px-2 py-1 rounded-md border border-white/5">
+                          {item.fileFormat}
+                        </span>
                       </td>
                       <td className="px-6 py-4 bg-white/5 border-y border-white/5 group-hover:bg-white/10 group-hover:border-violet-500/30 transition-all text-center">
                         <span className="px-3 py-1 rounded-lg bg-blue-500/10 text-blue-400 text-[10px] font-black uppercase tracking-widest border border-blue-500/20">
@@ -192,7 +208,11 @@ export default function TaskDetailPage() {
                       </td>
                       <td className="px-6 py-4 bg-white/5 rounded-r-2xl border-y border-r border-white/5 group-hover:bg-white/10 group-hover:border-violet-500/30 transition-all text-right">
                         <span className="text-xs font-medium text-gray-500 group-hover:text-gray-300">
-                          {new Date(item.uploadedAt).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}
+                          {new Date(item.uploadedAt).toLocaleDateString(undefined, {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                          })}
                         </span>
                       </td>
                     </tr>

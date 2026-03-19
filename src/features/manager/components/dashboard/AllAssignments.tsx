@@ -144,8 +144,7 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
                   a.assignmentName.toLowerCase().includes(searchText.toLowerCase()))
             )
             .filter(
-              (a) =>
-                statusFilter === 'ALL' || (a.status && a.status.toUpperCase() === statusFilter)
+              (a) => statusFilter === 'ALL' || (a.status && a.status.toUpperCase() === statusFilter)
             )
             .sort((a, b) => {
               const aIsInactive = a.status?.toUpperCase() === 'INACTIVE'
