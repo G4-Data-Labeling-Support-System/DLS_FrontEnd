@@ -1,4 +1,5 @@
 import axiosClient from '@/lib/axios'
+import type { AxiosProgressEvent } from 'axios'
 import { ENDPOINTS } from './endpoints'
 
 export interface GetDatasetsParams {
@@ -8,6 +9,9 @@ export interface GetDatasetsParams {
   description?: string
   totalItems?: number
   createdAt?: string
+  dataItemStatus?: string
+  datasetStatus?: string
+  files?: string[]
 }
 
 const datasetApi = {
@@ -32,12 +36,10 @@ const datasetApi = {
       throw error
     }
   },
-  createDataset(data: {
-    projectId: string
-    datasetName: string
-    description?: string
-    files?: File[]
-  }) {
+  createDataset(
+    data: { projectId: string; datasetName: string; description?: string; files?: File[] },
+    onUploadProgress?: (progressEvent: AxiosProgressEvent) => void
+  ) {
     try {
       const url = ENDPOINTS.DATASETS.CREATE
       const formData = new FormData()
@@ -52,7 +54,8 @@ const datasetApi = {
         })
       }
       return axiosClient.post(url, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress
       })
     } catch (error) {
       console.error('Failed to create dataset', error)
@@ -86,12 +89,30 @@ const datasetApi = {
       throw error
     }
   },
-  updateDataset(id: string, datasetData?: GetDatasetsParams) {
+  async updateDataset(
+    id: string,
+    data: { projectId?: string; datasetName?: string; description?: string; files?: File[] },
+    onUploadProgress?: (progressEvent: AxiosProgressEvent) => void
+  ) {
     try {
-      const url = ENDPOINTS.DATASETS.DETAIL
-        ? ENDPOINTS.DATASETS.DETAIL(id)
-        : `${ENDPOINTS.DATASETS.LIST}/${id}`
-      return axiosClient.patch(url, datasetData)
+      const url = ENDPOINTS.DATASETS.UPDATE(id)
+      const formData = new FormData()
+
+      if (data.projectId !== undefined) formData.append('projectId', data.projectId)
+      if (data.datasetName !== undefined) formData.append('datasetName', data.datasetName)
+      if (data.description !== undefined) formData.append('description', data.description)
+
+      if (data.files) {
+        data.files.forEach((file) => {
+          formData.append('files', file)
+        })
+      }
+
+      const response = await axiosClient.put(url, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress
+      })
+      return response
     } catch (error) {
       console.error('Failed to update dataset', error)
       throw error
@@ -99,12 +120,19 @@ const datasetApi = {
   },
   deleteDataset(id: string) {
     try {
-      const url = ENDPOINTS.DATASETS.DETAIL
-        ? ENDPOINTS.DATASETS.DETAIL(id)
-        : `${ENDPOINTS.DATASETS.LIST}/${id}`
+      const url = ENDPOINTS.DATASETS.DELETE(id)
       return axiosClient.delete(url)
     } catch (error) {
       console.error('Failed to delete dataset', error)
+      throw error
+    }
+  },
+  deleteItem(id: string) {
+    try {
+      const url = ENDPOINTS.DATAITEMS.DELETE(id)
+      return axiosClient.delete(url)
+    } catch (error) {
+      console.error('Failed to delete dataset item', error)
       throw error
     }
   }

@@ -1,9 +1,9 @@
-import { Link } from 'react-router-dom'
-import { App, Spin, Empty, Input, Space, Typography, Button } from 'antd'
+import { App, Spin, Empty, Input, Space, Typography, Button, Select } from 'antd'
 import { PlusOutlined, SearchOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import datasetApi, { type GetDatasetsParams } from '@/api/DatasetApi'
 import { DatasetCard } from './DatasetCard'
 import { DatasetDetail } from './DatasetDetail'
+import { CreateDatasetModal } from './CreateDatasetModal'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
 import { useState } from 'react'
 
@@ -14,21 +14,26 @@ interface AllDatasetProps {
   loading: boolean
   selectedDatasetId?: string | null
   onDatasetSelect?: (id: string | null) => void
+  onCreate?: () => void
 }
 
 const AllDataset: React.FC<AllDatasetProps> = ({
   datasets,
   loading,
   selectedDatasetId,
-  onDatasetSelect
+  onDatasetSelect,
+  onCreate
 }) => {
   const { message } = App.useApp()
   const [searchText, setSearchText] = useState<string>('')
+  const [statusFilter, setStatusFilter] = useState<string>('ALL')
   const [internalDatasetId, setInternalDatasetId] = useState<string | null>(null)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deletingDatasetId, setDeletingDatasetId] = useState<string | null>(null)
   const [deletingDatasetName, setDeletingDatasetName] = useState('')
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [editingDataset, setEditingDataset] = useState<GetDatasetsParams | null>(null)
 
   const currentDatasetId = selectedDatasetId !== undefined ? selectedDatasetId : internalDatasetId
 
@@ -48,18 +53,23 @@ const AllDataset: React.FC<AllDatasetProps> = ({
     setDeleteModalOpen(true)
   }
 
+  const handleEdit = (ds: GetDatasetsParams) => {
+    setEditingDataset(ds)
+    setEditModalOpen(true)
+  }
+
   const confirmDelete = async () => {
     if (!deletingDatasetId) return
     setDeleting(true)
     try {
       await datasetApi.deleteDataset(deletingDatasetId)
-      message.success('Dataset deleted successfully!')
+      message.success(`${deletingDatasetName} deactivated successfully!`)
       setDeleteModalOpen(false)
       setDeletingDatasetId(null)
       setDeletingDatasetName('')
       window.location.reload()
     } catch {
-      message.error('An error occurred while deleting the dataset.')
+      message.error('An error occurred while deactivating the dataset.')
     } finally {
       setDeleting(false)
     }
@@ -84,6 +94,16 @@ const AllDataset: React.FC<AllDatasetProps> = ({
           All Datasets
         </Title>
         <Space>
+          <Select
+            value={statusFilter}
+            onChange={(value) => setStatusFilter(value)}
+            className="w-36"
+            options={[
+              { value: 'ALL', label: 'All Statuses' },
+              { value: 'ACTIVE', label: 'Active' },
+              { value: 'INACTIVE', label: 'Inactive' }
+            ]}
+          />
           <Input
             placeholder="Search datasets..."
             prefix={<SearchOutlined className="text-gray-400" />}
@@ -105,12 +125,21 @@ const AllDataset: React.FC<AllDatasetProps> = ({
           {datasets
             .filter(
               (ds) =>
-                !searchText ||
-                (ds.datasetName && ds.datasetName.toLowerCase().includes(searchText.toLowerCase()))
+                (!searchText ||
+                  (ds.datasetName &&
+                    ds.datasetName.toLowerCase().includes(searchText.toLowerCase()))) &&
+                (statusFilter === 'ALL' ||
+                  (ds.datasetStatus && ds.datasetStatus.toUpperCase() === statusFilter))
             )
-            .sort(
-              (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-            )
+            .sort((a, b) => {
+              const aIsInactive = a.datasetStatus?.toUpperCase() === 'INACTIVE'
+              const bIsInactive = b.datasetStatus?.toUpperCase() === 'INACTIVE'
+
+              if (aIsInactive && !bIsInactive) return 1
+              if (!aIsInactive && bIsInactive) return -1
+
+              return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+            })
             .map((ds) => {
               const uniqueId = ds.datasetId || ''
               return (
@@ -118,23 +147,24 @@ const AllDataset: React.FC<AllDatasetProps> = ({
                   key={uniqueId}
                   {...ds}
                   onClick={() => handleDatasetSelect(uniqueId)}
-                  onEdit={() => handleDatasetSelect(uniqueId)}
+                  onEdit={() => handleEdit(ds)}
                   onDelete={() => handleDelete(uniqueId)}
                 />
               )
             })}
 
           {/* Start New Dataset Card */}
-          <Link to="/manager/datasets/create" className="block group">
-            <div className="h-full min-h-[160px] border-2 border-dashed border-gray-700 rounded-xl flex flex-col items-center justify-center gap-4 bg-[#1A1625]/30 hover:bg-[#1A1625] hover:border-violet-500 transition-all cursor-pointer">
-              <div className="w-12 h-12 rounded-full bg-[#231e31] group-hover:bg-violet-600 flex items-center justify-center transition-colors">
-                <PlusOutlined className="text-gray-400 group-hover:text-white text-xl" />
-              </div>
-              <span className="text-gray-400 group-hover:text-white font-medium font-display">
-                Create Dataset
-              </span>
+          <div
+            onClick={onCreate}
+            className="block group h-full min-h-[160px] border-2 border-dashed border-gray-700 rounded-xl flex flex-col items-center justify-center gap-4 bg-[#1A1625]/30 hover:bg-[#1A1625] hover:border-violet-500 transition-all cursor-pointer"
+          >
+            <div className="w-12 h-12 rounded-full bg-[#231e31] group-hover:bg-violet-600 flex items-center justify-center transition-colors">
+              <PlusOutlined className="text-gray-400 group-hover:text-white text-xl" />
             </div>
-          </Link>
+            <span className="text-gray-400 group-hover:text-white font-medium font-display">
+              Create Dataset
+            </span>
+          </div>
         </div>
       )}
 
@@ -156,10 +186,10 @@ const AllDataset: React.FC<AllDatasetProps> = ({
               </div>
             </div>
             <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
-              Delete Dataset
+              Deactivate Dataset
             </h2>
             <p className="text-white/50 text-sm">
-              Are you sure you want to delete{' '}
+              Are you sure you want to deactivate{' '}
               <span className="text-white/80 font-medium">{deletingDatasetName}</span>? This action
               cannot be undone.
             </p>
@@ -183,11 +213,35 @@ const AllDataset: React.FC<AllDatasetProps> = ({
               onClick={confirmDelete}
               className="bg-red-600 hover:bg-red-500 border-none"
             >
-              Delete Dataset
+              Deactivate Dataset
             </Button>
           </div>
         </div>
       </GlassModal>
+
+      <CreateDatasetModal
+        open={editModalOpen}
+        isEdit={true}
+        initialData={
+          editingDataset
+            ? {
+                datasetId: editingDataset.datasetId!,
+                datasetName: editingDataset.datasetName || '',
+                description: editingDataset.description,
+                projectId: editingDataset.projectId
+              }
+            : undefined
+        }
+        onCancel={() => {
+          setEditModalOpen(false)
+          setEditingDataset(null)
+        }}
+        onSuccess={() => {
+          setEditModalOpen(false)
+          setEditingDataset(null)
+          window.location.reload()
+        }}
+      />
     </div>
   )
 }

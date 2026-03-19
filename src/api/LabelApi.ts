@@ -69,6 +69,15 @@ const labelApiClient = {
       console.error('Failed to delete label', error)
       throw error
     }
+  },
+  getLabelsByDatasetId(datasetId: string) {
+    try {
+      const url = ENDPOINTS.LABELS.BY_DATASET(datasetId)
+      return axiosClient.get(url)
+    } catch (error) {
+      console.error('Failed to fetch labels by dataset id', error)
+      throw error
+    }
   }
 }
 

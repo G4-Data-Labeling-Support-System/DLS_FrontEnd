@@ -53,3 +53,84 @@ export interface UpdateUserRequest {
   coverImage?: string
   userStatus?: string
 }
+// ============ Entity Types ============
+
+export interface Project {
+  projectId: string
+  projectName: string
+  description?: string
+  status?: 'ACTIVE' | 'INACTIVE' | 'ONGOING' | string
+  projectStatus?: string
+  createdAt?: string
+  updatedAt?: string
+}
+
+export interface Label {
+  labelId: string
+  datasetId: string
+  labelName: string
+  color: string
+  description?: string
+  createdAt?: string
+}
+
+export interface DataItem {
+  itemId: string
+  datasetId: string
+  fileName: string
+  url: string
+  fileFormat?: string
+  fileSize?: number
+  width?: number
+  height?: number
+  dataType: 'IMAGE' | 'VIDEO' | 'AUDIO' | 'TEXT' | string
+  uploadedAt?: string
+}
+
+export interface Dataset {
+  datasetId: string
+  datasetName: string
+  description?: string
+  totalItems: number
+  createdAt?: string
+  project?: Project
+  assignmentId?: string
+  dataitems?: DataItem[]
+  labels?: Label[]
+}
+
+export interface Assignment {
+  assignmentId: string
+  assignmentName: string
+  description?: string
+  assignmentStatus: 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED' | 'REVIEWED' | string
+  assignedBy: string
+  assignedTo: string
+  reviewedBy?: string
+  dueDate?: string
+  createdAt?: string
+  updatedAt?: string
+  project?: Project
+  dataset?: Dataset
+}
+
+export interface ApiResponse<T> {
+  code: number
+  message: string
+  data: T
+}
+
+export interface AnnotationSubmitItem {
+  annotationConfidence: string
+  annotationData: Record<string, unknown>
+  annotationStatus: string
+  annotationType: string
+  comment: string
+  dataitemId: string
+  labelIds: string[]
+}
+
+export interface AnnotationSubmitPayload {
+  taskId: string
+  annotations: AnnotationSubmitItem[]
+}

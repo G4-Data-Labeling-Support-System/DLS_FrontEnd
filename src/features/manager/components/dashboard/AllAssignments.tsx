@@ -1,29 +1,32 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Space, Typography, Spin, App, Input, Select, Empty, Button } from 'antd'
 import { SearchOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import { AssignmentCard } from './AssignmentCard'
 import { AssignmentDetail } from './AssignmentDetail'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
-
+import {
+  useAllAssignments,
+  useInvalidateAssignments
+} from '@/features/manager/hooks/useProjectDetail'
 import assignmentApi, { type GetAssignmentsParams } from '@/api/AssignmentApi'
+
 const { Title } = Typography
 
 interface AllAssignmentsProps {
   selectedAssignmentId?: string | null
   onAssignmentSelect?: (id: string | null) => void
   onEdit?: (assignment: GetAssignmentsParams) => void
-  refreshTrigger?: number
 }
 
 export const AllAssignments: React.FC<AllAssignmentsProps> = ({
   selectedAssignmentId,
   onAssignmentSelect,
-  onEdit,
-  refreshTrigger
+  onEdit
 }) => {
   const { message } = App.useApp()
-  const [assignments, setAssignments] = useState<GetAssignmentsParams[]>([])
-  const [loading, setLoading] = useState<boolean>(true)
+  const { data: assignments = [], isLoading: loading } = useAllAssignments()
+  const invalidateAssignments = useInvalidateAssignments()
+
   const [searchText, setSearchText] = useState<string>('')
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
   const [internalAssignmentId, setInternalAssignmentId] = useState<string | null>(null)
@@ -43,82 +46,6 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
     }
   }
 
-  const fetchAssignments = async () => {
-    try {
-      setLoading(true)
-      const response = await assignmentApi.getAssignments()
-      const data = response.data?.data || response.data || []
-
-      if (Array.isArray(data)) {
-        // Dynamically map properties checking multiple possible backend formats natively
-        const mappedAssignments: GetAssignmentsParams[] = data.map((a: Record<string, unknown>) => {
-          const mapped: GetAssignmentsParams = {}
-          if (a.assignmentId || a.id) {
-            mapped.assignmentId = String(a.assignmentId || a.id)
-          }
-          if (a.assignmentName || a.name) {
-            mapped.assignmentName = String(a.assignmentName || a.name)
-          }
-          if (a.assignmentStatus || a.status) {
-            mapped.status = String(a.assignmentStatus || a.status)
-          }
-          if (a.descriptionAssignment || a.description) {
-            mapped.description = String(a.descriptionAssignment || a.description)
-          }
-          if (a.projectId || a.project_id) {
-            mapped.projectId = String(a.projectId || a.project_id)
-          }
-          if (a.datasetId || a.dataset_id) {
-            mapped.datasetId = String(a.datasetId || a.dataset_id)
-          }
-          if (a.createdAt || a.created_at || a.createdDate) {
-            mapped.createdAt = String(a.createdAt || a.created_at || a.createdDate)
-          }
-          if (a.updatedAt) {
-            mapped.updatedAt = String(a.updatedAt)
-          }
-          if (a.assignedTo || a.user_id || a.annotatorId) {
-            mapped.assignedTo = String(a.assignedTo || a.user_id || a.annotatorId)
-          }
-          if (a.reviewedBy || a.reviewerId) {
-            mapped.reviewedBy = String(a.reviewedBy || a.reviewerId)
-          }
-          if (a.dueDate || a.due_date) {
-            mapped.dueDate = String(a.dueDate || a.due_date)
-          }
-          if (a.assignedBy || a.creatorId) {
-            mapped.assignedBy = String(a.assignedBy || a.creatorId)
-          }
-          return mapped
-        })
-        setAssignments(mappedAssignments)
-      } else {
-        console.warn('API returned non-array data:', data)
-        setAssignments([])
-      }
-    } catch (error) {
-      const assignError = error as Record<string, unknown>
-      const responseData = assignError?.response as Record<string, unknown>
-      const data = responseData?.data as Record<string, unknown>
-      const isNotFoundError = data?.code === 404 && data?.message === 'Assignment not found'
-
-      if (isNotFoundError) {
-        // Backend confirmed 0 assignments exist system-wide
-        setAssignments([])
-      } else {
-        console.error('Failed to load assignments.', error)
-      }
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    if (!currentAssignmentId) {
-      fetchAssignments()
-    }
-  }, [currentAssignmentId, refreshTrigger])
-
   const handleDelete = (id?: string) => {
     if (!id) return
     const asn = assignments.find((a) => a.assignmentId === id)
@@ -133,7 +60,7 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
     try {
       await assignmentApi.deleteAssignment(deletingAssignmentId)
       message.success('Assignment deleted successfully!')
-      setAssignments((prev) => prev.filter((a) => a.assignmentId !== deletingAssignmentId))
+      invalidateAssignments()
       setDeleteModalOpen(false)
       setDeletingAssignmentId(null)
       setDeletingAssignmentName('')
@@ -185,10 +112,10 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
             options={[
               { value: 'ALL', label: 'All Statuses' },
               { value: 'ASSIGNED', label: 'Assigned' },
-              { value: 'CANCLED', label: 'Cancled' },
-              { value: 'COMPLETED', label: 'Completed' },
               { value: 'IN_PROGRESS', label: 'In Progress' },
-              { value: 'REVIEWING', label: 'Reviewing' }
+              { value: 'REVIEWING', label: 'Reviewing' },
+              { value: 'COMPLETED', label: 'Completed' },
+              { value: 'INACTIVE', label: 'Inactive' }
             ]}
           />
           <Input
@@ -219,9 +146,15 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
             .filter(
               (a) => statusFilter === 'ALL' || (a.status && a.status.toUpperCase() === statusFilter)
             )
-            .sort(
-              (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-            )
+            .sort((a, b) => {
+              const aIsInactive = a.status?.toUpperCase() === 'INACTIVE'
+              const bIsInactive = b.status?.toUpperCase() === 'INACTIVE'
+
+              if (aIsInactive && !bIsInactive) return 1
+              if (!aIsInactive && bIsInactive) return -1
+
+              return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+            })
             .map((a, index) => {
               const uniqueId = a.assignmentId || String(index)
               return (
@@ -255,10 +188,10 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
               </div>
             </div>
             <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
-              Delete Assignment
+              Deactivate Assignment
             </h2>
             <p className="text-white/50 text-sm">
-              Are you sure you want to delete{' '}
+              Are you sure you want to deactivate{' '}
               <span className="text-white/80 font-medium">{deletingAssignmentName}</span>? This
               action cannot be undone.
             </p>
@@ -282,7 +215,7 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
               onClick={confirmDelete}
               className="bg-red-600 hover:bg-red-500 border-none"
             >
-              Delete Assignment
+              Deactivate Assignment
             </Button>
           </div>
         </div>

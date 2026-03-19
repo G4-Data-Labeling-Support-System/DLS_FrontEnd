@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { Tooltip, Spin } from 'antd'
+import { Tooltip, Spin, message } from 'antd'
 import assignmentApi from '@/api/AssignmentApi'
+import taskApi from '@/api/TaskApi'
+import type { AnnotationSubmitItem } from '@/shared/types/api.types'
 
 interface Shape {
   type: 'bounding_box' | 'polygon'
@@ -61,26 +63,39 @@ export default function AnnotationPage() {
   const [currentShape, setCurrentShape] = useState<Shape | null>(null)
   const [shapes, setShapes] = useState<Shape[]>([])
 
+  // Store all annotations in current session before bulk submit
+  const [sessionAnnotations, setSessionAnnotations] = useState<AnnotationSubmitItem[]>([])
+
   useEffect(() => {
     async function fetchData() {
       if (!taskId) return
       setLoading(true)
       try {
         // 1. Fetch task items
-        const taskRes = await assignmentApi.getTaskById(taskId)
+        const taskRes = await taskApi.getTaskById(taskId)
         const items = taskRes.data?.data || taskRes.data || []
         setDataItems(Array.isArray(items) ? items : [])
 
-        // 2. Fetch labels if assignmentId is available
-        if (assignmentId) {
-          const labelsRes = await assignmentApi.getLabelsByAssignmentId(assignmentId)
-          const labelsData = labelsRes.data?.data || labelsRes.data || []
-          if (Array.isArray(labelsData)) {
-            setLabels(labelsData)
-            if (labelsData.length > 0) {
-              setCurrentLabel(labelsData[0])
-              setSelectedLabels([labelsData[0].labelName])
+        // Try to recover assignmentId from task if missing (e.g., on refresh)
+        let effectiveAssignmentId = assignmentId
+        if (!effectiveAssignmentId && items.length > 0) {
+          effectiveAssignmentId = items[0].assignmentId
+        }
+
+        // 2. Fetch labels if effectiveAssignmentId is available
+        if (effectiveAssignmentId) {
+          try {
+            const labelsRes = await assignmentApi.getLabelsByAssignmentId(effectiveAssignmentId)
+            const labelsData = labelsRes.data?.data || labelsRes.data || []
+            if (Array.isArray(labelsData)) {
+              setLabels(labelsData)
+              if (labelsData.length > 0) {
+                setCurrentLabel(labelsData[0])
+                setSelectedLabels([labelsData[0].labelId])
+              }
             }
+          } catch (labelErr) {
+            console.error('Failed to fetch labels for assignment:', labelErr)
           }
         }
       } catch (err) {
@@ -229,39 +244,140 @@ export default function AnnotationPage() {
     setIsDrawing(false)
   }
 
-  const resetAnnotationState = () => {
+  const createAnnotationPayload = (itemId: string): AnnotationSubmitItem => {
+    return {
+      annotationConfidence: 'LOW',
+      annotationData: {
+        active: currentShape
+          ? {
+              type: currentShape.type,
+              points: currentShape.points ? currentShape.points.length : undefined,
+              dimensions:
+                currentShape.type === 'bounding_box'
+                  ? {
+                      w: Math.round(currentShape.width || 0),
+                      h: Math.round(currentShape.height || 0)
+                    }
+                  : undefined
+            }
+          : null,
+        session: shapes.map((s) => ({ type: s.type, label: s.label })),
+        raw: shapes
+      },
+      annotationStatus: 'DRAFT',
+      annotationType: shapes.some((s) => s.type === 'bounding_box')
+        ? 'BOUNDING_BOX'
+        : shapes.some((s) => s.type === 'polygon')
+          ? 'POLYGON_SEGMENTATION'
+          : 'CLASSIFICATION',
+      comment: comment,
+      dataitemId: itemId,
+      labelIds: selectedLabels
+    }
+  }
+
+  const saveCurrentToSession = () => {
+    if (!currentItem) return
+    const itemId = currentItem.itemId || (currentItem as { id?: string }).id
+    if (!itemId) return
+
+    const newAnnotation = createAnnotationPayload(itemId)
+    setSessionAnnotations((prev) => {
+      const existingIndex = prev.findIndex((a) => a.dataitemId === itemId)
+      if (existingIndex >= 0) {
+        const updated = [...prev]
+        updated[existingIndex] = newAnnotation
+        return updated
+      }
+      return [...prev, newAnnotation]
+    })
+  }
+
+  const loadFromSession = (
+    item: DataItem | undefined,
+    annotationsToSearch?: AnnotationSubmitItem[]
+  ) => {
+    if (!item) return
+    const itemId = item.itemId || (item as { id?: string }).id
+    const sourceAnnotations = annotationsToSearch || sessionAnnotations
+    const existing = sourceAnnotations.find((a) => a.dataitemId === itemId)
+
+    // Zoom and pan reset
     setZoom(1)
     setOffset({ x: 0, y: 0 })
-    setShapes([])
     setIsDrawing(false)
     setCurrentShape(null)
+
+    if (existing) {
+      setShapes((existing.annotationData.raw as Shape[]) || [])
+      setComment(existing.comment || '')
+      setSelectedLabels(existing.labelIds || [])
+    } else {
+      setShapes([])
+      setComment('This is a preliminary scan observation.')
+      if (labels.length > 0) {
+        setSelectedLabels([labels[0].labelId])
+      } else {
+        setSelectedLabels([])
+      }
+    }
   }
 
   const handleNext = () => {
-    resetAnnotationState()
-    if (currentIndex < totalItems - 1) {
-      setCurrentIndex(currentIndex + 1)
-    } else {
-      setCurrentIndex(0)
-    }
+    saveCurrentToSession()
+    const nextIdx = currentIndex < totalItems - 1 ? currentIndex + 1 : 0
+    loadFromSession(dataItems[nextIdx])
+    setCurrentIndex(nextIdx)
   }
 
   const handlePrevious = () => {
-    resetAnnotationState()
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1)
-    } else {
-      setCurrentIndex(totalItems - 1)
-    }
+    saveCurrentToSession()
+    const prevIdx = currentIndex > 0 ? currentIndex - 1 : totalItems - 1
+    loadFromSession(dataItems[prevIdx])
+    setCurrentIndex(prevIdx)
   }
 
   const toggleLabel = (labelObj: Label) => {
     setCurrentLabel(labelObj)
     setSelectedLabels((prev) =>
-      prev.includes(labelObj.labelName)
-        ? prev.filter((l) => l !== labelObj.labelName)
-        : [...prev, labelObj.labelName]
+      prev.includes(labelObj.labelId)
+        ? prev.filter((l) => l !== labelObj.labelId)
+        : [...prev, labelObj.labelId]
     )
+  }
+
+  const handleSubmitTask = async () => {
+    if (!taskId) return
+    saveCurrentToSession()
+
+    try {
+      setLoading(true)
+      const currentItemId = (currentItem?.itemId ||
+        (currentItem as { id?: string })?.id ||
+        '') as string
+      const currentAnnotation = createAnnotationPayload(currentItemId)
+
+      const finalAnnotations = [...sessionAnnotations]
+      const existingIndex = finalAnnotations.findIndex((a) => a.dataitemId === currentItemId)
+      if (existingIndex >= 0) {
+        finalAnnotations[existingIndex] = currentAnnotation
+      } else {
+        finalAnnotations.push(currentAnnotation)
+      }
+
+      await taskApi.submitAnnotations({
+        taskId,
+        annotations: finalAnnotations
+      })
+
+      message.success('Annotations submitted successfully!')
+      navigate('/annotator/dashboard')
+    } catch (err) {
+      console.error(err)
+      message.error('Failed to submit annotations.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (loading) {
@@ -317,7 +433,10 @@ export default function AnnotationPage() {
             </span>
             <span className="text-xs font-mono text-gray-300">{taskId}</span>
           </div>
-          <button className="bg-violet-600 hover:bg-violet-500 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow-lg shadow-violet-900/20 transition-all cursor-pointer">
+          <button
+            onClick={handleSubmitTask}
+            className="bg-violet-600 hover:bg-violet-500 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow-lg shadow-violet-900/20 transition-all cursor-pointer"
+          >
             Submit Task
           </button>
         </div>
@@ -469,16 +588,16 @@ export default function AnnotationPage() {
                       className={`
                                               px-3 py-1.5 rounded-lg text-xs font-bold transition-all border
                                               ${
-                                                selectedLabels.includes(label.labelName)
+                                                selectedLabels.includes(label.labelId)
                                                   ? 'bg-white/10 text-white'
                                                   : 'bg-white/5 border-transparent text-gray-500 hover:bg-white/10 hover:text-gray-300'
                                               }
                                           `}
                       style={{
-                        borderColor: selectedLabels.includes(label.labelName)
+                        borderColor: selectedLabels.includes(label.labelId)
                           ? label.color
                           : 'transparent',
-                        color: selectedLabels.includes(label.labelName) ? label.color : undefined
+                        color: selectedLabels.includes(label.labelId) ? label.color : undefined
                       }}
                     >
                       {label.labelName}
@@ -501,23 +620,7 @@ export default function AnnotationPage() {
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 className="w-full h-24 bg-white/5 rounded-xl border border-white/10 p-4 text-sm text-gray-300 focus:outline-none focus:border-violet-500/50 transition-colors resize-none"
-                placeholder="Add a comment about this data item..."
               />
-            </div>
-
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px] text-emerald-400">
-                  history
-                </span>
-                <span className="text-xs font-bold uppercase tracking-widest text-gray-400">
-                  Version
-                </span>
-              </div>
-              <div className="flex items-center justify-between px-4 py-3 bg-white/5 rounded-xl border border-white/10">
-                <span className="text-sm font-bold text-gray-300">Version 1</span>
-                <span className="text-[10px] font-mono text-gray-500 italic">Latest</span>
-              </div>
             </div>
 
             <div className="flex flex-col gap-4">
@@ -573,9 +676,6 @@ export default function AnnotationPage() {
                 <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
               </button>
             </div>
-            <button className="w-full px-4 py-3 rounded-xl bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 text-sm font-bold hover:bg-emerald-600/30 transition-all cursor-pointer">
-              Save Annotations
-            </button>
           </div>
         </div>
       </div>

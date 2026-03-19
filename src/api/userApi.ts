@@ -25,8 +25,13 @@ export const userApi = {
   },
 
   // [PATCH] Deactivate user (change status to INACTIVE)
-  deleteUser: async (id: string): Promise<void> => {
+  deactivateUser: async (id: string): Promise<void> => {
     await mainClient.patch(`/users/${id}/deactivate`)
+  },
+
+  // [DELETE] Remove user permanently
+  deleteUser: async (id: string): Promise<void> => {
+    await mainClient.delete(`/users/${id}/avatar/delete`)
   },
 
   // [PATCH] Activate user (change status to ACTIVE)

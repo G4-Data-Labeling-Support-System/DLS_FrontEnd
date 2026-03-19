@@ -19,13 +19,10 @@ export const PATH_MANAGER = {
   root: '/manager',
   createProject: '/manager/create-project',
   editProject: '/manager/projects/edit/:id',
-  datasetSetup: '/manager/datasets/setup',
-  guidelinesSetup: '/manager/create-project/guidelines-setup',
-  editGuidelines: '/manager/projects/edit/:id/guidelines',
   teamAssignment: '/manager/create-project/team-assignment',
   datasetManagement: '/manager/datasets',
-  createDataset: '/manager/datasets/create',
-  datasetDetail: '/manager/datasets/:id'
+  datasetDetail: '/manager/datasets/:id',
+  createDataset: '/manager/datasets/create'
 }
 
 export const PATH_ANNOTATOR = {

@@ -2,10 +2,7 @@ import { UserRole } from '@/shared/constants/user_role'
 import { lazy } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { PATH_ANNOTATOR, PATH_MANAGER } from './paths'
-import { CreateProjectPage } from '@/pages/manager'
-import DatasetSetupPage from '@/pages/manager/DatasetSetupPage'
 import ManagerLayout from '@/components/layout/ManagerLayout'
-import GuidelinesSetupPage from '@/pages/manager/GuidelinesSetupPage'
 import { GuestGuard, RoleGuard } from './guards'
 import { Header } from '@/components/common/Header'
 import { LazyPage } from '@/components/common/LazyPage'
@@ -20,7 +17,6 @@ const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage'))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 const ManagerDashboardPage = lazy(() => import('@/pages/manager/ManagerDashboardPage'))
 const DatasetManagementPage = lazy(() => import('@/pages/manager/DatasetManagementPage'))
-const CreateDatasetPage = lazy(() => import('@/pages/manager/CreateDatasetPage'))
 const DatasetDetailPage = lazy(() => import('@/pages/manager/DatasetDetailPage'))
 
 // Admin pages
@@ -42,6 +38,8 @@ const AnnotationPage = lazy(() => import('@/pages/annotator/AnnotationPage'))
 // Reviewer pages
 const ReviewerLayout = lazy(() => import('@/components/layout/ReviewerLayout'))
 const ReviewerWorkspacePage = lazy(() => import('@/pages/reviewer/ReviewerWorkspacePage'))
+const ReviewerTaskDetailPage = lazy(() => import('@/pages/reviewer/TaskDetailPage'))
+const ReviewerAnnotationPage = lazy(() => import('@/pages/reviewer/AnnotationPage'))
 
 export const router = createBrowserRouter([
   {
@@ -140,58 +138,10 @@ export const router = createBrowserRouter([
         )
       },
       {
-        path: PATH_MANAGER.createProject,
-        element: (
-          <LazyPage>
-            <CreateProjectPage />
-          </LazyPage>
-        )
-      },
-      {
-        path: PATH_MANAGER.editProject,
-        element: (
-          <LazyPage>
-            <CreateProjectPage />
-          </LazyPage>
-        )
-      },
-      {
-        path: PATH_MANAGER.datasetSetup,
-        element: (
-          <LazyPage>
-            <DatasetSetupPage />
-          </LazyPage>
-        )
-      },
-      {
-        path: PATH_MANAGER.guidelinesSetup,
-        element: (
-          <LazyPage>
-            <GuidelinesSetupPage />
-          </LazyPage>
-        )
-      },
-      {
-        path: PATH_MANAGER.editGuidelines,
-        element: (
-          <LazyPage>
-            <GuidelinesSetupPage />
-          </LazyPage>
-        )
-      },
-      {
         path: PATH_MANAGER.datasetManagement,
         element: (
           <LazyPage>
             <DatasetManagementPage />
-          </LazyPage>
-        )
-      },
-      {
-        path: PATH_MANAGER.createDataset,
-        element: (
-          <LazyPage>
-            <CreateDatasetPage />
           </LazyPage>
         )
       },
@@ -293,6 +243,10 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
+        element: <Navigate to="/reviewer/review" replace />
+      },
+      {
+        path: 'review',
         element: (
           <LazyPage>
             <ReviewerDashboardPage />
@@ -300,7 +254,55 @@ export const router = createBrowserRouter([
         )
       },
       {
-        path: 'workspace',
+        path: 'project',
+        element: (
+          <LazyPage>
+            <ReviewerDashboardPage />
+          </LazyPage>
+        )
+      },
+      {
+        path: 'project/:assignmentId',
+        element: (
+          <LazyPage>
+            <ReviewerDashboardPage />
+          </LazyPage>
+        )
+      },
+      {
+        path: 'assignment',
+        element: (
+          <LazyPage>
+            <ReviewerDashboardPage />
+          </LazyPage>
+        )
+      },
+      {
+        path: 'assignment/:assignmentId',
+        element: (
+          <LazyPage>
+            <ReviewerDashboardPage />
+          </LazyPage>
+        )
+      },
+      {
+        path: 'task/:taskId',
+        element: (
+          <LazyPage>
+            <ReviewerTaskDetailPage />
+          </LazyPage>
+        )
+      },
+      {
+        path: 'task/:taskId/annotate',
+        element: (
+          <LazyPage>
+            <ReviewerAnnotationPage />
+          </LazyPage>
+        )
+      },
+      {
+        path: 'workspace/:projectId',
         element: (
           <LazyPage>
             <ReviewerWorkspacePage />

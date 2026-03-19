@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import datasetApi from '@/api/DatasetApi'
+import assignmentApi from '@/api/AssignmentApi'
 import { themeClasses } from '@/styles'
 import { useNavigate } from 'react-router-dom'
 import { PATH_ANNOTATOR } from '@/routes/paths'
@@ -10,7 +11,12 @@ interface Dataset {
   description?: string
   totalItems?: number
   createdAt?: string
+  datasetStatus?: string
   dataitems?: DatasetItem[]
+  project?: {
+    projectId: string
+    [key: string]: unknown
+  }
 }
 
 interface DatasetItem {
@@ -25,10 +31,14 @@ interface DatasetItem {
 }
 
 interface AnnotatorDatasetCardProps {
-  projectId: string
+  projectId?: string
+  assignmentId?: string
 }
 
-export default function AnnotatorDatasetCard({ projectId }: AnnotatorDatasetCardProps) {
+export default function AnnotatorDatasetCard({
+  projectId,
+  assignmentId
+}: AnnotatorDatasetCardProps) {
   const navigate = useNavigate()
   const [datasets, setDatasets] = useState<Dataset[]>([])
   const [loading, setLoading] = useState(true)
@@ -40,15 +50,22 @@ export default function AnnotatorDatasetCard({ projectId }: AnnotatorDatasetCard
 
   useEffect(() => {
     const fetchDatasets = async () => {
-      if (!projectId) {
+      if (!projectId && !assignmentId) {
         setLoading(false)
         return
       }
 
       try {
         setLoading(true)
-        const response = await datasetApi.getDatasetsByProjectId(projectId)
-        const data = response.data?.data || response.data || []
+        let data: unknown
+        if (assignmentId) {
+          const response = await assignmentApi.getDatasetByAssignmentId(assignmentId)
+          data = response.data?.data || response.data || []
+        } else if (projectId) {
+          const response = await datasetApi.getDatasetsByProjectId(projectId)
+          data = response.data?.data || response.data || []
+        }
+
         setDatasets(Array.isArray(data) ? data : [data])
       } catch (err) {
         console.error('Failed to fetch datasets:', err)
@@ -59,11 +76,12 @@ export default function AnnotatorDatasetCard({ projectId }: AnnotatorDatasetCard
     }
 
     fetchDatasets()
-  }, [projectId])
+  }, [projectId, assignmentId])
 
-  const filteredDatasets = datasets.filter((d) =>
-    d.datasetName.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredDatasets = datasets.filter((d) => {
+    const status = (d.datasetStatus || '').toUpperCase()
+    return status !== 'INACTIVE' && d.datasetName.toLowerCase().includes(searchTerm.toLowerCase())
+  })
 
   const totalPages = Math.ceil(filteredDatasets.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
@@ -163,13 +181,15 @@ export default function AnnotatorDatasetCard({ projectId }: AnnotatorDatasetCard
 
                     <div className="flex justify-end mb-3">
                       <button
-                        onClick={() =>
+                        onClick={() => {
+                          const targetProjectId =
+                            projectId || dataset.project?.projectId || 'unknown'
                           navigate(
                             PATH_ANNOTATOR.datasetDetail
-                              .replace(':projectId', projectId)
+                              .replace(':projectId', targetProjectId)
                               .replace(':datasetId', dataset.datasetId)
                           )
-                        }
+                        }}
                         className="px-3 py-1 bg-violet-600 hover:bg-violet-700 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 shadow-lg shadow-violet-500/20"
                       >
                         <span>View Detail</span>

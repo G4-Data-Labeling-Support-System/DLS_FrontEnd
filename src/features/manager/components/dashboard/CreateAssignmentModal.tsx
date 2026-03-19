@@ -16,6 +16,25 @@ interface CreateAssignmentModalProps {
   onSuccess: () => void
 }
 
+interface NormalizedProject {
+  projectId: string
+  projectName: string
+  projectStatus: string
+}
+
+interface RawProjectData {
+  projectId?: string | number
+  id?: string | number
+  project_id?: string | number
+  projectName?: string
+  name?: string
+  project_name?: string
+  projectStatus?: string
+  status?: string
+  project_status?: string
+  project?: RawProjectData
+}
+
 export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
   open,
   projectId,
@@ -30,7 +49,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
   const [annotators, setAnnotators] = useState<Record<string, unknown>[]>([])
   const [reviewers, setReviewers] = useState<Record<string, unknown>[]>([])
   const [datasets, setDatasets] = useState<Record<string, unknown>[]>([])
-  const [projects, setProjects] = useState<Record<string, unknown>[]>([])
+  const [projects, setProjects] = useState<NormalizedProject[]>([])
   const [selectedProjectId, setSelectedProjectId] = useState<string>(projectId || '')
   const [loading, setLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -46,7 +65,35 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
       try {
         const res = await projectApi.getProjects()
         const data = res.data?.data || res.data
-        setProjects(Array.isArray(data) ? data : [])
+        const projectList = Array.isArray(data) ? data : []
+
+        // Robust normalization similar to AllProjects.tsx
+        const normalizedProjects: NormalizedProject[] = projectList.map((p: RawProjectData) => {
+          const projectInfo = p.project || p
+          return {
+            projectId: String(
+              projectInfo.projectId || projectInfo.id || projectInfo.project_id || ''
+            ),
+            projectName: String(
+              projectInfo.projectName || projectInfo.name || projectInfo.project_name || ''
+            ),
+            projectStatus: String(
+              projectInfo.projectStatus || projectInfo.status || projectInfo.project_status || ''
+            )
+          }
+        })
+
+        setProjects(
+          normalizedProjects.sort((a, b) => {
+            const aIsInactive = a.projectStatus?.toUpperCase() === 'INACTIVE'
+            const bIsInactive = b.projectStatus?.toUpperCase() === 'INACTIVE'
+
+            if (aIsInactive && !bIsInactive) return 1
+            if (!aIsInactive && bIsInactive) return -1
+
+            return 0
+          })
+        )
       } catch (error) {
         console.error(error)
         message.error('Failed to load projects.')
@@ -93,7 +140,14 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
           const datasetRes = await datasetApi.getDatasetsByProjectId(currentPid)
           const datasetsData = datasetRes.data?.data || datasetRes.data
           const dsArray = Array.isArray(datasetsData) ? datasetsData : []
-          setDatasets(dsArray)
+          setDatasets(
+            dsArray.filter((d: Record<string, unknown>) => {
+              const status = String(
+                d.datasetStatus || d.status || d.dataset_status || ''
+              ).toUpperCase()
+              return status === 'ACTIVE'
+            })
+          )
         } else {
           setDatasets([])
         }
@@ -115,7 +169,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
           assignmentName: initialData.assignmentName,
           assignedTo: initialData.assignedTo,
           reviewerId: initialData.reviewedBy || initialData.reviewerId,
-          description: initialData.description,
+          description: initialData.description || initialData.descriptionAssignment,
           dueDate: initialData.dueDate ? dayjs(initialData.dueDate) : undefined,
           datasetId: initialData.datasetId,
           projectId: initialData.projectId,
@@ -130,7 +184,8 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
           const managerId =
             (currentUser as unknown as Record<string, unknown>).userId || currentUser.id
           form.setFieldsValue({
-            assignedBy: managerId
+            assignedBy: managerId,
+            assignmentStatus: 'ASSIGNED'
           })
         }
         if (projectId) {
@@ -149,27 +204,74 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
         ? projectId
         : values.projectId || initialData?.projectId
       if (!resolvedProjectId && !isEditMode) {
+        message.destroy()
         message.error('Please select a project')
+        setIsSubmitting(false)
         return
       }
 
-      const payload = {
+      // Check if project is inactive
+      if (resolvedProjectId) {
+        const selectedProject = projects.find(
+          (p) => String(p.projectId) === String(resolvedProjectId)
+        )
+        if (
+          selectedProject &&
+          (selectedProject.projectStatus as string)?.toUpperCase() === 'INACTIVE'
+        ) {
+          message.error('Cannot create assignment for an inactive project.')
+          setIsSubmitting(false)
+          return
+        }
+      }
+
+      // Check if dataset is inactive (ensure only active datasets can be selected)
+      if (values.datasetId) {
+        const selectedDataset = datasets.find(
+          (d) => String(d.datasetId || d.id) === String(values.datasetId)
+        )
+        if (selectedDataset) {
+          const dsStatus = String(
+            selectedDataset.datasetStatus ||
+              selectedDataset.status ||
+              selectedDataset.dataset_status ||
+              ''
+          ).toUpperCase()
+          if (dsStatus !== 'ACTIVE') {
+            message.error(
+              `Cannot select a dataset with status '${dsStatus}'. Please select an ACTIVE dataset.`
+            )
+            setIsSubmitting(false)
+            return
+          }
+        }
+      }
+
+      const payload: Partial<GetAssignmentsParams> = {
         assignmentName: values.assignmentName,
         assignedTo: values.assignedTo,
         reviewedBy: values.reviewerId,
         description: values.description,
-        dueDate: values.dueDate ? values.dueDate.toISOString() : undefined,
-        assignmentStatus: 'ASSIGNED'
+        dueDate: values.dueDate ? values.dueDate.toISOString() : undefined
       }
 
       if (isEditMode && initialData?.assignmentId) {
-        await assignmentApi.updateAssignment(initialData.assignmentId, payload)
+        const updatePayload = {
+          ...payload,
+          projectId: initialData.projectId,
+          datasetId: values.datasetId || initialData.datasetId,
+          assignmentStatus: initialData.assignmentStatus || initialData.status,
+          totalItems: initialData.totalItems,
+          completedItems: initialData.completedItems
+        }
+        await assignmentApi.updateAssignment(initialData.assignmentId, updatePayload)
         message.success('Assignment updated successfully!')
       } else {
         const createPayload = {
           ...payload,
           assignedBy: values.assignedBy,
-          datasetId: values.datasetId
+          datasetId: values.datasetId,
+          assignmentStatus: 'ASSIGNED'
         }
         await assignmentApi.createAssignmentForProject(resolvedProjectId!, createPayload)
         message.success('Assignment created successfully!')
@@ -177,16 +279,36 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
 
       form.resetFields()
       onSuccess()
-    } catch (error) {
+    } catch (error: unknown) {
       if (error && typeof error === 'object' && 'errorFields' in error) {
-        // validation error, do nothing
-      } else {
-        console.error(
-          isEditMode ? 'Failed to update assignment' : 'Failed to create assignment',
-          error
-        )
-        message.error(isEditMode ? 'Failed to update assignment' : 'Failed to create assignment')
+        return
       }
+      console.error(
+        isEditMode ? 'Failed to update assignment' : 'Failed to create assignment',
+        error
+      )
+
+      // Map API errors to form fields
+      // const apiErrors = error?.response?.data?.errors
+      // if (apiErrors && typeof apiErrors === 'object') {
+      //     const fieldErrors = Object.entries(apiErrors).map(([key, messages]) => {
+      //         // Map API field names to form field names if they differ
+      //         let fieldName = key
+      //         if (key === 'reviewedBy') fieldName = 'reviewerId'
+
+      //         return {
+      //             name: fieldName,
+      //             errors: Array.isArray(messages) ? messages : [String(messages)]
+      //         }
+      //     })
+      //     form.setFields(fieldErrors)
+      // }
+
+      const apiError =
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        (error as Error)?.message ||
+        (isEditMode ? 'Failed to update assignment' : 'Failed to create assignment')
+      message.error(apiError)
     } finally {
       setIsSubmitting(false)
     }
@@ -209,7 +331,12 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
       const datasetRes = await datasetApi.getDatasetsByProjectId(value)
       const datasetsData = datasetRes.data?.data || datasetRes.data
       const dsArray = Array.isArray(datasetsData) ? datasetsData : []
-      setDatasets(dsArray)
+      setDatasets(
+        dsArray.filter((d: Record<string, unknown>) => {
+          const status = String(d.datasetStatus || d.status || d.dataset_status || '').toUpperCase()
+          return status === 'ACTIVE'
+        })
+      )
     } catch (error) {
       console.error(error)
       message.error('Failed to load datasets for selected project.')
@@ -262,12 +389,9 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
                 optionFilterProp="children"
                 onChange={handleProjectChange}
               >
-                {projects.map((p: Record<string, unknown>) => (
-                  <Select.Option
-                    key={(p.projectId as string) || (p.id as string)}
-                    value={(p.projectId as string) || (p.id as string)}
-                  >
-                    {(p.projectName as string) || (p.name as string)}
+                {projects.map((p: NormalizedProject) => (
+                  <Select.Option key={p.projectId} value={p.projectId}>
+                    {p.projectName}
                   </Select.Option>
                 ))}
               </Select>
@@ -348,30 +472,28 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
             </Form.Item>
           </div>
 
-          {!isEditMode && (
-            <Form.Item
-              label="Dataset"
-              name="datasetId"
-              rules={[{ required: true, message: 'Please select a dataset' }]}
+          <Form.Item
+            label="Dataset"
+            name="datasetId"
+            rules={[{ required: true, message: 'Please select a dataset' }]}
+          >
+            <Select
+              placeholder={!effectiveProjectId ? 'Select a project first' : 'Select dataset'}
+              loading={loading}
+              showSearch
+              optionFilterProp="children"
+              disabled={!effectiveProjectId}
             >
-              <Select
-                placeholder={!effectiveProjectId ? 'Select a project first' : 'Select dataset'}
-                loading={loading}
-                showSearch
-                optionFilterProp="children"
-                disabled={!effectiveProjectId}
-              >
-                {datasets.map((d: Record<string, unknown>) => (
-                  <Select.Option
-                    key={(d.datasetId as string) || (d.id as string)}
-                    value={(d.datasetId as string) || (d.id as string)}
-                  >
-                    {(d.datasetName as string) || (d.name as string)}
-                  </Select.Option>
-                ))}
-              </Select>
-            </Form.Item>
-          )}
+              {datasets.map((d: Record<string, unknown>) => (
+                <Select.Option
+                  key={(d.datasetId as string) || (d.id as string)}
+                  value={(d.datasetId as string) || (d.id as string)}
+                >
+                  {(d.datasetName as string) || (d.name as string)}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
 
           <Form.Item
             label="Due Date"

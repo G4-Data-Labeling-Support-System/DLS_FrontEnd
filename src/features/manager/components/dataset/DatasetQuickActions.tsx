@@ -1,3 +1,4 @@
+import React from 'react'
 import { Card, Button, Typography } from 'antd'
 import { PlusCircleFilled, FolderOpenOutlined, RightOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
@@ -5,7 +6,11 @@ import { PATH_MANAGER } from '@/routes/paths'
 
 const { Title } = Typography
 
-export const DatasetQuickActions = () => {
+interface DatasetQuickActionsProps {
+  onCreateDataset?: () => void
+}
+
+export const DatasetQuickActions: React.FC<DatasetQuickActionsProps> = ({ onCreateDataset }) => {
   const navigate = useNavigate()
 
   return (
@@ -22,7 +27,7 @@ export const DatasetQuickActions = () => {
           type="primary"
           size="large"
           className="w-full h-12 flex items-center justify-center bg-fuchsia-600 hover:bg-fuchsia-500 border-none shadow-[0_0_15px_rgba(192,38,211,0.4)]"
-          onClick={() => navigate(PATH_MANAGER.createDataset)}
+          onClick={onCreateDataset || (() => navigate(PATH_MANAGER.createDataset))}
         >
           <PlusCircleFilled className="text-lg mr-2" />
           CREATE DATASET

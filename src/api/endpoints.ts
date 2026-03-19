@@ -26,15 +26,18 @@ export const ENDPOINTS = {
     DETAIL: (id: string) => `/projects/${id}`,
     CREATE: '/projects',
     DELETE: (id: string) => `/projects/${id}/remove`,
-    STATUS: (id: string) => `/projects/${id}/status`
+    STATUS: (id: string) => `/projects/${id}/status`,
+    MEMBERS: (id: string) => `/projects/${id}/members`
   },
 
   DATASETS: {
     LIST: '/datasets',
     DETAIL: (id: string) => `/datasets/${id}`,
     ITEMS: (id: string) => `/dataitems/datasets/${id}`,
+    UPDATE: (id: string) => `/datasets/${id}`,
     CREATE: '/datasets',
-    BY_PROJECT: (projectId: string) => `/datasets/project/${projectId}`
+    BY_PROJECT: (projectId: string) => `/datasets/project/${projectId}`,
+    DELETE: (id: string) => `/datasets/remove/${id}`
   },
 
   DATA_ITEMS: {
@@ -47,9 +50,10 @@ export const ENDPOINTS = {
     UPDATE: (id: string) => `/assignments/${id}`,
     BY_PROJECT: (projectId: string) => `assignments/projects/${projectId}`,
     BY_ANNOTATOR: (annotatorId: string) => `/assignments/annotators/${annotatorId}`,
-    DELETE: (id: string) => `/assignments/${id}`,
+    DELETE: (id: string) => `/assignments/remove/${id}`,
     CREATE_BY_PROJECT: (projectId: string) => `/assignments/projects/${projectId}`,
-    LABELS: (assignmentId: string) => `/assignments/${assignmentId}/labels`
+    LABELS: (assignmentId: string) => `/assignments/${assignmentId}/labels`,
+    DATASET: (assignmentId: string) => `/assignments/${assignmentId}/dataset`
   },
 
   ANNOTATIONS: {
@@ -70,7 +74,8 @@ export const ENDPOINTS = {
     DETAIL: (id: string) => `/labels/${id}`,
     CREATE: (datasetId: string) => `/datasets/${datasetId}/labels`,
     UPDATE: (id: string) => `/labels/${id}`,
-    DELETE: (id: string) => `/labels/${id}`
+    DELETE: (id: string) => `/labels/${id}`,
+    BY_DATASET: (datasetId: string) => `/datasets/${datasetId}/labels`
   },
 
   REVIEWER: {
@@ -81,11 +86,13 @@ export const ENDPOINTS = {
   },
 
   DATAITEMS: {
-    BY_DATASET: (datasetId: string) => `/dataitems/datasets/${datasetId}`
+    BY_DATASET: (datasetId: string) => `/dataitems/datasets/${datasetId}`,
+    DELETE: (id: string) => `/images/delete/${id}`
   },
 
   TASKS: {
     BY_ASSIGNMENT: (assignmentId: string) => `/tasks/assignments/${assignmentId}`,
-    DETAIL: (taskId: string) => `/tasks/${taskId}`
+    DETAIL: (taskId: string) => `/tasks/${taskId}`,
+    DATA_ITEMS: (taskId: string) => `/tasks/${taskId}/taskDataitems`
   }
 } as const
