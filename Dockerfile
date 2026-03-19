@@ -3,7 +3,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --only=production
 COPY . .
-RUN npm run build:dev
+RUN npm run build
 
 FROM nginx:alpine AS run
 COPY --from=builder /app/dist /usr/share/nginx/html
