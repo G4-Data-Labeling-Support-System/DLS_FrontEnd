@@ -95,20 +95,20 @@ pipeline {
         //     }
         // }
 
-        stage('Node Build') {
-            steps {
-                echo "#====================== Node install and build ======================#"
-                script {
-                    if (env.BRANCH_NAME == 'master') {
-                        sh "npm install"
-                        sh "npm run build:prod"
-                    } else {
-                        sh "npm install"
-                        sh "npm run build"
-                    }
-                }
-            }
-        }
+        // stage('Node Build') {
+        //     steps {
+        //         echo "#====================== Node install and build ======================#"
+        //         script {
+        //             if (env.BRANCH_NAME == 'master') {
+        //                 sh "npm install"
+        //                 sh "npm run build:prod"
+        //             } else {
+        //                 sh "npm install"
+        //                 sh "npm run build"
+        //             }
+        //         }
+        //     }
+        // }
 
         // stage('OWASP DP-SCAN') {
         //     steps {
