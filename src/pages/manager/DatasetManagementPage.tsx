@@ -121,8 +121,7 @@ const DatasetManagementPage: React.FC = () => {
               (d) =>
                 d.datasetId &&
                 d.datasetId !== 'undefined' &&
-                d.datasetId !== 'null' &&
-                d.datasetStatus?.toUpperCase() !== 'INACTIVE'
+                d.datasetId !== 'null'
             )
         setDatasets(mappedDatasets)
       } else {

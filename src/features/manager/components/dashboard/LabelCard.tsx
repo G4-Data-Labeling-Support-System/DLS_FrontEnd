@@ -28,7 +28,7 @@ export const LabelCard: React.FC<LabelCardProps> = ({
     { type: 'divider' },
     {
       key: '4',
-      label: <span className="text-red-500">Delete Label</span>,
+      label: <span className="text-red-500">Deactivate Label</span>,
       icon: <DeleteOutlined className="text-red-500" />,
       onClick: onDelete
     }

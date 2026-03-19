@@ -7,25 +7,25 @@ export default function getTaskStatusStyle(status: string) {
     }
   switch (status.toLowerCase()) {
     case 'completed':
-    case 'done':
       return {
         badge: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400',
         dot: 'bg-emerald-400',
         icon: 'task_alt'
       }
-    case 'pending':
-      return {
-        badge: 'border-amber-500/30 bg-amber-500/10 text-amber-400',
-        dot: 'bg-amber-400',
-        icon: 'pending'
-      }
-    case 'active':
+    case 'in_progress':
     case 'in progress':
       return {
         badge: 'border-violet-500/30 bg-violet-500/10 text-violet-400',
         dot: 'bg-violet-400',
         icon: 'edit_note'
       }
+    case 'inactive':
+      return {
+        badge: 'border-red-500/30 bg-red-500/10 text-red-400',
+        dot: 'bg-red-400',
+        icon: 'highlight_off'
+      }
+    case 'not_started':
     default:
       return {
         badge: 'border-gray-500/20 bg-gray-500/10 text-gray-400',
@@ -36,30 +36,30 @@ export default function getTaskStatusStyle(status: string) {
 }
 
 export function getAnnotationStatusLabel(status: string) {
-  switch (status) {
-    case 'not_submitted':
-      return 'Not Submitted'
-    case 'needs_editing':
-      return 'Needs Editing'
-    case 'corrected':
-      return 'Corrected'
+  switch (status?.toLowerCase()) {
     case 'submitted':
       return 'Submitted'
+    case 'approved':
+      return 'Approved'
+    case 'rejected':
+      return 'Rejected'
+    case 'inactive':
+      return 'Inactive'
     default:
-      return status
+      return status || 'Unassigned'
   }
 }
 
 export function getAnnotationStatusStyle(status: string) {
-  switch (status) {
-    case 'not_submitted':
-      return 'text-gray-400'
-    case 'needs_editing':
-      return 'text-fuchsia-400'
-    case 'corrected':
-      return 'text-emerald-400'
+  switch (status?.toLowerCase()) {
     case 'submitted':
       return 'text-violet-400'
+    case 'approved':
+      return 'text-emerald-400'
+    case 'rejected':
+      return 'text-fuchsia-400'
+    case 'inactive':
+      return 'text-red-400'
     default:
       return 'text-gray-400'
   }

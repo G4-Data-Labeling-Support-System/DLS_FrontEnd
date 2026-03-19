@@ -27,27 +27,29 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
     { key: '2', label: 'Edit Assignment', icon: <EditOutlined />, onClick: onEdit },
     ...(onDelete
       ? [
-          { type: 'divider' as const },
-          {
-            key: '4',
-            label: <span className="text-red-500">Delete Assignment</span>,
-            icon: <DeleteOutlined className="text-red-500" />,
-            onClick: onDelete
-          }
-        ]
+        { type: 'divider' as const },
+        {
+          key: '4',
+          label: <span className="text-red-500">Deactivate Assignment</span>,
+          icon: <DeleteOutlined className="text-red-500" />,
+          onClick: onDelete
+        }
+      ]
       : [])
   ]
 
   // Status mapping using Assignment specific logic
   const getStatusColor = (status?: string) => {
     switch (status?.toUpperCase()) {
-      case 'ACTIVE':
+      case 'ASSIGNED':
+        return 'default'
+      case 'IN_PROGRESS':
         return 'processing'
+      case 'REVIEWING':
+        return 'warning'
       case 'COMPLETED':
         return 'success'
-      case 'PAUSED':
-        return 'warning'
-      case 'ARCHIVE':
+      case 'INACTIVE':
         return 'error'
       default:
         return 'default'
@@ -62,7 +64,9 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
   if (variant === 'compact') {
     return (
       <div
-        className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-blue-500/30 transition-colors cursor-pointer group"
+        className={`flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-blue-500/30 transition-colors cursor-pointer group ${
+          status?.toUpperCase() === 'INACTIVE' ? 'opacity-60 grayscale-[0.5]' : ''
+        }`}
         onClick={onClick}
       >
         <div className="flex justify-between items-start">
@@ -76,7 +80,9 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
         <div className="flex items-center gap-2 mt-1">
           <Tag
             color={getStatusColor(status)}
-            className="m-0 text-[10px] px-1.5 py-0 font-medium whitespace-nowrap"
+            className={`m-0 text-[10px] px-1.5 py-0 font-medium whitespace-nowrap ${
+              status?.toUpperCase() === 'INACTIVE' ? 'text-red-500' : ''
+            }`}
           >
             {status || 'UNKNOWN'}
           </Tag>
@@ -88,19 +94,21 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
 
   return (
     <Card
-      className="bg-[#1A1625] border border-violet-500/20 rounded-xl overflow-hidden hover:bg-violet-500/10 hover:border-fuchsia-500/50 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(139,92,246,0.15)] transition-all duration-500 flex flex-col h-full cursor-pointer relative pt-4 mt-3"
+      className={`bg-[#1A1625] border border-violet-500/20 rounded-xl overflow-hidden hover:bg-violet-500/10 hover:border-fuchsia-500/50 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(139,92,246,0.15)] transition-all duration-500 flex flex-col h-full cursor-pointer relative pt-4 mt-3 ${
+        status?.toUpperCase() === 'INACTIVE' ? 'opacity-60 grayscale-[0.5]' : ''
+      }`}
       onClick={onClick}
     >
       {assignmentName &&
-      typeof assignmentName === 'object' &&
-      ('projectName' in (assignmentName as object) ||
-        'project_name' in (assignmentName as object)) ? (
+        typeof assignmentName === 'object' &&
+        ('projectName' in (assignmentName as object) ||
+          'project_name' in (assignmentName as object)) ? (
         <div className="absolute -top-3 left-4 z-10">
           <div className="bg-violet-500/20 border border-violet-500/30 text-violet-300 text-[10px] font-bold px-3 py-1 rounded-full backdrop-blur-sm shadow-lg flex items-center gap-1.5 transition-all group-hover:bg-violet-500/30 group-hover:border-violet-500/50">
             <div className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
             {String(
               (assignmentName as Record<string, unknown>).projectName ||
-                (assignmentName as Record<string, unknown>).project_name
+              (assignmentName as Record<string, unknown>).project_name
             )}
           </div>
         </div>
@@ -116,7 +124,12 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
           </Title>
         </div>
         <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-          <Tag color={getStatusColor(status)} className="m-0 text-[10px] px-1.5 py-0 font-medium whitespace-nowrap">
+          <Tag
+            color={getStatusColor(status)}
+            className={`m-0 text-[10px] px-1.5 py-0 font-medium whitespace-nowrap ${
+              status?.toUpperCase() === 'INACTIVE' ? 'text-red-500' : ''
+            }`}
+          >
             {status || 'UNKNOWN'}
           </Tag>
           <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">

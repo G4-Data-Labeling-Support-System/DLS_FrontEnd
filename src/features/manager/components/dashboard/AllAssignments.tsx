@@ -112,9 +112,10 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
             options={[
               { value: 'ALL', label: 'All Statuses' },
               { value: 'ASSIGNED', label: 'Assigned' },
-              { value: 'COMPLETED', label: 'Completed' },
               { value: 'IN_PROGRESS', label: 'In Progress' },
-              { value: 'REVIEWING', label: 'Reviewing' }
+              { value: 'REVIEWING', label: 'Reviewing' },
+              { value: 'COMPLETED', label: 'Completed' },
+              { value: 'INACTIVE', label: 'Inactive' }
             ]}
           />
           <Input
@@ -144,12 +145,17 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
             )
             .filter(
               (a) =>
-                a.status?.toUpperCase() !== 'CANCELLED' &&
-                (statusFilter === 'ALL' || (a.status && a.status.toUpperCase() === statusFilter))
+                statusFilter === 'ALL' || (a.status && a.status.toUpperCase() === statusFilter)
             )
-            .sort(
-              (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-            )
+            .sort((a, b) => {
+              const aIsInactive = a.status?.toUpperCase() === 'INACTIVE'
+              const bIsInactive = b.status?.toUpperCase() === 'INACTIVE'
+
+              if (aIsInactive && !bIsInactive) return 1
+              if (!aIsInactive && bIsInactive) return -1
+
+              return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+            })
             .map((a, index) => {
               const uniqueId = a.assignmentId || String(index)
               return (
@@ -183,10 +189,10 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
               </div>
             </div>
             <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
-              Delete Assignment
+              Deactivate Assignment
             </h2>
             <p className="text-white/50 text-sm">
-              Are you sure you want to delete{' '}
+              Are you sure you want to deactivate{' '}
               <span className="text-white/80 font-medium">{deletingAssignmentName}</span>? This
               action cannot be undone.
             </p>
@@ -210,7 +216,7 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
               onClick={confirmDelete}
               className="bg-red-600 hover:bg-red-500 border-none"
             >
-              Delete Assignment
+              Deactivate Assignment
             </Button>
           </div>
         </div>

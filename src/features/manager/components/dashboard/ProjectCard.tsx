@@ -1,12 +1,6 @@
 import React from 'react'
 import { Card, Button, Typography, Dropdown, Tag, type MenuProps } from 'antd'
-import {
-  MoreOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  CloseCircleOutlined
-} from '@ant-design/icons'
+import { MoreOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons'
 import type { GetProjectsParams } from '@/api/ProjectApi' // Import type từ API của bạn
 
 const { Title } = Typography
@@ -15,7 +9,6 @@ const { Title } = Typography
 interface ProjectCardProps extends GetProjectsParams {
   onEdit?: () => void
   onDelete?: () => void
-  onCancelProject?: () => void
   onClick?: () => void
 }
 
@@ -25,20 +18,12 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   createdAt,
   onEdit,
   onDelete,
-  onCancelProject,
   onClick
 }) => {
   const items: MenuProps['items'] = [
     { key: '1', label: 'View Details', icon: <EyeOutlined />, onClick: onClick },
     { key: '2', label: 'Edit Project', icon: <EditOutlined />, onClick: onEdit },
     { type: 'divider' },
-    {
-      key: '5',
-      label: <span className="text-orange-500">Cancel Project</span>,
-      icon: <CloseCircleOutlined className="text-orange-500" />,
-      onClick: onCancelProject,
-      disabled: projectStatus === 'CANCELLED'
-    },
     {
       key: '4',
       label: <span className="text-red-500">Deactivate Project</span>,
@@ -50,22 +35,14 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   // Hàm chọn màu cho Tag trạng thái
   const getStatusColor = (status?: string) => {
     switch (status?.toUpperCase()) {
-      case 'ACTIVE':
-        return 'processing'
-      case 'INPROGRESS':
-        return 'gold'
-      case 'COMPLETED':
-        return 'success'
-      case 'PAUSED':
-        return 'warning'
-      case 'ARCHIVE':
-        return 'error'
-      case 'INACTIVE':
-        return 'error'
-      case 'CANCELLED':
-        return 'error'
       case 'NOT_STARTED':
         return 'default'
+      case 'IN_PROGRESS':
+        return 'processing'
+      case 'COMPLETED':
+        return 'success'
+      case 'INACTIVE':
+        return 'error'
       default:
         return 'default'
     }
@@ -79,7 +56,9 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
 
   return (
     <Card
-      className="bg-[#1A1625] border border-violet-500/20 rounded-xl overflow-hidden hover:bg-violet-500/10 hover:border-fuchsia-500/50 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(139,92,246,0.15)] transition-all duration-500 flex flex-col h-full cursor-pointer relative pt-4 mt-3"
+      className={`bg-[#1A1625] border border-violet-500/20 rounded-xl overflow-hidden hover:bg-violet-500/10 hover:border-fuchsia-500/50 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(139,92,246,0.15)] transition-all duration-500 flex flex-col h-full cursor-pointer relative pt-4 mt-3 ${
+        projectStatus?.toUpperCase() === 'INACTIVE' ? 'opacity-60 grayscale-[0.5]' : ''
+      }`}
       onClick={onClick}
     >
       <div className="flex justify-between items-start mb-2">
@@ -93,7 +72,12 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
           </Title>
         </div>
         <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-          <Tag color={getStatusColor(projectStatus)} className="m-0 text-[10px] px-1.5 py-0 font-medium whitespace-nowrap border-0 rounded">
+          <Tag
+            color={getStatusColor(projectStatus)}
+            className={`m-0 text-[10px] px-1.5 py-0 font-medium whitespace-nowrap border-0 rounded ${
+              projectStatus?.toUpperCase() === 'INACTIVE' ? 'text-red-500' : ''
+            }`}
+          >
             {(projectStatus || 'UNKNOWN').toUpperCase()}
           </Tag>
           <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">

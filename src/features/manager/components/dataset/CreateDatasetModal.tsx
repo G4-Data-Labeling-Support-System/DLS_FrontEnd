@@ -50,65 +50,64 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
     fileListRef.current = fileList
   }, [fileList])
 
-  // 1. Fetch initial dataset details if editing
+  // 2. Combined loading: Load projects then resolve current project if editing
   useEffect(() => {
-    const fetchDetails = async () => {
-      if (open && isEdit && initialData?.datasetId) {
-        try {
+    const initData = async () => {
+      if (!open) return
+      setLoading(true)
+      try {
+        // First fetch all projects
+        const projRes = await projectApi.getProjects()
+        const projData = projRes.data?.data || projRes.data || []
+        let activeProjects: GetProjectsParams[] = []
+        if (Array.isArray(projData)) {
+          activeProjects = projData
+            .map((p: any) => ({
+              projectId: String(p.projectId || p.id || ''),
+              projectName: String(p.projectName || p.name || 'Unknown Project'),
+              projectStatus: String(p.projectStatus || p.status || 'ACTIVE')
+            }))
+            .filter((p) => p.projectId && p.projectStatus?.toUpperCase() !== 'INACTIVE')
+        }
+
+        if (isEdit && initialData?.datasetId) {
           setFetchingDetails(true)
           const res = await datasetApi.getDatasetById(initialData.datasetId)
           const data = res.data?.data || res.data
           if (data) {
-            const pId = data.projectId
+            const pId = String(data.projectId)
             form.setFieldsValue({
-              datasetName: data.datasetName || data.name || data.title,
+              datasetName: data.datasetName,
               description: data.description,
               projectId: pId
             })
 
-            // Resolve project info if available in response
+            // Resolve current project info
             const projectInfo = data.project || {}
-            const resolvedPId = String(pId || projectInfo.projectId || projectInfo.id || '')
-            const resolvedPName = String(projectInfo.projectName || projectInfo.name || '')
+            const resolvedPId = String(projectInfo.projectId)
+            const resolvedPName = String(projectInfo.projectName)
+            const resolvedStatus = String(projectInfo.projectStatus)
 
-            if (resolvedPId) {
-              setProjects(prev => {
-                if (prev.find(p => p.projectId === resolvedPId)) return prev
-                return [...prev, {
+            // If the current project is NOT in the active projects list, add it
+            if (resolvedPId && !activeProjects.find(p => String(p.projectId) === resolvedPId)) {
+              activeProjects = [
+                {
                   projectId: resolvedPId,
-                  projectName: resolvedPName || 'Fetching...',
-                  projectStatus: String(projectInfo.projectStatus || 'ACTIVE')
-                }]
-              })
-
-              if (!resolvedPName) {
-                try {
-                  const projRes = await projectApi.getProjectById(resolvedPId)
-                  const projData = projRes.data?.data || projRes.data
-                  if (projData) {
-                    setProjects(prev => prev.map(p => p.projectId === resolvedPId ? {
-                      projectId: resolvedPId,
-                      projectName: projData.projectName || projData.name || '',
-                      projectStatus: projData.projectStatus || 'ACTIVE'
-                    } : p))
-                  }
-                } catch (err) {
-                  console.error('Failed to resolve project name:', err)
-                }
-              }
+                  projectName: resolvedPName,
+                  projectStatus: resolvedStatus
+                },
+                ...activeProjects
+              ]
             }
 
-            // Check for assignments
             setHasAssignments(!!(data.assignmentId || (data.assignments && data.assignments.length > 0)))
           }
 
+          // Fetch items
           const itemsRes = await datasetApi.getDatasetItems(initialData.datasetId)
           const items = itemsRes.data?.data || itemsRes.data || []
           if (Array.isArray(items)) {
-            const initialFileList = items.map((item: {
-              content?: string; url?: string; imageUrl?: string; previewUrl?: string; path?: string;
-              dataItemId?: string; id?: string; name?: string; filename?: string
-            }) => {
+            const initialFileList = items.map((item: any) => {
               const url = item.content || item.url || item.imageUrl || item.previewUrl || item.path || ''
               return {
                 uid: String(item.dataItemId || item.id || Math.random()),
@@ -121,49 +120,28 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
             }).filter((f) => !!f.url)
             setFileList(initialFileList)
           }
-        } catch (error) {
-          console.error('Fetch details failed:', error)
-          message.error('Failed to refresh dataset details.')
-        } finally {
-          setFetchingDetails(false)
+        } else if (!isEdit) {
+          form.resetFields()
+          setFileList([])
+          setDeletedItemIds([])
+          setHasAssignments(false)
+          if (initialProjectId) {
+            form.setFieldsValue({ projectId: initialProjectId })
+          }
         }
-      } else if (open && !isEdit) {
-        form.resetFields()
-        setFileList([])
-        setDeletedItemIds([])
-        setHasAssignments(false)
-        if (initialProjectId) {
-          form.setFieldsValue({ projectId: initialProjectId })
-        }
-      }
-    }
-    fetchDetails()
-  }, [open, isEdit, initialData?.datasetId, initialProjectId, form, message])
 
-  // 2. Load projects list
-  useEffect(() => {
-    const fetchProjects = async () => {
-      if (!open) return
-      try {
-        const response = await projectApi.getProjects()
-        const data = response.data?.data || response.data || []
-        if (Array.isArray(data)) {
-          const normalizedProjects = data.map((p: { project?: GetProjectsParams; projectId?: string; id?: string; projectName?: string; name?: string; projectStatus?: string; status?: string }) => {
-            const info = p.project || p
-            return {
-              projectId: String(info.projectId),
-              projectName: String(info.projectName),
-              projectStatus: String(info.projectStatus)
-            }
-          })
-          setProjects(normalizedProjects)
-        }
+        setProjects(activeProjects)
       } catch (error) {
-        console.error('Fetch projects failed:', error)
+        console.error('Initialization failed:', error)
+        if (isEdit) message.error('Failed to load dataset details.')
+      } finally {
+        setFetchingDetails(false)
+        setLoading(false)
       }
     }
-    fetchProjects()
-  }, [open])
+
+    initData()
+  }, [open, isEdit, initialData?.datasetId, initialProjectId, form, message])
 
   useEffect(() => {
     return () => {
@@ -223,7 +201,11 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
 
       // Check if project is in the list
       const selectedProject = projects.find(p => String(p.projectId) === String(values.projectId))
-      if (!selectedProject) {
+
+      // If updating and project hasn't changed, allow it even if not in the list (could be INACTIVE)
+      const projectIsSame = isEdit && initialData?.projectId && String(initialData.projectId) === String(values.projectId)
+
+      if (!selectedProject && !projectIsSame) {
         message.warning('The selected project is not in the project list.')
         setLoading(false)
         return
@@ -272,6 +254,7 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
       // 4. API Call
       const payload = {
         ...values,
+        projectId: String(values.projectId || initialData?.projectId || ''), // Ensure correct projectId string
         files: filesToUpload.length > 0 ? filesToUpload : undefined
       }
       const res = isEdit
@@ -340,7 +323,9 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
                     optionFilterProp="children"
                   >
                     {projects.map((p) => (
-                      <Select.Option key={p.projectId} value={p.projectId}>{p.projectName}</Select.Option>
+                      <Select.Option key={p.projectId} value={p.projectId}>
+                        {p.projectName}
+                      </Select.Option>
                     ))}
                   </Select>
                 </Form.Item>

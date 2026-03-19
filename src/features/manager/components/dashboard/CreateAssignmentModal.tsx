@@ -77,7 +77,17 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
           }
         })
 
-        setProjects(normalizedProjects.filter((p: NormalizedProject) => p.projectStatus?.toUpperCase() !== 'INACTIVE'))
+        setProjects(
+          normalizedProjects.sort((a, b) => {
+            const aIsInactive = a.projectStatus?.toUpperCase() === 'INACTIVE'
+            const bIsInactive = b.projectStatus?.toUpperCase() === 'INACTIVE'
+
+            if (aIsInactive && !bIsInactive) return 1
+            if (!aIsInactive && bIsInactive) return -1
+
+            return 0
+          })
+        )
       } catch (error) {
         console.error(error)
         message.error('Failed to load projects.')
@@ -127,7 +137,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
           setDatasets(
             dsArray.filter((d: Record<string, unknown>) => {
               const status = String(d.datasetStatus || d.status || d.dataset_status || '').toUpperCase()
-              return status !== 'INACTIVE'
+              return status === 'ACTIVE'
             })
           )
         } else {
@@ -202,13 +212,13 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
         }
       }
 
-      // Check if dataset is inactive (only for create mode as dataset is fixed in edit mode)
-      if (!isEditMode && values.datasetId) {
+      // Check if dataset is inactive (ensure only active datasets can be selected)
+      if (values.datasetId) {
         const selectedDataset = datasets.find(d => String(d.datasetId || d.id) === String(values.datasetId))
         if (selectedDataset) {
           const dsStatus = String(selectedDataset.datasetStatus || selectedDataset.status || selectedDataset.dataset_status || '').toUpperCase()
-          if (dsStatus === 'INACTIVE') {
-            message.error('Cannot create assignment with an inactive dataset.')
+          if (dsStatus !== 'ACTIVE') {
+            message.error(`Cannot select a dataset with status '${dsStatus}'. Please select an ACTIVE dataset.`)
             setIsSubmitting(false)
             return
           }
@@ -227,7 +237,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
         const updatePayload = {
           ...payload,
           projectId: initialData.projectId,
-          datasetId: initialData.datasetId,
+          datasetId: values.datasetId || initialData.datasetId,
           assignmentStatus: initialData.assignmentStatus || initialData.status,
           totalItems: initialData.totalItems,
           completedItems: initialData.completedItems
@@ -299,7 +309,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
       setDatasets(
         dsArray.filter((d: Record<string, unknown>) => {
           const status = String(d.datasetStatus || d.status || d.dataset_status || '').toUpperCase()
-          return status !== 'INACTIVE'
+          return status === 'ACTIVE'
         })
       )
     } catch (error) {
@@ -440,30 +450,28 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
             </Form.Item>
           </div>
 
-          {!isEditMode && (
-            <Form.Item
-              label="Dataset"
-              name="datasetId"
-              rules={[{ required: true, message: 'Please select a dataset' }]}
+          <Form.Item
+            label="Dataset"
+            name="datasetId"
+            rules={[{ required: true, message: 'Please select a dataset' }]}
+          >
+            <Select
+              placeholder={!effectiveProjectId ? 'Select a project first' : 'Select dataset'}
+              loading={loading}
+              showSearch
+              optionFilterProp="children"
+              disabled={!effectiveProjectId}
             >
-              <Select
-                placeholder={!effectiveProjectId ? 'Select a project first' : 'Select dataset'}
-                loading={loading}
-                showSearch
-                optionFilterProp="children"
-                disabled={!effectiveProjectId}
-              >
-                {datasets.map((d: Record<string, unknown>) => (
-                  <Select.Option
-                    key={(d.datasetId as string) || (d.id as string)}
-                    value={(d.datasetId as string) || (d.id as string)}
-                  >
-                    {(d.datasetName as string) || (d.name as string)}
-                  </Select.Option>
-                ))}
-              </Select>
-            </Form.Item>
-          )}
+              {datasets.map((d: Record<string, unknown>) => (
+                <Select.Option
+                  key={(d.datasetId as string) || (d.id as string)}
+                  value={(d.datasetId as string) || (d.id as string)}
+                >
+                  {(d.datasetName as string) || (d.name as string)}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
 
           <Form.Item
             label="Due Date"

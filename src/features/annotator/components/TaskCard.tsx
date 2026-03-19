@@ -20,7 +20,7 @@ interface Task {
 export default function TaskCard({ task, assignmentId }: { task: Task; assignmentId?: string }) {
   const navigate = useNavigate()
   if (!task.id) return null // Guard against missing ID
-  const taskStatus = task.taskStatus || task.status || task.reviewStatus || 'PENDING'
+  const taskStatus = task.taskStatus || task.status || task.reviewStatus || 'NOT_STARTED'
   const taskName = task.name || task.filename || 'Untitled Task'
   
   const completed = task.completedItems ?? 0
