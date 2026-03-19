@@ -92,7 +92,6 @@ export default function AnnotatorDashboardPage() {
 
           // Normalize assignment
           const actualTasks = Array.isArray(assignmentData.tasks) ? assignmentData.tasks : []
-          const fallbackTasks = actualTasks.length > 0 ? actualTasks : [MOCK_TEST_TASK]
           const calcCompleted = actualTasks.filter(
             (t: AssignmentTask) =>
               t.taskStatus === 'COMPLETED' ||
@@ -103,16 +102,16 @@ export default function AnnotatorDashboardPage() {
             ...assignmentData,
             id: assignmentData.assignmentId || assignmentData.id,
             name: assignmentData.assignmentName || assignmentData.name || assignmentData.title,
-            status: assignmentData.assignmentStatus || assignmentData.status,
+            status: assignmentData.assignmentStatus || assignmentData.status || 'PENDING',
             description: assignmentData.descriptionAssignment || assignmentData.description,
             projectId:
               assignmentData.projectId ||
               assignmentData.project?.projectId ||
               assignmentData.project?.id,
-            tasks: fallbackTasks,
+            tasks: actualTasks.length > 0 ? actualTasks : undefined,
             completedTasks:
               actualTasks.length > 0 ? calcCompleted : (assignmentData.completedTasks ?? 0),
-            totalTasks: actualTasks.length > 0 ? actualTasks.length : assignmentData.totalTasks || 1
+            totalTasks: actualTasks.length > 0 ? actualTasks.length : assignmentData.totalTasks || 0
           }
           setAssignment(normAssignment)
           // Fetch associated Guideline
@@ -155,7 +154,15 @@ export default function AnnotatorDashboardPage() {
             let hasFetchedProject = false
             try {
               const assignRes = await assignmentApi.getAssignmentsByAnnotator(user.id)
-              const assignsList = assignRes.data?.data || assignRes.data || []
+              const rawList = assignRes.data?.data || assignRes.data || []
+              
+              const assignsList = rawList.map((a: any) => ({
+                 ...a,
+                 id: a.assignmentId || a.id,
+                 assignmentName: a.assignmentName || a.name || `Assignment ${a.assignmentId?.split('-').pop() || ''}`,
+                 status: a.assignmentStatus || a.status || 'PENDING'
+              }))
+
               setAnnotatorAssignments(assignsList)
 
               if (assignsList.length > 0) {
