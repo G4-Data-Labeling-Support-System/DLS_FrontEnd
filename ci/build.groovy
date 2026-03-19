@@ -1,14 +1,14 @@
 def call(config) {
-    stage('Maven Build') {
-        echo 'Running Maven Build...'
+    stage('Node Build') {
+        echo 'Running Node Build...'
 
         script {
-            String mavenHome = tool 'maven'
-            withEnv(["PATH+MAVEN=${mavenHome}/bin"]) {
-                sh '''
-                    mvn -version
-                    mvn clean package -DskipTests
-                '''
+            if (env.BRANCH_NAME == 'main') {
+                sh "npm install"
+                sh "npm run build:prod"
+            } else {
+                sh "npm install"
+                sh "npm run build"
             }
         }
     }
