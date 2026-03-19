@@ -92,6 +92,7 @@ export default function AnnotatorDashboardPage() {
 
           // Normalize assignment
           const actualTasks = Array.isArray(assignmentData.tasks) ? assignmentData.tasks : []
+          const fallbackTasks = actualTasks.length > 0 ? actualTasks : [MOCK_TEST_TASK]
           const calcCompleted = actualTasks.filter(
             (t: AssignmentTask) =>
               t.taskStatus === 'COMPLETED' || t.annotationStatus === 'COMPLETED'
@@ -107,10 +108,10 @@ export default function AnnotatorDashboardPage() {
               assignmentData.projectId ||
               assignmentData.project?.projectId ||
               assignmentData.project?.id,
-            tasks: actualTasks.length > 0 ? actualTasks : undefined,
+            tasks: fallbackTasks,
             completedTasks:
               actualTasks.length > 0 ? calcCompleted : (assignmentData.completedTasks ?? 0),
-            totalTasks: actualTasks.length > 0 ? actualTasks.length : assignmentData.totalTasks || 0
+            totalTasks: actualTasks.length > 0 ? actualTasks.length : assignmentData.totalTasks || 1
           }
           setAssignment(normAssignment)
           // Fetch associated Guideline

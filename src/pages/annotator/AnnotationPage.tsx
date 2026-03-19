@@ -250,16 +250,16 @@ export default function AnnotationPage() {
       annotationData: {
         active: currentShape
           ? {
-              type: currentShape.type,
-              points: currentShape.points ? currentShape.points.length : undefined,
-              dimensions:
-                currentShape.type === 'bounding_box'
-                  ? {
-                      w: Math.round(currentShape.width || 0),
-                      h: Math.round(currentShape.height || 0)
-                    }
-                  : undefined
-            }
+            type: currentShape.type,
+            points: currentShape.points ? currentShape.points.length : undefined,
+            dimensions:
+              currentShape.type === 'bounding_box'
+                ? {
+                  w: Math.round(currentShape.width || 0),
+                  h: Math.round(currentShape.height || 0)
+                }
+                : undefined
+          }
           : null,
         session: shapes.map((s) => ({ type: s.type, label: s.label })),
         raw: shapes
@@ -268,8 +268,8 @@ export default function AnnotationPage() {
       annotationType: shapes.some((s) => s.type === 'bounding_box')
         ? 'BOUNDING_BOX'
         : shapes.some((s) => s.type === 'polygon')
-        ? 'POLYGON_SEGMENTATION'
-        : 'CLASSIFICATION',
+          ? 'POLYGON_SEGMENTATION'
+          : 'CLASSIFICATION',
       comment: comment,
       dataitemId: itemId,
       labelIds: selectedLabels
@@ -428,7 +428,7 @@ export default function AnnotationPage() {
             </span>
             <span className="text-xs font-mono text-gray-300">{taskId}</span>
           </div>
-          <button 
+          <button
             onClick={handleSubmitTask}
             className="bg-violet-600 hover:bg-violet-500 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow-lg shadow-violet-900/20 transition-all cursor-pointer"
           >
@@ -582,11 +582,10 @@ export default function AnnotationPage() {
                       onClick={() => toggleLabel(label)}
                       className={`
                                               px-3 py-1.5 rounded-lg text-xs font-bold transition-all border
-                                              ${
-                                                selectedLabels.includes(label.labelId)
-                                                  ? 'bg-white/10 text-white'
-                                                  : 'bg-white/5 border-transparent text-gray-500 hover:bg-white/10 hover:text-gray-300'
-                                              }
+                                              ${selectedLabels.includes(label.labelId)
+                          ? 'bg-white/10 text-white'
+                          : 'bg-white/5 border-transparent text-gray-500 hover:bg-white/10 hover:text-gray-300'
+                        }
                                           `}
                       style={{
                         borderColor: selectedLabels.includes(label.labelId)
@@ -615,7 +614,7 @@ export default function AnnotationPage() {
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 className="w-full h-24 bg-white/5 rounded-xl border border-white/10 p-4 text-sm text-gray-300 focus:outline-none focus:border-violet-500/50 transition-colors resize-none"
-                />
+              />
             </div>
 
             <div className="flex flex-col gap-4">
@@ -631,16 +630,16 @@ export default function AnnotationPage() {
                     {
                       active: currentShape
                         ? {
-                            type: currentShape.type,
-                            points: currentShape.points ? currentShape.points.length : undefined,
-                            dimensions:
-                              currentShape.type === 'bounding_box'
-                                ? {
-                                    w: Math.round(currentShape.width || 0),
-                                    h: Math.round(currentShape.height || 0)
-                                  }
-                                : undefined
-                          }
+                          type: currentShape.type,
+                          points: currentShape.points ? currentShape.points.length : undefined,
+                          dimensions:
+                            currentShape.type === 'bounding_box'
+                              ? {
+                                w: Math.round(currentShape.width || 0),
+                                h: Math.round(currentShape.height || 0)
+                              }
+                              : undefined
+                        }
                         : null,
                       session: shapes.map((s) => ({ type: s.type, label: s.label })),
                       raw: shapes
