@@ -23,7 +23,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://dls-beta.hikarimoon.pro', // Server backend base URL
+        target: 'https://dls-be-dev.hikarimoon.pro', // Server backend base URL
         changeOrigin: true,
         secure: false,
         timeout: 600000,      // 10 phút
