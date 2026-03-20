@@ -14,8 +14,7 @@ import {
   TasksSection,
   GuidelineSection,
   AnnotationProjectDetail,
-  AnnotatorDatasetCard,
-  MOCK_TEST_TASK
+  AnnotatorDatasetCard
 } from '@/features/annotator'
 import { AssignmentCard } from '@/features/manager/components/dashboard/AssignmentCard'
 
@@ -91,7 +90,14 @@ export default function AnnotatorDashboardPage() {
           const assignmentData = assignmentRes.data?.data || assignmentRes.data
 
           // Normalize assignment
-          const actualTasks = Array.isArray(assignmentData.tasks) ? assignmentData.tasks : []
+          const actualTasks = (
+            Array.isArray(assignmentData.tasks) ? assignmentData.tasks : []
+          ).filter((t: AssignmentTask) => {
+            const status = String(
+              t.taskStatus || t.status || t.assignmentStatus || ''
+            ).toUpperCase()
+            return status !== 'INACTIVE' && status !== 'DELETED'
+          })
           const calcCompleted = actualTasks.filter(
             (t: AssignmentTask) =>
               t.taskStatus === 'COMPLETED' ||
@@ -155,12 +161,15 @@ export default function AnnotatorDashboardPage() {
             try {
               const assignRes = await assignmentApi.getAssignmentsByAnnotator(user.id)
               const rawList = assignRes.data?.data || assignRes.data || []
-              
-              const assignsList = rawList.map((a: any) => ({
-                 ...a,
-                 id: a.assignmentId || a.id,
-                 assignmentName: a.assignmentName || a.name || `Assignment ${a.assignmentId?.split('-').pop() || ''}`,
-                 status: a.assignmentStatus || a.status || 'PENDING'
+
+              const assignsList = rawList.map((a: GetAssignmentsParams) => ({
+                ...a,
+                id: a.assignmentId || a.id,
+                assignmentName:
+                  a.assignmentName ||
+                  a.name ||
+                  `Assignment ${a.assignmentId?.split('-').pop() || ''}`,
+                status: a.assignmentStatus || a.status || 'PENDING'
               }))
 
               setAnnotatorAssignments(assignsList)
@@ -298,18 +307,27 @@ export default function AnnotatorDashboardPage() {
           <div className="rounded-2xl grid md:grid-cols-2 sm:grid-cols-1 gap-6">
             <AssignmentHeader assignment={assignment} />
             {guideline && <GuidelineSection guideline={guideline.content ?? ''} />}
-            {assignment.tasks && (
-              <div
-                className={`${themeClasses.backgrounds.card} border ${themeClasses.borders.violet10} rounded-2xl p-6 md:col-span-2`}
-              >
-                <TasksSection tasks={assignment.tasks} assignmentId={assignment.id} />
-              </div>
-            )}
+            <div
+              className={`${themeClasses.backgrounds.card} border ${themeClasses.borders.violet10} rounded-2xl p-6 md:col-span-2`}
+            >
+              <TasksSection
+                tasks={(assignment.tasks || []).filter((t: AssignmentTask) => {
+                  const status = String(
+                    t.taskStatus || t.status || t.assignmentStatus || ''
+                  ).toUpperCase()
+                  return status !== 'INACTIVE' && status !== 'DELETED'
+                })}
+                assignmentId={assignment.id}
+              />
+            </div>
           </div>
         ) : annotatorAssignments.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {annotatorAssignments
-              .filter((a) => a.status?.toUpperCase() !== 'CANCELLED')
+              .filter((a) => {
+                const status = (a.assignmentStatus || a.status || '').toUpperCase()
+                return status !== 'CANCELLED' && status !== 'INACTIVE'
+              })
               .map((a, idx) => (
                 <AssignmentCard
                   key={a.assignmentId || idx}

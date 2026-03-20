@@ -49,13 +49,30 @@ export default function TasksSection({
         const rawData = response.data?.data || response.data || []
 
         if (Array.isArray(rawData)) {
-          const mappedTasks: Task[] = (rawData as Record<string, unknown>[]).map((t) => ({
-            ...t,
-            id: String(t.taskId || t.id || ''),
-            name: String(t.taskName || t.name || ''),
-            batchLabel: String(t.batchLabel || t.taskType || 'Unbatched'),
-            taskStatus: String(t.task_status || t.taskStatus || t.status || 'PENDING')
-          }))
+          const mappedTasks: Task[] = (rawData as Record<string, unknown>[]).map((t) => {
+            let status = String(
+              t.task_status || t.taskStatus || t.status || 'PENDING'
+            ).toUpperCase()
+            if (status === 'NOT_STARTED') status = 'PENDING'
+
+            // Robustly map progress fields from various possible API responses
+            const completedItems = Number(
+              t.completedItems ?? t.completed_items ?? t.completedCount ?? t.completed_count ?? 0
+            )
+            const totalItems = Number(
+              t.totalItems ?? t.total_items ?? t.itemsCount ?? t.totalCount ?? 0
+            )
+
+            return {
+              ...t,
+              id: String(t.taskId || t.id || ''),
+              name: String(t.taskName || t.name || ''),
+              batchLabel: String(t.batchLabel || t.taskType || 'Unbatched'),
+              taskStatus: status,
+              completedItems,
+              totalItems
+            }
+          })
           setTasks(mappedTasks)
         }
       } catch (err) {

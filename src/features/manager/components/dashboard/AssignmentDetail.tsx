@@ -8,6 +8,8 @@ import datasetApi from '@/api/DatasetApi'
 import { ProjectDetail } from './ProjectDetail'
 import { DatasetDetail } from '../dataset/DatasetDetail'
 import { TaskDetail } from '@/pages/annotator/TaskDetailPage'
+import { ChangeDatasetModal } from '../dataset/ChangeDatasetModal'
+import { useAuthStore } from '@/store'
 import { useSearchParams } from 'react-router-dom'
 
 const { Title } = Typography
@@ -20,24 +22,15 @@ interface AssignmentDetailProps {
 
 interface Task {
   taskId: string
-  completedCount: number
-  createdAt: string
-  taskName: string
-  reviewStatus: string
-  taskStatus: string
-  taskType: string
-  assignmentId: string
-}
-
-interface Task {
-  taskId: string
-  completedCount: number
-  createdAt: string
-  taskName: string
-  reviewStatus: string
-  taskStatus: string
-  taskType: string
-  assignmentId: string
+  completedCount?: number
+  createdAt?: string
+  taskName?: string
+  reviewStatus?: string
+  taskStatus?: string
+  status?: string
+  taskType?: string
+  assignmentId?: string
+  [key: string]: unknown
 }
 
 export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
@@ -52,6 +45,17 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
   const [loading, setLoading] = useState<boolean>(true)
   const [tasks, setTasks] = useState<Task[]>([])
   const [tasksLoading, setTasksLoading] = useState<boolean>(false)
+  const [isChangeDatasetModalOpen, setIsChangeDatasetModalOpen] = useState(false)
+  const { user } = useAuthStore()
+
+  const isManager =
+    user?.role?.toLowerCase().includes('manager') ||
+    user?.role?.toLowerCase().includes('admin') ||
+    user?.userRole?.toLowerCase().includes('manager') ||
+    user?.userRole?.toLowerCase().includes('admin')
+
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const handleRefresh = () => setRefreshTrigger((prev) => prev + 1)
   const [searchParams, setSearchParams] = useSearchParams()
 
   const viewProjectId = searchParams.get('viewProjectId')
@@ -109,8 +113,8 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
 
           setAssignment({
             assignmentId: String(data.assignmentId || data.id),
-            assignmentName: String(data.assignmentName || data.name),
-            status: String(data.status || data.assignmentStatus),
+            assignmentName: String(data.assignmentName || data.name || ''),
+            status: String(data.status || data.assignmentStatus || ''),
             description: data.description
               ? String(data.description)
               : data.descriptionAssignment
@@ -179,12 +183,18 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
       try {
         setTasksLoading(true)
         const response = await taskApi.getTasksByAssignmentId(assignmentId)
-        const rawData = response.data?.data || response.data || []
+        const rawData = (response.data?.data || response.data || []) as Record<string, unknown>[]
         if (isMounted && Array.isArray(rawData)) {
-          const mappedTasks: Task[] = rawData.map((t: Record<string, unknown>) => ({
-            ...t,
-            taskId: String(t.taskId || t.id || '')
-          })) as Task[]
+          const mappedTasks: Task[] = rawData
+            .map((t) => ({
+              ...t,
+              taskId: String(t.taskId || t.id || '')
+            }))
+            .filter((t: unknown) => {
+              const taskObj = t as Task
+              const status = String(taskObj.taskStatus || taskObj.status || '').toUpperCase()
+              return status !== 'INACTIVE' && status !== 'DELETED'
+            }) as Task[]
           setTasks(mappedTasks)
         }
       } catch (error) {
@@ -206,7 +216,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
     return () => {
       isMounted = false
     }
-  }, [assignmentId, onBack, message])
+  }, [assignmentId, onBack, message, refreshTrigger])
 
   const getStatusColor = (status?: string) => {
     switch (status?.toUpperCase()) {
@@ -273,6 +283,8 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
             ...selectedTask,
             assignmentName: assignment.assignmentName
           }}
+          loading={false}
+          onBack={() => setViewTaskId(null)}
         />
       )
     }
@@ -289,7 +301,10 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
             <Tag
               color={getStatusColor(assignment.status)}
               className={`m-0 font-medium text-sm px-3 py-1 ${
-                assignment.status?.toUpperCase() === 'INACTIVE' ? 'text-red-500' : ''
+                assignment.status?.toUpperCase() === 'INACTIVE' ||
+                assignment.status?.toUpperCase() === 'CANCELLED'
+                  ? 'text-red-500'
+                  : ''
               }`}
             >
               {assignment.status}
@@ -379,6 +394,16 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
               <DatabaseOutlined className="text-fuchsia-400" />
               Assigned Dataset
             </span>
+            {isManager && (
+              <Button
+                type="link"
+                size="small"
+                className="text-fuchsia-400 hover:text-fuchsia-300 p-0 h-auto"
+                onClick={() => setIsChangeDatasetModalOpen(true)}
+              >
+                Change
+              </Button>
+            )}
           </div>
           {assignment.datasetId ? (
             <div
@@ -470,6 +495,18 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
                     padding-bottom: 0;
                 }
             `}</style>
+
+      <ChangeDatasetModal
+        open={isChangeDatasetModalOpen}
+        assignmentId={assignment.assignmentId || ''}
+        projectId={assignment.projectId || ''}
+        currentDatasetId={assignment.datasetId}
+        onCancel={() => setIsChangeDatasetModalOpen(false)}
+        onSuccess={() => {
+          setIsChangeDatasetModalOpen(false)
+          handleRefresh()
+        }}
+      />
     </div>
   )
 }

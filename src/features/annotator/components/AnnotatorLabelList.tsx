@@ -24,13 +24,24 @@ export const AnnotatorLabelList: React.FC<AnnotatorLabelListProps> = ({ datasetI
         const data = response.data?.data || response.data?.content || response.data || []
 
         if (Array.isArray(data)) {
-          const mappedLabels: GetLabelsParams[] = (data as Record<string, unknown>[]).map((l) => ({
-            labelId: String(l.labelId || l.id),
-            labelName: String(l.labelName || l.name),
-            color: String(l.color),
-            description: String(l.description || ''),
-            createdAt: String(l.createdAt || '')
-          }))
+          const mappedLabels: GetLabelsParams[] = (data as Record<string, unknown>[])
+            .map((l) => ({
+              labelId: String(l.labelId || l.id),
+              labelName: String(l.labelName || l.name),
+              labelStatus: String(l.labelStatus || l.status || l.label_status || '')
+                .trim()
+                .toUpperCase(),
+              color: String(l.color),
+              description: String(l.description || ''),
+              createdAt: String(l.createdAt || '')
+            }))
+            .filter((l) => {
+              return (
+                l.labelStatus !== 'INACTIVE' &&
+                l.labelStatus !== 'DELETED' &&
+                l.labelStatus !== 'DISABLED'
+              )
+            })
           setLabels(mappedLabels)
         }
       } catch (error: unknown) {

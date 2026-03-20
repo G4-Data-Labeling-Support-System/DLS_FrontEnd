@@ -53,7 +53,9 @@ export const ENDPOINTS = {
     DELETE: (id: string) => `/assignments/remove/${id}`,
     CREATE_BY_PROJECT: (projectId: string) => `/assignments/projects/${projectId}`,
     LABELS: (assignmentId: string) => `/assignments/${assignmentId}/labels`,
-    DATASET: (assignmentId: string) => `/assignments/${assignmentId}/dataset`
+    DATASET: (assignmentId: string) => `/assignments/${assignmentId}/dataset`,
+    CHANGE_DATASET: (assignmentId: string) =>
+      `/assignments/change-dataset/assignment/${assignmentId}`
   },
 
   ANNOTATIONS: {
