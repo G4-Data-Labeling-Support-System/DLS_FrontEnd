@@ -23,8 +23,8 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        // target: 'https://dls-be-dev.hikarimoon.pro', // Server backend base URL
-        target: 'http://localhost:8081',
+        target: 'https://dls-be-dev.hikarimoon.pro', // Server backend base URL
+        // target: 'http://localhost:8081',
         changeOrigin: true,
         secure: false,
         timeout: 600000,      // 10 phút
