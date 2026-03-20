@@ -57,6 +57,7 @@ export class AuthService {
         // Merge JWT info with API Profile (API profile is more detailed)
         const finalUser = { ...(jwtUser as User), ...user }
         useAuthStore.getState().setUser(finalUser as User)
+        localStorage.setItem('user', JSON.stringify(finalUser))
         // console.log('Final User from API:', finalUser);
         return finalUser
       } catch (profileErr) {

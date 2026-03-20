@@ -82,7 +82,9 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose }) => 
         (response as { avatarUrl?: string; data?: { avatarUrl?: string } }).data?.avatarUrl
 
       if (newAvatarUrl) {
-        setUser({ ...user!, coverImage: newAvatarUrl })
+        const updatedUser = { ...user!, avatar: newAvatarUrl }
+        setUser(updatedUser)
+        localStorage.setItem('user', JSON.stringify(updatedUser))
       } else {
         // If it doesn't return the URL, we might need to refetch profile or just assume it worked
         // and maybe the avatar path is predictable or returned in the whole user object
@@ -101,9 +103,10 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose }) => 
   }
 
   const getAvatarUrl = (avatarPath: string | undefined | null) => {
-    if (!avatarPath) return 'https://cdn-icons-png.flaticon.com/512/9408/9408175.png'
-    if (avatarPath.startsWith('http')) return avatarPath
-    const cleanPath = avatarPath.startsWith('/') ? avatarPath.substring(1) : avatarPath
+    const finalPath = avatarPath || user?.coverImage
+    if (!finalPath) return 'https://cdn-icons-png.flaticon.com/512/9408/9408175.png'
+    if (finalPath.startsWith('http')) return finalPath
+    const cleanPath = finalPath.startsWith('/') ? finalPath.substring(1) : finalPath
     return `${API_BASE_URL}/${cleanPath}`
   }
 
@@ -152,7 +155,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose }) => 
                 className={`w-28 h-28 rounded-full border-4 border-[#0D0D0D] overflow-hidden shadow-2xl bg-[#1A1A1A] transition-all ${uploadingAvatar ? 'opacity-50' : 'group-hover:brightness-75'}`}
               >
                 <img
-                  src={getAvatarUrl(user?.coverImage)}
+                  src={getAvatarUrl(user?.avatar)}
                   alt="Avatar"
                   className="w-full h-full object-cover"
                 />

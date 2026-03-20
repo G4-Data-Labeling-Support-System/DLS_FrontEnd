@@ -31,6 +31,11 @@ export const userApi = {
 
   // [DELETE] Remove user permanently
   deleteUser: async (id: string): Promise<void> => {
+    await mainClient.delete(`/users/${id}`)
+  },
+
+  // [DELETE] Remove user avatar
+  deleteAvatar: async (id: string): Promise<void> => {
     await mainClient.delete(`/users/${id}/avatar/delete`)
   },
 
@@ -41,24 +46,17 @@ export const userApi = {
 
   // [PUT] Update user avatar
   updateAvatar: async (id: string, file: File): Promise<{ avatarUrl: string }> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.readAsDataURL(file)
-      reader.onload = async () => {
-        try {
-          // The base64 string includes the prefix (e.g., data:image/png;base64,...),
-          // usually backends want only the content or the whole thing.
-          // I'll send the whole thing as it's safer.
-          const base64String = reader.result as string
-          const response = await mainClient.put(ENDPOINTS.USERS.UPDATE_AVATAR(id), {
-            file: base64String
-          })
-          resolve(response.data)
-        } catch (error) {
-          reject(error)
-        }
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await mainClient.put(ENDPOINTS.USERS.UPDATE_AVATAR(id), formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
       }
-      reader.onerror = (error) => reject(error)
     })
+
+    // Unwrap the data from ApiResponse structure if needed
+    const result = response.data.data ?? response.data
+    return result
   }
 }
