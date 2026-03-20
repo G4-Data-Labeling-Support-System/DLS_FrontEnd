@@ -68,9 +68,11 @@ export class AuthService {
       }
 
       return { userRole: 'USER' } // Last resort
-    } catch (err) {
-      console.error('Login/Profile Flow Error:', err)
-      return null
+    } catch (err: any) {
+      const errorDetail = err.response?.data || err.message || err
+      console.error('🚨 LOGIN FAILED:', errorDetail)
+      // Ném lỗi ra ngoài kèm message chi tiết từ BE nếu có
+      throw err
     }
   }
 }

@@ -53,6 +53,7 @@ export interface UpdateUserRequest {
   coverImage?: string
   userStatus?: string
 }
+
 // ============ Entity Types ============
 
 export interface Project {
@@ -60,7 +61,7 @@ export interface Project {
   projectName: string
   description?: string
   status?: 'ACTIVE' | 'INACTIVE' | 'ONGOING' | string
-  projectStatus?: string
+  projectStatus?: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'INACTIVE' | string
   createdAt?: string
   updatedAt?: string
 }
@@ -71,6 +72,8 @@ export interface Label {
   labelName: string
   color: string
   description?: string
+  labelStatus?: 'ACTIVE' | 'INACTIVE' | string
+  status?: 'ACTIVE' | 'INACTIVE' | string
   createdAt?: string
 }
 
@@ -84,6 +87,7 @@ export interface DataItem {
   width?: number
   height?: number
   dataType: 'IMAGE' | 'VIDEO' | 'AUDIO' | 'TEXT' | string
+  dataItemStatus?: 'ACTIVE' | 'INACTIVE' | string
   uploadedAt?: string
 }
 
@@ -92,6 +96,7 @@ export interface Dataset {
   datasetName: string
   description?: string
   totalItems: number
+  datasetStatus?: 'ACTIVE' | 'INACTIVE' | string
   createdAt?: string
   project?: Project
   assignmentId?: string
@@ -103,7 +108,7 @@ export interface Assignment {
   assignmentId: string
   assignmentName: string
   description?: string
-  assignmentStatus: 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED' | 'REVIEWED' | string
+  assignmentStatus: 'ASSIGNED' | 'IN_PROGRESS' | 'REVIEWING' | 'COMPLETED' | 'INACTIVE' | string
   assignedBy: string
   assignedTo: string
   reviewedBy?: string
@@ -114,6 +119,54 @@ export interface Assignment {
   dataset?: Dataset
 }
 
+export interface Task {
+  taskId: string
+  taskName: string
+  taskType: 'BATCH' | 'ClASSIFICATION' | string
+  completedItems?: number
+  totalItems?: number
+  flagForReview?: boolean
+  taskStatus: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'INACTIVE' | string
+  createdAt?: string
+  assignmentId?: string
+  assignment?: Assignment
+  annotations?: any[]
+  taskDataitems?: TaskDataItem[]
+}
+
+export interface TaskDataItem {
+  taskItemId: string
+  itemIndex: number
+  task?: Task
+  dataitem?: DataItem
+  taskDataItemStatus: 'IN_PROGRESS' | 'COMPLETED' | string
+  assignedAt?: string
+  completedAt?: string
+}
+
+export interface Review {
+  reviewId: string
+  reviewStatus: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'REJECTED' | 'INACTIVE' | string
+  comment?: string
+  reviewedAt?: string
+  user?: User
+  annotation?: any
+  evidences?: string[]
+}
+
+export interface Guideline {
+  guideId: string
+  title: string
+  content: string
+  version?: number
+  guidelineStatus?: 'ACTIVE' | 'INACTIVE' | string
+  status?: 'ACTIVE' | 'INACTIVE' | string
+  createdAt?: string
+  updatedAt?: string
+  project?: Project
+  projectId?: string
+}
+
 export interface ApiResponse<T> {
   code: number
   message: string
@@ -121,10 +174,10 @@ export interface ApiResponse<T> {
 }
 
 export interface AnnotationSubmitItem {
-  annotationConfidence: string
+  annotationConfidence: 'LOW' | 'MEDIUM' | 'HIGH' | string
   annotationData: Record<string, unknown>
-  annotationStatus: string
-  annotationType: string
+  annotationStatus: 'SUBMITTED' | 'APPROVED' | 'REJECTED' | 'INACTIVE' | string
+  annotationType: 'CLASSIFICATION' | 'BOUNDING_BOX' | 'POLYGON' | 'SEGMENTATION' | string
   comment: string
   dataitemId: string
   labelIds: string[]
