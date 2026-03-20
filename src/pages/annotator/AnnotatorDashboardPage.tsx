@@ -14,8 +14,7 @@ import {
   TasksSection,
   GuidelineSection,
   AnnotationProjectDetail,
-  AnnotatorDatasetCard,
-  MOCK_TEST_TASK
+  AnnotatorDatasetCard
 } from '@/features/annotator'
 import { AssignmentCard } from '@/features/manager/components/dashboard/AssignmentCard'
 
@@ -298,13 +297,14 @@ export default function AnnotatorDashboardPage() {
           <div className="rounded-2xl grid md:grid-cols-2 sm:grid-cols-1 gap-6">
             <AssignmentHeader assignment={assignment} />
             {guideline && <GuidelineSection guideline={guideline.content ?? ''} />}
-            {assignment.tasks && (
-              <div
-                className={`${themeClasses.backgrounds.card} border ${themeClasses.borders.violet10} rounded-2xl p-6 md:col-span-2`}
-              >
-                <TasksSection tasks={assignment.tasks} assignmentId={assignment.id} />
-              </div>
-            )}
+            <div
+              className={`${themeClasses.backgrounds.card} border ${themeClasses.borders.violet10} rounded-2xl p-6 md:col-span-2`}
+            >
+              <TasksSection 
+                tasks={assignment.tasks || []} 
+                assignmentId={assignment.id} 
+              />
+            </div>
           </div>
         ) : annotatorAssignments.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

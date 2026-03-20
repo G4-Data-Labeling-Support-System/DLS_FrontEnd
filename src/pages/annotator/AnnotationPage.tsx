@@ -66,6 +66,18 @@ export default function AnnotationPage() {
   // Store all annotations in current session before bulk submit
   const [sessionAnnotations, setSessionAnnotations] = useState<AnnotationSubmitItem[]>([])
 
+  // Persistence Keys
+  const STORAGE_KEY_SESSIONS = `annotation_session_${taskId}`
+  const STORAGE_KEY_INDEX = `annotation_index_${taskId}`
+
+  // Save progress automatically
+  useEffect(() => {
+    if (taskId && (sessionAnnotations.length > 0 || currentIndex > 0)) {
+      localStorage.setItem(STORAGE_KEY_SESSIONS, JSON.stringify(sessionAnnotations))
+      localStorage.setItem(STORAGE_KEY_INDEX, String(currentIndex))
+    }
+  }, [sessionAnnotations, currentIndex, taskId])
+
   useEffect(() => {
     async function fetchData() {
       if (!taskId) return
@@ -97,6 +109,38 @@ export default function AnnotationPage() {
           } catch (labelErr) {
             console.error('Failed to fetch labels for assignment:', labelErr)
           }
+        }
+
+        // 3. Restore from localStorage if available
+        const savedSessions = localStorage.getItem(STORAGE_KEY_SESSIONS)
+        const savedIndex = localStorage.getItem(STORAGE_KEY_INDEX)
+
+        if (savedSessions) {
+          try {
+            const parsed = JSON.parse(savedSessions)
+            setSessionAnnotations(parsed)
+
+            const restoredIdx = savedIndex !== null ? parseInt(savedIndex) : startIdx
+            if (restoredIdx >= 0 && restoredIdx < items.length) {
+              setCurrentIndex(restoredIdx)
+              // We need to load from the RESTORED session, not the state yet
+              const restoredItem = items[restoredIdx]
+              const existing = parsed.find(
+                (a: AnnotationSubmitItem) =>
+                  a.dataitemId === (restoredItem.itemId || restoredItem.id)
+              )
+              if (existing) {
+                setShapes((existing.annotationData.raw as Shape[]) || [])
+                setComment(existing.comment || '')
+                setSelectedLabels(existing.labelIds || [])
+              }
+            }
+          } catch (e) {
+            console.warn('Failed to restore session:', e)
+          }
+        } else {
+          // Normal first-time load
+          loadFromSession(items[currentIndex])
         }
       } catch (err) {
         console.error('Failed to load annotation data:', err)
@@ -244,7 +288,10 @@ export default function AnnotationPage() {
     setIsDrawing(false)
   }
 
-  const createAnnotationPayload = (itemId: string): AnnotationSubmitItem => {
+  const createAnnotationPayload = (
+    itemId: string,
+    status: AnnotationSubmitItem['annotationStatus'] = 'DRAFT'
+  ): AnnotationSubmitItem => {
     return {
       annotationConfidence: 'LOW',
       annotationData: {
@@ -264,11 +311,11 @@ export default function AnnotationPage() {
         session: shapes.map((s) => ({ type: s.type, label: s.label })),
         raw: shapes
       },
-      annotationStatus: 'DRAFT',
+      annotationStatus: status,
       annotationType: shapes.some((s) => s.type === 'bounding_box')
         ? 'BOUNDING_BOX'
         : shapes.some((s) => s.type === 'polygon')
-          ? 'POLYGON_SEGMENTATION'
+          ? 'POLYGON'
           : 'CLASSIFICATION',
       comment: comment,
       dataitemId: itemId,
@@ -355,9 +402,15 @@ export default function AnnotationPage() {
       const currentItemId = (currentItem?.itemId ||
         (currentItem as { id?: string })?.id ||
         '') as string
-      const currentAnnotation = createAnnotationPayload(currentItemId)
+      // Create current annotation as SUBMITTED
+      const currentAnnotation = createAnnotationPayload(currentItemId, 'SUBMITTED')
 
-      const finalAnnotations = [...sessionAnnotations]
+      // Normalize all session annotations to SUBMITTED for the final push
+      const finalAnnotations: AnnotationSubmitItem[] = sessionAnnotations.map((a) => ({
+        ...a,
+        annotationStatus: 'SUBMITTED'
+      }))
+
       const existingIndex = finalAnnotations.findIndex((a) => a.dataitemId === currentItemId)
       if (existingIndex >= 0) {
         finalAnnotations[existingIndex] = currentAnnotation
@@ -369,6 +422,10 @@ export default function AnnotationPage() {
         taskId,
         annotations: finalAnnotations
       })
+
+      // Clear local storage after successful submission
+      localStorage.removeItem(STORAGE_KEY_SESSIONS)
+      localStorage.removeItem(STORAGE_KEY_INDEX)
 
       message.success('Annotations submitted successfully!')
       navigate('/annotator/dashboard')
