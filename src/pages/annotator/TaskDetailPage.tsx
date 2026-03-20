@@ -1,15 +1,35 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { Card, Table, Descriptions, Tag, Typography, Spin, Button } from 'antd'
-import { DatabaseOutlined, InfoCircleOutlined, ArrowLeftOutlined, PlayCircleOutlined } from '@ant-design/icons'
+import {
+  DatabaseOutlined,
+  InfoCircleOutlined,
+  ArrowLeftOutlined,
+  PlayCircleOutlined
+} from '@ant-design/icons'
 import taskApi from '@/api/TaskApi'
 import assignmentApi from '@/api/AssignmentApi'
 import { useTaskDetail } from '@/features/annotator/hooks/useTaskDetail'
-import type { Task } from '@/features/annotator/components/TaskSection'
 import { ChangeDatasetModal } from '@/features/manager/components/dataset/ChangeDatasetModal'
 import { useAuthStore } from '@/store'
 
 const { Title, Text } = Typography
+
+export interface Task {
+  taskId: string
+  id?: string
+  taskName?: string
+  name?: string
+  assignmentName?: string
+  status?: string
+  description?: string
+  assignmentId?: string
+  projectId?: string
+  datasetId?: string
+  createdAt?: string
+  assignedBy?: string
+  [key: string]: unknown
+}
 
 export interface TaskDataItemRecord {
   dataItemId: string
@@ -26,7 +46,7 @@ export interface TaskDataItemRecord {
 }
 
 interface TaskDetailProps {
-  task: any | null
+  task: Task | null
   loading: boolean
   onItemClick?: (item: TaskDataItemRecord, index: number) => void
   onBack?: () => void
@@ -38,12 +58,22 @@ interface TaskDetailProps {
  * Reusable Task Detail Component
  * Used in both Annotator and Manager flows
  */
-export const TaskDetail: React.FC<TaskDetailProps> = ({ task, loading, onItemClick, onBack, onStartLabeling, onRefresh }) => {
+export const TaskDetail: React.FC<TaskDetailProps> = ({
+  task,
+  loading,
+  onItemClick,
+  onBack,
+  onStartLabeling,
+  onRefresh
+}) => {
   const { user } = useAuthStore()
   const [isChangeDatasetModalOpen, setIsChangeDatasetModalOpen] = useState(false)
 
-  const isManager = user?.role?.toLowerCase().includes('manager') || user?.role?.toLowerCase().includes('admin') || 
-                   user?.userRole?.toLowerCase().includes('manager') || user?.userRole?.toLowerCase().includes('admin')
+  const isManager =
+    user?.role?.toLowerCase().includes('manager') ||
+    user?.role?.toLowerCase().includes('admin') ||
+    user?.userRole?.toLowerCase().includes('manager') ||
+    user?.userRole?.toLowerCase().includes('admin')
 
   const {
     data: dataItems = [],
@@ -140,7 +170,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task, loading, onItemCli
       title: 'Action',
       key: 'action',
       width: '6%',
-      render: (_: any, record: TaskDataItemRecord, index: number) => (
+      render: (_: unknown, record: TaskDataItemRecord, index: number) => (
         <button
           onClick={() => onItemClick?.(record, index)}
           className="p-1.5 rounded-lg hover:bg-white/5 text-gray-400 hover:text-violet-400 transition-all cursor-pointer"
@@ -215,7 +245,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task, loading, onItemCli
                       {task.assignmentName || 'N/A'}
                     </span>
                     {isManager && (
-                      <button 
+                      <button
                         onClick={() => setIsChangeDatasetModalOpen(true)}
                         className="text-[10px] bg-violet-500/10 text-violet-400 border border-violet-500/20 px-2 py-0.5 rounded hover:bg-violet-500/20 transition-all font-bold uppercase tracking-wider"
                       >
@@ -229,15 +259,21 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task, loading, onItemCli
                     <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider">
                       <span className="text-violet-400">
                         {Math.round(
-                          (dataItems.filter((i: TaskDataItemRecord) => i.taskDataItemStatus === 'COMPLETED').length /
+                          (dataItems.filter(
+                            (i: TaskDataItemRecord) => i.taskDataItemStatus === 'COMPLETED'
+                          ).length /
                             (dataItems.length || 1)) *
                             100
                         )}
                         %
                       </span>
                       <span className="text-gray-500">
-                        {dataItems.filter((i: TaskDataItemRecord) => i.taskDataItemStatus === 'COMPLETED').length} /{' '}
-                        {dataItems.length}
+                        {
+                          dataItems.filter(
+                            (i: TaskDataItemRecord) => i.taskDataItemStatus === 'COMPLETED'
+                          ).length
+                        }{' '}
+                        / {dataItems.length}
                       </span>
                     </div>
                     <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
@@ -279,7 +315,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task, loading, onItemCli
               dataSource={dataItems}
               columns={columns}
               loading={itemsLoading}
-              rowKey={(record) => record.taskItemId || record.dataItemId}
+              rowKey={(record) => String(record.taskItemId || record.dataItemId || '')}
               pagination={{
                 pageSize: 10,
                 showSizeChanger: false,
@@ -291,11 +327,11 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task, loading, onItemCli
           </Card>
         </div>
       </div>
-      
+
       <ChangeDatasetModal
         open={isChangeDatasetModalOpen}
-        assignmentId={task?.assignmentId}
-        projectId={task?.projectId}
+        assignmentId={task?.assignmentId || ''}
+        projectId={task?.projectId || ''}
         currentDatasetId={task?.datasetId}
         onCancel={() => setIsChangeDatasetModalOpen(false)}
         onSuccess={() => {
@@ -366,7 +402,7 @@ export default function TaskDetailPage() {
   const location = useLocation()
   const navigate = useNavigate()
 
-  const [task, setTask] = useState<any | null>(null)
+  const [task, setTask] = useState<Task | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -379,14 +415,14 @@ export default function TaskDetailPage() {
       }
       setLoading(true)
       try {
-        const assignmentId = location.state?.assignmentId || taskId
+        const assignmentId = (location.state?.assignmentId || taskId || '') as string
 
         // 1. Fetch task details
         const tasksRes = await taskApi.getTasksByAssignmentId(assignmentId)
         const tasksData = tasksRes.data?.data || tasksRes.data || []
 
         let currentTask = Array.isArray(tasksData)
-          ? tasksData.find((t: any) => String(t.taskId || t.id) === String(taskId))
+          ? tasksData.find((t: Task) => String(t.taskId || t.id) === String(taskId))
           : tasksData
 
         if (!currentTask && Array.isArray(tasksData) && tasksData.length > 0) {
@@ -400,10 +436,12 @@ export default function TaskDetailPage() {
         }
 
         // 2. Resolve the real assignment ID from the task if needed
-        const realAssignmentId = currentTask.assignmentId || assignmentId
+        const realAssignmentId = ((currentTask as Task).assignmentId || assignmentId) as string
 
         // 3. Fetch assignment details to get the name
-        let assignmentName = currentTask.assignmentName || location.state?.assignmentName
+        let assignmentName =
+          (currentTask as Task).assignmentName ||
+          (location.state as { assignmentName?: string })?.assignmentName
         if (!assignmentName && realAssignmentId) {
           try {
             const assignRes = await assignmentApi.getAssignmentById(realAssignmentId)

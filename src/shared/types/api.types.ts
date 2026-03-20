@@ -130,7 +130,7 @@ export interface Task {
   createdAt?: string
   assignmentId?: string
   assignment?: Assignment
-  annotations?: any[]
+  annotations?: Record<string, unknown>[]
   taskDataitems?: TaskDataItem[]
 }
 
@@ -150,7 +150,7 @@ export interface Review {
   comment?: string
   reviewedAt?: string
   user?: User
-  annotation?: any
+  annotation?: Record<string, unknown>
   evidences?: string[]
 }
 

@@ -3,9 +3,11 @@ import { ENDPOINTS } from './endpoints'
 
 interface GetAssignmentsParams {
   assignmentId?: string
+  id?: string
   projectId?: string
   datasetId?: string
   assignmentName?: string
+  name?: string
   assignedTo?: string
   assignedBy?: string
   reviewerId?: string

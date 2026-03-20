@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { Tooltip, Spin, message } from 'antd'
 import assignmentApi from '@/api/AssignmentApi'
@@ -76,7 +76,37 @@ export default function AnnotationPage() {
       localStorage.setItem(STORAGE_KEY_SESSIONS, JSON.stringify(sessionAnnotations))
       localStorage.setItem(STORAGE_KEY_INDEX, String(currentIndex))
     }
-  }, [sessionAnnotations, currentIndex, taskId])
+  }, [sessionAnnotations, currentIndex, taskId, STORAGE_KEY_SESSIONS, STORAGE_KEY_INDEX])
+
+  const loadFromSession = useCallback(
+    (item: DataItem | undefined, annotationsToSearch?: AnnotationSubmitItem[]) => {
+      if (!item) return
+      const itemId = item.itemId || (item as { id?: string }).id
+      const sourceAnnotations = annotationsToSearch || sessionAnnotations
+      const existing = sourceAnnotations.find((a) => a.dataitemId === itemId)
+
+      // Zoom and pan reset
+      setZoom(1)
+      setOffset({ x: 0, y: 0 })
+      setIsDrawing(false)
+      setCurrentShape(null)
+
+      if (existing) {
+        setShapes((existing.annotationData.raw as Shape[]) || [])
+        setComment(existing.comment || '')
+        setSelectedLabels(existing.labelIds || [])
+      } else {
+        setShapes([])
+        setComment('This is a preliminary scan observation.')
+        if (labels.length > 0) {
+          setSelectedLabels([labels[0].labelId])
+        } else {
+          setSelectedLabels([])
+        }
+      }
+    },
+    [sessionAnnotations, labels]
+  )
 
   useEffect(() => {
     async function fetchData() {
@@ -150,7 +180,15 @@ export default function AnnotationPage() {
       }
     }
     fetchData()
-  }, [taskId, assignmentId])
+  }, [
+    taskId,
+    assignmentId,
+    startIdx,
+    STORAGE_KEY_SESSIONS,
+    STORAGE_KEY_INDEX,
+    currentIndex,
+    loadFromSession
+  ])
 
   const currentItem = dataItems[currentIndex]
   const totalItems = dataItems.length
@@ -338,36 +376,6 @@ export default function AnnotationPage() {
       }
       return [...prev, newAnnotation]
     })
-  }
-
-  const loadFromSession = (
-    item: DataItem | undefined,
-    annotationsToSearch?: AnnotationSubmitItem[]
-  ) => {
-    if (!item) return
-    const itemId = item.itemId || (item as { id?: string }).id
-    const sourceAnnotations = annotationsToSearch || sessionAnnotations
-    const existing = sourceAnnotations.find((a) => a.dataitemId === itemId)
-
-    // Zoom and pan reset
-    setZoom(1)
-    setOffset({ x: 0, y: 0 })
-    setIsDrawing(false)
-    setCurrentShape(null)
-
-    if (existing) {
-      setShapes((existing.annotationData.raw as Shape[]) || [])
-      setComment(existing.comment || '')
-      setSelectedLabels(existing.labelIds || [])
-    } else {
-      setShapes([])
-      setComment('This is a preliminary scan observation.')
-      if (labels.length > 0) {
-        setSelectedLabels([labels[0].labelId])
-      } else {
-        setSelectedLabels([])
-      }
-    }
   }
 
   const handleNext = () => {

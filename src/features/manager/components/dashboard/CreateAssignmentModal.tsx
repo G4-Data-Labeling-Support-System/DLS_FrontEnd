@@ -266,7 +266,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
           completedItems: initialData.completedItems
         }
         await assignmentApi.updateAssignment(initialData.assignmentId, updatePayload)
-        
+
         // If datasetId changed, also call the specific change-dataset API
         if (values.datasetId && values.datasetId !== initialData.datasetId) {
           try {
@@ -275,7 +275,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
             console.warn('Dataset change specific API failed, but main update succeeded:', e)
           }
         }
-        
+
         message.success('Assignment updated successfully!')
       } else {
         const createPayload = {

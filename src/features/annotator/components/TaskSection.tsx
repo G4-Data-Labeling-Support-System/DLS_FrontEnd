@@ -50,7 +50,9 @@ export default function TasksSection({
 
         if (Array.isArray(rawData)) {
           const mappedTasks: Task[] = (rawData as Record<string, unknown>[]).map((t) => {
-            let status = String(t.task_status || t.taskStatus || t.status || 'PENDING').toUpperCase()
+            let status = String(
+              t.task_status || t.taskStatus || t.status || 'PENDING'
+            ).toUpperCase()
             if (status === 'NOT_STARTED') status = 'PENDING'
 
             // Robustly map progress fields from various possible API responses
@@ -60,7 +62,7 @@ export default function TasksSection({
             const totalItems = Number(
               t.totalItems ?? t.total_items ?? t.itemsCount ?? t.totalCount ?? 0
             )
-            
+
             return {
               ...t,
               id: String(t.taskId || t.id || ''),

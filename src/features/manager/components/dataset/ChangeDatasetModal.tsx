@@ -13,6 +13,14 @@ interface ChangeDatasetModalProps {
   onSuccess: () => void
 }
 
+interface DatasetOption {
+  datasetId?: string
+  id?: string
+  datasetName?: string
+  name?: string
+  [key: string]: unknown
+}
+
 export const ChangeDatasetModal: React.FC<ChangeDatasetModalProps> = ({
   open,
   assignmentId,
@@ -23,7 +31,7 @@ export const ChangeDatasetModal: React.FC<ChangeDatasetModalProps> = ({
 }) => {
   const { message } = App.useApp()
   const [form] = Form.useForm()
-  const [datasets, setDatasets] = useState<Record<string, unknown>[]>([])
+  const [datasets, setDatasets] = useState<DatasetOption[]>([])
   const [loading, setLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -36,10 +44,12 @@ export const ChangeDatasetModal: React.FC<ChangeDatasetModalProps> = ({
         const res = await datasetApi.getDatasetsByProjectId(projectId)
         const data = res.data?.data || res.data
         const dsArray = Array.isArray(data) ? data : []
-        
+
         setDatasets(
-          dsArray.filter((d: Record<string, unknown>) => {
-            const status = String(d.datasetStatus || d.status || d.dataset_status || '').toUpperCase()
+          dsArray.filter((d: DatasetOption) => {
+            const status = String(
+              d.datasetStatus || d.status || d.dataset_status || ''
+            ).toUpperCase()
             return status === 'ACTIVE'
           })
         )
@@ -61,13 +71,15 @@ export const ChangeDatasetModal: React.FC<ChangeDatasetModalProps> = ({
       setIsSubmitting(true)
 
       await assignmentApi.changeAssignmentDataset(assignmentId, values.datasetId)
-      
+
       message.success('Assignment dataset changed successfully!')
       onSuccess()
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to change dataset:', error)
-      const apiError = error?.response?.data?.message || error?.message || 'Failed to change dataset'
-      message.error(apiError)
+      const errorObj = error as { response?: { data?: { message?: string } }; message?: string }
+      const apiError =
+        errorObj.response?.data?.message || errorObj.message || 'Failed to change dataset'
+      message.error(String(apiError))
     } finally {
       setIsSubmitting(false)
     }
@@ -80,15 +92,17 @@ export const ChangeDatasetModal: React.FC<ChangeDatasetModalProps> = ({
           <h2 className="text-white text-xl font-bold tracking-tight mb-2 font-display">
             Change Assignment Dataset
           </h2>
-          <p className="text-white/50 text-sm">
-            Select a new dataset for this assignment.
-          </p>
+          <p className="text-white/50 text-sm">Select a new dataset for this assignment.</p>
         </div>
 
         <Spin spinning={loading}>
           <Form form={form} layout="vertical">
             <Form.Item
-              label={<span className="text-gray-400 text-xs font-bold uppercase tracking-wider">Select Dataset</span>}
+              label={
+                <span className="text-gray-400 text-xs font-bold uppercase tracking-wider">
+                  Select Dataset
+                </span>
+              }
               name="datasetId"
               rules={[{ required: true, message: 'Please select a dataset' }]}
             >
@@ -98,12 +112,9 @@ export const ChangeDatasetModal: React.FC<ChangeDatasetModalProps> = ({
                 optionFilterProp="children"
                 className="custom-select"
               >
-                {datasets.map((d: Record<string, unknown>) => (
-                  <Select.Option 
-                    key={(d.datasetId as string) || (d.id as string)} 
-                    value={(d.datasetId as string) || (d.id as string)}
-                  >
-                    {(d.datasetName as string) || (d.name as string)}
+                {datasets.map((d: DatasetOption) => (
+                  <Select.Option key={d.datasetId || d.id || ''} value={d.datasetId || d.id || ''}>
+                    {d.datasetName || d.name || ''}
                   </Select.Option>
                 ))}
               </Select>
@@ -128,7 +139,7 @@ export const ChangeDatasetModal: React.FC<ChangeDatasetModalProps> = ({
           </Form>
         </Spin>
       </div>
-      
+
       <style>{`
         .custom-select .ant-select-selector {
           background: rgba(15, 14, 23, 0.5) !important;

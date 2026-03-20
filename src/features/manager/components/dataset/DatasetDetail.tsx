@@ -37,6 +37,7 @@ interface Label {
   labelName: string
   color: string
   description?: string
+  labelStatus?: string
 }
 
 interface DatasetDetailProps {
@@ -146,7 +147,24 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
     try {
       const response = await labelApi.getLabelsByDatasetId(datasetId)
       const data = response.data?.data || response.data || []
-      setLabels(Array.isArray(data) ? data : [data])
+      const labelArray = Array.isArray(data) ? data : [data]
+      setLabels(
+        labelArray
+          .map((item: unknown) => {
+            const l = item as Record<string, unknown>
+            const status = String(l['labelStatus'] || l['status'] || l['label_status'] || '')
+              .trim()
+              .toUpperCase()
+            return { ...(l as unknown as Label), labelStatus: status }
+          })
+          .filter((l: Label) => {
+            return (
+              l.labelStatus !== 'INACTIVE' &&
+              l.labelStatus !== 'DELETED' &&
+              l.labelStatus !== 'DISABLED'
+            )
+          })
+      )
     } catch (error) {
       console.error('Error fetching labels:', error)
     }

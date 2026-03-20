@@ -22,24 +22,15 @@ interface AssignmentDetailProps {
 
 interface Task {
   taskId: string
-  completedCount: number
-  createdAt: string
-  taskName: string
-  reviewStatus: string
-  taskStatus: string
-  taskType: string
-  assignmentId: string
-}
-
-interface Task {
-  taskId: string
-  completedCount: number
-  createdAt: string
-  taskName: string
-  reviewStatus: string
-  taskStatus: string
-  taskType: string
-  assignmentId: string
+  completedCount?: number
+  createdAt?: string
+  taskName?: string
+  reviewStatus?: string
+  taskStatus?: string
+  status?: string
+  taskType?: string
+  assignmentId?: string
+  [key: string]: unknown
 }
 
 export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
@@ -57,11 +48,14 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
   const [isChangeDatasetModalOpen, setIsChangeDatasetModalOpen] = useState(false)
   const { user } = useAuthStore()
 
-  const isManager = user?.role?.toLowerCase().includes('manager') || user?.role?.toLowerCase().includes('admin') || 
-                   user?.userRole?.toLowerCase().includes('manager') || user?.userRole?.toLowerCase().includes('admin')
+  const isManager =
+    user?.role?.toLowerCase().includes('manager') ||
+    user?.role?.toLowerCase().includes('admin') ||
+    user?.userRole?.toLowerCase().includes('manager') ||
+    user?.userRole?.toLowerCase().includes('admin')
 
   const [refreshTrigger, setRefreshTrigger] = useState(0)
-  const handleRefresh = () => setRefreshTrigger(prev => prev + 1)
+  const handleRefresh = () => setRefreshTrigger((prev) => prev + 1)
   const [searchParams, setSearchParams] = useSearchParams()
 
   const viewProjectId = searchParams.get('viewProjectId')
@@ -119,8 +113,8 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
 
           setAssignment({
             assignmentId: String(data.assignmentId || data.id),
-            assignmentName: String(data.assignmentName || data.name),
-            status: String(data.status || data.assignmentStatus),
+            assignmentName: String(data.assignmentName || data.name || ''),
+            status: String(data.status || data.assignmentStatus || ''),
             description: data.description
               ? String(data.description)
               : data.descriptionAssignment
@@ -189,15 +183,16 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
       try {
         setTasksLoading(true)
         const response = await taskApi.getTasksByAssignmentId(assignmentId)
-        const rawData = response.data?.data || response.data || []
+        const rawData = (response.data?.data || response.data || []) as Record<string, unknown>[]
         if (isMounted && Array.isArray(rawData)) {
           const mappedTasks: Task[] = rawData
-            .map((t: Record<string, unknown>) => ({
+            .map((t) => ({
               ...t,
               taskId: String(t.taskId || t.id || '')
             }))
-            .filter((t: any) => {
-              const status = String(t.taskStatus || t.status || '').toUpperCase()
+            .filter((t: unknown) => {
+              const taskObj = t as Task
+              const status = String(taskObj.taskStatus || taskObj.status || '').toUpperCase()
               return status !== 'INACTIVE' && status !== 'DELETED'
             }) as Task[]
           setTasks(mappedTasks)
@@ -288,6 +283,8 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
             ...selectedTask,
             assignmentName: assignment.assignmentName
           }}
+          loading={false}
+          onBack={() => setViewTaskId(null)}
         />
       )
     }
@@ -304,7 +301,10 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
             <Tag
               color={getStatusColor(assignment.status)}
               className={`m-0 font-medium text-sm px-3 py-1 ${
-                assignment.status?.toUpperCase() === 'INACTIVE' ? 'text-red-500' : ''
+                assignment.status?.toUpperCase() === 'INACTIVE' ||
+                assignment.status?.toUpperCase() === 'CANCELLED'
+                  ? 'text-red-500'
+                  : ''
               }`}
             >
               {assignment.status}
