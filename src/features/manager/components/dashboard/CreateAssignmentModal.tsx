@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Form, Input, Select, DatePicker, Button, Avatar, App } from 'antd'
+import { SearchOutlined } from '@ant-design/icons'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
 import { userApi } from '@/api/userApi'
 import datasetApi from '@/api/DatasetApi'
@@ -213,7 +214,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
       // Check if project is inactive
       if (resolvedProjectId) {
         const selectedProject = projects.find(
-          (p) => String(p.projectId) === String(resolvedProjectId)
+          (p: NormalizedProject) => String(p.projectId) === String(resolvedProjectId)
         )
         if (
           selectedProject &&
@@ -228,7 +229,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
       // Check if dataset is inactive (ensure only active datasets can be selected)
       if (values.datasetId) {
         const selectedDataset = datasets.find(
-          (d) => String(d.datasetId || d.id) === String(values.datasetId)
+          (d: Record<string, unknown>) => String(d.datasetId || d.id) === String(values.datasetId)
         )
         if (selectedDataset) {
           const dsStatus = String(
@@ -265,6 +266,16 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
           completedItems: initialData.completedItems
         }
         await assignmentApi.updateAssignment(initialData.assignmentId, updatePayload)
+        
+        // If datasetId changed, also call the specific change-dataset API
+        if (values.datasetId && values.datasetId !== initialData.datasetId) {
+          try {
+            await assignmentApi.changeAssignmentDataset(initialData.assignmentId, values.datasetId)
+          } catch (e) {
+            console.warn('Dataset change specific API failed, but main update succeeded:', e)
+          }
+        }
+        
         message.success('Assignment updated successfully!')
       } else {
         const createPayload = {
@@ -483,6 +494,8 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
               showSearch
               optionFilterProp="children"
               disabled={!effectiveProjectId}
+              suffixIcon={<SearchOutlined className="text-white/30" />}
+              className="dataset-select-premium"
             >
               {datasets.map((d: Record<string, unknown>) => (
                 <Select.Option
@@ -525,6 +538,44 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
           </div>
         </Form>
       </div>
+
+      <style>{`
+        .dataset-select-premium .ant-select-selector {
+          background: rgba(255, 255, 255, 0.03) !important;
+          border-color: rgba(255, 255, 255, 0.1) !important;
+          border-radius: 12px !important;
+          height: 42px !important;
+          display: flex !important;
+          align-items: center !important;
+        }
+        .dataset-select-premium .ant-select-selection-placeholder {
+          color: rgba(255, 255, 255, 0.3) !important;
+        }
+        .dataset-select-premium .ant-select-selection-item {
+          color: white !important;
+        }
+        .ant-select-dropdown {
+          background: #1a1a1e !important;
+          border: 1px solid rgba(255, 255, 255, 0.08) !important;
+          border-radius: 12px !important;
+          padding: 4px !important;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+        }
+        .ant-select-item {
+          color: rgba(255, 255, 255, 0.7) !important;
+          border-radius: 8px !important;
+          margin: 2px 0 !important;
+          transition: all 0.2s !important;
+        }
+        .ant-select-item-option-selected {
+          background: rgba(139, 92, 246, 0.2) !important;
+          color: white !important;
+        }
+        .ant-select-item-option-active {
+          background: rgba(255, 255, 255, 0.05) !important;
+          color: white !important;
+        }
+      `}</style>
     </GlassModal>
   )
 }

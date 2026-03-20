@@ -6,6 +6,8 @@ import taskApi from '@/api/TaskApi'
 import assignmentApi from '@/api/AssignmentApi'
 import { useTaskDetail } from '@/features/annotator/hooks/useTaskDetail'
 import type { Task } from '@/features/annotator/components/TaskSection'
+import { ChangeDatasetModal } from '@/features/manager/components/dataset/ChangeDatasetModal'
+import { useAuthStore } from '@/store'
 
 const { Title, Text } = Typography
 
@@ -29,13 +31,20 @@ interface TaskDetailProps {
   onItemClick?: (item: TaskDataItemRecord, index: number) => void
   onBack?: () => void
   onStartLabeling?: () => void
+  onRefresh?: () => void
 }
 
 /**
  * Reusable Task Detail Component
  * Used in both Annotator and Manager flows
  */
-export const TaskDetail: React.FC<TaskDetailProps> = ({ task, loading, onItemClick, onBack, onStartLabeling }) => {
+export const TaskDetail: React.FC<TaskDetailProps> = ({ task, loading, onItemClick, onBack, onStartLabeling, onRefresh }) => {
+  const { user } = useAuthStore()
+  const [isChangeDatasetModalOpen, setIsChangeDatasetModalOpen] = useState(false)
+
+  const isManager = user?.role?.toLowerCase().includes('manager') || user?.role?.toLowerCase().includes('admin') || 
+                   user?.userRole?.toLowerCase().includes('manager') || user?.userRole?.toLowerCase().includes('admin')
+
   const {
     data: dataItems = [],
     isLoading: itemsLoading,
@@ -205,6 +214,14 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task, loading, onItemCli
                     <span className="text-gray-200 font-medium">
                       {task.assignmentName || 'N/A'}
                     </span>
+                    {isManager && (
+                      <button 
+                        onClick={() => setIsChangeDatasetModalOpen(true)}
+                        className="text-[10px] bg-violet-500/10 text-violet-400 border border-violet-500/20 px-2 py-0.5 rounded hover:bg-violet-500/20 transition-all font-bold uppercase tracking-wider"
+                      >
+                        Change
+                      </button>
+                    )}
                   </div>
                 </Descriptions.Item>
                 <Descriptions.Item label="Progress">
@@ -270,10 +287,22 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task, loading, onItemCli
               }}
               className="manager-task-table"
             />
-            {itemsError && <div className="p-8 text-red-400 text-center">{itemsError}</div>}
+            {itemsError && <div className="p-8 text-red-400 text-center">{String(itemsError)}</div>}
           </Card>
         </div>
       </div>
+      
+      <ChangeDatasetModal
+        open={isChangeDatasetModalOpen}
+        assignmentId={task?.assignmentId}
+        projectId={task?.projectId}
+        currentDatasetId={task?.datasetId}
+        onCancel={() => setIsChangeDatasetModalOpen(false)}
+        onSuccess={() => {
+          setIsChangeDatasetModalOpen(false)
+          onRefresh?.()
+        }}
+      />
 
       <style>{`
         .custom-descriptions .ant-descriptions-item-label {
@@ -445,6 +474,9 @@ export default function TaskDetailPage() {
         onItemClick={handleItemClick}
         onBack={() => navigate(-1)}
         onStartLabeling={handleStartLabeling}
+        onRefresh={() => {
+          window.location.reload()
+        }}
       />
     </div>
   )

@@ -134,6 +134,15 @@ const assignmentApi = {
       console.error('Failed to fetch dataset for assignment', error)
       throw error
     }
+  },
+  changeAssignmentDataset(assignmentId: string, datasetId: string) {
+    try {
+      const url = ENDPOINTS.ASSIGNMENTS.CHANGE_DATASET(assignmentId)
+      return axiosClient.put(url, { datasetId })
+    } catch (error) {
+      console.error('Failed to change assignment dataset', error)
+      throw error
+    }
   }
 }
 
