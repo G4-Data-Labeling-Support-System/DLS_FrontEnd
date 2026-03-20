@@ -27,10 +27,10 @@ def call(config) {
                 docker run -d --name ${containerName} \
                 -p ${config.testPort}:${config.testPort} ${imageTagged}
 
-                echo "Waiting for Vite to be healthy..."
+                echo "Waiting for Nginx to be healthy..."
 
-                ATTEMPTS=40
-                SLEEP=3
+                ATTEMPTS=5
+                SLEEP=2
 
                 for i in \$(seq 1 \$ATTEMPTS); do
                     if curl -fs http://localhost:${config.testPort}/ > /dev/null; then
