@@ -65,34 +65,47 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
       const data = response.data?.data || response.data?.content || response.data || []
 
       if (Array.isArray(data)) {
-        const mappedLabels: GetLabelsParams[] = data.map((l: Record<string, unknown>) => {
-          const mapped: GetLabelsParams = {}
-          if (l.labelId || l.id) {
-            mapped.labelId = String(l.labelId || l.id)
-          }
-          if (l.labelName || l.name) {
-            mapped.labelName = String(l.labelName || l.name)
-          }
-          if (l.labelStatus || l.status) {
-            mapped.labelStatus = String(l.labelStatus || l.status)
-          }
-          if (l.description) {
-            mapped.description = String(l.description)
-          }
-          if (l.color) {
-            mapped.color = String(l.color)
-          }
-          if (l.projectId || l.project_id) {
-            mapped.projectId = String(l.projectId || l.project_id)
-          }
-          if (l.createdAt || l.created_at || l.createdDate) {
-            mapped.createdAt = String(l.createdAt || l.created_at || l.createdDate)
-          }
-          if (l.updatedAt) {
-            mapped.updatedAt = String(l.updatedAt)
-          }
-          return mapped
-        })
+        const mappedLabels: GetLabelsParams[] = data
+          .map((l: Record<string, unknown>) => {
+            const mapped: GetLabelsParams = {}
+            if (l.labelId || l.id) {
+              mapped.labelId = String(l.labelId || l.id)
+            }
+            if (l.labelName || l.name) {
+              mapped.labelName = String(l.labelName || l.name)
+            }
+            const status = String(
+              l.labelStatus ||
+                l.status ||
+                l.label_status ||
+                l.datasetStatus ||
+                l.dataItemStatus ||
+                ''
+            )
+              .trim()
+              .toUpperCase()
+            mapped.labelStatus = status
+            if (l.description) {
+              mapped.description = String(l.description)
+            }
+            if (l.color) {
+              mapped.color = String(l.color)
+            }
+            if (l.projectId || l.project_id) {
+              mapped.projectId = String(l.projectId || l.project_id)
+            }
+            if (l.createdAt || l.created_at || l.createdDate) {
+              mapped.createdAt = String(l.createdAt || l.created_at || l.createdDate)
+            }
+            if (l.updatedAt) {
+              mapped.updatedAt = String(l.updatedAt)
+            }
+            return mapped
+          })
+          .filter((l) => {
+            const status = String(l.labelStatus || '').toUpperCase()
+            return status !== 'INACTIVE' && status !== 'DELETED' && status !== 'DISABLED'
+          })
         setLabels(mappedLabels)
       } else {
         console.warn('API returned non-array data:', data)
@@ -289,8 +302,7 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
             className="w-36"
             options={[
               { value: 'ALL', label: 'All Statuses' },
-              { value: 'ACTIVE', label: 'Active' },
-              { value: 'INACTIVE', label: 'Inactive' }
+              { value: 'ACTIVE', label: 'Active' }
             ]}
           />
           <Input
@@ -312,13 +324,14 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 items-stretch">
           {labels
-            .filter(
-              (l) =>
-                (!searchText ||
-                  (l.labelName && l.labelName.toLowerCase().includes(searchText.toLowerCase()))) &&
-                (statusFilter === 'ALL' ||
-                  (l.labelStatus && l.labelStatus.toUpperCase() === statusFilter))
-            )
+            .filter((l) => {
+              const matchesSearch =
+                !searchText ||
+                (l.labelName && l.labelName.toLowerCase().includes(searchText.toLowerCase()))
+              const matchesStatus = statusFilter === 'ALL' || l.labelStatus === statusFilter
+
+              return matchesSearch && matchesStatus
+            })
             .sort((a, b) => {
               const aIsInactive = a.labelStatus?.toUpperCase() === 'INACTIVE'
               const bIsInactive = b.labelStatus?.toUpperCase() === 'INACTIVE'

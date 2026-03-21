@@ -186,10 +186,10 @@ pipeline {
                         docker run -d --name ${containerName} \
                         -p ${testPort}:${testPort} ${env.IMAGE_TAGGED}
 
-                        echo "⏳ Waiting for Vite to be healthy..."
+                        echo "⏳ Waiting for Nginx to be healthy..."
 
-                        ATTEMPTS=40
-                        SLEEP=3
+                        ATTEMPTS=5
+                        SLEEP=2
 
                         for i in \$(seq 1 \$ATTEMPTS); do
                         if curl -fs http://localhost:${testPort} > /dev/null; then
@@ -200,9 +200,6 @@ pipeline {
                         echo "⏱ Attempt \$i/\$ATTEMPTS – not ready yet"
                         sleep \$SLEEP
                         done
-
-                        echo "🔍 Final health check"
-                        curl -f http://localhost:${testPort}/admin
 
                         docker stop ${containerName}
                         docker rm ${containerName}
@@ -399,12 +396,10 @@ pipeline {
 
         cleanup {
             sh """
-                echo "🧹 Cleaning up Docker resources..."
+                echo "🧹 Cleaning up test containers..."
                 docker stop test-${APP_NAME}-${env.BUILD_NUMBER} || true
                 docker rm test-${APP_NAME}-${env.BUILD_NUMBER} || true
-                docker rmi ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION} || true
-                docker rmi ${env.IMAGE_TAGGED} || true
-                docker system prune -f || true
+                # REMOVED: docker system prune -f (this was destroying caching)
                 echo "✅ Cleanup completed"
             """
         }

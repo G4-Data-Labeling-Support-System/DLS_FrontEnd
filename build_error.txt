@@ -1,2 +1,0 @@
-src/features/manager/components/dataset/DatasetQuickActions.tsx(29,68): error TS2339: Property 'createDataset' does not exist on type '{ root: string; createProject: string; editProject: string; teamAssignment: string; datasetManagement: string; datasetDetail: string; }'.
-src/shared/types/index.ts(3,1): error TS2308: Module './api.types' has already exported a member named 'ApiResponse'. Consider explicitly re-exporting to resolve the ambiguity.

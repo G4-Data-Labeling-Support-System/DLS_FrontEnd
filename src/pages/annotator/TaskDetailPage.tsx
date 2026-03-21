@@ -1,12 +1,35 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { Card, Table, Descriptions, Tag, Typography, Spin } from 'antd'
-import { DatabaseOutlined, InfoCircleOutlined } from '@ant-design/icons'
+import { Card, Table, Descriptions, Tag, Typography, Spin, Button } from 'antd'
+import {
+  DatabaseOutlined,
+  InfoCircleOutlined,
+  ArrowLeftOutlined,
+  PlayCircleOutlined
+} from '@ant-design/icons'
 import taskApi from '@/api/TaskApi'
+import assignmentApi from '@/api/AssignmentApi'
 import { useTaskDetail } from '@/features/annotator/hooks/useTaskDetail'
-import type { Task } from '@/features/annotator/components/TaskSection'
+import { ChangeDatasetModal } from '@/features/manager/components/dataset/ChangeDatasetModal'
+import { useAuthStore } from '@/store'
 
 const { Title, Text } = Typography
+
+export interface Task {
+  taskId: string
+  id?: string
+  taskName?: string
+  name?: string
+  assignmentName?: string
+  status?: string
+  description?: string
+  assignmentId?: string
+  projectId?: string
+  datasetId?: string
+  createdAt?: string
+  assignedBy?: string
+  [key: string]: unknown
+}
 
 export interface TaskDataItemRecord {
   dataItemId: string
@@ -19,35 +42,44 @@ export interface TaskDataItemRecord {
     uploadedAt: string
     previewUrl?: string
   }
+  taskItemId?: string // Added for rowKey in table
 }
 
 interface TaskDetailProps {
-  task: {
-    taskId: string
-    taskName?: string
-    taskStatus?: string
-    reviewStatus?: string
-    taskType?: string
-    assignmentId?: string
-    assignmentName?: string
-    completedCount?: number
-    totalItems?: number
-    createdAt?: string
-  }
+  task: Task | null
+  loading: boolean
   onItemClick?: (item: TaskDataItemRecord, index: number) => void
   onBack?: () => void
+  onStartLabeling?: () => void
+  onRefresh?: () => void
 }
 
 /**
  * Reusable Task Detail Component
  * Used in both Annotator and Manager flows
  */
-export const TaskDetail: React.FC<TaskDetailProps> = ({ task, onItemClick }) => {
+export const TaskDetail: React.FC<TaskDetailProps> = ({
+  task,
+  loading,
+  onItemClick,
+  onBack,
+  onStartLabeling,
+  onRefresh
+}) => {
+  const { user } = useAuthStore()
+  const [isChangeDatasetModalOpen, setIsChangeDatasetModalOpen] = useState(false)
+
+  const isManager =
+    user?.role?.toLowerCase().includes('manager') ||
+    user?.role?.toLowerCase().includes('admin') ||
+    user?.userRole?.toLowerCase().includes('manager') ||
+    user?.userRole?.toLowerCase().includes('admin')
+
   const {
     data: dataItems = [],
     isLoading: itemsLoading,
     error: itemsError
-  } = useTaskDetail(task.taskId)
+  } = useTaskDetail(task?.taskId || '')
 
   const columns = [
     {
@@ -71,7 +103,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task, onItemClick }) => 
     {
       title: 'Filename',
       key: 'filename',
-      width: '30%',
+      width: '20%',
       render: (_: unknown, record: TaskDataItemRecord) => (
         <Text
           className="text-gray-200 font-medium truncate block max-w-[200px]"
@@ -84,7 +116,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task, onItemClick }) => 
     {
       title: 'Format',
       key: 'fileFormat',
-      width: '18%',
+      width: '12%',
       render: (_: unknown, record: TaskDataItemRecord) => (
         <Tag className="bg-blue-500/10 border-blue-500/20 text-blue-400 font-medium rounded-md px-2 py-0.5">
           {record.dataItem.fileFormat}
@@ -94,17 +126,38 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task, onItemClick }) => 
     {
       title: 'Data Type',
       key: 'dataType',
-      width: '18%',
+      width: '12%',
       render: (_: unknown, record: TaskDataItemRecord) => (
-        <Tag className="bg-emerald-500/10 border-emerald-500/20 text-emerald-400 font-medium rounded-md px-2 py-0.5">
+        <Tag className="bg-violet-500/10 border-violet-500/20 text-violet-400 font-medium rounded-md px-2 py-0.5">
           {record.dataItem.dataType}
+        </Tag>
+      )
+    },
+    {
+      title: 'Status',
+      key: 'status',
+      width: '12%',
+      render: (_: unknown, record: TaskDataItemRecord) => (
+        <Tag
+          className={`
+              rounded-md px-2 py-0.5 font-bold border
+              ${
+                record.taskDataItemStatus === 'COMPLETED'
+                  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                  : record.taskDataItemStatus === 'IN_PROGRESS'
+                    ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                    : 'bg-gray-500/10 border-gray-500/20 text-gray-400'
+              }
+            `}
+        >
+          {record.taskDataItemStatus || 'NOT_STARTED'}
         </Tag>
       )
     },
     {
       title: 'Uploaded At',
       key: 'uploadedAt',
-      width: '24%',
+      width: '18%',
       render: (_: unknown, record: TaskDataItemRecord) => (
         <Text className="text-gray-400 text-sm">
           {record.dataItem.uploadedAt
@@ -112,155 +165,196 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task, onItemClick }) => 
             : 'N/A'}
         </Text>
       )
+    },
+    {
+      title: 'Action',
+      key: 'action',
+      width: '6%',
+      render: (_: unknown, record: TaskDataItemRecord, index: number) => (
+        <button
+          onClick={() => onItemClick?.(record, index)}
+          className="p-1.5 rounded-lg hover:bg-white/5 text-gray-400 hover:text-violet-400 transition-all cursor-pointer"
+        >
+          <InfoCircleOutlined className="text-lg" />
+        </button>
+      )
     }
   ]
+
+  if (loading || !task) {
+    return (
+      <div className="py-32 flex flex-col items-center gap-4">
+        <Spin
+          indicator={
+            <div className="w-12 h-12 rounded-full border-4 border-violet-500/20 border-t-violet-500 animate-spin" />
+          }
+        />
+        <span className="text-gray-500 font-medium tracking-widest text-[10px] uppercase">
+          Loading Task Details...
+        </span>
+      </div>
+    )
+  }
 
   return (
     <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <div>
-          <Title level={4} className="!text-white !m-0 !font-bold tracking-tight">
-            Task Details: {task.taskName || task.taskId}
-          </Title>
-          <div className="flex items-center gap-2 mt-1">
-            <div className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse" />
+        <div className="flex items-center gap-4">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="group flex items-center gap-2 text-gray-400 hover:text-white transition-all bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg border border-white/5 hover:border-white/10"
+            >
+              <ArrowLeftOutlined className="text-xs group-hover:-translate-x-0.5 transition-transform" />
+              <span className="text-xs font-bold uppercase tracking-wider">Back</span>
+            </button>
+          )}
+          <div className="flex flex-col">
+            <Title level={4} className="!text-white !mb-0 tracking-tight font-bold">
+              {task.taskName || 'Untitled Task'}
+            </Title>
             <Text className="text-gray-500 font-mono text-xs select-all">ID: {task.taskId}</Text>
           </div>
         </div>
+        {onStartLabeling && (
+          <Button
+            type="primary"
+            icon={<PlayCircleOutlined />}
+            onClick={onStartLabeling}
+            className="bg-violet-600 border-none hover:bg-violet-500 rounded-xl h-auto py-2 h-[38px] flex items-center"
+          >
+            <span className="text-sm font-medium">Start Labeling</span>
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-2">
-        {/* Task Metadata Card */}
-        <div className="lg:col-span-4 lg:sticky lg:top-6 h-fit">
-          <Card
-            className="bg-[#1A1625]/80 backdrop-blur-xl border-white/5 rounded-2xl shadow-2xl overflow-hidden group"
-            title={
-              <div className="py-1">
-                <span className="text-white flex items-center gap-2.5 font-semibold text-base">
-                  <div className="p-2 rounded-lg bg-violet-500/10 group-hover:bg-violet-500/20 transition-colors">
-                    <InfoCircleOutlined className="text-violet-400" />
+        {/* Left Column: Metrics and Info */}
+        <div className="lg:col-span-12">
+          <Card className="bg-[#16161a]/60 border-white/5 backdrop-blur-xl rounded-2xl shadow-xl overflow-hidden hover:border-white/10 transition-all duration-500">
+            <div className="p-2">
+              <Descriptions
+                column={{ xxl: 4, xl: 3, lg: 2, md: 2, sm: 1, xs: 1 }}
+                layout="vertical"
+                className="custom-descriptions"
+              >
+                <Descriptions.Item label="Assignment">
+                  <div className="flex items-center gap-2">
+                    <DatabaseOutlined className="text-violet-400" />
+                    <span className="text-gray-200 font-medium">
+                      {task.assignmentName || 'N/A'}
+                    </span>
+                    {isManager && (
+                      <button
+                        onClick={() => setIsChangeDatasetModalOpen(true)}
+                        className="text-[10px] bg-violet-500/10 text-violet-400 border border-violet-500/20 px-2 py-0.5 rounded hover:bg-violet-500/20 transition-all font-bold uppercase tracking-wider"
+                      >
+                        Change
+                      </button>
+                    )}
                   </div>
-                  Task Metadata
-                </span>
-              </div>
-            }
-          >
-            <Descriptions column={1} size="small" className="mt-2">
-              <Descriptions.Item label={<span className="text-gray-400 font-medium">Status</span>}>
-                <Tag
-                  className={`
-                  rounded-full px-3 py-0.5 border-none font-semibold text-[10px] tracking-wider uppercase
-                  ${
-                    task.taskStatus === 'COMPLETED'
-                      ? 'bg-emerald-500/10 text-emerald-400'
-                      : task.taskStatus === 'IN_PROGRESS'
-                        ? 'bg-blue-500/10 text-blue-400'
-                        : task.taskStatus === 'INACTIVE'
-                          ? 'bg-red-500/10 text-red-400'
-                          : 'bg-gray-500/10 text-gray-400'
-                  }
-                `}
-                >
-                  {(task.taskStatus || task.reviewStatus || 'NOT_STARTED').toUpperCase()}
-                </Tag>
-              </Descriptions.Item>
-              <Descriptions.Item
-                label={<span className="text-gray-400 font-medium">Assignment</span>}
-              >
-                <span className="text-gray-200 font-medium">{task.assignmentName || 'N/A'}</span>
-              </Descriptions.Item>
-              <Descriptions.Item
-                label={<span className="text-gray-400 font-medium">Progress</span>}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-200 font-bold">
-                    {
-                      dataItems.filter(
-                        (item: TaskDataItemRecord) =>
-                          item.taskDataItemStatus?.toUpperCase() === 'COMPLETED'
-                      ).length
-                    }
+                </Descriptions.Item>
+                <Descriptions.Item label="Progress">
+                  <div className="flex flex-col gap-1 w-full max-w-[200px]">
+                    <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider">
+                      <span className="text-violet-400">
+                        {Math.round(
+                          (dataItems.filter(
+                            (i: TaskDataItemRecord) => i.taskDataItemStatus === 'COMPLETED'
+                          ).length /
+                            (dataItems.length || 1)) *
+                            100
+                        )}
+                        %
+                      </span>
+                      <span className="text-gray-500">
+                        {
+                          dataItems.filter(
+                            (i: TaskDataItemRecord) => i.taskDataItemStatus === 'COMPLETED'
+                          ).length
+                        }{' '}
+                        / {dataItems.length}
+                      </span>
+                    </div>
+                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-violet-600 to-indigo-600 rounded-full transition-all duration-1000 ease-out"
+                        style={{
+                          width: `${(dataItems.filter((i: TaskDataItemRecord) => i.taskDataItemStatus === 'COMPLETED').length / (dataItems.length || 1)) * 100}%`
+                        }}
+                      />
+                    </div>
+                  </div>
+                </Descriptions.Item>
+                <Descriptions.Item label="Created At">
+                  <span className="text-gray-400 text-xs font-mono">
+                    {task.createdAt ? new Date(task.createdAt).toLocaleDateString() : 'N/A'}
                   </span>
-                  <span className="text-gray-500">/</span>
-                  <span className="text-gray-500">{dataItems.length} items</span>
-                </div>
-              </Descriptions.Item>
-              <Descriptions.Item label={<span className="text-gray-400 font-medium">Created</span>}>
-                <span className="text-gray-400 text-xs">
-                  {task.createdAt ? new Date(task.createdAt).toLocaleString() : 'N/A'}
-                </span>
-              </Descriptions.Item>
-            </Descriptions>
+                </Descriptions.Item>
+              </Descriptions>
+            </div>
           </Card>
         </div>
 
-        {/* Task Data Items Table Card */}
-        <div className="lg:col-span-8">
-          <Card
-            className="bg-[#1A1625]/80 backdrop-blur-xl border-white/5 rounded-2xl shadow-2xl overflow-hidden"
-            title={
-              <div className="flex items-center justify-between py-1">
-                <span className="text-white flex items-center gap-2.5 font-semibold text-base">
-                  <div className="p-2 rounded-lg bg-emerald-500/10">
-                    <DatabaseOutlined className="text-emerald-400" />
-                  </div>
-                  Data Items
-                </span>
-                <div className="flex items-center gap-2 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                  <span className="text-emerald-400 font-bold text-xs uppercase tracking-tighter">
-                    {dataItems.length} Records
-                  </span>
-                </div>
-              </div>
-            }
-          >
-            {itemsLoading ? (
-              <div className="py-32 flex flex-col items-center gap-4">
-                <Spin
-                  indicator={
-                    <div className="w-12 h-12 rounded-full border-4 border-violet-500/20 border-t-violet-500 animate-spin" />
-                  }
-                />
-                <span className="text-gray-500 font-medium tracking-widest text-[10px] uppercase">
-                  Retrieving Dataset...
-                </span>
-              </div>
-            ) : itemsError ? (
-              <div className="py-20 flex flex-col items-center gap-3">
-                <div className="p-4 rounded-full bg-red-500/10">
-                  <InfoCircleOutlined className="text-red-400 text-2xl" />
-                </div>
-                <span className="text-red-400/80 font-medium">Failed to synchronize task data</span>
-              </div>
-            ) : (
-              <Table
-                columns={columns}
-                dataSource={dataItems as TaskDataItemRecord[]}
-                rowKey={(record) => record.dataItemId || Math.random().toString()}
-                pagination={{
-                  pageSize: 5,
-                  className: 'custom-pagination px-4'
-                }}
-                className="manager-task-table"
-                size="large"
-                onRow={(record, index) => ({
-                  onClick: () => onItemClick?.(record, index ?? 0),
-                  className: onItemClick ? 'cursor-pointer' : ''
-                })}
-              />
-            )}
+        {/* Full Width Table for Items */}
+        <div className="lg:col-span-12 mt-6">
+          <div className="flex items-center gap-3 mb-6 px-2">
+            <div className="w-8 h-8 rounded-xl bg-violet-500/10 flex items-center justify-center">
+              <DatabaseOutlined className="text-violet-400 text-sm" />
+            </div>
+            <Title level={5} className="!text-white !mb-0 tracking-tight font-bold">
+              Task Data Items
+            </Title>
+            <Tag className="bg-white/5 border-white/10 text-gray-400 rounded-lg font-mono">
+              {dataItems.length}
+            </Tag>
+          </div>
+
+          <Card className="bg-[#16161a]/40 border-white/5 backdrop-blur-xl rounded-2xl shadow-2xl overflow-hidden">
+            <Table
+              dataSource={dataItems}
+              columns={columns}
+              loading={itemsLoading}
+              rowKey={(record) => String(record.taskItemId || record.dataItemId || '')}
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: false,
+                className: 'custom-pagination !mt-8 !mb-4 !px-6'
+              }}
+              className="manager-task-table"
+            />
+            {itemsError && <div className="p-8 text-red-400 text-center">{String(itemsError)}</div>}
           </Card>
         </div>
       </div>
 
+      <ChangeDatasetModal
+        open={isChangeDatasetModalOpen}
+        assignmentId={task?.assignmentId || ''}
+        projectId={task?.projectId || ''}
+        currentDatasetId={task?.datasetId}
+        onCancel={() => setIsChangeDatasetModalOpen(false)}
+        onSuccess={() => {
+          setIsChangeDatasetModalOpen(false)
+          onRefresh?.()
+        }}
+      />
+
       <style>{`
+        .custom-descriptions .ant-descriptions-item-label {
+          color: #6b7280 !important;
+          font-size: 10px !important;
+          text-transform: uppercase !important;
+          letter-spacing: 0.1em !important;
+          font-weight: 700 !important;
+          padding-bottom: 8px !important;
+        }
         .manager-task-table .ant-table {
           background: transparent !important;
         }
         .manager-task-table .ant-table-thead > tr > th {
-          background: #231e31/40 !important;
-          color: #6b7280 !important;
+          background: rgba(255, 255, 255, 0.02) !important;
+          color: #9ca3af !important;
           border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
           font-size: 11px;
           text-transform: uppercase;
@@ -313,11 +407,15 @@ export default function TaskDetailPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    async function fetchData() {
-      if (!taskId) return
+    async function load() {
+      if (!taskId) {
+        setError('Task ID is missing.')
+        setLoading(false)
+        return
+      }
       setLoading(true)
       try {
-        const assignmentId = location.state?.assignmentId || taskId
+        const assignmentId = (location.state?.assignmentId || taskId || '') as string
 
         // 1. Fetch task details
         const tasksRes = await taskApi.getTasksByAssignmentId(assignmentId)
@@ -332,10 +430,32 @@ export default function TaskDetailPage() {
         }
 
         if (!currentTask) {
-          throw new Error('Task not found')
+          setError('Task not found.')
+          setLoading(false)
+          return
         }
 
-        setTask(currentTask)
+        // 2. Resolve the real assignment ID from the task if needed
+        const realAssignmentId = ((currentTask as Task).assignmentId || assignmentId) as string
+
+        // 3. Fetch assignment details to get the name
+        let assignmentName =
+          (currentTask as Task).assignmentName ||
+          (location.state as { assignmentName?: string })?.assignmentName
+        if (!assignmentName && realAssignmentId) {
+          try {
+            const assignRes = await assignmentApi.getAssignmentById(realAssignmentId)
+            const assignData = assignRes.data?.data || assignRes.data
+            assignmentName = assignData.assignmentName || assignData.name || assignData.title
+          } catch (e) {
+            console.warn('Could not fetch assignment details for name:', e)
+          }
+        }
+
+        setTask({
+          ...currentTask,
+          assignmentName: assignmentName || 'N/A'
+        })
       } catch (err) {
         console.error('Failed to load task details:', err)
         setError('Failed to load task details from the server.')
@@ -343,20 +463,27 @@ export default function TaskDetailPage() {
         setLoading(false)
       }
     }
-    fetchData()
-  }, [taskId, location.state?.assignmentId])
+    load()
+  }, [taskId, location.state])
 
-  if (loading) {
-    return (
-      <div className="w-full h-screen flex justify-center items-center">
-        <Spin size="large" tip="Loading task details..." />
-      </div>
-    )
+  const handleStartLabeling = () => {
+    if (!taskId) return
+    const savedIndex = localStorage.getItem(`annotation_index_${taskId}`)
+    const startIndex = savedIndex !== null ? parseInt(savedIndex) : 0
+    navigate(`/annotator/task/${taskId}/annotate`, {
+      state: { startIndex, assignmentId: task?.assignmentId }
+    })
   }
 
-  if (error || !task) {
+  const handleItemClick = (_item: TaskDataItemRecord, index: number) => {
+    navigate(`/annotator/task/${taskId}/annotate`, {
+      state: { startIndex: index, assignmentId: task?.assignmentId }
+    })
+  }
+
+  if (error || (!task && !loading)) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 gap-4">
+      <div className="flex flex-col items-center justify-center py-20 gap-4 min-h-screen bg-[#0f0e17]">
         <span className="material-symbols-outlined text-red-500 text-5xl opacity-80">error</span>
         <span className="text-red-400 font-medium">{error || 'Task not found.'}</span>
         <button
@@ -369,22 +496,25 @@ export default function TaskDetailPage() {
     )
   }
 
-  const handleItemClick = (_item: TaskDataItemRecord, index: number) => {
-    navigate(`/annotator/task/${task.taskId || task.id}/annotate`, {
-      state: { startIndex: index, assignmentId: task.assignmentId || task.id }
-    })
-  }
-
   return (
-    <div className="p-6">
+    <div className="min-h-screen bg-[#0f0e17] p-8">
       <TaskDetail
-        task={{
-          ...task,
-          taskId: String(task.taskId || task.id),
-          taskName: String(task.taskName || task.name || task.filename || 'Untitled Task')
-        }}
+        task={
+          task
+            ? {
+                ...task,
+                taskId: String(task.taskId || task.id),
+                taskName: String(task.taskName || task.name || 'Untitled Task')
+              }
+            : null
+        }
+        loading={loading}
         onItemClick={handleItemClick}
         onBack={() => navigate(-1)}
+        onStartLabeling={handleStartLabeling}
+        onRefresh={() => {
+          window.location.reload()
+        }}
       />
     </div>
   )
