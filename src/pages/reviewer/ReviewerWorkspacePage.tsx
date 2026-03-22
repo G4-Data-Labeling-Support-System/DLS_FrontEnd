@@ -14,6 +14,8 @@ import { ReviewerLoadingState } from '@/features/reviewer/components/workspace/R
 import { ApproveModal } from '@/features/reviewer/components/workspace/ApproveModal'
 import { RejectModal } from '@/features/reviewer/components/workspace/RejectModal'
 import { reviewerApi, type ReviewerItem, type ReviewerItemDetail } from '@/api/ReviewerApi'
+import assignmentApi from '@/api/AssignmentApi'
+import taskApi from '@/api/TaskApi'
 import { LoadingOutlined } from '@ant-design/icons'
 
 // ⚡ Cache for item details - prevents refetching
@@ -100,20 +102,40 @@ const ReviewerWorkspacePage: React.FC = () => {
     const fetchItems = async () => {
       setLoadingItems(true)
       try {
-        const data = await reviewerApi.getProjectItems(projectId)
-        if (Array.isArray(data)) {
-          setItems(data)
-          if (data.length > 0) {
-            setSelectedId(data[0].id)
+        // ⚡ Standard real flow: Project -> Assignments -> Tasks
+        const assignRes = await assignmentApi.getAssignmentsByProjectId(projectId)
+        const assignments = assignRes.data?.data || assignRes.data || []
+        
+        if (assignments.length === 0) {
+          message.warning('No assignments found for this project')
+          setItems([])
+          return
+        }
+
+        // Get tasks for the first assignment assigned to reviewer
+        const assignmentId = assignments[0].assignmentId || assignments[0].id
+        const taskRes = await taskApi.getTasksByAssignmentId(assignmentId)
+        const tasks = taskRes.data?.data || taskRes.data || []
+
+        if (tasks.length > 0) {
+          const mappedItems: ReviewerItem[] = tasks.map((t: any) => ({
+            id: t.taskId || t.id,
+            filename: t.taskName || t.name || `Task ${t.taskId}`,
+            status: (t.taskStatus || 'pending').toLowerCase() as any,
+            imageUrl: '', // Will be loaded in detail
+            lastModified: t.createdAt || ''
+          }))
+          setItems(mappedItems)
+          if (mappedItems.length > 0) {
+            setSelectedId(mappedItems[0].id)
           }
         } else {
           setItems([])
-          // console.error("API returned non-array for project items:", data);
-          message.warning('No items found in project')
+          message.warning('No tasks found in this assignment')
         }
-      } catch {
-        message.error('Failed to load dataset items')
-        // console.error('Error fetching items:', error);
+      } catch (error) {
+        message.error('Failed to load project tasks')
+        console.error('Error fetching reviewer items:', error)
       } finally {
         setLoadingItems(false)
       }
@@ -173,15 +195,26 @@ const ReviewerWorkspacePage: React.FC = () => {
   // ⚡ Optimistic review decision with instant feedback
   const handleReviewDecision = useCallback(
     async (status: 'approved' | 'rejected', _reason?: string, _feedback?: string[]) => {
-      if (!selectedId) return
+      if (!selectedId || !itemDetail?.annotations) return
 
       setIsSubmitting(true)
 
       try {
-        // Include reason/feedback if api supports it (mocking support for now)
-        // console.log(`Submitting ${status} for ${selectedId}`, { reason, feedback });
+        const reviews = itemDetail.annotations
+          .filter((ann: any) => ann.id || ann.annotationId)
+          .map((ann: any) => ({
+            annotationId: ann.id || ann.annotationId,
+            reviewStatus: (status === 'approved' ? 'APPROVED' : 'REJECTED') as any,
+            comment: _reason || ''
+          }))
 
-        await reviewerApi.submitReviewDecision(selectedId, status)
+        if (reviews.length === 0) {
+          message.warning('No annotations to review on this item')
+          setIsSubmitting(false)
+          return
+        }
+
+        await reviewerApi.submitReviewDecision({ reviews })
 
         message.success({
           content: `Item ${status} successfully`,
@@ -190,19 +223,18 @@ const ReviewerWorkspacePage: React.FC = () => {
         })
 
         // ⚡ Navigate to dashboard for both Approved and Rejected
-        // console.log('Navigating to dashboard...');
         navigate('/reviewer', { replace: true })
-      } catch {
+      } catch (error) {
         setIsSubmitting(false)
+        console.error('Review submission error:', error)
         message.error({
           content: 'Failed to submit review',
           key: 'review',
           duration: 3
         })
-        // console.error('Error submitting review:', error);
       }
     },
-    [selectedId, navigate, message]
+    [selectedId, itemDetail, navigate, message]
   )
 
   // ⌨️ Keyboard shortcuts for faster workflow
