@@ -37,7 +37,7 @@ export default function TasksSection({
 
   useEffect(() => {
     // Sync tasks when parent passes new tasks (such as from Annotated Dashboard API)
-    const mappedTasks: Task[] = initialTasks.map((t: any) => {
+    const mappedTasks: Task[] = initialTasks.map((t: any, idx: number) => {
       let status = String(t.task_status || t.taskStatus || t.status || 'PENDING').toUpperCase()
       if (status === 'NOT_STARTED') status = 'PENDING'
 
@@ -50,8 +50,8 @@ export default function TasksSection({
 
       return {
         ...t,
-        id: String(t.taskId || t.id || ''),
-        name: String(t.taskName || t.name || ''),
+        id: String(t.taskId || t.id || t.dataItemId || t.dataitemId || `task-${idx}`),
+        name: String(t.taskName || t.name || t.filename || `Task ${idx + 1}`),
         batchLabel: String(t.batchLabel || t.taskType || 'Unbatched'),
         taskStatus: status,
         completedItems,
@@ -221,9 +221,9 @@ export default function TasksSection({
 
               {/* Grid space */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {batchTasks.map((task) => (
+                {batchTasks.map((task, idx) => (
                   <TaskCard
-                    key={`${batchLabel}-${task.id}`}
+                    key={`${batchLabel}-${task.id}-${idx}`}
                     task={task}
                     assignmentId={assignmentId}
                   />

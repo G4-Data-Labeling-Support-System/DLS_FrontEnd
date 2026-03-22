@@ -3,6 +3,7 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import assignmentApi, { type GetAssignmentsParams } from '@/api/AssignmentApi'
 import guidelineApi from '@/api/GuidelineApi'
 import projectApi from '@/api/ProjectApi'
+import taskApi from '@/api/TaskApi'
 import { themeClasses } from '@/styles'
 import {
   DashboardTabs,
@@ -92,11 +93,13 @@ export default function AnnotatorDashboardPage() {
           // Normalize assignment & Fetch Tasks if they are not included
           let rawTasks = Array.isArray(assignmentData.tasks) ? assignmentData.tasks : []
           if (rawTasks.length === 0) {
-             try {
-                const { default: taskApi } = await import('@/api/TaskApi')
-                const tRes = await taskApi.getTasksByAssignmentId(assignmentId)
-                rawTasks = tRes.data?.data || tRes.data || []
-             } catch(e) { console.warn('Failed to fetch tasks for assignment detail', e) }
+            try {
+              const apiId = assignmentData.assignmentId || assignmentData.id || assignmentId
+              const tRes = await taskApi.getTasksByAssignmentId(apiId)
+              rawTasks = tRes.data?.data || tRes.data || []
+            } catch (e) {
+              console.warn('Failed to fetch tasks for assignment detail', e)
+            }
           }
           
           const actualTasks = rawTasks.filter((t: any) => {
