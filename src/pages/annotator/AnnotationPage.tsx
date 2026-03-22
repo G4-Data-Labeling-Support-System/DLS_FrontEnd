@@ -130,10 +130,17 @@ export default function AnnotationPage() {
             const labelsRes = await assignmentApi.getLabelsByAssignmentId(effectiveAssignmentId)
             const labelsData = labelsRes.data?.data || labelsRes.data || []
             if (Array.isArray(labelsData)) {
-              setLabels(labelsData)
-              if (labelsData.length > 0) {
-                setCurrentLabel(labelsData[0])
-                setSelectedLabels([labelsData[0].labelId])
+              // Normalize internal label structure to match UI expectations
+              const normLabels = labelsData.map((l: any) => ({
+                ...l,
+                labelId: l.labelId || l.id,
+                labelName: l.labelName || l.name,
+                color: l.color || '#8b5cf6'
+              }))
+              setLabels(normLabels)
+              if (normLabels.length > 0) {
+                setCurrentLabel(normLabels[0])
+                setSelectedLabels([normLabels[0].labelId])
               }
             }
           } catch (labelErr) {
@@ -180,15 +187,8 @@ export default function AnnotationPage() {
       }
     }
     fetchData()
-  }, [
-    taskId,
-    assignmentId,
-    startIdx,
-    STORAGE_KEY_SESSIONS,
-    STORAGE_KEY_INDEX,
-    currentIndex,
-    loadFromSession
-  ])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taskId, assignmentId])
 
   const currentItem = dataItems[currentIndex]
   const totalItems = dataItems.length
@@ -335,16 +335,16 @@ export default function AnnotationPage() {
       annotationData: {
         active: currentShape
           ? {
-              type: currentShape.type,
-              points: currentShape.points ? currentShape.points.length : undefined,
-              dimensions:
-                currentShape.type === 'bounding_box'
-                  ? {
-                      w: Math.round(currentShape.width || 0),
-                      h: Math.round(currentShape.height || 0)
-                    }
-                  : undefined
-            }
+            type: currentShape.type,
+            points: currentShape.points ? currentShape.points.length : undefined,
+            dimensions:
+              currentShape.type === 'bounding_box'
+                ? {
+                  w: Math.round(currentShape.width || 0),
+                  h: Math.round(currentShape.height || 0)
+                }
+                : undefined
+          }
           : null,
         session: shapes.map((s) => ({ type: s.type, label: s.label })),
         raw: shapes
@@ -532,7 +532,7 @@ export default function AnnotationPage() {
               onDoubleClick={finishPolygon}
             >
               {shapes.map((shape, i) => (
-                <g key={i}>
+                <g key={`shape-${i}-${shape.label}`}>
                   {shape.type === 'bounding_box' ? (
                     <rect
                       x={shape.x}
@@ -646,17 +646,16 @@ export default function AnnotationPage() {
                 {labels.length === 0 ? (
                   <span className="text-xs text-gray-500 italic">No labels available</span>
                 ) : (
-                  labels.map((label) => (
+                  labels.map((label, idx) => (
                     <button
-                      key={label.labelId}
+                      key={label.labelId || `label-${idx}`}
                       onClick={() => toggleLabel(label)}
                       className={`
                                               px-3 py-1.5 rounded-lg text-xs font-bold transition-all border
-                                              ${
-                                                selectedLabels.includes(label.labelId)
-                                                  ? 'bg-white/10 text-white'
-                                                  : 'bg-white/5 border-transparent text-gray-500 hover:bg-white/10 hover:text-gray-300'
-                                              }
+                                              ${selectedLabels.includes(label.labelId)
+                          ? 'bg-white/10 text-white'
+                          : 'bg-white/5 border-transparent text-gray-500 hover:bg-white/10 hover:text-gray-300'
+                        }
                                           `}
                       style={{
                         borderColor: selectedLabels.includes(label.labelId)
@@ -701,16 +700,16 @@ export default function AnnotationPage() {
                     {
                       active: currentShape
                         ? {
-                            type: currentShape.type,
-                            points: currentShape.points ? currentShape.points.length : undefined,
-                            dimensions:
-                              currentShape.type === 'bounding_box'
-                                ? {
-                                    w: Math.round(currentShape.width || 0),
-                                    h: Math.round(currentShape.height || 0)
-                                  }
-                                : undefined
-                          }
+                          type: currentShape.type,
+                          points: currentShape.points ? currentShape.points.length : undefined,
+                          dimensions:
+                            currentShape.type === 'bounding_box'
+                              ? {
+                                w: Math.round(currentShape.width || 0),
+                                h: Math.round(currentShape.height || 0)
+                              }
+                              : undefined
+                        }
                         : null,
                       session: shapes.map((s) => ({ type: s.type, label: s.label })),
                       raw: shapes

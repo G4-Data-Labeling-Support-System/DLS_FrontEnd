@@ -89,19 +89,27 @@ export default function AnnotatorDashboardPage() {
           const assignmentRes = await assignmentApi.getAssignmentById(assignmentId)
           const assignmentData = assignmentRes.data?.data || assignmentRes.data
 
-          // Normalize assignment
-          const actualTasks = (
-            Array.isArray(assignmentData.tasks) ? assignmentData.tasks : []
-          ).filter((t: AssignmentTask) => {
+          // Normalize assignment & Fetch Tasks if they are not included
+          let rawTasks = Array.isArray(assignmentData.tasks) ? assignmentData.tasks : []
+          if (rawTasks.length === 0) {
+             try {
+                const { default: taskApi } = await import('@/api/TaskApi')
+                const tRes = await taskApi.getTasksByAssignmentId(assignmentId)
+                rawTasks = tRes.data?.data || tRes.data || []
+             } catch(e) { console.warn('Failed to fetch tasks for assignment detail', e) }
+          }
+          
+          const actualTasks = rawTasks.filter((t: any) => {
             const status = String(
               t.taskStatus || t.status || t.assignmentStatus || ''
             ).toUpperCase()
             return status !== 'INACTIVE' && status !== 'DELETED'
           })
+          
           const calcCompleted = actualTasks.filter(
-            (t: AssignmentTask) =>
+            (t: any) =>
               t.taskStatus === 'COMPLETED' ||
-              ['submitted', 'approved'].includes(t.annotationStatus?.toLowerCase())
+              ['submitted', 'approved'].includes(String(t.annotationStatus).toLowerCase())
           ).length
 
           const normAssignment = {
@@ -114,7 +122,7 @@ export default function AnnotatorDashboardPage() {
               assignmentData.projectId ||
               assignmentData.project?.projectId ||
               assignmentData.project?.id,
-            tasks: actualTasks.length > 0 ? actualTasks : undefined,
+            tasks: actualTasks,
             completedTasks:
               actualTasks.length > 0 ? calcCompleted : (assignmentData.completedTasks ?? 0),
             totalTasks: actualTasks.length > 0 ? actualTasks.length : assignmentData.totalTasks || 0
