@@ -80,11 +80,9 @@ export const ENDPOINTS = {
     BY_DATASET: (datasetId: string) => `/datasets/${datasetId}/labels`
   },
 
-  REVIEWER: {
-    STATS: '/reviewer/stats',
-    PROJECT_ITEMS: (projectId: string) => `/reviewer/projects/${projectId}/items`,
-    ITEM_DETAIL: (itemId: string) => `/reviewer/items/${itemId}`,
-    REVIEW_DECISION: (itemId: string) => `/reviewer/items/${itemId}/review`
+  REVIEWS: {
+    UPDATE: '/reviews/update',
+    BY_ANNOTATION: (annotationId: string) => `/reviews/annotation/${annotationId}`
   },
 
   DATAITEMS: {

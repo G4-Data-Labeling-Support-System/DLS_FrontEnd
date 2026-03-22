@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { Tooltip, Spin, message } from 'antd'
+import { Tooltip, Spin, Result, Button } from 'antd'
 import assignmentApi from '@/api/AssignmentApi'
 import taskApi from '@/api/TaskApi'
 import type { AnnotationSubmitItem } from '@/shared/types/api.types'
@@ -52,6 +52,7 @@ export default function AnnotationPage() {
   const [comment, setComment] = useState('This is a preliminary scan observation.')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isSubmitted, setIsSubmitted] = useState(false)
 
   // Zoom and Tool States
   const [zoom, setZoom] = useState(1)
@@ -81,7 +82,12 @@ export default function AnnotationPage() {
   const loadFromSession = useCallback(
     (item: DataItem | undefined, annotationsToSearch?: AnnotationSubmitItem[]) => {
       if (!item) return
-      const itemId = item.itemId || (item as { id?: string }).id
+      const itemId =
+        (item as any).dataItemId ||
+        (item as any).dataitemId ||
+        item.itemId ||
+        (item as any).dataItem?.itemId ||
+        (item as any).id
       const sourceAnnotations = annotationsToSearch || sessionAnnotations
       const existing = sourceAnnotations.find((a) => a.dataitemId === itemId)
 
@@ -130,10 +136,17 @@ export default function AnnotationPage() {
             const labelsRes = await assignmentApi.getLabelsByAssignmentId(effectiveAssignmentId)
             const labelsData = labelsRes.data?.data || labelsRes.data || []
             if (Array.isArray(labelsData)) {
-              setLabels(labelsData)
-              if (labelsData.length > 0) {
-                setCurrentLabel(labelsData[0])
-                setSelectedLabels([labelsData[0].labelId])
+              // Normalize internal label structure to match UI expectations
+              const normLabels = labelsData.map((l: any) => ({
+                ...l,
+                labelId: l.labelId || l.id,
+                labelName: l.labelName || l.name,
+                color: l.color || '#8b5cf6'
+              }))
+              setLabels(normLabels)
+              if (normLabels.length > 0) {
+                setCurrentLabel(normLabels[0])
+                setSelectedLabels([normLabels[0].labelId])
               }
             }
           } catch (labelErr) {
@@ -155,9 +168,14 @@ export default function AnnotationPage() {
               setCurrentIndex(restoredIdx)
               // We need to load from the RESTORED session, not the state yet
               const restoredItem = items[restoredIdx]
+              const restoredItemId =
+                (restoredItem as any).dataItemId ||
+                (restoredItem as any).dataitemId ||
+                restoredItem.itemId ||
+                (restoredItem as any).dataItem?.itemId ||
+                restoredItem.id
               const existing = parsed.find(
-                (a: AnnotationSubmitItem) =>
-                  a.dataitemId === (restoredItem.itemId || restoredItem.id)
+                (a: AnnotationSubmitItem) => a.dataitemId === restoredItemId
               )
               if (existing) {
                 setShapes((existing.annotationData.raw as Shape[]) || [])
@@ -180,15 +198,8 @@ export default function AnnotationPage() {
       }
     }
     fetchData()
-  }, [
-    taskId,
-    assignmentId,
-    startIdx,
-    STORAGE_KEY_SESSIONS,
-    STORAGE_KEY_INDEX,
-    currentIndex,
-    loadFromSession
-  ])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taskId, assignmentId])
 
   const currentItem = dataItems[currentIndex]
   const totalItems = dataItems.length
@@ -333,21 +344,9 @@ export default function AnnotationPage() {
     return {
       annotationConfidence: 'LOW',
       annotationData: {
-        active: currentShape
-          ? {
-              type: currentShape.type,
-              points: currentShape.points ? currentShape.points.length : undefined,
-              dimensions:
-                currentShape.type === 'bounding_box'
-                  ? {
-                      w: Math.round(currentShape.width || 0),
-                      h: Math.round(currentShape.height || 0)
-                    }
-                  : undefined
-            }
-          : null,
-        session: shapes.map((s) => ({ type: s.type, label: s.label })),
-        raw: shapes
+        shapes: shapes,
+        comment: comment,
+        labels: selectedLabels
       },
       annotationStatus: status,
       annotationType: shapes.some((s) => s.type === 'bounding_box')
@@ -363,7 +362,12 @@ export default function AnnotationPage() {
 
   const saveCurrentToSession = () => {
     if (!currentItem) return
-    const itemId = currentItem.itemId || (currentItem as { id?: string }).id
+    const itemId =
+      (currentItem as any).dataItemId ||
+      (currentItem as any).dataitemId ||
+      currentItem.itemId ||
+      (currentItem as any).dataItem?.itemId ||
+      (currentItem as any).id
     if (!itemId) return
 
     const newAnnotation = createAnnotationPayload(itemId)
@@ -407,8 +411,11 @@ export default function AnnotationPage() {
 
     try {
       setLoading(true)
-      const currentItemId = (currentItem?.itemId ||
-        (currentItem as { id?: string })?.id ||
+      const currentItemId = ((currentItem as any)?.dataItemId ||
+        (currentItem as any)?.dataitemId ||
+        currentItem?.itemId ||
+        (currentItem as any)?.dataItem?.itemId ||
+        (currentItem as any)?.id ||
         '') as string
       // Create current annotation as SUBMITTED
       const currentAnnotation = createAnnotationPayload(currentItemId, 'SUBMITTED')
@@ -426,23 +433,46 @@ export default function AnnotationPage() {
         finalAnnotations.push(currentAnnotation)
       }
 
-      await taskApi.submitAnnotations({
+      const payload = {
         taskId,
-        annotations: finalAnnotations
-      })
+        annotations: finalAnnotations.filter((a) => a.dataitemId && a.dataitemId.length > 5) // Filter out garbage
+      }
 
-      // Clear local storage after successful submission
-      localStorage.removeItem(STORAGE_KEY_SESSIONS)
+      console.log('🚀 SUBMITTING ANNOTATIONS TO BE:', payload)
+
+      await taskApi.submitAnnotations(payload)
+
       localStorage.removeItem(STORAGE_KEY_INDEX)
 
-      message.success('Annotations submitted successfully!')
-      navigate('/annotator/dashboard')
+      setIsSubmitted(true)
     } catch (err) {
       console.error(err)
-      message.error('Failed to submit annotations.')
+      setError('Failed to submit annotations.')
     } finally {
       setLoading(false)
     }
+  }
+
+  if (isSubmitted) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-[#0f0e17] gap-4">
+        <Result
+          status="success"
+          title={<span className="text-white">Task Submitted Successfully!</span>}
+          subTitle={<span className="text-gray-400">Your annotations have been saved and securely submitted for review.</span>}
+          extra={[
+            <Button
+              key="back-to-assignment-btn"
+              type="primary"
+              onClick={() => navigate(assignmentId ? `/annotator/assignment/${assignmentId}` : '/annotator/assignment')}
+              className="bg-violet-600 hover:bg-violet-500 border-none px-6 h-10 font-bold"
+            >
+              Back to Assignment
+            </Button>
+          ]}
+        />
+      </div>
+    )
   }
 
   if (loading) {
@@ -532,7 +562,7 @@ export default function AnnotationPage() {
               onDoubleClick={finishPolygon}
             >
               {shapes.map((shape, i) => (
-                <g key={i}>
+                <g key={`shape-${i}-${shape.label}`}>
                   {shape.type === 'bounding_box' ? (
                     <rect
                       x={shape.x}
@@ -646,17 +676,16 @@ export default function AnnotationPage() {
                 {labels.length === 0 ? (
                   <span className="text-xs text-gray-500 italic">No labels available</span>
                 ) : (
-                  labels.map((label) => (
+                  labels.map((label, idx) => (
                     <button
-                      key={label.labelId}
+                      key={label.labelId || `label-${idx}`}
                       onClick={() => toggleLabel(label)}
                       className={`
                                               px-3 py-1.5 rounded-lg text-xs font-bold transition-all border
-                                              ${
-                                                selectedLabels.includes(label.labelId)
-                                                  ? 'bg-white/10 text-white'
-                                                  : 'bg-white/5 border-transparent text-gray-500 hover:bg-white/10 hover:text-gray-300'
-                                              }
+                                              ${selectedLabels.includes(label.labelId)
+                          ? 'bg-white/10 text-white'
+                          : 'bg-white/5 border-transparent text-gray-500 hover:bg-white/10 hover:text-gray-300'
+                        }
                                           `}
                       style={{
                         borderColor: selectedLabels.includes(label.labelId)
@@ -701,16 +730,16 @@ export default function AnnotationPage() {
                     {
                       active: currentShape
                         ? {
-                            type: currentShape.type,
-                            points: currentShape.points ? currentShape.points.length : undefined,
-                            dimensions:
-                              currentShape.type === 'bounding_box'
-                                ? {
-                                    w: Math.round(currentShape.width || 0),
-                                    h: Math.round(currentShape.height || 0)
-                                  }
-                                : undefined
-                          }
+                          type: currentShape.type,
+                          points: currentShape.points ? currentShape.points.length : undefined,
+                          dimensions:
+                            currentShape.type === 'bounding_box'
+                              ? {
+                                w: Math.round(currentShape.width || 0),
+                                h: Math.round(currentShape.height || 0)
+                              }
+                              : undefined
+                        }
                         : null,
                       session: shapes.map((s) => ({ type: s.type, label: s.label })),
                       raw: shapes
