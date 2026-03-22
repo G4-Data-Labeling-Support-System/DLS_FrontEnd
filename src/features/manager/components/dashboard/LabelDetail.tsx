@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { App, Spin, Typography, Card, Descriptions } from 'antd'
+import { App, Spin, Typography, Card, Descriptions, Tag } from 'antd'
 import { DatabaseOutlined } from '@ant-design/icons'
 import labelApiClient from '@/api/LabelApi'
 import datasetApi from '@/api/DatasetApi'
@@ -15,6 +15,7 @@ interface LabelDetailData {
   description?: string
   datasetId?: string
   createAt?: string
+  labelStatus?: string
 }
 
 interface LabelDetailProps {
@@ -58,7 +59,8 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
             color: data.color ? String(data.color) : undefined,
             description: data.description ? String(data.description) : undefined,
             datasetId: data.datasetId ? String(data.datasetId) : undefined,
-            createAt: data.createAt ? String(data.createAt) : undefined
+            createAt: data.createAt ? String(data.createAt) : undefined,
+            labelStatus: data.labelStatus ? String(data.labelStatus).toUpperCase() : undefined
           })
 
           if (data.datasetId) {
@@ -100,6 +102,21 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
     return new Date(dateString).toLocaleString('vi-VN')
   }
 
+  const getStatusColor = (status?: string) => {
+    switch (status?.toUpperCase()) {
+      case 'ACTIVE':
+        return 'processing'
+      case 'COMPLETED':
+        return 'success'
+      case 'INACTIVE':
+        return 'error'
+      case 'DRAFT':
+        return 'default'
+      default:
+        return 'default'
+    }
+  }
+
   if (loading) {
     return (
       <div className="w-full h-64 flex justify-center items-center">
@@ -133,6 +150,14 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
             <Title level={3} className="!text-white !m-0 !font-display">
               {label.labelName || 'Unnamed Label'}
             </Title>
+            <div className="mt-2">
+              <Tag
+                color={getStatusColor(label.labelStatus)}
+                className="m-0 font-medium text-sm px-3 py-1"
+              >
+                {label.labelStatus || 'UNKNOWN'}
+              </Tag>
+            </div>
           </div>
         </div>
       </div>
@@ -161,6 +186,13 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
                   {label.labelId}
                 </span>
               </Descriptions.Item>
+              {label.labelStatus && (
+                <Descriptions.Item label="Status">
+                  <span className={`font-semibold ${label.labelStatus === 'ACTIVE' ? 'text-green-400' : 'text-red-400'}`}>
+                    {label.labelStatus}
+                  </span>
+                </Descriptions.Item>
+              )}
               <Descriptions.Item label="Color">
                 {label.color ? (
                   <div className="flex items-center gap-2">
