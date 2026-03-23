@@ -36,6 +36,18 @@ export const useDatasetsByProject = (projectId: string) => {
   })
 }
 
+export const useAllDatasets = () => {
+  return useQuery({
+    queryKey: ['datasets', 'all'],
+    queryFn: () =>
+      datasetApi.getDatasets().then((res) => {
+        const data = res.data?.data || res.data || []
+        return Array.isArray(data) ? data : []
+      }),
+    staleTime: 0
+  })
+}
+
 const mapAssignment = (a: Record<string, unknown>): GetAssignmentsParams => ({
   assignmentId: String(a.assignmentId || a.id || ''),
   assignmentName: String(a.assignmentName || a.name || ''),

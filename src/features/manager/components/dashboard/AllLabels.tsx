@@ -18,13 +18,15 @@ interface AllLabelsProps {
   onLabelSelect?: (id: string | null) => void
   openCreateModal?: boolean
   onCreateModalClose?: () => void
+  projectId?: string
 }
 
 export const AllLabels: React.FC<AllLabelsProps> = ({
   selectedLabelId: _selectedLabelId,
   onLabelSelect,
   openCreateModal,
-  onCreateModalClose
+  onCreateModalClose,
+  projectId
 }) => {
   const { message } = App.useApp()
   const [form] = Form.useForm()
@@ -330,6 +332,7 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 items-stretch">
           {labels
+            .filter((l) => !projectId || String(l.projectId) === String(projectId))
             .filter((l) => {
               const matchesSearch =
                 !searchText ||

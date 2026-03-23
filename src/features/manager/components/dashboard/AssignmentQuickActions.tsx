@@ -36,11 +36,11 @@ export const AssignmentQuickActions: React.FC<AssignmentQuickActionsProps> = ({
 
         <Button
           className="w-full h-12 flex items-center justify-between bg-[#231e31] border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 hover:bg-[#2d2640]"
-          onClick={() => navigate(PATH_MANAGER.datasetManagement)}
+          onClick={() => navigate(PATH_MANAGER.assignmentManagement)}
         >
           <div className="flex items-center">
             <DatabaseOutlined className="mr-3 text-lg text-fuchsia-400" />
-            <span>DATASET & LABEL LIST</span>
+            <span>VIEW ALL ASSIGNMENTS</span>
           </div>
           <RightOutlined className="text-xs" />
         </Button>

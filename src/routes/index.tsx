@@ -16,6 +16,7 @@ const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
 const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage'))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 const ManagerDashboardPage = lazy(() => import('@/pages/manager/ManagerDashboardPage'))
+const AssignmentManagementPage = lazy(() => import('@/pages/manager/AssignmentManagementPage'))
 const DatasetManagementPage = lazy(() => import('@/pages/manager/DatasetManagementPage'))
 const DatasetDetailPage = lazy(() => import('@/pages/manager/DatasetDetailPage'))
 
@@ -138,6 +139,14 @@ export const router = createBrowserRouter([
         element: (
           <LazyPage>
             <ManagerDashboardPage />
+          </LazyPage>
+        )
+      },
+      {
+        path: PATH_MANAGER.assignmentManagement,
+        element: (
+          <LazyPage>
+            <AssignmentManagementPage />
           </LazyPage>
         )
       },

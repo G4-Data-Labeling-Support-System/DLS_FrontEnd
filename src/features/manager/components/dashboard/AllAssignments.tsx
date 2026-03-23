@@ -16,12 +16,14 @@ interface AllAssignmentsProps {
   selectedAssignmentId?: string | null
   onAssignmentSelect?: (id: string | null) => void
   onEdit?: (assignment: GetAssignmentsParams) => void
+  projectId?: string
 }
 
 export const AllAssignments: React.FC<AllAssignmentsProps> = ({
   selectedAssignmentId,
   onAssignmentSelect,
-  onEdit
+  onEdit,
+  projectId
 }) => {
   const { message } = App.useApp()
   const { data: assignments = [], isLoading: loading } = useAllAssignments()
@@ -137,6 +139,7 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 items-stretch">
           {assignments
+            .filter((a) => !projectId || String(a.projectId) === String(projectId))
             .filter(
               (a) =>
                 !searchText ||
