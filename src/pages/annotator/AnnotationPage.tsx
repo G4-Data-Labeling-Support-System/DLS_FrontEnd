@@ -50,6 +50,7 @@ export default function AnnotationPage() {
   const [selectedLabels, setSelectedLabels] = useState<string[]>([])
   const [currentLabel, setCurrentLabel] = useState<Label | null>(null)
   const [comment, setComment] = useState('This is a preliminary scan observation.')
+  const [confidence, setConfidence] = useState<'LOW' | 'MEDIUM' | 'HIGH'>('LOW')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isSubmitted, setIsSubmitted] = useState(false)
@@ -101,9 +102,11 @@ export default function AnnotationPage() {
         setShapes((existing.annotationData.shapes as Shape[]) || (existing.annotationData.raw as Shape[]) || [])
         setComment(existing.comment || '')
         setSelectedLabels(existing.labelIds || [])
+        setConfidence((existing.annotationConfidence as 'LOW' | 'MEDIUM' | 'HIGH') || 'LOW')
       } else {
         setShapes([])
         setComment('This is a preliminary scan observation.')
+        setConfidence('LOW')
         if (labels.length > 0) {
           setSelectedLabels([labels[0].labelId])
         } else {
@@ -181,6 +184,7 @@ export default function AnnotationPage() {
                 setShapes((existing.annotationData.shapes as Shape[]) || (existing.annotationData.raw as Shape[]) || [])
                 setComment(existing.comment || '')
                 setSelectedLabels(existing.labelIds || [])
+                setConfidence((existing.annotationConfidence as 'LOW' | 'MEDIUM' | 'HIGH') || 'LOW')
               }
             }
           } catch (e) {
@@ -342,7 +346,7 @@ export default function AnnotationPage() {
     status: AnnotationSubmitItem['annotationStatus'] = 'DRAFT'
   ): AnnotationSubmitItem => {
     return {
-      annotationConfidence: 'LOW',
+      annotationConfidence: confidence,
       annotationData: {
         shapes: shapes,
         comment: comment,
@@ -698,6 +702,32 @@ export default function AnnotationPage() {
                     </button>
                   ))
                 )}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px] text-orange-400">psychology</span>
+                <span className="text-xs font-bold uppercase tracking-widest text-gray-400">
+                  Confidence
+                </span>
+              </div>
+              <div className="flex bg-black/40 rounded-xl border border-white/5 p-1 gap-1">
+                {(['LOW', 'MEDIUM', 'HIGH'] as const).map((level) => (
+                  <button
+                    key={level}
+                    onClick={() => setConfidence(level)}
+                    className={`
+                      flex-1 py-1.5 rounded-lg text-xs font-bold transition-all
+                      ${confidence === level
+                        ? 'bg-orange-500/20 text-orange-400 border border-orange-500/50'
+                        : 'text-gray-500 hover:text-gray-300 hover:bg-white/5 border border-transparent'
+                      }
+                    `}
+                  >
+                    {level}
+                  </button>
+                ))}
               </div>
             </div>
 
