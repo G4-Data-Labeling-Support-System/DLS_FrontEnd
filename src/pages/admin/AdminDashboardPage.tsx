@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { themeClasses } from '@/styles'
 import { TeamOutlined, DesktopOutlined, DatabaseOutlined } from '@ant-design/icons'
 import { useUsers } from '@/features/admin/hooks/useUsers'
@@ -5,8 +6,8 @@ import { useLabels } from '@/features/admin/hooks/useLabels'
 import type { User } from '@/shared/types/api.types'
 
 export default function AdminDashboard() {
-  const { data: rawUsers, isLoading } = useUsers()
-  const { data: labelsResponse, isLoading: isLoadingLabels } = useLabels()
+  const { data: rawUsers, isLoading, error: usersError } = useUsers()
+  const { data: labelsResponse, isLoading: isLoadingLabels, error: labelsError } = useLabels()
   const users = Array.isArray(rawUsers)
     ? (rawUsers as User[])
     : (rawUsers as unknown as { data: User[] })?.data || []
@@ -23,6 +24,15 @@ export default function AdminDashboard() {
     return typedData.total ?? typedData.count ?? typedData.totalLabels ?? 0
   }
   const labelCount = getLabelCount()
+
+  useEffect(() => {
+    if (usersError) {
+      console.error('[AdminDashboard] Error fetching users:', usersError)
+    }
+    if (labelsError) {
+      console.error('[AdminDashboard] Error fetching labels:', labelsError)
+    }
+  }, [usersError, labelsError])
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">

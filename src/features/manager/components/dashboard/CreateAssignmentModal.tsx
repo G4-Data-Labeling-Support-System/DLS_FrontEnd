@@ -135,10 +135,30 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
           })
         )
 
-        // Fetch datasets by project (only when we have a project ID)
+        // Fetch datasets and assignments by project
         const currentPid = initialData?.projectId || effectiveProjectId
         if (currentPid) {
-          const datasetRes = await datasetApi.getDatasetsByProjectId(currentPid)
+          const [datasetRes, assignmentRes] = await Promise.all([
+            datasetApi.getDatasetsByProjectId(currentPid),
+            assignmentApi.getAssignmentsByProjectId(currentPid)
+          ])
+          
+          const assignmentsData = assignmentRes.data?.data || assignmentRes.data || []
+          const assignmentsArray = Array.isArray(assignmentsData) ? assignmentsData : []
+          
+          const usedDatasetIds = new Set(
+            assignmentsArray
+              .filter((a: any) => {
+                const status = String(a.assignmentStatus || a.status || '').toUpperCase()
+                if (status === 'INACTIVE' || status === 'CANCELLED' || status === 'ARCHIVED') return false
+                if (isEditMode && initialData && (String(a.assignmentId || a.id) === String(initialData.assignmentId || initialData.id))) {
+                  return false
+                }
+                return true
+              })
+              .map((a: any) => String(a.datasetId || a.dataset_id || ''))
+          )
+
           const datasetsData = datasetRes.data?.data || datasetRes.data
           const dsArray = Array.isArray(datasetsData) ? datasetsData : []
           setDatasets(
@@ -146,7 +166,8 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
               const status = String(
                 d.datasetStatus || d.status || d.dataset_status || ''
               ).toUpperCase()
-              return status === 'ACTIVE'
+              const dsId = String(d.datasetId || d.id || '')
+              return status === 'ACTIVE' && !usedDatasetIds.has(dsId)
             })
           )
         } else {
@@ -339,13 +360,34 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
     form.setFieldsValue({ datasetId: undefined })
     // Fetch datasets for the newly selected project
     try {
-      const datasetRes = await datasetApi.getDatasetsByProjectId(value)
+      const [datasetRes, assignmentRes] = await Promise.all([
+        datasetApi.getDatasetsByProjectId(value),
+        assignmentApi.getAssignmentsByProjectId(value)
+      ])
+      
+      const assignmentsData = assignmentRes.data?.data || assignmentRes.data || []
+      const assignmentsArray = Array.isArray(assignmentsData) ? assignmentsData : []
+      
+      const usedDatasetIds = new Set(
+        assignmentsArray
+          .filter((a: any) => {
+            const status = String(a.assignmentStatus || a.status || '').toUpperCase()
+            if (status === 'INACTIVE' || status === 'CANCELLED' || status === 'ARCHIVED') return false
+            if (isEditMode && initialData && (String(a.assignmentId || a.id) === String(initialData.assignmentId || initialData.id))) {
+              return false
+            }
+            return true
+          })
+          .map((a: any) => String(a.datasetId || a.dataset_id || ''))
+      )
+
       const datasetsData = datasetRes.data?.data || datasetRes.data
       const dsArray = Array.isArray(datasetsData) ? datasetsData : []
       setDatasets(
         dsArray.filter((d: Record<string, unknown>) => {
           const status = String(d.datasetStatus || d.status || d.dataset_status || '').toUpperCase()
-          return status === 'ACTIVE'
+          const dsId = String(d.datasetId || d.id || '')
+          return status === 'ACTIVE' && !usedDatasetIds.has(dsId)
         })
       )
     } catch (error) {
