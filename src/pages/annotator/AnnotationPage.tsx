@@ -80,6 +80,16 @@ export default function AnnotationPage() {
     }
   }, [sessionAnnotations, currentIndex, taskId, STORAGE_KEY_SESSIONS, STORAGE_KEY_INDEX])
 
+  // Auto-save realtime changes (with debounce)
+  useEffect(() => {
+    if (loading || !dataItems[currentIndex]) return
+    const timeout = setTimeout(() => {
+      saveCurrentToSession()
+    }, 500)
+    return () => clearTimeout(timeout)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shapes, comment, selectedLabels, confidence, loading])
+
   const loadFromSession = useCallback(
     (item: DataItem | undefined, annotationsToSearch?: AnnotationSubmitItem[]) => {
       if (!item) return
@@ -511,7 +521,10 @@ export default function AnnotationPage() {
       <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-[#16161a]">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => {
+              saveCurrentToSession()
+              navigate(-1)
+            }}
             className="p-1.5 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors cursor-pointer"
           >
             <span className="material-symbols-outlined text-[20px]">arrow_back</span>
@@ -526,6 +539,24 @@ export default function AnnotationPage() {
         </div>
 
         <div className="flex items-center gap-6">
+          {/* Progress Bar */}
+          <div className="flex flex-col gap-1 items-end min-w-[200px]">
+            <div className="flex justify-between w-full text-[10px] font-bold uppercase tracking-widest text-gray-500">
+              <span>Progress</span>
+              <span className="text-violet-400">
+                {sessionAnnotations.filter(a => ((a.annotationData?.shapes as Shape[]) || []).length > 0 || (a.labelIds && a.labelIds.length > 0)).length} / {totalItems}
+              </span>
+            </div>
+            <div className="w-full h-1.5 bg-black/40 border border-white/5 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-violet-500 transition-all duration-300"
+                style={{ width: `${totalItems ? Math.round((sessionAnnotations.filter(a => ((a.annotationData?.shapes as Shape[]) || []).length > 0 || (a.labelIds && a.labelIds.length > 0)).length / totalItems) * 100) : 0}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="w-[1px] h-8 bg-white/10 hidden md:block" />
+
           <div className="flex flex-col items-end">
             <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">
               Task ID
@@ -652,8 +683,32 @@ export default function AnnotationPage() {
             <span className="text-xs font-mono text-gray-300">{(zoom * 100).toFixed(0)}%</span>
           </div>
 
-          <div className="absolute top-6 left-6 px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-white/10">
-            <span className="text-xs font-mono text-gray-300">{currentItem.fileName}</span>
+          <div className="absolute top-6 left-6 flex flex-col gap-2 z-20">
+            <div className="px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 w-fit">
+              <span className="text-xs font-mono text-gray-300">{currentItem.fileName}</span>
+            </div>
+            {(() => {
+              const currentId =
+                (currentItem as any).dataItemId ||
+                (currentItem as any).dataitemId ||
+                currentItem.itemId ||
+                (currentItem as any).dataItem?.itemId ||
+                (currentItem as any).id
+              const isLabeled = sessionAnnotations.some(
+                a => a.dataitemId === currentId && 
+                (((a.annotationData?.shapes as Shape[]) || []).length > 0 || (a.labelIds && a.labelIds.length > 0))
+              )
+              return isLabeled ? (
+                <div className="px-3 py-1 bg-emerald-500/20 backdrop-blur-md rounded-lg border border-emerald-500/30 flex items-center gap-1.5 w-fit shadow-lg shadow-emerald-500/10">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-[10px] font-bold text-emerald-400 tracking-wider">LABELED</span>
+                </div>
+              ) : (
+                <div className="px-3 py-1 bg-amber-500/20 backdrop-blur-md rounded-lg border border-amber-500/30 flex items-center gap-1.5 w-fit shadow-lg shadow-amber-500/10">
+                  <span className="text-[10px] font-bold text-amber-400 tracking-wider">DRAFT</span>
+                </div>
+              )
+            })()}
           </div>
 
           <div className="absolute bottom-6 left-6 px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 flex items-center gap-2">

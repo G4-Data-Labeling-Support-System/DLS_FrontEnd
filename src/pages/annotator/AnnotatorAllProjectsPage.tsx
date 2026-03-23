@@ -60,7 +60,7 @@ export default function AnnotatorAllProjectsPage() {
           // Fallback: nếu annotator chưa được gán assignment nào nhưng dự án được mở (tuỳ logic hệ thống)
           const projectsRes = await projectApi.getProjects()
           const projectsList = projectsRes.data?.data || projectsRes.data || []
-          
+
           const validProjects = projectsList
             .filter((p: any) => {
               const status = (p.projectStatus || p.status || '').toUpperCase()
@@ -103,18 +103,18 @@ export default function AnnotatorAllProjectsPage() {
           {error}
         </div>
       ) : projects.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
           {projects.map((p) => (
-             <ProjectCard
-                key={p.id}
-                id={p.id}
-                projectName={p.name}
-                status={p.status}
-                createdAt={p.createdAt}
-                updatedAt={p.updatedAt}
-                description={p.descriptionProject || p.description}
-                onClick={() => navigate(`/annotator/projects/${p.id}`)}
-             />
+            <ProjectCard
+              key={p.id}
+              id={p.id}
+              projectName={p.name}
+              status={p.status}
+              createdAt={p.createdAt}
+              updatedAt={p.updatedAt}
+              description={p.descriptionProject || p.description}
+              onClick={() => navigate(`/annotator/projects/${p.id}`)}
+            />
           ))}
         </div>
       ) : (
