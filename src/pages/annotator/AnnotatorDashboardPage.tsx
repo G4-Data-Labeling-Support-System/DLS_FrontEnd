@@ -284,7 +284,7 @@ export default function AnnotatorDashboardPage() {
 
   return (
     <div className="p-6">
-      <DashboardTabs activeTab={activeTab} onTabChange={handleTabChange} />
+      <DashboardTabs activeTab={activeTab} onTabChange={handleTabChange} allowedTabs={['project', 'assignment']} />
 
       {activeTab === 'project' &&
         (!projectDetail && loading ? (
