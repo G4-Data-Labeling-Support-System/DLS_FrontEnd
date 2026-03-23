@@ -116,9 +116,9 @@ export default function AnnotatorAssignmentDetailPage() {
           type="text" 
           icon={<ArrowLeftOutlined />} 
           className="text-gray-400 hover:text-white mb-6"
-          onClick={() => navigate(`/annotator/projects/${projectId}`)}
+          onClick={() => navigate(`/annotator/projects/${projectId}/assignments`)}
         >
-          Back to Project Detail
+          Back to Assignments
         </Button>
         <div className="text-center text-gray-400 py-20 bg-[#1A1625]/40 rounded-xl border border-dashed border-gray-700">
           {error || 'Assignment not found.'}
@@ -134,9 +134,9 @@ export default function AnnotatorAssignmentDetailPage() {
         type="text" 
         icon={<ArrowLeftOutlined />} 
         className="text-gray-400 hover:text-white mb-6"
-        onClick={() => navigate(`/annotator/projects/${projectId}`)}
+        onClick={() => navigate(`/annotator/projects/${projectId}/assignments`)}
       >
-        Back to Project Detail
+        Back to Assignments
       </Button>
 
       {/* Tái sử dụng Layout cũ cho Assignment */}
