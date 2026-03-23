@@ -11,8 +11,14 @@ import {
   type DashboardTabType
 } from '@/features/manager/components/dashboard/DashboardTabs'
 import { CreateProjectModal } from '@/features/manager/components/dashboard/CreateProjectModal'
+import { ProjectDetail } from '@/features/manager/components/dashboard/ProjectDetail'
+import { CreateDatasetModal } from '@/features/manager/components/dataset/CreateDatasetModal'
+import { DatasetQuickActions } from '@/features/manager/components/dataset/DatasetQuickActions'
+import AllDataset from '@/features/manager/components/dataset/AllDataset'
+import { AllLabels } from '@/features/manager/components/dashboard/AllLabels'
+import { LabelQuickActions } from '@/features/manager/components/dashboard/LabelQuickActions'
 
-import { useInvalidateAssignments } from '@/features/manager/hooks/useProjectDetail'
+import { useInvalidateAssignments, useDatasetsByProject } from '@/features/manager/hooks/useProjectDetail'
 
 const ManagerDashboardPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -26,31 +32,43 @@ const ManagerDashboardPage: React.FC = () => {
   const [createProjectOpen, setCreateProjectOpen] = useState(false)
   const [editProjectId, setEditProjectId] = useState<string | undefined>(undefined)
   const [projectRefreshTrigger, setProjectRefreshTrigger] = useState(0)
+  
+  const [createDatasetOpen, setCreateDatasetOpen] = useState(false)
+  const [createLabelOpen, setCreateLabelOpen] = useState(false)
 
   const tabParam = searchParams.get('tab')
   const activeTab: DashboardTabType =
-    tabParam === 'assignment' || tabParam === 'project' ? (tabParam as DashboardTabType) : 'project'
+    ['project', 'assignments', 'datasets', 'labels'].includes(tabParam as string)
+      ? (tabParam as DashboardTabType)
+      : 'project'
 
   const selectedProjectId = searchParams.get('projectId')
   const selectedAssignmentId = searchParams.get('assignmentId')
+  
+  const { data: projectDatasets = [], isLoading: datasetsLoading } = useDatasetsByProject(selectedProjectId || '')
 
   const handleTabChange = (tab: DashboardTabType) => {
-    setSearchParams({ tab })
+    if (selectedProjectId) {
+      setSearchParams({ tab, projectId: selectedProjectId })
+    } else {
+      setSearchParams({ tab })
+    }
   }
 
   const handleProjectSelect = (id: string | null) => {
     if (id) {
       setSearchParams({ tab: 'project', projectId: id })
     } else {
-      setSearchParams({ tab: 'project' })
+      searchParams.delete('projectId')
+      setSearchParams(searchParams)
     }
   }
 
   const handleAssignmentSelect = (id: string | null) => {
     if (id) {
-      setSearchParams({ tab: 'assignment', assignmentId: id })
+      setSearchParams({ tab: 'assignments', assignmentId: id, projectId: selectedProjectId || '' })
     } else {
-      setSearchParams({ tab: 'assignment' })
+      setSearchParams({ tab: 'assignments', projectId: selectedProjectId || '' })
     }
   }
 
@@ -67,17 +85,16 @@ const ManagerDashboardPage: React.FC = () => {
   const handleCreateProjectSuccess = () => {
     handleCloseProjectModal()
     // Always refresh the project list and reset selection to go back to list view
-    setSearchParams({ tab: 'project' })
+    searchParams.delete('projectId')
+    searchParams.delete('tab')
+    setSearchParams(searchParams)
     setProjectRefreshTrigger((prev) => prev + 1)
   }
 
   return (
     <div className="p-6">
-      {/* Custom Tab Navigation */}
-      <DashboardTabs activeTab={activeTab} onTabChange={handleTabChange} />
-
-      {activeTab === 'project' && (
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start relative">
+      {!selectedProjectId ? (
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start relative animate-fade-in">
           {/* All Projects - Main Content (3 cols) */}
           <div className="xl:col-span-3">
             <AllProjects
@@ -105,49 +122,109 @@ const ManagerDashboardPage: React.FC = () => {
             />
           </div>
 
-          <CreateProjectModal
-            open={createProjectOpen}
-            onCancel={handleCloseProjectModal}
-            onSuccess={handleCreateProjectSuccess}
-            editId={editProjectId}
-          />
+        </div>
+      ) : (
+        <div className="flex flex-col gap-6 animate-fade-in">
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => handleProjectSelect(null)}
+              className="px-4 py-2 bg-[#231e31] hover:bg-violet-600/20 text-gray-300 hover:text-white rounded-lg border border-gray-800 hover:border-violet-500/50 transition-all font-medium text-sm flex items-center gap-2 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+              Back to Projects
+            </button>
+          </div>
+
+          {/* Custom Tab Navigation */}
+          <DashboardTabs activeTab={activeTab} onTabChange={handleTabChange} />
+
+          {activeTab === 'project' && (
+            <ProjectDetail projectId={selectedProjectId as string} onBack={() => handleProjectSelect(null)} />
+          )}
+
+          {activeTab === 'assignments' && (
+            <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start relative">
+              {/* All Assignments - Main Content (3 cols) */}
+              <div className="xl:col-span-3">
+                <AllAssignments
+                  selectedAssignmentId={selectedAssignmentId}
+                  onAssignmentSelect={handleAssignmentSelect}
+                  onEdit={(asn) => {
+                    setEditingAssignment(asn)
+                    setCreateAssignmentOpen(true)
+                  }}
+                />
+              </div>
+
+              {/* Quick Actions - Sticky Sidebar (1 col) */}
+              <div className="xl:col-span-1 xl:sticky xl:top-6 space-y-6">
+                <AssignmentQuickActions
+                  onCreateAssignment={() => {
+                    setEditingAssignment(undefined)
+                    setCreateAssignmentOpen(true)
+                  }}
+                />
+              </div>
+
+              <CreateAssignmentModal
+                open={createAssignmentOpen}
+                initialData={editingAssignment}
+                projectId={selectedProjectId}
+                onCancel={handleCloseModal}
+                onSuccess={() => {
+                  handleCloseModal()
+                  setSearchParams({ tab: 'assignments', projectId: selectedProjectId })
+                  invalidateAssignments()
+                }}
+              />
+            </div>
+          )}
+
+          {activeTab === 'datasets' && (
+            <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start relative">
+              <div className="xl:col-span-3">
+                <AllDataset datasets={projectDatasets} loading={datasetsLoading} onCreate={() => setCreateDatasetOpen(true)} />
+              </div>
+              <div className="xl:col-span-1 xl:sticky xl:top-6 space-y-6">
+                <DatasetQuickActions onCreateDataset={() => setCreateDatasetOpen(true)} />
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'labels' && (
+            <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start relative">
+              <div className="xl:col-span-3">
+                <AllLabels />
+              </div>
+              <div className="xl:col-span-1 xl:sticky xl:top-6 space-y-6">
+                <LabelQuickActions onCreateLabel={() => setCreateLabelOpen(true)} />
+              </div>
+            </div>
+          )}
         </div>
       )}
 
-      {activeTab === 'assignment' && (
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start relative">
-          {/* All Assignments - Main Content (3 cols) */}
-          <div className="xl:col-span-3">
-            <AllAssignments
-              selectedAssignmentId={selectedAssignmentId}
-              onAssignmentSelect={handleAssignmentSelect}
-              onEdit={(asn) => {
-                setEditingAssignment(asn)
-                setCreateAssignmentOpen(true)
-              }}
-            />
-          </div>
+      <CreateProjectModal
+        open={createProjectOpen}
+        onCancel={handleCloseProjectModal}
+        onSuccess={handleCreateProjectSuccess}
+        editId={editProjectId}
+      />
 
-          {/* Quick Actions - Sticky Sidebar (1 col) */}
-          <div className="xl:col-span-1 xl:sticky xl:top-6 space-y-6">
-            <AssignmentQuickActions
-              onCreateAssignment={() => {
-                setEditingAssignment(undefined)
-                setCreateAssignmentOpen(true)
-              }}
-            />
-          </div>
-
-          <CreateAssignmentModal
-            open={createAssignmentOpen}
-            initialData={editingAssignment}
-            projectId=""
-            onCancel={handleCloseModal}
-            onSuccess={() => {
-              handleCloseModal()
-              setSearchParams({ tab: 'assignment' })
-              invalidateAssignments()
-            }}
+      <CreateDatasetModal
+        open={createDatasetOpen}
+        onCancel={() => setCreateDatasetOpen(false)}
+        onSuccess={() => {
+          setCreateDatasetOpen(false)
+          window.location.reload()
+        }}
+      />
+      
+      {createLabelOpen && (
+        <div className="hidden">
+          <AllLabels 
+            openCreateModal={true} 
+            onCreateModalClose={() => setCreateLabelOpen(false)} 
           />
         </div>
       )}
