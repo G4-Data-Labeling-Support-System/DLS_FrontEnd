@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { Space, Typography, Spin, Input, Select, Empty, App, Button } from 'antd'
 import { SearchOutlined, PlusOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import { ProjectCard } from './ProjectCard'
-import { ProjectDetail } from './ProjectDetail'
 import projectApi, { type GetProjectsParams } from '@/api/ProjectApi'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
 const { Title } = Typography
@@ -16,7 +15,6 @@ interface AllProjectsProps {
 }
 
 export const AllProjects: React.FC<AllProjectsProps> = ({
-  selectedProjectId,
   onProjectSelect,
   refreshTrigger,
   onEdit,
@@ -28,18 +26,14 @@ export const AllProjects: React.FC<AllProjectsProps> = ({
   const [loading, setLoading] = useState<boolean>(true)
   const [searchText, setSearchText] = useState<string>('')
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
-  const [internalProjectId, setInternalProjectId] = useState<string | null>(null)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null)
   const [deletingProjectName, setDeletingProjectName] = useState('')
 
-  const currentProjectId = selectedProjectId !== undefined ? selectedProjectId : internalProjectId
   const handleProjectSelect = (id: string | null) => {
     if (onProjectSelect) {
       onProjectSelect(id)
-    } else {
-      setInternalProjectId(id)
     }
   }
 

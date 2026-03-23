@@ -68,6 +68,21 @@ export interface ReviewUpdateRequest {
 }
 
 export const reviewerApi = {
+  getDashboardStats: async (): Promise<ReviewerStats> => {
+    // Mocking for now since there's no official endpoint
+    return {
+      totalSubmissions: 0,
+      totalSubmissionsTrend: 0,
+      pendingReviews: 0,
+      averageAccuracy: 0,
+      averageAccuracyTrend: 0,
+      topPerformer: {
+        name: 'N/A',
+        precision: 0
+      }
+    }
+  },
+
   // New: Get assignments for a project, then tasks (Real API flow)
   getProjectItems: async (projectId: string): Promise<ReviewerItem[]> => {
     try {
