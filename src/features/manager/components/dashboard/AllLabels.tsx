@@ -76,11 +76,9 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
             }
             const status = String(
               l.labelStatus ||
-                l.status ||
-                l.label_status ||
-                l.datasetStatus ||
-                l.dataItemStatus ||
-                ''
+              l.status ||
+              l.label_status ||
+              ''
             )
               .trim()
               .toUpperCase()
@@ -104,7 +102,7 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
           })
           .filter((l) => {
             const status = String(l.labelStatus || '').toUpperCase()
-            return status !== 'INACTIVE' && status !== 'DELETED' && status !== 'DISABLED'
+            return status !== 'DELETED' && status !== 'DISABLED'
           })
         setLabels(mappedLabels)
       } else {
@@ -224,10 +222,17 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
             (d: Record<string, unknown>) =>
               ({
                 datasetId: String(d.id || d.datasetId || ''),
-                datasetName: String(d.name || d.datasetName || '')
+                datasetName: String(d.name || d.datasetName || ''),
+                datasetStatus: String(d.datasetStatus || d.status || d.dataset_status || '')
               }) as GetDatasetsParams
           )
-          .filter((d) => d.datasetId && d.datasetId !== 'undefined' && d.datasetId !== 'null')
+          .filter(
+            (d) =>
+              d.datasetId &&
+              d.datasetId !== 'undefined' &&
+              d.datasetId !== 'null' &&
+              d.datasetStatus?.toUpperCase() === 'ACTIVE'
+          )
         setDatasets(mapped)
       }
     } catch (error) {
@@ -302,7 +307,8 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
             className="w-36"
             options={[
               { value: 'ALL', label: 'All Statuses' },
-              { value: 'ACTIVE', label: 'Active' }
+              { value: 'ACTIVE', label: 'Active' },
+              { value: 'INACTIVE', label: 'Inactive' }
             ]}
           />
           <Input

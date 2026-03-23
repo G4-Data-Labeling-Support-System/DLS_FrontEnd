@@ -138,29 +138,20 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
         // Fetch datasets and assignments by project
         const currentPid = initialData?.projectId || effectiveProjectId
         if (currentPid) {
-          const [datasetRes, assignmentRes] = await Promise.all([
-            datasetApi.getDatasetsByProjectId(currentPid),
-            assignmentApi.getAssignmentsByProjectId(currentPid)
+          const [datasetRes, asmRes] = await Promise.all([
+            datasetApi.getDatasetsByProjectId(currentPid).catch(() => ({ data: { data: [] } })),
+            assignmentApi.getAssignmentsByProjectId(currentPid).catch(() => ({ data: { data: [] } }))
           ])
-          
-          const assignmentsData = assignmentRes.data?.data || assignmentRes.data || []
-          const assignmentsArray = Array.isArray(assignmentsData) ? assignmentsData : []
-          
-          const usedDatasetIds = new Set(
-            assignmentsArray
-              .filter((a: any) => {
-                const status = String(a.assignmentStatus || a.status || '').toUpperCase()
-                if (status === 'INACTIVE' || status === 'CANCELLED' || status === 'ARCHIVED') return false
-                if (isEditMode && initialData && (String(a.assignmentId || a.id) === String(initialData.assignmentId || initialData.id))) {
-                  return false
-                }
-                return true
-              })
-              .map((a: any) => String(a.datasetId || a.dataset_id || ''))
-          )
+
+          const asmData = asmRes.data?.data || asmRes.data
+          const asmArray = Array.isArray(asmData) ? asmData : []
+          const assignedDatasetIds = asmArray
+            .map((a: Record<string, unknown>) => String(a.datasetId || (a.dataset as Record<string, unknown>)?.id || (a.dataset as Record<string, unknown>)?.datasetId || ''))
+            .filter(Boolean)
 
           const datasetsData = datasetRes.data?.data || datasetRes.data
           const dsArray = Array.isArray(datasetsData) ? datasetsData : []
+          
           setDatasets(
             dsArray.filter((d: Record<string, unknown>) => {
               const status = String(
@@ -181,7 +172,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
       }
     }
     fetchData()
-  }, [open, effectiveProjectId, message, initialData])
+  }, [open, effectiveProjectId, message, initialData, isEditMode])
 
   // Set form fields when modal opens or initialData changes
   useEffect(() => {

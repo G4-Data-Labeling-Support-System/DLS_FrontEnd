@@ -91,7 +91,7 @@ const datasetApi = {
   },
   async updateDataset(
     id: string,
-    data: { projectId?: string; datasetName?: string; description?: string; files?: File[] },
+    data: { projectId?: string; datasetName?: string; description?: string; files?: File[]; deleteDataItemId?: string[] },
     onUploadProgress?: (progressEvent: AxiosProgressEvent) => void
   ) {
     try {
@@ -101,6 +101,12 @@ const datasetApi = {
       if (data.projectId !== undefined) formData.append('projectId', data.projectId)
       if (data.datasetName !== undefined) formData.append('datasetName', data.datasetName)
       if (data.description !== undefined) formData.append('description', data.description)
+
+      if (data.deleteDataItemId && data.deleteDataItemId.length > 0) {
+        data.deleteDataItemId.forEach((itemId) => {
+          formData.append('deleteDataItemId', itemId)
+        })
+      }
 
       if (data.files) {
         data.files.forEach((file) => {

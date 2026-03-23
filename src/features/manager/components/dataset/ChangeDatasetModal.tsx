@@ -41,16 +41,34 @@ export const ChangeDatasetModal: React.FC<ChangeDatasetModalProps> = ({
     const fetchDatasets = async () => {
       setLoading(true)
       try {
-        const res = await datasetApi.getDatasetsByProjectId(projectId)
-        const data = res.data?.data || res.data
+        const [datasetRes, asmRes] = await Promise.all([
+          datasetApi.getDatasetsByProjectId(projectId),
+          assignmentApi.getAssignmentsByProjectId(projectId).catch(() => ({ data: { data: [] } }))
+        ])
+        
+        const data = datasetRes.data?.data || datasetRes.data
         const dsArray = Array.isArray(data) ? data : []
+
+        const asmData = asmRes.data?.data || asmRes.data
+        const asmArray = Array.isArray(asmData) ? asmData : []
+        const assignedDatasetIds = asmArray
+          .map((a: Record<string, unknown>) => String(a.datasetId || (a.dataset as Record<string, unknown>)?.id || (a.dataset as Record<string, unknown>)?.datasetId || ''))
+          .filter(Boolean)
 
         setDatasets(
           dsArray.filter((d: DatasetOption) => {
             const status = String(
               d.datasetStatus || d.status || d.dataset_status || ''
             ).toUpperCase()
-            return status === 'ACTIVE'
+            
+            if (status !== 'ACTIVE') return false
+            
+            const dsId = String(d.datasetId || d.id || '')
+            if (currentDatasetId && dsId === String(currentDatasetId)) {
+              return true
+            }
+            
+            return !assignedDatasetIds.includes(dsId)
           })
         )
       } catch (error) {
