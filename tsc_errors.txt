@@ -1,0 +1,2 @@
+src/features/manager/components/dashboard/AllProjects.tsx(18,3): error TS6133: 'selectedProjectId' is declared but its value is never read.
+src/features/manager/components/dashboard/AllProjects.tsx(30,10): error TS6133: 'internalProjectId' is declared but its value is never read.

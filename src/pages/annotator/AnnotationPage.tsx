@@ -98,7 +98,7 @@ export default function AnnotationPage() {
       setCurrentShape(null)
 
       if (existing) {
-        setShapes((existing.annotationData.raw as Shape[]) || [])
+        setShapes((existing.annotationData.shapes as Shape[]) || (existing.annotationData.raw as Shape[]) || [])
         setComment(existing.comment || '')
         setSelectedLabels(existing.labelIds || [])
       } else {
@@ -178,7 +178,7 @@ export default function AnnotationPage() {
                 (a: AnnotationSubmitItem) => a.dataitemId === restoredItemId
               )
               if (existing) {
-                setShapes((existing.annotationData.raw as Shape[]) || [])
+                setShapes((existing.annotationData.shapes as Shape[]) || (existing.annotationData.raw as Shape[]) || [])
                 setComment(existing.comment || '')
                 setSelectedLabels(existing.labelIds || [])
               }

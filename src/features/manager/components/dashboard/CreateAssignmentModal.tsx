@@ -135,7 +135,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
           })
         )
 
-        // Fetch datasets by project (only when we have a project ID)
+        // Fetch datasets and assignments by project
         const currentPid = initialData?.projectId || effectiveProjectId
         if (currentPid) {
           const [datasetRes, asmRes] = await Promise.all([
@@ -157,15 +157,8 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
               const status = String(
                 d.datasetStatus || d.status || d.dataset_status || ''
               ).toUpperCase()
-              
-              if (status !== 'ACTIVE') return false
-              
               const dsId = String(d.datasetId || d.id || '')
-              if (isEditMode && initialData?.datasetId && dsId === String(initialData.datasetId)) {
-                return true
-              }
-              
-              return !assignedDatasetIds.includes(dsId)
+              return status === 'ACTIVE' && !usedDatasetIds.has(dsId)
             })
           )
         } else {
@@ -358,26 +351,34 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
     form.setFieldsValue({ datasetId: undefined })
     // Fetch datasets for the newly selected project
     try {
-      const [datasetRes, asmRes] = await Promise.all([
+      const [datasetRes, assignmentRes] = await Promise.all([
         datasetApi.getDatasetsByProjectId(value),
-        assignmentApi.getAssignmentsByProjectId(value).catch(() => ({ data: { data: [] } }))
+        assignmentApi.getAssignmentsByProjectId(value)
       ])
-
-      const asmData = asmRes.data?.data || asmRes.data
-      const asmArray = Array.isArray(asmData) ? asmData : []
-      const assignedDatasetIds = asmArray
-        .map((a: Record<string, unknown>) => String(a.datasetId || (a.dataset as Record<string, unknown>)?.id || (a.dataset as Record<string, unknown>)?.datasetId || ''))
-        .filter(Boolean)
+      
+      const assignmentsData = assignmentRes.data?.data || assignmentRes.data || []
+      const assignmentsArray = Array.isArray(assignmentsData) ? assignmentsData : []
+      
+      const usedDatasetIds = new Set(
+        assignmentsArray
+          .filter((a: any) => {
+            const status = String(a.assignmentStatus || a.status || '').toUpperCase()
+            if (status === 'INACTIVE' || status === 'CANCELLED' || status === 'ARCHIVED') return false
+            if (isEditMode && initialData && (String(a.assignmentId || a.id) === String(initialData.assignmentId || initialData.id))) {
+              return false
+            }
+            return true
+          })
+          .map((a: any) => String(a.datasetId || a.dataset_id || ''))
+      )
 
       const datasetsData = datasetRes.data?.data || datasetRes.data
       const dsArray = Array.isArray(datasetsData) ? datasetsData : []
       setDatasets(
         dsArray.filter((d: Record<string, unknown>) => {
           const status = String(d.datasetStatus || d.status || d.dataset_status || '').toUpperCase()
-          if (status !== 'ACTIVE') return false
-          
           const dsId = String(d.datasetId || d.id || '')
-          return !assignedDatasetIds.includes(dsId)
+          return status === 'ACTIVE' && !usedDatasetIds.has(dsId)
         })
       )
     } catch (error) {

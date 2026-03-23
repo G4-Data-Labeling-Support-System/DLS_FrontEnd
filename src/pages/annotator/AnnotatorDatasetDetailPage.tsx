@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom'
 import datasetApi from '@/api/DatasetApi'
 import { labelApi } from '@/api/LabelApi'
 import { themeClasses } from '@/styles'
-import { PATH_ANNOTATOR } from '@/routes/paths'
 
 interface Dataset {
   datasetId: string
@@ -116,10 +115,10 @@ export default function AnnotatorDatasetDetailPage() {
         <div className="glass-panel border border-red-500/20 bg-red-500/5 rounded-2xl p-6 text-center">
           <p className="text-red-400">{error || 'Dataset not found'}</p>
           <button
-            onClick={() => navigate(PATH_ANNOTATOR.project)}
+            onClick={() => navigate(`/annotator/projects/${projectId}/datasets`)}
             className="mt-4 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white text-sm transition-colors"
           >
-            Back to Dashboard
+            Back to Datasets
           </button>
         </div>
       </div>
@@ -135,11 +134,11 @@ export default function AnnotatorDatasetDetailPage() {
       {/* Header & Breadcrumb */}
       <div className="mb-8 relative z-10">
         <button
-          onClick={() => navigate(PATH_ANNOTATOR.project)}
+          onClick={() => navigate(`/annotator/projects/${projectId}/datasets`)}
           className="mb-4 px-3 py-1.5 flex items-center gap-2 text-sm text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors w-fit border border-white/10"
         >
           <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-          Back to Dashboard
+          Back to Datasets
         </button>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
