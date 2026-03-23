@@ -28,7 +28,11 @@ const SystemSettings = lazy(() => import('@/pages/admin/SystemSettingsPage'))
 
 // Annotator pages
 const AnnotatorLayout = lazy(() => import('@/components/layout/AnnotatorLayout'))
-const AnnotatorDashboardPage = lazy(() => import('@/pages/annotator/AnnotatorDashboardPage'))
+const AnnotatorAllProjectsPage = lazy(() => import('@/pages/annotator/AnnotatorAllProjectsPage'))
+const AnnotatorProjectDetailPage = lazy(() => import('@/pages/annotator/AnnotatorProjectDetailPage'))
+const AnnotatorProjectAssignmentsPage = lazy(() => import('@/pages/annotator/AnnotatorProjectAssignmentsPage'))
+const AnnotatorProjectDatasetsPage = lazy(() => import('@/pages/annotator/AnnotatorProjectDatasetsPage'))
+const AnnotatorAssignmentDetailPage = lazy(() => import('@/pages/annotator/AnnotatorAssignmentDetailPage'))
 const AnnotatorDatasetDetailPage = lazy(
   () => import('@/pages/annotator/AnnotatorDatasetDetailPage')
 )
@@ -169,37 +173,45 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Navigate to={PATH_ANNOTATOR.project} replace />
+        element: <Navigate to={PATH_ANNOTATOR.projects} replace />
       },
       {
-        path: PATH_ANNOTATOR.project,
+        path: 'projects',
         element: (
           <LazyPage>
-            <AnnotatorDashboardPage />
+            <AnnotatorAllProjectsPage />
           </LazyPage>
         )
       },
       {
-        path: `${PATH_ANNOTATOR.project}/:assignmentId`,
+        path: 'projects/:projectId',
         element: (
           <LazyPage>
-            <AnnotatorDashboardPage />
+            <AnnotatorProjectDetailPage />
           </LazyPage>
         )
       },
       {
-        path: PATH_ANNOTATOR.assignment,
+        path: 'projects/:projectId/assignments',
         element: (
           <LazyPage>
-            <AnnotatorDashboardPage />
+            <AnnotatorProjectAssignmentsPage />
           </LazyPage>
         )
       },
       {
-        path: `${PATH_ANNOTATOR.assignment}/:assignmentId`,
+        path: 'projects/:projectId/datasets',
         element: (
           <LazyPage>
-            <AnnotatorDashboardPage />
+            <AnnotatorProjectDatasetsPage />
+          </LazyPage>
+        )
+      },
+      {
+        path: 'projects/:projectId/assignments/:assignmentId',
+        element: (
+          <LazyPage>
+            <AnnotatorAssignmentDetailPage />
           </LazyPage>
         )
       },
