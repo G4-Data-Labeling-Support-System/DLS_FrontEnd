@@ -7,9 +7,10 @@ const { Title } = Typography
 
 interface LabelQuickActionsProps {
   onCreateLabel?: () => void
+  isGlobalView?: boolean
 }
 
-export const LabelQuickActions: React.FC<LabelQuickActionsProps> = ({ onCreateLabel }) => {
+export const LabelQuickActions: React.FC<LabelQuickActionsProps> = ({ onCreateLabel, isGlobalView }) => {
   const navigate = useNavigate()
 
   return (
@@ -29,7 +30,7 @@ export const LabelQuickActions: React.FC<LabelQuickActionsProps> = ({ onCreateLa
           onClick={() =>
             onCreateLabel
               ? onCreateLabel()
-              : navigate(`${PATH_MANAGER.datasetManagement}?tab=label&createLabel=true`)
+              : navigate(`${PATH_MANAGER.manageProjectThings}?tab=label&createLabel=true`)
           }
         >
           <PlusCircleFilled className="text-lg mr-2" />
@@ -38,11 +39,15 @@ export const LabelQuickActions: React.FC<LabelQuickActionsProps> = ({ onCreateLa
 
         <Button
           className="w-full h-12 flex items-center justify-between bg-[#231e31] border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 hover:bg-[#2d2640]"
-          onClick={() => navigate(`${PATH_MANAGER.datasetManagement}?tab=label`)}
+          onClick={() =>
+            navigate(
+              isGlobalView ? PATH_MANAGER.root : `${PATH_MANAGER.manageProjectThings}?tab=label`
+            )
+          }
         >
           <div className="flex items-center">
             <FolderOpenOutlined className="mr-3 text-lg text-fuchsia-400" />
-            <span>VIEW ALL LABELS</span>
+            <span>{isGlobalView ? 'VIEW ALL PROJECTS' : 'VIEW ALL LABELS'}</span>
           </div>
           <RightOutlined className="text-xs" />
         </Button>

@@ -11,6 +11,7 @@ import labelApiClient, {
   type UpdateLabelPayload
 } from '@/api/LabelApi'
 import datasetApi, { type GetDatasetsParams } from '@/api/DatasetApi'
+import { useDatasetsByProject } from '@/features/manager/hooks/useProjectDetail'
 const { Title } = Typography
 
 interface AllLabelsProps {
@@ -33,6 +34,7 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
   const [editForm] = Form.useForm()
   const [labels, setLabels] = useState<GetLabelsParams[]>([])
   const [loading, setLoading] = useState<boolean>(true)
+  const { data: projectDatasets = [] } = useDatasetsByProject(projectId || '')
   const [searchText, setSearchText] = useState<string>('')
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
   const [_internalLabelId, setInternalLabelId] = useState<string | null>(null)
@@ -90,6 +92,9 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
             }
             if (l.color) {
               mapped.color = String(l.color)
+            }
+            if (l.datasetId || l.dataset_id) {
+              mapped.datasetId = String(l.datasetId || l.dataset_id)
             }
             if (l.projectId || l.project_id) {
               mapped.projectId = String(l.projectId || l.project_id)
@@ -332,7 +337,10 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 items-stretch">
           {labels
-            .filter((l) => !projectId || String(l.projectId) === String(projectId))
+            .filter((l) => {
+              if (!projectId) return true
+              return projectDatasets.some((d) => String(d.datasetId) === String(l.datasetId))
+            })
             .filter((l) => {
               const matchesSearch =
                 !searchText ||

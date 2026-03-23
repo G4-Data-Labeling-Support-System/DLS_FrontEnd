@@ -6,6 +6,7 @@ import { AssignmentDetail } from './AssignmentDetail'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
 import {
   useAllAssignments,
+  useAssignmentsByProject,
   useInvalidateAssignments
 } from '@/features/manager/hooks/useProjectDetail'
 import assignmentApi, { type GetAssignmentsParams } from '@/api/AssignmentApi'
@@ -26,7 +27,12 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
   projectId
 }) => {
   const { message } = App.useApp()
-  const { data: assignments = [], isLoading: loading } = useAllAssignments()
+  const { data: allAssignments = [], isLoading: loadingAll } = useAllAssignments({ enabled: !projectId })
+  const { data: projectAssignments = [], isLoading: loadingProject } = useAssignmentsByProject(projectId || '')
+  
+  const assignments = projectId ? projectAssignments : allAssignments
+  const loading = projectId ? loadingProject : loadingAll
+  
   const invalidateAssignments = useInvalidateAssignments()
 
   const [searchText, setSearchText] = useState<string>('')
@@ -139,7 +145,6 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 items-stretch">
           {assignments
-            .filter((a) => !projectId || String(a.projectId) === String(projectId))
             .filter(
               (a) =>
                 !searchText ||

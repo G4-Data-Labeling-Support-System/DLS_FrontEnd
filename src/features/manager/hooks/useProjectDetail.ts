@@ -99,7 +99,7 @@ export const useProjectMembers = (projectId: string) => {
   })
 }
 
-export const useAllAssignments = () => {
+export const useAllAssignments = (options?: { enabled?: boolean }) => {
   return useQuery({
     queryKey: ['assignments', 'all'],
     queryFn: () =>
@@ -107,7 +107,8 @@ export const useAllAssignments = () => {
         const data = res.data?.data || res.data || []
         return (Array.isArray(data) ? data : []).map(mapAssignment)
       }),
-    staleTime: 0
+    staleTime: 0,
+    enabled: options?.enabled !== false
   })
 }
 
