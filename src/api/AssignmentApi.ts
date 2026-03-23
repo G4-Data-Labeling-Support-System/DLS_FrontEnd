@@ -95,7 +95,7 @@ const assignmentApi = {
   deleteAssignment(id: string) {
     try {
       const url = ENDPOINTS.ASSIGNMENTS.DELETE(id)
-      return axiosClient.patch(url)
+      return axiosClient.delete(url)
     } catch (error) {
       console.error('Failed to delete assignment', error)
       throw error
