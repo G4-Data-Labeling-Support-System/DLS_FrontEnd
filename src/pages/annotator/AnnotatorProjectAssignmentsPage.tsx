@@ -27,14 +27,14 @@ export default function AnnotatorProjectAssignmentsPage() {
 
         const assignRes = await assignmentApi.getAssignmentsByAnnotator(user.id)
         const rawList = assignRes.data?.data || assignRes.data || []
-        
+
         const projectAssigns = rawList
           .filter((a: any) => (a.projectId || a.project?.projectId || a.project?.id) === projectId)
           .map((a: any) => ({
-             ...a,
-             id: a.assignmentId || a.id,
-             assignmentName: a.assignmentName || a.name || `Assignment ${a.assignmentId?.split('-').pop() || ''}`,
-             status: a.assignmentStatus || a.status || 'PENDING'
+            ...a,
+            id: a.assignmentId || a.id,
+            assignmentName: a.assignmentName || a.name || `Assignment ${a.assignmentId?.split('-').pop() || ''}`,
+            status: a.assignmentStatus || a.status || 'PENDING'
           }))
 
         setAssignments(projectAssigns)
@@ -60,9 +60,9 @@ export default function AnnotatorProjectAssignmentsPage() {
 
   return (
     <div className="p-6">
-      <Button 
-        type="text" 
-        icon={<ArrowLeftOutlined />} 
+      <Button
+        type="text"
+        icon={<ArrowLeftOutlined />}
         className="text-gray-400 hover:text-white mb-6"
         onClick={() => navigate(`/annotator/projects/${projectId}`)}
       >
@@ -79,11 +79,11 @@ export default function AnnotatorProjectAssignmentsPage() {
             {error}
           </div>
         ) : assignments.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
             {assignments
               .filter((a) => {
-                 const status = (a.assignmentStatus || a.status || '').toUpperCase()
-                 return status !== 'CANCELLED' && status !== 'INACTIVE'
+                const status = (a.assignmentStatus || a.status || '').toUpperCase()
+                return status !== 'CANCELLED' && status !== 'INACTIVE'
               })
               .map((a, idx) => (
                 <AssignmentCard
