@@ -158,7 +158,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
                 d.datasetStatus || d.status || d.dataset_status || ''
               ).toUpperCase()
               const dsId = String(d.datasetId || d.id || '')
-              return status === 'ACTIVE' && !usedDatasetIds.has(dsId)
+              return status === 'ACTIVE' && !assignedDatasetIds.includes(dsId)
             })
           )
         } else {
@@ -361,7 +361,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
       
       const usedDatasetIds = new Set(
         assignmentsArray
-          .filter((a: any) => {
+          .filter((a: Record<string, unknown>) => {
             const status = String(a.assignmentStatus || a.status || '').toUpperCase()
             if (status === 'INACTIVE' || status === 'CANCELLED' || status === 'ARCHIVED') return false
             if (isEditMode && initialData && (String(a.assignmentId || a.id) === String(initialData.assignmentId || initialData.id))) {
@@ -369,7 +369,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
             }
             return true
           })
-          .map((a: any) => String(a.datasetId || a.dataset_id || ''))
+          .map((a: Record<string, unknown>) => String(a.datasetId || a.dataset_id || ''))
       )
 
       const datasetsData = datasetRes.data?.data || datasetRes.data

@@ -288,7 +288,6 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
       <ProjectDetail
         projectId={viewProjectId}
         onBack={() => setViewProjectId(null)}
-        isInline={true}
       />
     )
   }
