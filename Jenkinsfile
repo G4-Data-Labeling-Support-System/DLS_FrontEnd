@@ -53,3 +53,99 @@ node {
         cleanWs()
     }
 }
+
+node {
+
+    def buildStatus = 'SUCCESS'
+    def slackNotify
+
+    try {
+        stage('Checkout') {
+            checkout scm
+        }
+
+        // Configs
+        def config = [
+            appName: 'data-labeling-fe',
+            dockerUser: 'fleeforezz',
+
+            release: '1.0.0',
+            beta: '1.0.0',
+            
+            containerPort: '5173',
+            testPort: '5173',
+            devPort: '5174',
+            betaPort: '5175',
+            prodPort: '5176',
+            
+            devServer: 'jso@10.0.1.74',
+            prodServer: 'jso@10.0.1.23',
+
+            manifestRepo: 'https://github.com/G4-Data-Labeling-Support-System/Infrastructure.git',
+            // env: '${env.BRANCH_NAME == 'main' ? 'production' : 'development'}',
+            // k8sNamespace: '${env.BRANCH_NAME == 'main' ? 'prod' : 'dev'}'
+        ]
+
+        // Env variables
+        slackNotify = load "ci/slack.groovy"
+        def buildPipeline = load "ci/build.groovy"
+        def sonarqubePipeline = load "ci/sonarqube.groovy"
+        def trivyFilesystemScan = load "ci/trivy-filesystem-scan.groovy"
+        def dockerPipeline = load "ci/docker.groovy"
+
+        def deployProd = load "ci/deploy-prod.groovy"
+        def deployBeta = load "ci/deploy-beta.groovy"
+        def deployDev = load "ci/deploy-dev.groovy"
+
+        def updateManifest = load "ci/update-manifest.groovy"
+
+        // Call functions base on branch
+        if (env.BRANCH_NAME == "main") {
+            // Step 1: Build project
+            buildPipeline.call(config)
+            // Step 2: Sonarqube Scan
+            sonarqubePipeline.call(config)
+            // Step 3: Trivy Filesystem Scan
+            trivyFilesystemScan.call()
+            // Step 4: Build -> Trivy Image Scan -> Test -> Push
+            dockerPipeline.call(config)
+            // Step 5: Deploy to Docker production server
+            deployProd.call(config)
+            // Step 6: Update Manifestfile
+            updateManifest.call(config)
+        } else if (env.BRANCH_NAME == "development") {
+            // Step 1: Build project
+            buildPipeline.call(config)
+            // Step 2: Sonarqube Scan
+            sonarqubePipeline.call(config)
+            // Step 3: Trivy Filesystem Scan
+            trivyFilesystemScan.call()
+            // Step 4: Build -> Trivy Image Scan -> Test -> Push
+            dockerPipeline.call(config)
+            // Step 5: Deploy to Docker production server
+            deployBeta.call(config)
+            // Step 6: Update Manifestfile
+            updateManifest.call(config)
+        } else {
+            buildPipeline.call(config)
+            dockerPipeline.call(config)
+        }
+    }
+    catch (err) {
+        buildStatus = 'FAILURE'
+        currentBuild.result = 'FAILURE'
+        throw err // keep pipeline failed
+    } finally {
+        if (slackNotify != null) {
+            slackNotify.call(buildStatus)
+        } else {
+            echo "Slack notify not loaded"
+        }
+
+        // Clean up workspace after run the pipeline
+        stage('Cleanup') {
+            cleanWs()
+        }
+    }
+
+}
