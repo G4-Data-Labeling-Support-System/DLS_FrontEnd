@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { Spin, Button } from 'antd'
 import { ArrowLeftOutlined, LoadingOutlined } from '@ant-design/icons'
 
@@ -30,8 +30,12 @@ interface Assignment {
 }
 
 export default function AnnotatorAssignmentDetailPage() {
-  const { projectId, assignmentId } = useParams<{ projectId: string; assignmentId: string }>()
+  const { projectId, assignmentId: paramAssignmentId } = useParams<{ projectId: string; assignmentId: string }>()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  
+  // Support both param and search param for flexibility
+  const assignmentId = paramAssignmentId || searchParams.get('assignmentId')
 
   const [assignment, setAssignment] = useState<Assignment | null>(null)
   const [loading, setLoading] = useState(true)
@@ -65,13 +69,13 @@ export default function AnnotatorAssignmentDetailPage() {
            }
         }
 
-        const actualTasks = rawTasks.filter((t: any) => {
+        const actualTasks = rawTasks.filter((t: Record<string, unknown>) => {
            const status = String(t.taskStatus || t.status || t.assignmentStatus || '').toUpperCase()
            return status !== 'INACTIVE' && status !== 'DELETED'
         })
         
         const calcCompleted = actualTasks.filter(
-           (t: any) =>
+           (t: Record<string, unknown>) =>
              t.taskStatus === 'COMPLETED' ||
              ['submitted', 'approved'].includes(String(t.annotationStatus).toLowerCase())
         ).length
@@ -100,6 +104,18 @@ export default function AnnotatorAssignmentDetailPage() {
     fetchAssignmentData()
   }, [assignmentId])
 
+  const handleBack = () => {
+    if (searchParams.get('assignmentId')) {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev)
+        next.delete('assignmentId')
+        return next
+      })
+    } else {
+      navigate(`/annotator/projects/${projectId}/assignments`)
+    }
+  }
+
   if (loading && !assignment) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
@@ -111,12 +127,12 @@ export default function AnnotatorAssignmentDetailPage() {
 
   if (error || !assignment) {
     return (
-      <div className="p-6">
+      <div>
         <Button 
           type="text" 
           icon={<ArrowLeftOutlined />} 
           className="text-gray-400 hover:text-white mb-6"
-          onClick={() => navigate(`/annotator/projects/${projectId}/assignments`)}
+          onClick={handleBack}
         >
           Back to Assignments
         </Button>
@@ -128,17 +144,7 @@ export default function AnnotatorAssignmentDetailPage() {
   }
 
   return (
-    <div className="p-6">
-      {/* Back Button */}
-      <Button 
-        type="text" 
-        icon={<ArrowLeftOutlined />} 
-        className="text-gray-400 hover:text-white mb-6"
-        onClick={() => navigate(`/annotator/projects/${projectId}/assignments`)}
-      >
-        Back to Assignments
-      </Button>
-
+    <div>
       {/* Tái sử dụng Layout cũ cho Assignment */}
       <div className="rounded-2xl grid md:grid-cols-2 sm:grid-cols-1 gap-6">
         <AssignmentHeader assignment={assignment} />

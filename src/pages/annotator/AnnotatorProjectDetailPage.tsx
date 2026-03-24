@@ -1,72 +1,46 @@
-import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Spin, Card, Descriptions, Tag, Empty, Typography, Button } from 'antd'
+import { Spin, Button, Tag } from 'antd'
 import { ArrowLeftOutlined, LoadingOutlined } from '@ant-design/icons'
 
-import { useAuthStore } from '@/store/auth.store'
-import projectApi from '@/api/ProjectApi'
-import guidelineApi from '@/api/GuidelineApi'
 import { AnnotatorProjectTabs } from '@/features/annotator/components/AnnotatorProjectTabs'
+import {
+  useProjectById,
+  useGuidelinesByProject
+} from '@/features/manager/hooks/useProjectDetail'
 
-const { Title } = Typography
+interface Guideline {
+  guideId?: string | number
+  title?: string
+  content?: string
+  createdAt?: string
+}
 
 export default function AnnotatorProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>()
   const navigate = useNavigate()
-  const { user } = useAuthStore()
 
-  const [projectDetail, setProjectDetail] = useState<any>(null)
-  const [guidelines, setGuidelines] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const {
+    data: project,
+    isLoading: projectLoading,
+    isError: projectError
+  } = useProjectById(projectId || '')
+  const { data: guidelines = [], isLoading: guidelinesLoading } = useGuidelinesByProject(projectId || '')
 
-  useEffect(() => {
-    const fetchProjectData = async () => {
-      if (!projectId || !user?.id) return
-
-      try {
-        setLoading(true)
-        setError(null)
-
-        // 1. Fetch Project Details
-        const projectRes = await projectApi.getProjectById(projectId)
-        const rawProj = projectRes.data?.data || projectRes.data
-        const pStatus = (rawProj.projectStatus || rawProj.status || '').toUpperCase()
-
-        if (pStatus && pStatus !== 'INACTIVE') {
-          setProjectDetail({
-            ...rawProj,
-            id: rawProj.projectId || rawProj.id,
-            name: rawProj.projectName || rawProj.name,
-            status: rawProj.projectStatus || rawProj.status
-          })
-        } else {
-          setError('Project is inactive or not found.')
-          return
-        }
-
-        // 2. Fetch all Guidelines
-        const guidelineRes = await guidelineApi.getGuidelines(projectId)
-        const guidelinesList = guidelineRes.data?.data || guidelineRes.data || []
-        setGuidelines(Array.isArray(guidelinesList) ? guidelinesList : [guidelinesList].filter(Boolean))
-      } catch (err) {
-        console.error('Failed to fetch project details:', err)
-        setError('Failed to load project details.')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchProjectData()
-  }, [projectId, user?.id])
+  const loading = projectLoading || guidelinesLoading
 
   const getStatusColor = (status?: string) => {
     switch (status?.toUpperCase()) {
-      case 'ACTIVE': return 'processing'
-      case 'COMPLETED': return 'success'
-      case 'PAUSED': return 'warning'
-      case 'INACTIVE': return 'error'
-      default: return 'default'
+      case 'ACTIVE':
+        return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+      case 'COMPLETED':
+        return 'border-indigo-500/30 bg-indigo-500/10 text-indigo-400'
+      case 'PAUSED':
+        return 'border-amber-500/30 bg-amber-500/10 text-amber-400'
+      case 'ARCHIVE':
+      case 'INACTIVE':
+        return 'border-red-500/30 bg-red-500/10 text-red-400'
+      default:
+        return 'border-gray-500/30 bg-gray-500/10 text-gray-400'
     }
   }
 
@@ -75,7 +49,7 @@ export default function AnnotatorProjectDetailPage() {
     return new Date(dateString).toLocaleString('vi-VN')
   }
 
-  if (loading && !projectDetail) {
+  if (loading && !project) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
         <Spin indicator={<LoadingOutlined className="text-4xl text-violet-500" spin />} />
@@ -84,7 +58,7 @@ export default function AnnotatorProjectDetailPage() {
     )
   }
 
-  if (error || !projectDetail) {
+  if (projectError || !project) {
     return (
       <div className="p-6">
         <Button
@@ -96,148 +70,141 @@ export default function AnnotatorProjectDetailPage() {
           Back to Projects
         </Button>
         <div className="text-center text-gray-400 py-20 bg-[#1A1625]/40 rounded-xl border border-dashed border-gray-700">
-          {error || 'Project not found.'}
+          Project not found or an error occurred.
         </div>
       </div>
     )
   }
 
   return (
-    <div className="p-6 animate-fade-in">
+    <div className="p-6 animate-fade-in relative overflow-hidden min-h-screen">
+      {/* Background Glows */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-violet-600/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-fuchsia-600/5 rounded-full blur-[100px] pointer-events-none" />
+
       {/* Back Button */}
       <Button
         type="text"
         icon={<ArrowLeftOutlined />}
-        className="text-gray-400 hover:text-white mb-4"
+        className="text-gray-400 hover:text-white mb-6 relative z-10"
         onClick={() => navigate('/annotator/projects')}
       >
         Back to Projects
       </Button>
 
       {/* Tabs Menu */}
-      {projectId && <AnnotatorProjectTabs projectId={projectId} activeTab={null} />}
+      {projectId && <AnnotatorProjectTabs projectId={projectId} activeTab="detail" />}
 
-      {/* Project Title + Status */}
-      <div className="flex justify-between items-start mt-6 mb-4">
-        <div>
-          <Title level={3} className="!text-white !m-0 !font-display">
-            {projectDetail.name || projectDetail.projectName}
-          </Title>
-          <div className="mt-2">
-            <Tag
-              color={getStatusColor(projectDetail.status)}
-              className="m-0 font-medium text-sm px-3 py-1"
-            >
-              {projectDetail.status || 'UNKNOWN'}
-            </Tag>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-2 relative z-10">
+        
+        {/* Left: Project Information */}
+        <div className="glass-panel rounded-2xl p-7 relative overflow-hidden flex flex-col border border-white/5 bg-[#1A1625]/60 backdrop-blur-md shadow-xl">
+          <div className="absolute -top-10 -right-10 w-56 h-56 rounded-full bg-violet-500/10 blur-[60px] pointer-events-none" />
+          <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-fuchsia-500/10 blur-[50px] pointer-events-none" />
+
+          <div className="relative z-10 flex-1 flex flex-col">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="material-symbols-outlined text-[14px] text-violet-400">
+                    folder_special
+                  </span>
+                  <span className="text-xs font-mono text-violet-400 tracking-widest uppercase font-bold">
+                    Project Information
+                  </span>
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                  {project.projectName}
+                </h1>
+                <p className="text-sm text-gray-400 mt-1 font-mono hover:text-gray-300 transition-colors cursor-default">
+                  {project.projectId}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-2 shrink-0">
+                <div
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold uppercase ${getStatusColor(project.projectStatus)}`}
+                >
+                  <span className="material-symbols-outlined text-[14px]">flag</span>
+                  {project.projectStatus || 'UNKNOWN'}
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-6 flex-1">
+              <h3 className="text-sm font-semibold text-white mb-2">Description</h3>
+              <p className="text-sm text-gray-300 leading-relaxed max-w-3xl">
+                {project.description || (
+                  <span className="text-gray-500 italic">No description provided for this project.</span>
+                )}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 border-t border-white/10 pt-4 mt-auto">
+              <div>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Created At</p>
+                <p className="text-sm font-semibold text-gray-300">{formatDate(project.createdAt)}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Last Updated</p>
+                <p className="text-sm font-semibold text-gray-300">{formatDate(project.updatedAt)}</p>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Main Card: Project Information + Guidelines */}
-      <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-4 p-0 overflow-hidden">
-        <div className="flex flex-col lg:flex-row h-full w-full">
-
-          {/* Left: Project Information */}
-          <div className="flex-1 p-6 border-b lg:border-b-0 lg:border-r border-gray-800">
-            <Descriptions
-              title={
-                <span className="text-white text-lg font-display flex items-center gap-2">
-                  <span className="material-symbols-outlined text-violet-400">info</span>
-                  Project Information
-                </span>
-              }
-              column={1}
-              className="custom-descriptions"
-              styles={{
-                label: { color: '#9ca3af', fontWeight: 500, width: '150px' },
-                content: { color: '#d1d5db' }
-              }}
-            >
-              <Descriptions.Item label="Project ID">
-                <span className="font-mono text-violet-300 bg-violet-500/10 px-2 py-0.5 rounded border border-violet-500/20">
-                  {projectDetail.id || projectDetail.projectId}
-                </span>
-              </Descriptions.Item>
-              <Descriptions.Item label="Description">
-                {projectDetail.description || projectDetail.descriptionProject || (
-                  <span className="text-gray-600 italic">No description</span>
-                )}
-              </Descriptions.Item>
-              <Descriptions.Item label="Created At">
-                {formatDate(projectDetail.createdAt)}
-              </Descriptions.Item>
-              <Descriptions.Item label="Last Updated">
-                {formatDate(projectDetail.updatedAt)}
-              </Descriptions.Item>
-            </Descriptions>
+        {/* Right: Project Guidelines */}
+        <div className="bg-[#1A1625]/60 backdrop-blur-md border border-violet-500/20 rounded-2xl overflow-hidden shadow-xl flex flex-col h-full min-h-[400px]">
+          <div className="w-full flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#231e31]/60">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-inner">
+                <span className="material-symbols-outlined text-[16px] text-emerald-400">menu_book</span>
+              </div>
+              <span className="font-semibold text-white text-base font-display">Project Guidelines</span>
+            </div>
+            <Tag color="#10b981" className="border-0 bg-emerald-500/10 text-emerald-400 border-emerald-500/20 border shadow-inner rounded-full font-bold px-3 py-0.5 m-0 text-xs">
+              {guidelines.length} total
+            </Tag>
           </div>
-
-          {/* Right: Project Guidelines */}
-          <div className="flex-1 p-6">
-            <h3 className="text-white text-lg font-display flex items-center gap-2 mb-4">
-              <span className="material-symbols-outlined text-green-400">menu_book</span>
-              Project Guidelines
-            </h3>
-
+          
+          <div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
             {guidelines.length === 0 ? (
-              <div className="flex-1 flex flex-col items-center justify-center min-h-[150px]">
-                <Empty
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description={<span className="text-gray-500">No guidelines available</span>}
-                />
+              <div className="w-full h-full flex flex-col items-center justify-center opacity-60">
+                <span className="material-symbols-outlined text-5xl mb-3 text-gray-600">article</span>
+                <p className="text-gray-400 text-sm">No guidelines available</p>
               </div>
             ) : (
-              <div
-                className="grid grid-cols-1 gap-4 overflow-y-auto pr-1 custom-scrollbar"
-                style={{ maxHeight: '300px' }}
-              >
-                {guidelines.map((guideline: any, index: number) => (
+              <div className="flex flex-col gap-4">
+                {guidelines.map((guideline: Guideline, index: number) => (
                   <div
                     key={guideline.guideId || index}
-                    className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-green-500/30 transition-colors"
+                    className="flex flex-col gap-3 bg-white/5 p-5 rounded-xl border border-white/10 hover:border-emerald-500/30 transition-all shadow-inner group"
                   >
-                    <h4
-                      className="text-white font-bold text-sm truncate"
-                      title={guideline.title || 'Unnamed Guideline'}
-                    >
-                      {guideline.title || 'Unnamed Guideline'}
-                    </h4>
-                    <div className="text-gray-400 text-sm mt-1 whitespace-pre-wrap">
+                    <div className="flex justify-between items-start gap-2 border-b border-white/5 pb-3">
+                      <div className="flex items-center gap-3 font-display text-white font-semibold">
+                         <span className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[11px] flex items-center justify-center font-bold font-sans">
+                           {index + 1}
+                         </span>
+                        <h4 className="truncate" title={guideline.title || 'Guideline'}>
+                          {guideline.title || 'Guideline'}
+                        </h4>
+                      </div>
+                    </div>
+                    
+                    <div className="text-gray-300 text-sm whitespace-pre-wrap leading-relaxed mt-1">
                       {guideline.content || 'No content provided.'}
                     </div>
-                    <div className="flex justify-between items-center mt-2 pt-2 border-t border-white/5">
-                      <span className="text-gray-500 text-xs">
-                        {formatDate(guideline.createdAt)}
-                      </span>
-                      {guideline.version && (
-                        <span className="text-gray-600 text-xs">v{guideline.version}</span>
-                      )}
+                    
+                    <div className="mt-2 text-[10px] text-gray-500 tracking-wider uppercase font-medium mt-auto w-full text-right">
+                      {formatDate(guideline.createdAt)}
                     </div>
                   </div>
                 ))}
               </div>
             )}
           </div>
-
         </div>
-      </Card>
-
-      <style>{`
-        .custom-descriptions .ant-descriptions-title {
-          margin-bottom: 20px;
-        }
-        .custom-descriptions .ant-descriptions-item-container {
-          border-bottom: 1px solid #2d263b;
-          padding-bottom: 12px;
-          margin-bottom: 12px;
-        }
-        .custom-descriptions .ant-descriptions-item-container:last-child {
-          border-bottom: none;
-          margin-bottom: 0;
-          padding-bottom: 0;
-        }
-      `}</style>
+      </div>
     </div>
   )
 }
