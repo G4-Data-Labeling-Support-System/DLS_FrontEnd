@@ -56,7 +56,7 @@ node {
             // Step 5: Deploy to Docker production server
             deployProd.call(config)
             // Step 6: Update Manifestfile
-            updateManifest.call(config)
+            // updateManifest.call(config)
         } else if (env.BRANCH_NAME == "development") {
             // Step 1: Build project
             buildPipeline.call(config)
@@ -69,10 +69,11 @@ node {
             // Step 5: Deploy to Docker production server
             deployBeta.call(config)
             // Step 6: Update Manifestfile
-            updateManifest.call(config)
+            // updateManifest.call(config)
         } else {
             buildPipeline.call(config)
             dockerPipeline.call(config)
+            deployDev.call(config)
         }
     }
     catch (err) {
