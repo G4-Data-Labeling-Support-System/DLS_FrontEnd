@@ -61,7 +61,9 @@ export const ENDPOINTS = {
 
   ANNOTATIONS: {
     LIST: '/annotations',
-    DETAIL: (id: string) => `/annotations/${id}`
+    DETAIL: (id: string) => `/annotations/${id}`,
+    BY_DATAITEM: (dataItemId: string) => `/annotations/dataitem/${dataItemId}`,
+    SUBMIT_SINGLE: '/annotations/submit'
   },
 
   GUIDELINES: {
