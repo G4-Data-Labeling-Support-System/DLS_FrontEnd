@@ -8,6 +8,7 @@ export interface GetLabelsParams {
   description?: string
   labelStatus?: string
   projectId?: string
+  datasetId?: string
   createdAt?: string
   updatedAt?: string
 }

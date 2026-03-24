@@ -3,6 +3,7 @@ import projectApi from '@/api/ProjectApi'
 import assignmentApi, { type GetAssignmentsParams } from '@/api/AssignmentApi'
 import guidelineApi from '@/api/GuidelineApi'
 import datasetApi from '@/api/DatasetApi'
+import { useInvalidateLabels } from './useLabels'
 
 export const useProjectById = (projectId: string) => {
   return useQuery({
@@ -33,6 +34,18 @@ export const useDatasetsByProject = (projectId: string) => {
         return Array.isArray(data) ? data : []
       }),
     enabled: !!projectId
+  })
+}
+
+export const useAllDatasets = () => {
+  return useQuery({
+    queryKey: ['datasets', 'all'],
+    queryFn: () =>
+      datasetApi.getDatasets().then((res) => {
+        const data = res.data?.data || res.data || []
+        return Array.isArray(data) ? data : []
+      }),
+    staleTime: 0
   })
 }
 
@@ -87,7 +100,7 @@ export const useProjectMembers = (projectId: string) => {
   })
 }
 
-export const useAllAssignments = () => {
+export const useAllAssignments = (options?: { enabled?: boolean }) => {
   return useQuery({
     queryKey: ['assignments', 'all'],
     queryFn: () =>
@@ -95,7 +108,8 @@ export const useAllAssignments = () => {
         const data = res.data?.data || res.data || []
         return (Array.isArray(data) ? data : []).map(mapAssignment)
       }),
-    staleTime: 0
+    staleTime: 0,
+    enabled: options?.enabled !== false
   })
 }
 
@@ -113,10 +127,12 @@ export const useInvalidateAssignments = () => {
 
 export const useInvalidateProjectDetail = () => {
   const invalidateAssignments = useInvalidateAssignments()
+  const invalidateLabels = useInvalidateLabels()
   const queryClient = useQueryClient()
 
   return (projectId: string) => {
     invalidateAssignments(projectId)
+    invalidateLabels()
     queryClient.invalidateQueries({ queryKey: ['guidelines', 'project', projectId] })
     queryClient.invalidateQueries({ queryKey: ['datasets', 'project', projectId] })
   }

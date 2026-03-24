@@ -18,7 +18,7 @@ import AllDataset from '@/features/manager/components/dataset/AllDataset'
 import { AllLabels } from '@/features/manager/components/dashboard/AllLabels'
 import { LabelQuickActions } from '@/features/manager/components/dashboard/LabelQuickActions'
 
-import { useInvalidateAssignments, useDatasetsByProject } from '@/features/manager/hooks/useProjectDetail'
+import { useInvalidateAssignments, useDatasetsByProject, useAllDatasets } from '@/features/manager/hooks/useProjectDetail'
 
 const ManagerDashboardPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -32,7 +32,7 @@ const ManagerDashboardPage: React.FC = () => {
   const [createProjectOpen, setCreateProjectOpen] = useState(false)
   const [editProjectId, setEditProjectId] = useState<string | undefined>(undefined)
   const [projectRefreshTrigger, setProjectRefreshTrigger] = useState(0)
-  
+
   const [createDatasetOpen, setCreateDatasetOpen] = useState(false)
   const [createLabelOpen, setCreateLabelOpen] = useState(false)
 
@@ -44,8 +44,14 @@ const ManagerDashboardPage: React.FC = () => {
 
   const selectedProjectId = searchParams.get('projectId')
   const selectedAssignmentId = searchParams.get('assignmentId')
-  
+  const selectedDatasetId = searchParams.get('datasetId')
+  const selectedLabelId = searchParams.get('labelId')
+
   const { data: projectDatasets = [], isLoading: datasetsLoading } = useDatasetsByProject(selectedProjectId || '')
+  const { data: allDatasets = [], isLoading: allDatasetsLoading } = useAllDatasets()
+
+  const currentDatasets = selectedProjectId ? projectDatasets : allDatasets
+  const currentDatasetsLoading = selectedProjectId ? datasetsLoading : allDatasetsLoading
 
   const handleTabChange = (tab: DashboardTabType) => {
     if (selectedProjectId) {
@@ -69,6 +75,22 @@ const ManagerDashboardPage: React.FC = () => {
       setSearchParams({ tab: 'assignments', assignmentId: id, projectId: selectedProjectId || '' })
     } else {
       setSearchParams({ tab: 'assignments', projectId: selectedProjectId || '' })
+    }
+  }
+
+  const handleDatasetSelect = (id: string | null) => {
+    if (id) {
+      setSearchParams({ tab: 'datasets', datasetId: id })
+    } else {
+      setSearchParams({ tab: 'datasets' })
+    }
+  }
+
+  const handleLabelSelect = (id: string | null) => {
+    if (id) {
+      setSearchParams({ tab: 'labels', labelId: id })
+    } else {
+      setSearchParams({ tab: 'labels' })
     }
   }
 
@@ -121,12 +143,11 @@ const ManagerDashboardPage: React.FC = () => {
               }}
             />
           </div>
-
         </div>
       ) : (
         <div className="flex flex-col gap-6 animate-fade-in">
           <div className="flex items-center gap-4">
-            <button 
+            <button
               onClick={() => handleProjectSelect(null)}
               className="px-4 py-2 bg-[#231e31] hover:bg-violet-600/20 text-gray-300 hover:text-white rounded-lg border border-gray-800 hover:border-violet-500/50 transition-all font-medium text-sm flex items-center gap-2 cursor-pointer"
             >
@@ -136,7 +157,16 @@ const ManagerDashboardPage: React.FC = () => {
           </div>
 
           {/* Custom Tab Navigation */}
-          <DashboardTabs activeTab={activeTab} onTabChange={handleTabChange} />
+          <DashboardTabs
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+            tabLabels={{
+              project: selectedProjectId ? 'Project Detail' : 'Projects',
+              assignments: selectedAssignmentId ? 'Assignment Detail' : 'Assignments',
+              datasets: selectedDatasetId ? 'Dataset Detail' : 'Datasets',
+              labels: selectedLabelId ? 'Label Detail' : 'Labels'
+            }}
+          />
 
           {activeTab === 'project' && (
             <ProjectDetail projectId={selectedProjectId as string} onBack={() => handleProjectSelect(null)} />
@@ -144,9 +174,10 @@ const ManagerDashboardPage: React.FC = () => {
 
           {activeTab === 'assignments' && (
             <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start relative">
-              {/* All Assignments - Main Content (3 cols) */}
-              <div className="xl:col-span-3">
+              {/* All Assignments - Main Content (3 cols or 4 if detail active) */}
+              <div className={selectedAssignmentId ? 'xl:col-span-4' : 'xl:col-span-3'}>
                 <AllAssignments
+                  projectId={selectedProjectId as string}
                   selectedAssignmentId={selectedAssignmentId}
                   onAssignmentSelect={handleAssignmentSelect}
                   onEdit={(asn) => {
@@ -157,23 +188,30 @@ const ManagerDashboardPage: React.FC = () => {
               </div>
 
               {/* Quick Actions - Sticky Sidebar (1 col) */}
-              <div className="xl:col-span-1 xl:sticky xl:top-6 space-y-6">
-                <AssignmentQuickActions
-                  onCreateAssignment={() => {
-                    setEditingAssignment(undefined)
-                    setCreateAssignmentOpen(true)
-                  }}
-                />
-              </div>
+              {!selectedAssignmentId && (
+                <div className="xl:col-span-1 xl:sticky xl:top-6 space-y-6">
+                  <AssignmentQuickActions
+                    onCreateAssignment={() => {
+                      setEditingAssignment(undefined)
+                      setCreateAssignmentOpen(true)
+                    }}
+                  />
+                </div>
+              )}
 
               <CreateAssignmentModal
                 open={createAssignmentOpen}
                 initialData={editingAssignment}
-                projectId={selectedProjectId}
+                projectId={selectedProjectId || undefined}
                 onCancel={handleCloseModal}
                 onSuccess={() => {
                   handleCloseModal()
-                  setSearchParams({ tab: 'assignments', projectId: selectedProjectId })
+                  // Keep the assignments view active but maintain the project filter if we were inside a project
+                  if (selectedProjectId) {
+                    setSearchParams({ tab: 'assignments', projectId: selectedProjectId })
+                  } else {
+                    setSearchParams({ tab: 'assignments' })
+                  }
                   invalidateAssignments()
                 }}
               />
@@ -182,23 +220,37 @@ const ManagerDashboardPage: React.FC = () => {
 
           {activeTab === 'datasets' && (
             <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start relative">
-              <div className="xl:col-span-3">
-                <AllDataset datasets={projectDatasets} loading={datasetsLoading} onCreate={() => setCreateDatasetOpen(true)} />
+              <div className={selectedDatasetId ? 'xl:col-span-4' : 'xl:col-span-3'}>
+                <AllDataset
+                  datasets={currentDatasets}
+                  loading={currentDatasetsLoading}
+                  selectedDatasetId={selectedDatasetId}
+                  onDatasetSelect={handleDatasetSelect}
+                  onCreate={() => setCreateDatasetOpen(true)}
+                />
               </div>
-              <div className="xl:col-span-1 xl:sticky xl:top-6 space-y-6">
-                <DatasetQuickActions onCreateDataset={() => setCreateDatasetOpen(true)} />
-              </div>
+              {!selectedDatasetId && (
+                <div className="xl:col-span-1 xl:sticky xl:top-6 space-y-6">
+                  <DatasetQuickActions onCreateDataset={() => setCreateDatasetOpen(true)} />
+                </div>
+              )}
             </div>
           )}
 
           {activeTab === 'labels' && (
             <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start relative">
-              <div className="xl:col-span-3">
-                <AllLabels />
+              <div className={selectedLabelId ? 'xl:col-span-4' : 'xl:col-span-3'}>
+                <AllLabels
+                  projectId={selectedProjectId as string}
+                  selectedLabelId={selectedLabelId}
+                  onLabelSelect={handleLabelSelect}
+                />
               </div>
-              <div className="xl:col-span-1 xl:sticky xl:top-6 space-y-6">
-                <LabelQuickActions onCreateLabel={() => setCreateLabelOpen(true)} />
-              </div>
+              {!selectedLabelId && (
+                <div className="xl:col-span-1 xl:sticky xl:top-6 space-y-6">
+                  <LabelQuickActions onCreateLabel={() => setCreateLabelOpen(true)} />
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -213,18 +265,20 @@ const ManagerDashboardPage: React.FC = () => {
 
       <CreateDatasetModal
         open={createDatasetOpen}
+        initialProjectId={selectedProjectId || undefined}
         onCancel={() => setCreateDatasetOpen(false)}
         onSuccess={() => {
           setCreateDatasetOpen(false)
           window.location.reload()
         }}
       />
-      
+
       {createLabelOpen && (
         <div className="hidden">
-          <AllLabels 
-            openCreateModal={true} 
-            onCreateModalClose={() => setCreateLabelOpen(false)} 
+          <AllLabels
+            openCreateModal={true}
+            onCreateModalClose={() => setCreateLabelOpen(false)}
+            projectId={selectedProjectId || undefined}
           />
         </div>
       )}

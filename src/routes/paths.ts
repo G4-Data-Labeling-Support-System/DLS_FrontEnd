@@ -20,7 +20,7 @@ export const PATH_MANAGER = {
   createProject: '/manager/create-project',
   editProject: '/manager/projects/edit/:id',
   teamAssignment: '/manager/create-project/team-assignment',
-  datasetManagement: '/manager/datasets',
+  manageProjectThings: '/manager/manage',
   datasetDetail: '/manager/datasets/:id',
   createDataset: '/manager/datasets/create'
 }

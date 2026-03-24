@@ -6,9 +6,10 @@ interface DashboardTabsProps {
   activeTab: DashboardTabType
   onTabChange: (tab: DashboardTabType) => void
   allowedTabs?: DashboardTabType[]
+  tabLabels?: Partial<Record<DashboardTabType, string>>
 }
 
-export const DashboardTabs: React.FC<DashboardTabsProps> = ({ activeTab, onTabChange, allowedTabs }) => {
+export const DashboardTabs: React.FC<DashboardTabsProps> = ({ activeTab, onTabChange, allowedTabs, tabLabels }) => {
   const showTab = (tab: DashboardTabType) => {
     if (!allowedTabs) return true
     return allowedTabs.includes(tab)
@@ -21,7 +22,7 @@ export const DashboardTabs: React.FC<DashboardTabsProps> = ({ activeTab, onTabCh
           onClick={() => onTabChange('project')}
           className={`text-lg font-medium transition-colors cursor-pointer relative pb-2 ${activeTab === 'project' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
         >
-          Project Detail
+          {tabLabels?.project || 'Projects'}
           {activeTab === 'project' && (
             <div className="absolute bottom-0 left-0 w-full h-0.5 bg-violet-500 rounded-t-md"></div>
           )}
@@ -32,7 +33,7 @@ export const DashboardTabs: React.FC<DashboardTabsProps> = ({ activeTab, onTabCh
           onClick={() => onTabChange(allowedTabs?.includes('assignment') ? 'assignment' : 'assignments')}
           className={`text-lg font-medium transition-colors cursor-pointer relative pb-2 ${['assignments', 'assignment'].includes(activeTab) ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
         >
-          Assignments
+          {tabLabels?.assignments || (allowedTabs?.includes('assignment') ? 'Assignment' : 'Assignments')}
           {['assignments', 'assignment'].includes(activeTab) && (
             <div className="absolute bottom-0 left-0 w-full h-0.5 bg-violet-500 rounded-t-md"></div>
           )}
@@ -43,7 +44,7 @@ export const DashboardTabs: React.FC<DashboardTabsProps> = ({ activeTab, onTabCh
           onClick={() => onTabChange('datasets')}
           className={`text-lg font-medium transition-colors cursor-pointer relative pb-2 ${activeTab === 'datasets' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
         >
-          Datasets
+          {tabLabels?.datasets || 'Datasets'}
           {activeTab === 'datasets' && (
             <div className="absolute bottom-0 left-0 w-full h-0.5 bg-violet-500 rounded-t-md"></div>
           )}
@@ -54,7 +55,7 @@ export const DashboardTabs: React.FC<DashboardTabsProps> = ({ activeTab, onTabCh
           onClick={() => onTabChange('labels')}
           className={`text-lg font-medium transition-colors cursor-pointer relative pb-2 ${activeTab === 'labels' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
         >
-          Labels
+          {tabLabels?.labels || 'Labels'}
           {activeTab === 'labels' && (
             <div className="absolute bottom-0 left-0 w-full h-0.5 bg-violet-500 rounded-t-md"></div>
           )}

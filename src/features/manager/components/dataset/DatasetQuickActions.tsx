@@ -8,9 +8,10 @@ const { Title } = Typography
 
 interface DatasetQuickActionsProps {
   onCreateDataset?: () => void
+  isGlobalView?: boolean
 }
 
-export const DatasetQuickActions: React.FC<DatasetQuickActionsProps> = ({ onCreateDataset }) => {
+export const DatasetQuickActions: React.FC<DatasetQuickActionsProps> = ({ onCreateDataset, isGlobalView }) => {
   const navigate = useNavigate()
 
   return (
@@ -35,11 +36,15 @@ export const DatasetQuickActions: React.FC<DatasetQuickActionsProps> = ({ onCrea
 
         <Button
           className="w-full h-12 flex items-center justify-between bg-[#231e31] border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 hover:bg-[#2d2640]"
-          onClick={() => navigate(PATH_MANAGER.root)}
+          onClick={() =>
+            navigate(
+              isGlobalView ? PATH_MANAGER.root : PATH_MANAGER.manageProjectThings + '?tab=dataset'
+            )
+          }
         >
           <div className="flex items-center">
             <FolderOpenOutlined className="mr-3 text-lg text-fuchsia-400" />
-            <span>PROJECT & ASSIGNMENT LIST</span>
+            <span>{isGlobalView ? 'VIEW ALL PROJECTS' : 'VIEW ALL DATASETS'}</span>
           </div>
           <RightOutlined className="text-xs" />
         </Button>

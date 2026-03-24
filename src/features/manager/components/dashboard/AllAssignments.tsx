@@ -6,6 +6,7 @@ import { AssignmentDetail } from './AssignmentDetail'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
 import {
   useAllAssignments,
+  useAssignmentsByProject,
   useInvalidateAssignments
 } from '@/features/manager/hooks/useProjectDetail'
 import assignmentApi, { type GetAssignmentsParams } from '@/api/AssignmentApi'
@@ -16,15 +17,22 @@ interface AllAssignmentsProps {
   selectedAssignmentId?: string | null
   onAssignmentSelect?: (id: string | null) => void
   onEdit?: (assignment: GetAssignmentsParams) => void
+  projectId?: string
 }
 
 export const AllAssignments: React.FC<AllAssignmentsProps> = ({
   selectedAssignmentId,
   onAssignmentSelect,
-  onEdit
+  onEdit,
+  projectId
 }) => {
   const { message } = App.useApp()
-  const { data: assignments = [], isLoading: loading } = useAllAssignments()
+  const { data: allAssignments = [], isLoading: loadingAll } = useAllAssignments({ enabled: !projectId })
+  const { data: projectAssignments = [], isLoading: loadingProject } = useAssignmentsByProject(projectId || '')
+  
+  const assignments = projectId ? projectAssignments : allAssignments
+  const loading = projectId ? loadingProject : loadingAll
+  
   const invalidateAssignments = useInvalidateAssignments()
 
   const [searchText, setSearchText] = useState<string>('')

@@ -84,7 +84,7 @@ export const LabelCard: React.FC<LabelCardProps> = ({
             className={`m-0 text-[10px] px-1.5 py-0 font-medium whitespace-nowrap border-0 rounded ${isInactive ? 'text-red-500' : ''
               }`}
           >
-            {(labelStatus).toUpperCase()}
+            {(labelStatus || '').toUpperCase()}
           </Tag>
           <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
             <Button

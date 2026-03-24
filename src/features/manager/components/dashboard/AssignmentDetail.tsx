@@ -265,7 +265,6 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
       <ProjectDetail
         projectId={viewProjectId}
         onBack={() => setViewProjectId(null)}
-        isInline={true}
       />
     )
   }
