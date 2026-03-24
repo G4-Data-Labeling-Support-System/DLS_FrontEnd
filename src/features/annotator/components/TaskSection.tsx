@@ -154,11 +154,10 @@ export default function TasksSection({
                 }}
                 className={`
                                     px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap
-                                    ${
-                                      statusFilter === status
-                                        ? 'bg-violet-600 text-white shadow-lg shadow-violet-900/20'
-                                        : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
-                                    }
+                                    ${statusFilter === status
+                    ? 'bg-violet-600 text-white shadow-lg shadow-violet-900/20'
+                    : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
+                  }
                                 `}
               >
                 {status.replace('_', ' ')}

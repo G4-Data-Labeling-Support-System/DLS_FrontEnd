@@ -107,7 +107,7 @@ export const AllProjects: React.FC<AllProjectsProps> = ({
     )
   }
 
-// ProjectDetail is now handled by the parent component
+  // ProjectDetail is now handled by the parent component
   return (
     <div className="w-full">
       <div className="flex justify-between items-center mb-6">

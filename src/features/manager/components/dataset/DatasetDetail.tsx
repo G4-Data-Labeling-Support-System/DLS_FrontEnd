@@ -453,12 +453,12 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
                       <div className="absolute top-2 right-2">
                         <div
                           className={`w-2.5 h-2.5 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.5)] ${item.status?.toLowerCase() === 'active'
-                              ? 'bg-emerald-500'
-                              : item.status?.toLowerCase() === 'inactive'
-                                ? 'bg-red-500'
-                                : item.labeled
-                                  ? 'bg-emerald-500'
-                                  : 'bg-gray-400'
+                            ? 'bg-emerald-500'
+                            : item.status?.toLowerCase() === 'inactive'
+                              ? 'bg-red-500'
+                              : item.labeled
+                                ? 'bg-emerald-500'
+                                : 'bg-gray-400'
                             }`}
                           title={
                             item.status
@@ -634,22 +634,22 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
                     <div className="flex items-center gap-2">
                       <div
                         className={`w-2.5 h-2.5 rounded-full ${selectedItem.status?.toLowerCase() === 'active'
-                            ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
-                            : selectedItem.status?.toLowerCase() === 'inactive'
-                              ? 'bg-red-500'
-                              : selectedItem.labeled
-                                ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
-                                : 'bg-gray-500'
+                          ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
+                          : selectedItem.status?.toLowerCase() === 'inactive'
+                            ? 'bg-red-500'
+                            : selectedItem.labeled
+                              ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
+                              : 'bg-gray-500'
                           }`}
                       />
                       <span
                         className={`text-xs font-medium ${selectedItem.status?.toLowerCase() === 'active'
-                            ? 'text-emerald-400'
-                            : selectedItem.status?.toLowerCase() === 'inactive'
-                              ? 'text-red-400'
-                              : selectedItem.labeled
-                                ? 'text-emerald-400'
-                                : 'text-gray-400'
+                          ? 'text-emerald-400'
+                          : selectedItem.status?.toLowerCase() === 'inactive'
+                            ? 'text-red-400'
+                            : selectedItem.labeled
+                              ? 'text-emerald-400'
+                              : 'text-gray-400'
                           }`}
                       >
                         {selectedItem.status
