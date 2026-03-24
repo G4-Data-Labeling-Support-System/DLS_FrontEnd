@@ -80,17 +80,33 @@ const ManagerDashboardPage: React.FC = () => {
 
   const handleDatasetSelect = (id: string | null) => {
     if (id) {
-      setSearchParams({ tab: 'datasets', datasetId: id })
+      if (selectedProjectId) {
+        setSearchParams({ tab: 'datasets', datasetId: id, projectId: selectedProjectId })
+      } else {
+        setSearchParams({ tab: 'datasets', datasetId: id })
+      }
     } else {
-      setSearchParams({ tab: 'datasets' })
+      if (selectedProjectId) {
+        setSearchParams({ tab: 'datasets', projectId: selectedProjectId })
+      } else {
+        setSearchParams({ tab: 'datasets' })
+      }
     }
   }
 
   const handleLabelSelect = (id: string | null) => {
     if (id) {
-      setSearchParams({ tab: 'labels', labelId: id })
+      if (selectedProjectId) {
+        setSearchParams({ tab: 'labels', labelId: id, projectId: selectedProjectId })
+      } else {
+        setSearchParams({ tab: 'labels', labelId: id })
+      }
     } else {
-      setSearchParams({ tab: 'labels' })
+      if (selectedProjectId) {
+        setSearchParams({ tab: 'labels', projectId: selectedProjectId })
+      } else {
+        setSearchParams({ tab: 'labels' })
+      }
     }
   }
 
@@ -162,9 +178,9 @@ const ManagerDashboardPage: React.FC = () => {
             onTabChange={handleTabChange}
             tabLabels={{
               project: selectedProjectId ? 'Project Detail' : 'Projects',
-              assignments: selectedAssignmentId ? 'Assignment Detail' : 'Assignments',
-              datasets: selectedDatasetId ? 'Dataset Detail' : 'Datasets',
-              labels: selectedLabelId ? 'Label Detail' : 'Labels'
+              assignments: 'Assignments',
+              datasets: 'Datasets',
+              labels: 'Labels'
             }}
           />
 

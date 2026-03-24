@@ -29,10 +29,10 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
   const { message } = App.useApp()
   const { data: allAssignments = [], isLoading: loadingAll } = useAllAssignments({ enabled: !projectId })
   const { data: projectAssignments = [], isLoading: loadingProject } = useAssignmentsByProject(projectId || '')
-  
+
   const assignments = projectId ? projectAssignments : allAssignments
   const loading = projectId ? loadingProject : loadingAll
-  
+
   const invalidateAssignments = useInvalidateAssignments()
 
   const [searchText, setSearchText] = useState<string>('')
@@ -88,6 +88,22 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
     }
   }
 
+  const filteredAssignments = assignments
+    .filter(
+      (a) =>
+        !searchText || (a.assignmentName && a.assignmentName.toLowerCase().includes(searchText.toLowerCase()))
+    )
+    .filter((a) => statusFilter === 'ALL' || (a.status && a.status.toUpperCase() === statusFilter))
+    .sort((a, b) => {
+      const aIsInactive = a.status?.toUpperCase() === 'INACTIVE'
+      const bIsInactive = b.status?.toUpperCase() === 'INACTIVE'
+
+      if (aIsInactive && !bIsInactive) return 1
+      if (!aIsInactive && bIsInactive) return -1
+
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+    })
+
   if (loading && !currentAssignmentId) {
     return (
       <div className="w-full flex justify-center py-10">
@@ -136,7 +152,7 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
         </Space>
       </div>
 
-      {assignments.length === 0 ? (
+      {filteredAssignments.length === 0 ? (
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
           description={<span className="text-gray-500">No assignments created yet.</span>}
@@ -144,37 +160,18 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 items-stretch">
-          {assignments
-            .filter(
-              (a) =>
-                !searchText ||
-                (a.assignmentName &&
-                  a.assignmentName.toLowerCase().includes(searchText.toLowerCase()))
+          {filteredAssignments.map((a, index) => {
+            const uniqueId = a.assignmentId || String(index)
+            return (
+              <AssignmentCard
+                key={uniqueId}
+                {...a}
+                onClick={() => handleAssignmentSelect(uniqueId)}
+                onEdit={() => handleEdit(uniqueId)}
+                onDelete={() => handleDelete(uniqueId)}
+              />
             )
-            .filter(
-              (a) => statusFilter === 'ALL' || (a.status && a.status.toUpperCase() === statusFilter)
-            )
-            .sort((a, b) => {
-              const aIsInactive = a.status?.toUpperCase() === 'INACTIVE'
-              const bIsInactive = b.status?.toUpperCase() === 'INACTIVE'
-
-              if (aIsInactive && !bIsInactive) return 1
-              if (!aIsInactive && bIsInactive) return -1
-
-              return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-            })
-            .map((a, index) => {
-              const uniqueId = a.assignmentId || String(index)
-              return (
-                <AssignmentCard
-                  key={uniqueId}
-                  {...a}
-                  onClick={() => handleAssignmentSelect(uniqueId)}
-                  onEdit={() => handleEdit(uniqueId)}
-                  onDelete={() => handleDelete(uniqueId)}
-                />
-              )
-            })}
+          })}
         </div>
       )}
 

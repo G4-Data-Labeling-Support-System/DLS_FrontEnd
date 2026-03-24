@@ -223,6 +223,28 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
     }
   }
 
+  const filteredLabels = labels
+    .filter((l) => {
+      if (!projectId) return true
+      return projectDatasets.some((d) => String(d.datasetId) === String(l.datasetId))
+    })
+    .filter((l) => {
+      const matchesSearch =
+        !searchText || (l.labelName && l.labelName.toLowerCase().includes(searchText.toLowerCase()))
+      const matchesStatus = statusFilter === 'ALL' || l.labelStatus === statusFilter
+
+      return matchesSearch && matchesStatus
+    })
+    .sort((a, b) => {
+      const aIsInactive = a.labelStatus?.toUpperCase() === 'INACTIVE'
+      const bIsInactive = b.labelStatus?.toUpperCase() === 'INACTIVE'
+
+      if (aIsInactive && !bIsInactive) return 1
+      if (!aIsInactive && bIsInactive) return -1
+
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+    })
+
   const currentLabelId = _selectedLabelId !== undefined ? _selectedLabelId : _internalLabelId
 
   if (loading && !currentLabelId) {
@@ -264,7 +286,7 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
         </Space>
       </div>
 
-      {labels.length === 0 ? (
+      {filteredLabels.length === 0 ? (
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
           description={<span className="text-gray-500">No labels created yet.</span>}
@@ -272,40 +294,18 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 items-stretch">
-          {labels
-            .filter((l) => {
-              if (!projectId) return true
-              return projectDatasets.some((d) => String(d.datasetId) === String(l.datasetId))
-            })
-            .filter((l) => {
-              const matchesSearch =
-                !searchText ||
-                (l.labelName && l.labelName.toLowerCase().includes(searchText.toLowerCase()))
-              const matchesStatus = statusFilter === 'ALL' || l.labelStatus === statusFilter
-
-              return matchesSearch && matchesStatus
-            })
-            .sort((a, b) => {
-              const aIsInactive = a.labelStatus?.toUpperCase() === 'INACTIVE'
-              const bIsInactive = b.labelStatus?.toUpperCase() === 'INACTIVE'
-
-              if (aIsInactive && !bIsInactive) return 1
-              if (!aIsInactive && bIsInactive) return -1
-
-              return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-            })
-            .map((l, index) => {
-              const uniqueId = l.labelId || String(index)
-              return (
-                <LabelCard
-                  key={uniqueId}
-                  {...l}
-                  onClick={() => handleLabelSelect(uniqueId)}
-                  onEdit={() => handleEdit(uniqueId)}
-                  onDelete={() => handleDelete(uniqueId)}
-                />
-              )
-            })}
+          {filteredLabels.map((l, index) => {
+            const uniqueId = l.labelId || String(index)
+            return (
+              <LabelCard
+                key={uniqueId}
+                {...l}
+                onClick={() => handleLabelSelect(uniqueId)}
+                onEdit={() => handleEdit(uniqueId)}
+                onDelete={() => handleDelete(uniqueId)}
+              />
+            )
+          })}
         </div>
       )}
 
