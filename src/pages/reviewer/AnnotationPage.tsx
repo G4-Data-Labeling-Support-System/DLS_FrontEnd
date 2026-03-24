@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { Spin, Result, Button, message, Tooltip } from 'antd'
+import { Spin, Result, Button, message } from 'antd'
 import taskApi from '@/api/TaskApi'
 import { reviewerApi, type ReviewUpdateRequest } from '@/api/ReviewerApi'
 
@@ -42,7 +42,7 @@ export default function ReviewerAnnotationPage() {
   // Get starting index from state if passed
   const state = location.state as { startIndex?: number; assignmentId?: string } | null
   const startIdx = state?.startIndex || 0
-  const assignmentId = state?.assignmentId
+  // const assignmentId = state?.assignmentId
 
   const [dataItems, setDataItems] = useState<DataItem[]>([])
   const [currentIndex, setCurrentIndex] = useState(startIdx)
@@ -56,7 +56,7 @@ export default function ReviewerAnnotationPage() {
   const [offset, setOffset] = useState({ x: 0, y: 0 })
   const [isPanning, setIsPanning] = useState(false)
   const [panStart, setPanStart] = useState({ x: 0, y: 0 })
-  const [tool, setTool] = useState<'pan'>('pan')
+  const [tool] = useState<'pan'>('pan')
   
   // Current Item specific shapes (ReadOnly in review mode)
   const [shapes, setShapes] = useState<Shape[]>([])
@@ -96,7 +96,7 @@ export default function ReviewerAnnotationPage() {
     return rawAnns.map((ann: any) => {
       let parsedBbox: any = null
       let parsedPoints: any = null
-      let shapeType: Shape['type'] = 'bounding_box'
+      // let shapeType: Shape['type'] = 'bounding_box'
       
       try {
         const rawData = typeof ann.annotationData === 'string' ? JSON.parse(ann.annotationData) : ann.annotationData || {}
@@ -108,7 +108,7 @@ export default function ReviewerAnnotationPage() {
         }
         if (rawData.bbox) parsedBbox = rawData.bbox
         if (rawData.points) parsedPoints = rawData.points
-        if (ann.annotationType === 'POLYGON') shapeType = 'polygon'
+        // if (ann.annotationType === 'POLYGON') shapeType = 'polygon'
       } catch (e) {
         // fail silently for parse
       }
