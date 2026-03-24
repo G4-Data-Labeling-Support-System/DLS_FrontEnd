@@ -3,6 +3,7 @@ import projectApi from '@/api/ProjectApi'
 import assignmentApi, { type GetAssignmentsParams } from '@/api/AssignmentApi'
 import guidelineApi from '@/api/GuidelineApi'
 import datasetApi from '@/api/DatasetApi'
+import { useInvalidateLabels } from './useLabels'
 
 export const useProjectById = (projectId: string) => {
   return useQuery({
@@ -126,10 +127,12 @@ export const useInvalidateAssignments = () => {
 
 export const useInvalidateProjectDetail = () => {
   const invalidateAssignments = useInvalidateAssignments()
+  const invalidateLabels = useInvalidateLabels()
   const queryClient = useQueryClient()
 
   return (projectId: string) => {
     invalidateAssignments(projectId)
+    invalidateLabels()
     queryClient.invalidateQueries({ queryKey: ['guidelines', 'project', projectId] })
     queryClient.invalidateQueries({ queryKey: ['datasets', 'project', projectId] })
   }

@@ -32,7 +32,7 @@ const ManagerDashboardPage: React.FC = () => {
   const [createProjectOpen, setCreateProjectOpen] = useState(false)
   const [editProjectId, setEditProjectId] = useState<string | undefined>(undefined)
   const [projectRefreshTrigger, setProjectRefreshTrigger] = useState(0)
-  
+
   const [createDatasetOpen, setCreateDatasetOpen] = useState(false)
   const [createLabelOpen, setCreateLabelOpen] = useState(false)
 
@@ -46,7 +46,7 @@ const ManagerDashboardPage: React.FC = () => {
   const selectedAssignmentId = searchParams.get('assignmentId')
   const selectedDatasetId = searchParams.get('datasetId')
   const selectedLabelId = searchParams.get('labelId')
-  
+
   const { data: projectDatasets = [], isLoading: datasetsLoading } = useDatasetsByProject(selectedProjectId || '')
   const { data: allDatasets = [], isLoading: allDatasetsLoading } = useAllDatasets()
 
@@ -147,7 +147,7 @@ const ManagerDashboardPage: React.FC = () => {
       ) : (
         <div className="flex flex-col gap-6 animate-fade-in">
           <div className="flex items-center gap-4">
-            <button 
+            <button
               onClick={() => handleProjectSelect(null)}
               className="px-4 py-2 bg-[#231e31] hover:bg-violet-600/20 text-gray-300 hover:text-white rounded-lg border border-gray-800 hover:border-violet-500/50 transition-all font-medium text-sm flex items-center gap-2 cursor-pointer"
             >
@@ -157,9 +157,9 @@ const ManagerDashboardPage: React.FC = () => {
           </div>
 
           {/* Custom Tab Navigation */}
-          <DashboardTabs 
-            activeTab={activeTab} 
-            onTabChange={handleTabChange} 
+          <DashboardTabs
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
             tabLabels={{
               project: selectedProjectId ? 'Project Detail' : 'Projects',
               assignments: selectedAssignmentId ? 'Assignment Detail' : 'Assignments',
@@ -172,87 +172,87 @@ const ManagerDashboardPage: React.FC = () => {
             <ProjectDetail projectId={selectedProjectId as string} onBack={() => handleProjectSelect(null)} />
           )}
 
-        {activeTab === 'assignments' && (
-          <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start relative">
-            {/* All Assignments - Main Content (3 cols or 4 if detail active) */}
-            <div className={selectedAssignmentId ? 'xl:col-span-4' : 'xl:col-span-3'}>
-              <AllAssignments
-                projectId={selectedProjectId as string}
-                selectedAssignmentId={selectedAssignmentId}
-                onAssignmentSelect={handleAssignmentSelect}
-                onEdit={(asn) => {
-                  setEditingAssignment(asn)
-                  setCreateAssignmentOpen(true)
-                }}
-              />
-            </div>
-
-            {/* Quick Actions - Sticky Sidebar (1 col) */}
-            {!selectedAssignmentId && (
-              <div className="xl:col-span-1 xl:sticky xl:top-6 space-y-6">
-                <AssignmentQuickActions
-                  onCreateAssignment={() => {
-                    setEditingAssignment(undefined)
+          {activeTab === 'assignments' && (
+            <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start relative">
+              {/* All Assignments - Main Content (3 cols or 4 if detail active) */}
+              <div className={selectedAssignmentId ? 'xl:col-span-4' : 'xl:col-span-3'}>
+                <AllAssignments
+                  projectId={selectedProjectId as string}
+                  selectedAssignmentId={selectedAssignmentId}
+                  onAssignmentSelect={handleAssignmentSelect}
+                  onEdit={(asn) => {
+                    setEditingAssignment(asn)
                     setCreateAssignmentOpen(true)
                   }}
                 />
               </div>
-            )}
 
-            <CreateAssignmentModal
-              open={createAssignmentOpen}
-              initialData={editingAssignment}
-              projectId={selectedProjectId || undefined}
-              onCancel={handleCloseModal}
-              onSuccess={() => {
-                handleCloseModal()
-                // Keep the assignments view active but maintain the project filter if we were inside a project
-                if (selectedProjectId) {
-                  setSearchParams({ tab: 'assignments', projectId: selectedProjectId })
-                } else {
-                  setSearchParams({ tab: 'assignments' })
-                }
-                invalidateAssignments()
-              }}
-            />
-          </div>
-        )}
+              {/* Quick Actions - Sticky Sidebar (1 col) */}
+              {!selectedAssignmentId && (
+                <div className="xl:col-span-1 xl:sticky xl:top-6 space-y-6">
+                  <AssignmentQuickActions
+                    onCreateAssignment={() => {
+                      setEditingAssignment(undefined)
+                      setCreateAssignmentOpen(true)
+                    }}
+                  />
+                </div>
+              )}
 
-        {activeTab === 'datasets' && (
-          <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start relative">
-            <div className={selectedDatasetId ? 'xl:col-span-4' : 'xl:col-span-3'}>
-              <AllDataset 
-                datasets={currentDatasets} 
-                loading={currentDatasetsLoading} 
-                selectedDatasetId={selectedDatasetId}
-                onDatasetSelect={handleDatasetSelect}
-                onCreate={() => setCreateDatasetOpen(true)} 
+              <CreateAssignmentModal
+                open={createAssignmentOpen}
+                initialData={editingAssignment}
+                projectId={selectedProjectId || undefined}
+                onCancel={handleCloseModal}
+                onSuccess={() => {
+                  handleCloseModal()
+                  // Keep the assignments view active but maintain the project filter if we were inside a project
+                  if (selectedProjectId) {
+                    setSearchParams({ tab: 'assignments', projectId: selectedProjectId })
+                  } else {
+                    setSearchParams({ tab: 'assignments' })
+                  }
+                  invalidateAssignments()
+                }}
               />
             </div>
-            {!selectedDatasetId && (
-              <div className="xl:col-span-1 xl:sticky xl:top-6 space-y-6">
-                <DatasetQuickActions onCreateDataset={() => setCreateDatasetOpen(true)} />
-              </div>
-            )}
-          </div>
-        )}
+          )}
 
-        {activeTab === 'labels' && (
-          <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start relative">
-            <div className={selectedLabelId ? 'xl:col-span-4' : 'xl:col-span-3'}>
-              <AllLabels 
-                projectId={selectedProjectId as string}
-                selectedLabelId={selectedLabelId}
-                onLabelSelect={handleLabelSelect}
-              />
-            </div>
-            {!selectedLabelId && (
-              <div className="xl:col-span-1 xl:sticky xl:top-6 space-y-6">
-                <LabelQuickActions onCreateLabel={() => setCreateLabelOpen(true)} />
+          {activeTab === 'datasets' && (
+            <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start relative">
+              <div className={selectedDatasetId ? 'xl:col-span-4' : 'xl:col-span-3'}>
+                <AllDataset
+                  datasets={currentDatasets}
+                  loading={currentDatasetsLoading}
+                  selectedDatasetId={selectedDatasetId}
+                  onDatasetSelect={handleDatasetSelect}
+                  onCreate={() => setCreateDatasetOpen(true)}
+                />
               </div>
-            )}
-          </div>
-        )}
+              {!selectedDatasetId && (
+                <div className="xl:col-span-1 xl:sticky xl:top-6 space-y-6">
+                  <DatasetQuickActions onCreateDataset={() => setCreateDatasetOpen(true)} />
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'labels' && (
+            <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start relative">
+              <div className={selectedLabelId ? 'xl:col-span-4' : 'xl:col-span-3'}>
+                <AllLabels
+                  projectId={selectedProjectId as string}
+                  selectedLabelId={selectedLabelId}
+                  onLabelSelect={handleLabelSelect}
+                />
+              </div>
+              {!selectedLabelId && (
+                <div className="xl:col-span-1 xl:sticky xl:top-6 space-y-6">
+                  <LabelQuickActions onCreateLabel={() => setCreateLabelOpen(true)} />
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -265,18 +265,20 @@ const ManagerDashboardPage: React.FC = () => {
 
       <CreateDatasetModal
         open={createDatasetOpen}
+        initialProjectId={selectedProjectId || undefined}
         onCancel={() => setCreateDatasetOpen(false)}
         onSuccess={() => {
           setCreateDatasetOpen(false)
           window.location.reload()
         }}
       />
-      
+
       {createLabelOpen && (
         <div className="hidden">
-          <AllLabels 
-            openCreateModal={true} 
-            onCreateModalClose={() => setCreateLabelOpen(false)} 
+          <AllLabels
+            openCreateModal={true}
+            onCreateModalClose={() => setCreateLabelOpen(false)}
+            projectId={selectedProjectId || undefined}
           />
         </div>
       )}

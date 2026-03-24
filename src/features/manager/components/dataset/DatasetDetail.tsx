@@ -18,7 +18,7 @@ import { ProjectDetail } from '../dashboard/ProjectDetail'
 import { useSearchParams } from 'react-router-dom'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
 import { CreateDatasetModal } from './CreateDatasetModal'
-import { labelApi } from '@/api/LabelApi'
+import { useLabelsByDataset } from '@/features/manager/hooks/useLabels'
 
 const { Title } = Typography
 
@@ -30,14 +30,6 @@ interface DatasetDetailData {
   totalItems?: number
   createdAt?: string
   datasetStatus?: string
-}
-
-interface Label {
-  labelId: string
-  labelName: string
-  color: string
-  description?: string
-  labelStatus?: string
 }
 
 interface DatasetDetailProps {
@@ -65,7 +57,7 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
   const { message } = App.useApp()
   const [dataset, setDataset] = useState<DatasetDetailData | null>(null)
   const [projectName, setProjectName] = useState<string | null>(null)
-  const [labels, setLabels] = useState<Label[]>([])
+  const { data: labels = [] } = useLabelsByDataset(datasetId)
   const [loading, setLoading] = useState<boolean>(true)
   const [dataItems, setDataItems] = useState<DataItem[]>([])
   const [itemsLoading, setItemsLoading] = useState<boolean>(false)
@@ -143,40 +135,13 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
     }
   }, [datasetId])
 
-  const fetchLabels = useCallback(async () => {
-    try {
-      const response = await labelApi.getLabelsByDatasetId(datasetId)
-      const data = response.data?.data || response.data || []
-      const labelArray = Array.isArray(data) ? data : [data]
-      setLabels(
-        labelArray
-          .map((item: unknown) => {
-            const l = item as Record<string, unknown>
-            const status = String(l['labelStatus'] || l['status'] || l['label_status'] || '')
-              .trim()
-              .toUpperCase()
-            return { ...(l as unknown as Label), labelStatus: status }
-          })
-          .filter((l: Label) => {
-            return (
-              l.labelStatus !== 'INACTIVE' &&
-              l.labelStatus !== 'DELETED' &&
-              l.labelStatus !== 'DISABLED'
-            )
-          })
-      )
-    } catch (error) {
-      console.error('Error fetching labels:', error)
-    }
-  }, [datasetId])
 
   useEffect(() => {
     if (datasetId) {
       fetchDetail()
       fetchItems()
-      fetchLabels()
     }
-  }, [datasetId, fetchDetail, fetchItems, fetchLabels])
+  }, [datasetId, fetchDetail, fetchItems])
 
   const handleItemClick = async (item: DataItem) => {
     const itemId = item.dataItemId || item.id || item.itemId
@@ -487,15 +452,14 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
                       {/* Status Badge */}
                       <div className="absolute top-2 right-2">
                         <div
-                          className={`w-2.5 h-2.5 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.5)] ${
-                            item.status?.toLowerCase() === 'active'
+                          className={`w-2.5 h-2.5 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.5)] ${item.status?.toLowerCase() === 'active'
                               ? 'bg-emerald-500'
                               : item.status?.toLowerCase() === 'inactive'
                                 ? 'bg-red-500'
                                 : item.labeled
                                   ? 'bg-emerald-500'
                                   : 'bg-gray-400'
-                          }`}
+                            }`}
                           title={
                             item.status
                               ? item.status.toUpperCase()
@@ -595,9 +559,9 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
                 </div>
 
                 {selectedItem.imageUrl ||
-                selectedItem.url ||
-                selectedItem.previewUrl ||
-                selectedItem.path ? (
+                  selectedItem.url ||
+                  selectedItem.previewUrl ||
+                  selectedItem.path ? (
                   <Image
                     src={
                       selectedItem.imageUrl ||
@@ -669,26 +633,24 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
                   <Descriptions.Item label="Status">
                     <div className="flex items-center gap-2">
                       <div
-                        className={`w-2.5 h-2.5 rounded-full ${
-                          selectedItem.status?.toLowerCase() === 'active'
+                        className={`w-2.5 h-2.5 rounded-full ${selectedItem.status?.toLowerCase() === 'active'
                             ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
                             : selectedItem.status?.toLowerCase() === 'inactive'
                               ? 'bg-red-500'
                               : selectedItem.labeled
                                 ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
                                 : 'bg-gray-500'
-                        }`}
+                          }`}
                       />
                       <span
-                        className={`text-xs font-medium ${
-                          selectedItem.status?.toLowerCase() === 'active'
+                        className={`text-xs font-medium ${selectedItem.status?.toLowerCase() === 'active'
                             ? 'text-emerald-400'
                             : selectedItem.status?.toLowerCase() === 'inactive'
                               ? 'text-red-400'
                               : selectedItem.labeled
                                 ? 'text-emerald-400'
                                 : 'text-gray-400'
-                        }`}
+                          }`}
                       >
                         {selectedItem.status
                           ? selectedItem.status.toUpperCase()

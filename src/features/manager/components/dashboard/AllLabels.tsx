@@ -12,6 +12,7 @@ import labelApiClient, {
 } from '@/api/LabelApi'
 import datasetApi, { type GetDatasetsParams } from '@/api/DatasetApi'
 import { useDatasetsByProject } from '@/features/manager/hooks/useProjectDetail'
+import { useAllLabels, useInvalidateLabels } from '@/features/manager/hooks/useLabels'
 const { Title } = Typography
 
 interface AllLabelsProps {
@@ -32,8 +33,8 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
   const { message } = App.useApp()
   const [form] = Form.useForm()
   const [editForm] = Form.useForm()
-  const [labels, setLabels] = useState<GetLabelsParams[]>([])
-  const [loading, setLoading] = useState<boolean>(true)
+  const { data: labels = [], isLoading: loading } = useAllLabels()
+  const invalidateLabels = useInvalidateLabels()
   const { data: projectDatasets = [] } = useDatasetsByProject(projectId || '')
   const [searchText, setSearchText] = useState<string>('')
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
@@ -63,78 +64,9 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
   }
 
   const fetchLabels = async () => {
-    try {
-      setLoading(true)
-      const response = await labelApiClient.getLabels()
-      const data = response.data?.data || response.data?.content || response.data || []
-
-      if (Array.isArray(data)) {
-        const mappedLabels: GetLabelsParams[] = data
-          .map((l: Record<string, unknown>) => {
-            const mapped: GetLabelsParams = {}
-            if (l.labelId || l.id) {
-              mapped.labelId = String(l.labelId || l.id)
-            }
-            if (l.labelName || l.name) {
-              mapped.labelName = String(l.labelName || l.name)
-            }
-            const status = String(
-              l.labelStatus ||
-              l.status ||
-              l.label_status ||
-              ''
-            )
-              .trim()
-              .toUpperCase()
-            mapped.labelStatus = status
-            if (l.description) {
-              mapped.description = String(l.description)
-            }
-            if (l.color) {
-              mapped.color = String(l.color)
-            }
-            if (l.datasetId || l.dataset_id) {
-              mapped.datasetId = String(l.datasetId || l.dataset_id)
-            }
-            if (l.projectId || l.project_id) {
-              mapped.projectId = String(l.projectId || l.project_id)
-            }
-            if (l.createdAt || l.created_at || l.createdDate) {
-              mapped.createdAt = String(l.createdAt || l.created_at || l.createdDate)
-            }
-            if (l.updatedAt) {
-              mapped.updatedAt = String(l.updatedAt)
-            }
-            return mapped
-          })
-          .filter((l) => {
-            const status = String(l.labelStatus || '').toUpperCase()
-            return status !== 'DELETED' && status !== 'DISABLED'
-          })
-        setLabels(mappedLabels)
-      } else {
-        console.warn('API returned non-array data:', data)
-        setLabels([])
-      }
-    } catch (error) {
-      const labelError = error as Record<string, unknown>
-      const responseData = labelError?.response as Record<string, unknown>
-      const data = responseData?.data as Record<string, unknown>
-      const isNotFoundError = data?.code === 404 && data?.message === 'Label not found'
-
-      if (isNotFoundError) {
-        setLabels([])
-      } else {
-        console.error('Failed to load labels.', error)
-      }
-    } finally {
-      setLoading(false)
-    }
+    invalidateLabels()
   }
 
-  useEffect(() => {
-    fetchLabels()
-  }, [])
 
   useEffect(() => {
     if (openCreateModal) {
@@ -157,7 +89,7 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
       setDeleting(true)
       await labelApiClient.deleteLabel(deletingLabelId)
       message.success('Label deleted successfully!')
-      setLabels((prev) => prev.filter((l) => l.labelId !== deletingLabelId))
+      invalidateLabels()
       setDeleteModalOpen(false)
       setDeletingLabelId(null)
       setDeletingLabelName('')
@@ -169,17 +101,22 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
     }
   }
 
+  useEffect(() => {
+    if (editModalOpen && editingLabel) {
+      editForm.setFieldsValue({
+        labelName: editingLabel.labelName || '',
+        color: editingLabel.color || '#1677ff',
+        description: editingLabel.description || ''
+      })
+    }
+  }, [editModalOpen, editingLabel, editForm])
+
   const handleEdit = (id?: string) => {
     if (!id) return
     const label = labels.find((l) => l.labelId === id)
     if (!label) return
     setEditingLabelId(id)
     setEditingLabel(label)
-    editForm.setFieldsValue({
-      labelName: label.labelName || '',
-      color: label.color || '#1677ff',
-      description: label.description || ''
-    })
     setEditModalOpen(true)
   }
 
@@ -203,7 +140,6 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
       await labelApiClient.updateLabel(editingLabelId, payload)
       message.success('Label updated successfully!')
       setEditModalOpen(false)
-      editForm.resetFields()
       setEditingLabelId(null)
       setEditingLabel(null)
       fetchLabels()
@@ -221,7 +157,9 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
   const fetchDatasets = async () => {
     setDatasetsLoading(true)
     try {
-      const response = await datasetApi.getDatasets()
+      const response = projectId
+        ? await datasetApi.getDatasetsByProjectId(projectId)
+        : await datasetApi.getDatasets()
       const rawData = response.data?.data || response.data?.content || response.data || []
       if (Array.isArray(rawData)) {
         const mapped: GetDatasetsParams[] = rawData
@@ -251,7 +189,6 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
   }
 
   const handleOpenCreateModal = () => {
-    form.resetFields()
     setCreateModalOpen(true)
     fetchDatasets()
   }
@@ -273,7 +210,6 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
       await labelApiClient.createLabel(values.datasetId, payload)
       message.success('Label created successfully!')
       setCreateModalOpen(false)
-      form.resetFields()
       onCreateModalClose?.()
       fetchLabels()
     } catch (error) {
@@ -463,7 +399,6 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
         open={editModalOpen}
         onCancel={() => {
           setEditModalOpen(false)
-          editForm.resetFields()
           setEditingLabelId(null)
           setEditingLabel(null)
         }}
