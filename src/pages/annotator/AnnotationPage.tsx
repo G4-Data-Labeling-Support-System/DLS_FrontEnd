@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { Tooltip, Spin, Result, Button } from 'antd'
+import { Spin, Result, Button } from 'antd'
 import assignmentApi from '@/api/AssignmentApi'
 import taskApi from '@/api/TaskApi'
 import type { AnnotationSubmitItem } from '@/shared/types/api.types'
@@ -64,6 +64,35 @@ export default function AnnotationPage() {
   const [isDrawing, setIsDrawing] = useState(false)
   const [currentShape, setCurrentShape] = useState<Shape | null>(null)
   const [shapes, setShapes] = useState<Shape[]>([])
+  
+  // New: Redo Stack
+  const [redoStack, setRedoStack] = useState<Shape[]>([])
+
+  // Resizable sidebars
+  const [leftWidth, setLeftWidth] = useState(260)
+  const [rightWidth, setRightWidth] = useState(320)
+  const draggingRef = useRef<'left' | 'right' | null>(null)
+  const dragStartXRef = useRef(0)
+  const dragStartWidthRef = useRef(0)
+
+  useEffect(() => {
+    const onMouseMove = (e: MouseEvent) => {
+      if (!draggingRef.current) return
+      const delta = e.clientX - dragStartXRef.current
+      if (draggingRef.current === 'left') {
+        setLeftWidth(Math.max(160, Math.min(500, dragStartWidthRef.current + delta)))
+      } else {
+        setRightWidth(Math.max(200, Math.min(600, dragStartWidthRef.current - delta)))
+      }
+    }
+    const onMouseUp = () => { draggingRef.current = null; document.body.style.cursor = '' }
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
+    return () => {
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+    }
+  }, [])
 
   // Store all annotations in current session before bulk submit
   const [sessionAnnotations, setSessionAnnotations] = useState<AnnotationSubmitItem[]>([])
@@ -107,6 +136,8 @@ export default function AnnotationPage() {
       setOffset({ x: 0, y: 0 })
       setIsDrawing(false)
       setCurrentShape(null)
+      // Reset Redo Stack on page change
+      setRedoStack([])
 
       if (existing) {
         setShapes((existing.annotationData.shapes as Shape[]) || (existing.annotationData.raw as Shape[]) || [])
@@ -327,6 +358,7 @@ export default function AnnotationPage() {
     setIsDrawing(false)
     if (currentShape) {
       setShapes([...shapes, currentShape])
+      setRedoStack([])
       setCurrentShape(null)
     }
   }
@@ -339,6 +371,7 @@ export default function AnnotationPage() {
 
       if (finalPoints.length >= 2) {
         setShapes([...shapes, { ...currentShape, points: finalPoints, isPreview: false }])
+        setRedoStack([])
       }
       setCurrentShape(null)
       setIsDrawing(false)
@@ -347,8 +380,23 @@ export default function AnnotationPage() {
 
   const handleClearAll = () => {
     setShapes([])
+    setRedoStack([])
     setCurrentShape(null)
     setIsDrawing(false)
+  }
+
+  const handleUndo = () => {
+    if (shapes.length === 0) return
+    const lastShape = shapes[shapes.length - 1]
+    setShapes(shapes.slice(0, -1))
+    setRedoStack((prev) => [...prev, lastShape])
+  }
+
+  const handleRedo = () => {
+    if (redoStack.length === 0) return
+    const shapeToRestore = redoStack[redoStack.length - 1]
+    setRedoStack(redoStack.slice(0, -1))
+    setShapes([...shapes, shapeToRestore])
   }
 
   const createAnnotationPayload = (
@@ -396,18 +444,10 @@ export default function AnnotationPage() {
     })
   }
 
-  const handleNext = () => {
+  const handleItemSelect = (idx: number) => {
     saveCurrentToSession()
-    const nextIdx = currentIndex < totalItems - 1 ? currentIndex + 1 : 0
-    loadFromSession(dataItems[nextIdx])
-    setCurrentIndex(nextIdx)
-  }
-
-  const handlePrevious = () => {
-    saveCurrentToSession()
-    const prevIdx = currentIndex > 0 ? currentIndex - 1 : totalItems - 1
-    loadFromSession(dataItems[prevIdx])
-    setCurrentIndex(prevIdx)
+    loadFromSession(dataItems[idx])
+    setCurrentIndex(idx)
   }
 
   const toggleLabel = (labelObj: Label) => {
@@ -479,7 +519,7 @@ export default function AnnotationPage() {
               key="back-to-assignment-btn"
               type="primary"
               onClick={() => navigate(assignmentId ? `/annotator/assignment/${assignmentId}` : '/annotator/assignment')}
-              className="bg-violet-600 hover:bg-violet-500 border-none px-6 h-10 font-bold"
+              className="bg-violet-600 hover:bg-violet-500 border-none px-6 h-10 font-bold rounded-lg"
             >
               Back to Assignment
             </Button>
@@ -507,7 +547,7 @@ export default function AnnotationPage() {
         <span className="text-red-400 font-medium">{error || 'No data items found.'}</span>
         <button
           onClick={() => navigate(-1)}
-          className="mt-4 px-6 py-2 bg-white/5 border border-white/10 rounded-xl text-white hover:bg-white/10 transition-all"
+          className="mt-4 px-6 py-2 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-all font-bold"
         >
           Go Back
         </button>
@@ -516,347 +556,319 @@ export default function AnnotationPage() {
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col h-screen overflow-hidden bg-[#0f0e17]">
-      {/* Top Navigation / Breadcrumb */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-[#16161a]">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => {
-              saveCurrentToSession()
-              navigate(-1)
-            }}
-            className="p-1.5 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors cursor-pointer"
-          >
-            <span className="material-symbols-outlined text-[20px]">arrow_back</span>
-          </button>
-          <div className="h-4 w-[1px] bg-white/10" />
-          <div className="flex flex-col">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-violet-400">
-              Assignment
-            </span>
-            <h2 className="text-sm font-bold text-white tracking-tight">Annotation Workspace</h2>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-6">
-          {/* Progress Bar */}
-          <div className="flex flex-col gap-1 items-end min-w-[200px]">
-            <div className="flex justify-between w-full text-[10px] font-bold uppercase tracking-widest text-gray-500">
-              <span>Progress</span>
-              <span className="text-violet-400">
-                {sessionAnnotations.filter(a => ((a.annotationData?.shapes as Shape[]) || []).length > 0 || (a.labelIds && a.labelIds.length > 0)).length} / {totalItems}
-              </span>
-            </div>
-            <div className="w-full h-1.5 bg-black/40 border border-white/5 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-violet-500 transition-all duration-300"
-                style={{ width: `${totalItems ? Math.round((sessionAnnotations.filter(a => ((a.annotationData?.shapes as Shape[]) || []).length > 0 || (a.labelIds && a.labelIds.length > 0)).length / totalItems) * 100) : 0}%` }}
-              />
-            </div>
-          </div>
-
-          <div className="w-[1px] h-8 bg-white/10 hidden md:block" />
-
-          <div className="flex flex-col items-end">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">
-              Task ID
-            </span>
-            <span className="text-xs font-mono text-gray-300">{taskId}</span>
-          </div>
-          <button
-            onClick={handleSubmitTask}
-            className="bg-violet-600 hover:bg-violet-500 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow-lg shadow-violet-900/20 transition-all cursor-pointer"
-          >
-            Submit Task
-          </button>
-        </div>
+    <div className="fixed inset-0 z-[100] flex flex-col h-screen bg-[#111116] text-white overflow-hidden font-sans">
+      {/* Optional minimal top bar for backing out */}
+      <div className="absolute top-4 left-4 z-[200]">
+        <button
+           onClick={() => {
+             saveCurrentToSession()
+             navigate(-1)
+           }}
+           className="px-4 py-2 bg-black/40 backdrop-blur border border-white/10 rounded-xl hover:bg-white/10 text-gray-400 flex items-center gap-2 transition text-sm font-medium shadow-xl absolute top-4 left-4 cursor-pointer"
+        >
+           <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+           <span>Back</span>
+        </button>
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left: Image Viewer */}
-        <div
-          className="flex-1 relative bg-black/40 flex items-center justify-center p-8 group overflow-hidden"
-          onWheel={handleWheel}
-        >
-          <div
-            className="relative shadow-2xl rounded-lg border border-white/5 transition-transform duration-200 ease-out will-change-transform"
-            style={{ transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})` }}
-          >
-            <img
-              src={currentItem.url}
-              alt={currentItem.fileName}
-              className="max-w-full max-h-[70vh] object-contain select-none pointer-events-none"
-            />
-
-            <svg
-              className={`absolute inset-0 w-full h-full ${tool === 'pan' ? 'cursor-pointer' : 'cursor-crosshair'}`}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onDoubleClick={finishPolygon}
-            >
-              {shapes.map((shape, i) => (
-                <g key={`shape-${i}-${shape.label}`}>
-                  {shape.type === 'bounding_box' ? (
-                    <rect
-                      x={shape.x}
-                      y={shape.y}
-                      width={shape.width}
-                      height={shape.height}
-                      fill={`${shape.color}33`}
-                      stroke={shape.color}
-                      strokeWidth={2 / zoom}
-                    />
-                  ) : (
-                    <polyline
-                      points={shape.points?.map((p: [number, number]) => p.join(',')).join(' ')}
-                      fill={`${shape.color}33`}
-                      stroke={shape.color}
-                      strokeWidth={2 / zoom}
-                    />
-                  )}
-                </g>
-              ))}
-              {currentShape && (
-                <g>
-                  {currentShape.type === 'bounding_box' ? (
-                    <rect
-                      x={currentShape.x}
-                      y={currentShape.y}
-                      width={currentShape.width}
-                      height={currentShape.height}
-                      fill={`${currentShape.color}66`}
-                      stroke={currentShape.color}
-                      strokeWidth={2 / zoom}
-                    />
-                  ) : (
-                    <polyline
-                      points={currentShape.points
-                        ?.map((p: [number, number]) => p.join(','))
-                        .join(' ')}
-                      fill={`${currentShape.color}66`}
-                      stroke={currentShape.color}
-                      strokeWidth={2 / zoom}
-                    />
-                  )}
-                </g>
-              )}
-            </svg>
+      <div className="flex flex-1 overflow-hidden h-full">
+        
+        {/* Left Column: Thumbnail List */}
+        <div style={{ width: leftWidth, minWidth: 160 }} className="border-r border-white/10 overflow-y-auto custom-scrollbar flex flex-col pt-16 mt-4 pb-4 shrink-0">
+          <div className="flex items-center px-2 py-2 border-b border-white/10 mx-4 mb-2 gap-3 text-[10px] font-bold uppercase tracking-widest text-gray-500">
+            <span className="w-10 shrink-0 text-center">Status</span>
+            <span className="w-16 shrink-0 text-center">Image</span>
+            <span className="flex-1">Shapes</span>
           </div>
-
-          {/* Tools Overlay */}
-          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/80 backdrop-blur-md rounded-2xl border border-white/10 flex items-center gap-2 shadow-2xl z-20">
-            <ToolbarButton
-              icon="pan_tool"
-              title="Pan Tool"
-              active={tool === 'pan'}
-              onClick={() => setTool('pan')}
-            />
-            <ToolbarButton icon="zoom_in" title="Zoom In" onClick={handleZoomIn} />
-            <ToolbarButton icon="zoom_out" title="Zoom Out" onClick={handleZoomOut} />
-            <ToolbarButton icon="restart_alt" title="Reset Zoom" onClick={handleZoomReset} />
-            <div className="w-[1px] h-4 bg-white/20 mx-1" />
-            <ToolbarButton
-              icon="crop_free"
-              title="Bounding Box"
-              active={tool === 'box'}
-              onClick={() => setTool('box')}
-            />
-            <ToolbarButton
-              icon="polyline"
-              title="Polygon Tool"
-              active={tool === 'polygon'}
-              onClick={() => setTool('polygon')}
-            />
-            <div className="w-[1px] h-4 bg-white/20 mx-1" />
-            <ToolbarButton
-              icon="undo"
-              title="Undo"
-              onClick={() => setShapes(shapes.slice(0, -1))}
-            />
-            <ToolbarButton icon="delete" title="Clear All" onClick={handleClearAll} />
-          </div>
-
-          <div className="absolute top-6 right-6 px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 flex items-center gap-2">
-            <span className="material-symbols-outlined text-[16px] text-gray-400">zoom_in</span>
-            <span className="text-xs font-mono text-gray-300">{(zoom * 100).toFixed(0)}%</span>
-          </div>
-
-          <div className="absolute top-6 left-6 flex flex-col gap-2 z-20">
-            <div className="px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 w-fit">
-              <span className="text-xs font-mono text-gray-300">{currentItem.fileName}</span>
-            </div>
-            {(() => {
+          
+          <div className="flex-1 flex flex-col px-4 gap-4">
+            {dataItems.map((item, idx) => {
               const currentId =
-                (currentItem as any).dataItemId ||
-                (currentItem as any).dataitemId ||
-                currentItem.itemId ||
-                (currentItem as any).dataItem?.itemId ||
-                (currentItem as any).id
-              const isLabeled = sessionAnnotations.some(
-                a => a.dataitemId === currentId && 
-                (((a.annotationData?.shapes as Shape[]) || []).length > 0 || (a.labelIds && a.labelIds.length > 0))
-              )
-              return isLabeled ? (
-                <div className="px-3 py-1 bg-emerald-500/20 backdrop-blur-md rounded-lg border border-emerald-500/30 flex items-center gap-1.5 w-fit shadow-lg shadow-emerald-500/10">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="text-[10px] font-bold text-emerald-400 tracking-wider">LABELED</span>
-                </div>
-              ) : (
-                <div className="px-3 py-1 bg-amber-500/20 backdrop-blur-md rounded-lg border border-amber-500/30 flex items-center gap-1.5 w-fit shadow-lg shadow-amber-500/10">
-                  <span className="text-[10px] font-bold text-amber-400 tracking-wider">DRAFT</span>
-                </div>
-              )
-            })()}
-          </div>
+                (item as any).dataItemId ||
+                (item as any).dataitemId ||
+                item.itemId ||
+                (item as any).dataItem?.itemId ||
+                (item as any).id
+              const annotation = sessionAnnotations.find(a => a.dataitemId === currentId)
+              const shapeCount = ((annotation?.annotationData?.shapes as Shape[]) || []).length
+              const labelCount = annotation?.labelIds?.length || 0
+              const isLabeled = shapeCount > 0 || labelCount > 0
+              
+              const isSelected = currentIndex === idx;
+              return (
+                <div 
+                  key={currentId || idx}
+                  onClick={() => handleItemSelect(idx)}
+                  className="flex items-center gap-3 cursor-pointer transition-all hover:bg-white/5 rounded-lg px-2 py-1.5"
+                >
+                  {/* Status — w-10 to match header */}
+                  <div className="w-10 shrink-0 flex justify-center">
+                    <div className={`w-2.5 h-2.5 rounded-full ${isLabeled ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-rose-400/60'}`} />
+                  </div>
 
-          <div className="absolute bottom-6 left-6 px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 flex items-center gap-2">
-            <span className="material-symbols-outlined text-[16px] text-gray-400">
-              photo_library
-            </span>
-            <div className="text-xs font-mono text-gray-500">
-              <span className="text-white font-bold">{currentIndex + 1}</span> / {totalItems}
-            </div>
+                  {/* Image — w-16 to match header */}
+                  <div className="relative shrink-0 w-16">
+                    <img
+                      src={item.url}
+                      alt={item.fileName}
+                      className={`w-16 h-12 object-cover rounded-md bg-black/50 border-[2px] ${isSelected ? 'border-violet-500 shadow-[0_0_12px_rgba(139,92,246,0.4)]' : 'border-white/10'}`}
+                    />
+                    {/* Shape count badge */}
+                    <div className={`absolute -bottom-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center text-[10px] font-bold border ${
+                      shapeCount > 0
+                        ? 'bg-violet-600 border-violet-400/50 text-white'
+                        : 'bg-black/70 border-white/10 text-gray-500'
+                    }`}>
+                      {shapeCount}
+                    </div>
+                  </div>
+
+                  {/* Shapes — flex-1 to match header */}
+                  <div className="flex flex-col min-w-0 flex-1">
+                    <span className="text-[10px] text-gray-600 leading-tight">
+                      {shapeCount > 0 ? `${shapeCount} shape${shapeCount !== 1 ? 's' : ''}` : 'no shapes'}
+                      {labelCount > 0 ? ` · ${labelCount} label${labelCount !== 1 ? 's' : ''}` : ''}
+                    </span>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
 
-        {/* Right: Annotation Sidebar */}
-        <div className="w-[380px] border-l border-white/5 bg-[#16161a] flex flex-col overflow-y-auto custom-scrollbar">
-          <div className="p-6 flex flex-col gap-8">
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px] text-violet-400">label</span>
-                <span className="text-xs font-bold uppercase tracking-widest text-gray-400">
-                  Labels
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {labels.length === 0 ? (
-                  <span className="text-xs text-gray-500 italic">No labels available</span>
-                ) : (
-                  labels.map((label, idx) => (
-                    <button
-                      key={label.labelId || `label-${idx}`}
-                      onClick={() => toggleLabel(label)}
-                      className={`
-                                              px-3 py-1.5 rounded-lg text-xs font-bold transition-all border
-                                              ${selectedLabels.includes(label.labelId)
-                          ? 'bg-white/10 text-white'
-                          : 'bg-white/5 border-transparent text-gray-500 hover:bg-white/10 hover:text-gray-300'
-                        }
-                                          `}
-                      style={{
-                        borderColor: selectedLabels.includes(label.labelId)
-                          ? label.color
-                          : 'transparent',
-                        color: selectedLabels.includes(label.labelId) ? label.color : undefined
-                      }}
-                    >
-                      {label.labelName}
-                    </button>
-                  ))
-                )}
-              </div>
-            </div>
+        {/* Left Resize Handle */}
+        <div
+          className="w-1 shrink-0 cursor-col-resize hover:bg-violet-500/40 transition-colors bg-transparent group relative"
+          onMouseDown={(e) => {
+            draggingRef.current = 'left'
+            dragStartXRef.current = e.clientX
+            dragStartWidthRef.current = leftWidth
+            document.body.style.cursor = 'col-resize'
+            e.preventDefault()
+          }}
+        >
+          <div className="absolute inset-y-0 left-0 w-[3px] group-hover:bg-violet-500/40 transition-colors" />
+        </div>
+        <div className="flex-[2] flex flex-col relative overflow-hidden bg-[#111116] pt-12 pb-6 px-5 border-l-[2px] border-white/5 mx-2 my-2">
+          
+          <div className="text-left mb-3">
+            <h2 className="text-2xl font-medium text-gray-200 tracking-wide">
+              Select label and click the image to start
+            </h2>
+          </div>
 
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px] text-orange-400">psychology</span>
-                <span className="text-xs font-bold uppercase tracking-widest text-gray-400">
-                  Confidence
-                </span>
-              </div>
-              <div className="flex bg-black/40 rounded-xl border border-white/5 p-1 gap-1">
-                {(['LOW', 'MEDIUM', 'HIGH'] as const).map((level) => (
-                  <button
-                    key={level}
-                    onClick={() => setConfidence(level)}
-                    className={`
-                      flex-1 py-1.5 rounded-lg text-xs font-bold transition-all
-                      ${confidence === level
-                        ? 'bg-orange-500/20 text-orange-400 border border-orange-500/50'
-                        : 'text-gray-500 hover:text-gray-300 hover:bg-white/5 border border-transparent'
-                      }
-                    `}
+          {/* Image Container */}
+          <div className="flex-1 relative flex">
+             
+             {/* The Viewer */}
+             <div
+               className="relative shadow-2xl transition-transform duration-200 ease-out will-change-transform bg-[#1e293b]/50 overflow-hidden flex items-center justify-center w-full h-full mx-auto border-[1px] border-gray-600/80 shadow-[0_0_30px_rgba(96,165,250,0.15)]"
+               onWheel={handleWheel}
+             >
+                <div
+                    className="relative transition-transform duration-200 ease-out will-change-transform flex items-center justify-center h-full w-full"
+                    style={{ transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`, transformOrigin: 'center' }}
+                >
+                  <img src={currentItem.url} alt={currentItem.fileName} className="max-w-full max-h-full object-contain pointer-events-none select-none" />
+                  
+                  <svg
+                    className={`absolute inset-0 w-full h-full ${tool === 'pan' ? 'cursor-grab' : 'cursor-crosshair'}`}
+                    onMouseDown={handleMouseDown}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUp}
+                    onDoubleClick={finishPolygon}
                   >
-                    {level}
-                  </button>
-                ))}
+                    {shapes.map((shape, i) => (
+                      <g key={`shape-${i}-${shape.label}`}>
+                        {shape.type === 'bounding_box' ? (
+                          <rect
+                            x={shape.x}
+                            y={shape.y}
+                            width={shape.width}
+                            height={shape.height}
+                            fill={`${shape.color}33`}
+                            stroke={shape.color}
+                            strokeWidth={3 / zoom}
+                          />
+                        ) : (
+                          <polyline
+                            points={shape.points?.map((p: [number, number]) => p.join(',')).join(' ')}
+                            fill={`${shape.color}33`}
+                            stroke={shape.color}
+                            strokeWidth={3 / zoom}
+                          />
+                        )}
+                      </g>
+                    ))}
+                    {currentShape && (
+                      <g>
+                        {currentShape.type === 'bounding_box' ? (
+                          <rect
+                            x={currentShape.x}
+                            y={currentShape.y}
+                            width={currentShape.width}
+                            height={currentShape.height}
+                            fill={`${currentShape.color}66`}
+                            stroke={currentShape.color}
+                            strokeWidth={3 / zoom}
+                          />
+                        ) : (
+                          <polyline
+                            points={currentShape.points
+                              ?.map((p: [number, number]) => p.join(','))
+                              .join(' ')}
+                            fill={`${currentShape.color}66`}
+                            stroke={currentShape.color}
+                            strokeWidth={3 / zoom}
+                          />
+                        )}
+                      </g>
+                    )}
+                  </svg>
+                </div>
+             </div>
+
+             {/* Floating Tools on the right */}
+             <div className="absolute top-1/2 -translate-y-1/2 flex flex-col gap-2 bg-[#1e1b29] px-1.5 py-3 rounded-xl shadow-2xl border border-violet-500/20 z-20" style={{ right: '20px' }}>
+                {/* <span className="text-[9px] font-bold uppercase tracking-widest text-violet-400/60 text-center mb-2">Tools</span> */}
+                <ToolbarButton icon="pan_tool" active={tool === 'pan'} onClick={() => setTool('pan')} />
+                <ToolbarButton icon="zoom_in" onClick={handleZoomIn} />
+                <ToolbarButton icon="zoom_out" onClick={handleZoomOut} />
+                <ToolbarButton icon="restart_alt" onClick={handleZoomReset} />
+                <div className="w-full h-px bg-violet-500/20 my-1" />
+                <ToolbarButton icon="crop_free" active={tool === 'box'} onClick={() => setTool('box')} />
+                <ToolbarButton icon="polyline" active={tool === 'polygon'} onClick={() => setTool('polygon')} />
+             </div>
+          </div>
+
+
+          {/* Bottom Action Bar */}
+          <div className="mt-8 border-t border-white/10 pt-5 flex w-full items-center justify-between gap-4">
+            
+            <div className="flex item-center">
+              {/* Left: task counter */}
+              <span className="text-xs  font-mono text-gray-500">task {currentIndex + 1}/{totalItems}</span>
+
+              {/* Center: Undo / Redo / Reset */}
+              <div className="flex items-center gap-1 flex-1 justify-center">
+                <button onClick={handleUndo} className="px-3 py-1.5 cursor-pointer rounded-lg text-xs font-bold text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-all">undo</button>
+                <button onClick={handleRedo} className="px-3 py-1.5 cursor-pointer rounded-lg text-xs font-bold text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-all">redo</button>
+                <button onClick={handleClearAll} className="px-3 py-1.5 cursor-pointer rounded-lg text-xs font-bold text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-all">reset</button>
               </div>
             </div>
+            
+            
+            {/* Submit on Right */}
+            <button
+               onClick={handleSubmitTask}
+               className="shrink-0 cursor-pointer bg-violet-600 hover:bg-violet-500 text-white px-6 py-2 rounded-lg text-sm font-bold transition-all shadow-lg shadow-violet-900/20"
+            >
+               Submit
+            </button>
+          </div>
+        </div>
 
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px] text-amber-400">
-                  chat_bubble
-                </span>
-                <span className="text-xs font-bold uppercase tracking-widest text-gray-400">
-                  Comment
-                </span>
-              </div>
-              <textarea
+        {/* Right Resize Handle */}
+        <div
+          className="w-1 shrink-0 cursor-col-resize hover:bg-violet-500/40 transition-colors bg-transparent group relative"
+          onMouseDown={(e) => {
+            draggingRef.current = 'right'
+            dragStartXRef.current = e.clientX
+            dragStartWidthRef.current = rightWidth
+            document.body.style.cursor = 'col-resize'
+            e.preventDefault()
+          }}
+        >
+          <div className="absolute inset-y-0 left-0 w-[3px] group-hover:bg-violet-500/40 transition-colors" />
+        </div>
+
+        {/* Right Column: Comment, Labels, Confidence & Geometry */}
+        <div style={{ width: rightWidth, minWidth: 200 }} className="border-l border-white/5 px-6 py-6 flex flex-col gap-6 overflow-y-auto custom-scrollbar bg-[#16161a] shrink-0">
+
+           {/* Labels */}
+           <div className="flex flex-col gap-3">
+             <div className="flex items-center gap-2">
+               <span className="material-symbols-outlined text-[16px] text-violet-400">label</span>
+               <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Labels</span>
+             </div>
+             <div className="flex flex-wrap gap-2">
+               {labels.map(label => (
+                 <button
+                   key={label.labelId}
+                   onClick={() => toggleLabel(label)}
+                   className={`px-4 py-1.5 rounded-lg border text-xs font-bold transition-all`}
+                   style={{
+                     borderColor: selectedLabels.includes(label.labelId) ? label.color : 'transparent',
+                     backgroundColor: selectedLabels.includes(label.labelId) ? `${label.color}22` : 'rgba(255,255,255,0.05)',
+                     color: selectedLabels.includes(label.labelId) ? '#fff' : '#6b7280'
+                   }}
+                 >
+                   {label.labelName}
+                 </button>
+               ))}
+             </div>
+           </div>
+
+           {/* Confidence */}
+           <div className="flex flex-col gap-3">
+             <div className="flex items-center gap-2">
+               <span className="material-symbols-outlined text-[16px] text-orange-400">psychology</span>
+               <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Confidence</span>
+             </div>
+             <div className="flex bg-black/40 rounded-xl border border-white/5 p-1 gap-1">
+               {(['LOW', 'MEDIUM', 'HIGH'] as const).map(level => (
+                 <button
+                   key={level}
+                   onClick={() => setConfidence(level)}
+                   className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                     confidence === level
+                       ? 'bg-orange-500/20 text-orange-400 border border-orange-500/50'
+                       : 'text-gray-500 hover:text-gray-300 hover:bg-white/5 border border-transparent'
+                   }`}
+                 >
+                   {level}
+                 </button>
+               ))}
+             </div>
+           </div>
+           
+           <div className="flex flex-col gap-3">
+             <div className="flex items-center gap-2">
+               <span className="material-symbols-outlined text-[16px] text-amber-400">chat_bubble</span>
+               <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Comment</span>
+             </div>
+             <textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 className="w-full h-24 bg-white/5 rounded-xl border border-white/10 p-4 text-sm text-gray-300 focus:outline-none focus:border-violet-500/50 transition-colors resize-none"
-              />
-            </div>
+             />
+           </div>
 
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px] text-blue-400">poly</span>
-                <span className="text-xs font-bold uppercase tracking-widest text-gray-400">
-                  Geometry
-                </span>
-              </div>
-              <div className="bg-black/40 rounded-xl border border-white/5 p-4 h-48 overflow-y-auto custom-scrollbar">
-                <pre className="text-[10px] font-mono text-blue-300 whitespace-pre-wrap leading-relaxed">
-                  {JSON.stringify(
-                    {
-                      active: currentShape
-                        ? {
-                          type: currentShape.type,
-                          points: currentShape.points ? currentShape.points.length : undefined,
-                          dimensions:
-                            currentShape.type === 'bounding_box'
-                              ? {
-                                w: Math.round(currentShape.width || 0),
-                                h: Math.round(currentShape.height || 0)
-                              }
-                              : undefined
-                        }
-                        : null,
-                      session: shapes.map((s) => ({ type: s.type, label: s.label })),
-                      raw: shapes
-                    },
-                    null,
-                    2
-                  )}
-                </pre>
-              </div>
-            </div>
-          </div>
+           <div className="flex flex-col gap-3 flex-1">
+             <div className="flex items-center gap-2">
+               <span className="material-symbols-outlined text-[16px] text-blue-400">poly</span>
+               <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Geometry</span>
+             </div>
+             <div className="flex-1 bg-black/40 rounded-xl border border-white/5 p-4 overflow-y-auto min-h-[300px] custom-scrollbar">
+                {shapes.length === 0 ? (
+                  <div className="h-full flex items-center justify-center text-gray-600 text-xs font-mono">JSON</div>
+                ) : (
+                  <pre className="text-[10px] font-mono text-blue-300 whitespace-pre-wrap leading-relaxed">
+                     {JSON.stringify(
+                         {
+                           session: shapes.map((s) => ({ type: s.type, label: s.label })),
+                           raw: shapes
+                         },
+                         null,
+                         2
+                     )}
+                  </pre>
+                )}
+             </div>
+           </div>
 
-          {/* Bottom Actions */}
-          <div className="mt-auto p-6 bg-black/20 border-t border-white/5 flex flex-col gap-3">
-            <div className="flex gap-3">
-              <button
-                onClick={handlePrevious}
-                className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-sm font-bold text-gray-300 hover:bg-white/10 transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-                <span>Previous</span>
-              </button>
-              <button
-                onClick={handleNext}
-                className="flex-1 px-4 py-3 rounded-xl bg-violet-600 text-sm font-bold text-white hover:bg-violet-500 shadow-lg shadow-violet-900/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span>Next image</span>
-                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-              </button>
-            </div>
-          </div>
         </div>
+
       </div>
     </div>
   )
@@ -864,26 +876,22 @@ export default function AnnotationPage() {
 
 function ToolbarButton({
   icon,
-  title,
   active = false,
   onClick
 }: {
   icon: string
-  title?: string
   active?: boolean
   onClick?: () => void
 }) {
   return (
-    <Tooltip title={title} placement="top" mouseEnterDelay={0.3}>
-      <button
-        onClick={onClick}
-        className={`
-                    w-10 h-10 flex items-center justify-center rounded-lg transition-all cursor-pointer
-                    ${active ? 'bg-violet-600 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/10'}
-                `}
-      >
-        <span className="material-symbols-outlined text-[20px]">{icon}</span>
-      </button>
-    </Tooltip>
+    <button
+      onClick={onClick}
+      className={`
+          w-7 h-7 p-4 flex items-center justify-center transition-all cursor-pointer rounded-md
+          ${active ? 'bg-violet-600 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/10'}
+      `}
+    >
+      <span className="material-symbols-outlined text-[16px]">{icon}</span>
+    </button>
   )
 }
