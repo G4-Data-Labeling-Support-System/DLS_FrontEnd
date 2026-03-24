@@ -248,6 +248,12 @@ export default function AnnotationPage() {
 
   const currentItem = dataItems[currentIndex]
   const totalItems = dataItems.length
+  const currentItemId = currentItem ? (((currentItem as any).dataItemId ||
+    (currentItem as any).dataitemId ||
+    currentItem.itemId ||
+    (currentItem as any).dataItem?.itemId ||
+    (currentItem as any).id) as string) : ''
+  const currentAnnotation = sessionAnnotations.find(a => a.dataitemId === currentItemId)
 
   const handleWheel = (e: React.WheelEvent) => {
     const delta = e.deltaY > 0 ? -0.1 : 0.1
@@ -592,7 +598,6 @@ export default function AnnotationPage() {
               const annotation = sessionAnnotations.find(a => a.dataitemId === currentId)
               const shapeCount = ((annotation?.annotationData?.shapes as Shape[]) || []).length
               const labelCount = annotation?.labelIds?.length || 0
-              const isLabeled = shapeCount > 0 || labelCount > 0
               
               const isSelected = currentIndex === idx;
               return (
@@ -603,7 +608,13 @@ export default function AnnotationPage() {
                 >
                   {/* Status — w-10 to match header */}
                   <div className="w-10 shrink-0 flex justify-center">
-                    <div className={`w-2.5 h-2.5 rounded-full ${isLabeled ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-rose-400/60'}`} />
+                    <div className={`w-2.5 h-2.5 rounded-full ${
+                      (annotation?.annotationStatus?.toUpperCase() === 'SUBMITTED' || annotation?.annotationStatus?.toUpperCase() === 'APPROVED')
+                        ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
+                        : (annotation?.annotationStatus?.toUpperCase() === 'REJECTED' || annotation?.annotationStatus?.toUpperCase() === 'NEEDS_EDITING')
+                        ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]'
+                        : 'bg-gray-500/50'
+                    }`} />
                   </div>
 
                   {/* Image — w-16 to match header */}
@@ -784,6 +795,22 @@ export default function AnnotationPage() {
 
         {/* Right Column: Comment, Labels, Confidence & Geometry */}
         <div style={{ width: rightWidth, minWidth: 200 }} className="border-l border-white/5 px-6 py-6 flex flex-col gap-6 overflow-y-auto custom-scrollbar bg-[#16161a] shrink-0">
+
+           {/* Review Feedback (Only if Rejected) */}
+           {(currentAnnotation?.annotationStatus?.toUpperCase() === 'REJECTED' || currentAnnotation?.annotationStatus?.toUpperCase() === 'NEEDS_EDITING') && (
+             <div className="flex flex-col gap-3">
+               <div className="flex items-center gap-2">
+                 <span className="material-symbols-outlined text-[16px] text-rose-400">rate_review</span>
+                 <span className="text-xs font-bold uppercase tracking-widest text-rose-400">Review Feedback</span>
+               </div>
+               <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl text-sm text-rose-200/90 italic cursor-not-allowed select-none">
+                 {(currentAnnotation as any)?.reviewerComment || 
+                  (currentAnnotation as any)?.review?.comment || 
+                  (currentItem as any)?.reviewerComment || 
+                  'Please update this annotation based on the project guidelines. Reviewer rejected this submission.'}
+               </div>
+             </div>
+           )}
 
            {/* Labels */}
            <div className="flex flex-col gap-3">
