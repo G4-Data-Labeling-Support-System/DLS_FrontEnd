@@ -754,7 +754,9 @@ export default function AnnotationPage() {
                   {/* Status — w-10 to match header */}
                   <div className="w-10 shrink-0 flex justify-center">
                     <div className={`w-2.5 h-2.5 rounded-full ${
-                      (displayStatus === 'SUBMITTED' || displayStatus === 'APPROVED')
+                      displayStatus === 'APPROVED'
+                        ? 'bg-violet-500 shadow-[0_0_8px_rgba(139,92,246,0.6)]'
+                        : (displayStatus === 'SUBMITTED')
                         ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
                         : (displayStatus === 'REJECTED' || displayStatus === 'NEEDS_EDITING')
                         ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]'
@@ -900,8 +902,7 @@ export default function AnnotationPage() {
 
           {/* Bottom Action Bar */}
           <div className="mt-8 border-t border-white/10 pt-5 flex w-full items-center justify-between gap-4">
-            
-            <div className="flex item-center">
+
               {/* Left: task counter */}
               <span className="text-xs  font-mono text-gray-500">task {currentIndex + 1}/{totalItems}</span>
 
@@ -911,7 +912,6 @@ export default function AnnotationPage() {
                 <button onClick={handleRedo} className="px-3 py-1.5 cursor-pointer rounded-lg text-xs font-bold text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-all">redo</button>
                 <button onClick={handleClearAll} className="px-3 py-1.5 cursor-pointer rounded-lg text-xs font-bold text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-all">reset</button>
               </div>
-            </div>
             
             
             {/* Submit on Right */}

@@ -3,12 +3,13 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { Card, Table, Descriptions, Tag, Typography, Spin, Button } from 'antd'
 import {
   DatabaseOutlined,
-  InfoCircleOutlined,
   ArrowLeftOutlined,
-  PlayCircleOutlined
+  PlayCircleOutlined,
+  ArrowRightOutlined
 } from '@ant-design/icons'
 import taskApi from '@/api/TaskApi'
 import assignmentApi from '@/api/AssignmentApi'
+import annotationApi from '@/api/annotation'
 import { useTaskDetail } from '@/features/annotator/hooks/useTaskDetail'
 import { ChangeDatasetModal } from '@/features/manager/components/dataset/ChangeDatasetModal'
 import { useAuthStore } from '@/store'
@@ -81,6 +82,84 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({
     error: itemsError
   } = useTaskDetail(task?.taskId || '')
 
+  const getCanonicalId = (record: any) =>
+    record.dataItemId || record.dataitemId || record.itemId || record.dataItem?.itemId || record.id
+
+  const [sessionAnnotations, setSessionAnnotations] = useState<any[]>([])
+  const [remoteStatuses, setRemoteStatuses] = useState<Record<string, string>>({})
+  
+  // Load local session to show real-time progress
+  useEffect(() => {
+    if (task?.taskId) {
+      const saved = localStorage.getItem(`annotation_session_${task.taskId}`)
+      if (saved) {
+        try {
+          setSessionAnnotations(JSON.parse(saved))
+        } catch (e) {
+          console.warn('Failed to parse session annotations', e)
+        }
+      }
+    }
+  }, [task?.taskId])
+
+  // Background fetch remote statuses for all items
+  useEffect(() => {
+    if (dataItems.length === 0) return
+
+    dataItems.forEach(async (item: any) => {
+      const id = getCanonicalId(item)
+      if (!id) return
+      
+      console.log(`Fetching annotation for canonical ID: ${id}`);
+      try {
+        const res = await annotationApi.getAnnotationByDataItemId(id)
+        const remoteAnno = res.data?.data || res.data
+        if (remoteAnno && (remoteAnno.annotationStatus || remoteAnno.annotation_status || remoteAnno.status)) {
+          const status = (remoteAnno.annotationStatus || remoteAnno.annotation_status || remoteAnno.status).toUpperCase()
+          setRemoteStatuses(prev => ({
+            ...prev,
+            [id]: status
+          }))
+        }
+      } catch (err) {
+        // Silently skip if no annotation exists
+      }
+    })
+  }, [dataItems])
+
+  // Improved progress calculation
+  const getAnnotatedCount = () => {
+    if (!dataItems.length) return 0
+    
+    const annotatedIds = new Set<string>()
+    
+    // Server side completion (original data)
+    dataItems.forEach((item: TaskDataItemRecord) => {
+      if (item.taskDataItemStatus === 'COMPLETED') {
+        annotatedIds.add(item.dataItemId)
+      }
+    })
+
+    // Remote statuses fetched by background API calls
+    Object.entries(remoteStatuses).forEach(([id, status]) => {
+        if (status === 'SUBMITTED' || status === 'APPROVED' || status === 'COMPLETED') {
+            annotatedIds.add(id)
+        }
+    })
+    
+    // Local session submission
+    sessionAnnotations.forEach((anno) => {
+      if (anno.annotationStatus === 'SUBMITTED' || anno.annotationStatus === 'APPROVED') {
+        annotatedIds.add(anno.dataitemId)
+      }
+    })
+    
+    return annotatedIds.size
+  }
+
+  const annotatedCount = getAnnotatedCount()
+  const progressPercent = Math.round((annotatedCount / (dataItems.length || 1)) * 100)
+
   const columns = [
     {
       title: 'Preview',
@@ -137,22 +216,42 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({
       title: 'Status',
       key: 'status',
       width: '12%',
-      render: (_: unknown, record: TaskDataItemRecord) => (
-        <Tag
-          className={`
-              rounded-md px-2 py-0.5 font-bold border
-              ${
-                record.taskDataItemStatus === 'COMPLETED'
-                  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-                  : record.taskDataItemStatus === 'IN_PROGRESS'
-                    ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
-                    : 'bg-gray-500/10 border-gray-500/20 text-gray-400'
-              }
-            `}
-        >
-          {record.taskDataItemStatus || 'NOT_STARTED'}
-        </Tag>
-      )
+      render: (_: unknown, record: any) => {
+        const canonicalId = record.dataItemId || record.dataitemId || record.itemId || record.dataItem?.itemId || record.id
+        const localAnno = sessionAnnotations.find(a => a.dataitemId === canonicalId)
+        const status = (
+            remoteStatuses[canonicalId] || 
+            localAnno?.annotationStatus || 
+            record.taskDataItemStatus || 
+            'NOT_STARTED'
+        ).toUpperCase()
+        
+        const isApprove = status === 'APPROVED'
+        const isSubmitted = status === 'COMPLETED' || status === 'SUBMITTED'
+        const isRejected = status === 'REJECTED' || status === 'NEEDS_EDITING'
+        const isInProgress = status === 'IN_PROGRESS' || status === 'IN_EDITING'
+        
+        return (
+          <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${
+              isApprove ? 'bg-violet-500 shadow-[0_0_8px_rgba(139,92,246,0.4)]' :
+              isSubmitted ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' :
+              isRejected ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]' :
+              isInProgress ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]' :
+              'bg-gray-600'
+            }`} />
+            <span className={`text-xs font-bold uppercase tracking-wider ${
+              isApprove ? 'text-violet-400' :
+              isSubmitted ? 'text-emerald-400' :
+              isRejected ? 'text-rose-400' :
+              isInProgress ? 'text-amber-400' :
+              'text-gray-500'
+            }`}>
+              {status}
+            </span>
+          </div>
+        )
+      }
     },
     {
       title: 'Uploaded At',
@@ -173,9 +272,9 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({
       render: (_: unknown, record: TaskDataItemRecord, index: number) => (
         <button
           onClick={() => onItemClick?.(record, index)}
-          className="p-1.5 rounded-lg hover:bg-white/5 text-gray-400 hover:text-violet-400 transition-all cursor-pointer"
+          className="p-1.5 rounded-lg hover:bg-white/5 text-gray-400 hover:text-violet-400 transition-all cursor-pointer flex items-center justify-center"
         >
-          <InfoCircleOutlined className="text-lg" />
+          <ArrowRightOutlined className="text-lg" />
         </button>
       )
     }
@@ -258,29 +357,17 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({
                   <div className="flex flex-col gap-1 w-full max-w-[200px]">
                     <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider">
                       <span className="text-violet-400">
-                        {Math.round(
-                          (dataItems.filter(
-                            (i: TaskDataItemRecord) => i.taskDataItemStatus === 'COMPLETED'
-                          ).length /
-                            (dataItems.length || 1)) *
-                            100
-                        )}
-                        %
+                        {progressPercent}%
                       </span>
                       <span className="text-gray-500">
-                        {
-                          dataItems.filter(
-                            (i: TaskDataItemRecord) => i.taskDataItemStatus === 'COMPLETED'
-                          ).length
-                        }{' '}
-                        / {dataItems.length}
+                        {annotatedCount} / {dataItems.length}
                       </span>
                     </div>
                     <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-gradient-to-r from-violet-600 to-indigo-600 rounded-full transition-all duration-1000 ease-out"
                         style={{
-                          width: `${(dataItems.filter((i: TaskDataItemRecord) => i.taskDataItemStatus === 'COMPLETED').length / (dataItems.length || 1)) * 100}%`
+                          width: `${progressPercent}%`
                         }}
                       />
                     </div>
