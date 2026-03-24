@@ -33,7 +33,7 @@ export default function AnnotatorAssignmentDetailPage() {
   const { projectId, assignmentId: paramAssignmentId } = useParams<{ projectId: string; assignmentId: string }>()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  
+
   // Support both param and search param for flexibility
   const assignmentId = paramAssignmentId || searchParams.get('assignmentId')
 
@@ -60,36 +60,36 @@ export default function AnnotatorAssignmentDetailPage() {
         // 2. Lấy thông tin Tasks
         let rawTasks = Array.isArray(assignmentData.tasks) ? assignmentData.tasks : []
         if (rawTasks.length === 0) {
-           try {
-              const apiId = assignmentData.assignmentId || assignmentData.id || assignmentId
-              const tRes = await taskApi.getTasksByAssignmentId(apiId)
-              rawTasks = tRes.data?.data || tRes.data || []
-           } catch (e) {
-              console.warn('Failed to fetch tasks for assignment detail', e)
-           }
+          try {
+            const apiId = assignmentData.assignmentId || assignmentData.id || assignmentId
+            const tRes = await taskApi.getTasksByAssignmentId(apiId)
+            rawTasks = tRes.data?.data || tRes.data || []
+          } catch (e) {
+            console.warn('Failed to fetch tasks for assignment detail', e)
+          }
         }
 
         const actualTasks = rawTasks.filter((t: Record<string, unknown>) => {
-           const status = String(t.taskStatus || t.status || t.assignmentStatus || '').toUpperCase()
-           return status !== 'INACTIVE' && status !== 'DELETED'
+          const status = String(t.taskStatus || t.status || t.assignmentStatus || '').toUpperCase()
+          return status !== 'INACTIVE' && status !== 'DELETED'
         })
-        
+
         const calcCompleted = actualTasks.filter(
-           (t: Record<string, unknown>) =>
-             t.taskStatus === 'COMPLETED' ||
-             ['submitted', 'approved'].includes(String(t.annotationStatus).toLowerCase())
+          (t: Record<string, unknown>) =>
+            t.taskStatus === 'COMPLETED' ||
+            ['submitted', 'approved'].includes(String(t.annotationStatus).toLowerCase())
         ).length
 
         const normAssignment: Assignment = {
-           ...assignmentData,
-           id: assignmentData.assignmentId || assignmentData.id,
-           name: assignmentData.assignmentName || assignmentData.name || assignmentData.title,
-           status: assignmentData.assignmentStatus || assignmentData.status || 'PENDING',
-           description: assignmentData.descriptionAssignment || assignmentData.description,
-           projectId: assignmentData.projectId || assignmentData.project?.projectId || assignmentData.project?.id,
-           tasks: actualTasks,
-           completedTasks: actualTasks.length > 0 ? calcCompleted : (assignmentData.completedTasks ?? 0),
-           totalTasks: actualTasks.length > 0 ? actualTasks.length : assignmentData.totalTasks || 0
+          ...assignmentData,
+          id: assignmentData.assignmentId || assignmentData.id,
+          name: assignmentData.assignmentName || assignmentData.name || assignmentData.title,
+          status: assignmentData.assignmentStatus || assignmentData.status || 'PENDING',
+          description: assignmentData.descriptionAssignment || assignmentData.description,
+          projectId: assignmentData.projectId || assignmentData.project?.projectId || assignmentData.project?.id,
+          tasks: actualTasks,
+          completedTasks: actualTasks.length > 0 ? calcCompleted : (assignmentData.completedTasks ?? 0),
+          totalTasks: actualTasks.length > 0 ? actualTasks.length : assignmentData.totalTasks || 0
         }
 
         setAssignment(normAssignment)
@@ -128,9 +128,9 @@ export default function AnnotatorAssignmentDetailPage() {
   if (error || !assignment) {
     return (
       <div>
-        <Button 
-          type="text" 
-          icon={<ArrowLeftOutlined />} 
+        <Button
+          type="text"
+          icon={<ArrowLeftOutlined />}
           className="text-gray-400 hover:text-white mb-6"
           onClick={handleBack}
         >
@@ -151,10 +151,10 @@ export default function AnnotatorAssignmentDetailPage() {
         {/* Placeholder for GuidelineSection if needed */}
         <div className="hidden md:block"></div>
         <div className={`${themeClasses.backgrounds.card} border ${themeClasses.borders.violet10} rounded-2xl p-6 md:col-span-2`}>
-           <TasksSection 
-             tasks={assignment.tasks} 
-             assignmentId={assignment.id} 
-           />
+          <TasksSection
+            tasks={assignment.tasks}
+            assignmentId={assignment.id}
+          />
         </div>
       </div>
     </div>
