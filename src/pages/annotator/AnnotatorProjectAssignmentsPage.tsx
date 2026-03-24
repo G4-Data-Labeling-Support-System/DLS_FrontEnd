@@ -23,13 +23,13 @@ export default function AnnotatorProjectAssignmentsPage() {
   const navigate = useNavigate()
   const { user } = useAuthStore()
   const [searchParams, setSearchParams] = useSearchParams()
-  
+
   const selectedAssignmentId = searchParams.get('assignmentId')
 
   const [assignments, setAssignments] = useState<GetAssignmentsParams[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  
+
   const [searchText, setSearchText] = useState<string>('')
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
 
@@ -70,7 +70,7 @@ export default function AnnotatorProjectAssignmentsPage() {
       const status = (a.status || '').toUpperCase()
       return status !== 'CANCELLED' && status !== 'INACTIVE'
     })
-    .filter((a) => 
+    .filter((a) =>
       !searchText || (a.assignmentName && a.assignmentName.toLowerCase().includes(searchText.toLowerCase()))
     )
     .filter((a) => statusFilter === 'ALL' || (a.status && a.status.toUpperCase() === statusFilter))

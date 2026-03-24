@@ -14,7 +14,7 @@ export default function AnnotatorProjectDatasetsPage() {
   const { projectId } = useParams<{ projectId: string }>()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  
+
   const selectedDatasetId = searchParams.get('datasetId')
 
   const [datasets, setDatasets] = useState<GetDatasetsParams[]>([])
@@ -34,7 +34,7 @@ export default function AnnotatorProjectDatasetsPage() {
 
         const response = await datasetApi.getDatasetsByProjectId(projectId)
         const rawData = response.data?.data || response.data || []
-        
+
         if (Array.isArray(rawData)) {
           const mappedDatasets: GetDatasetsParams[] = rawData
             .map((d: Record<string, unknown>) => ({
@@ -66,7 +66,7 @@ export default function AnnotatorProjectDatasetsPage() {
       const status = (ds.datasetStatus || '').toUpperCase()
       return status !== 'INACTIVE'
     })
-    .filter((ds) => 
+    .filter((ds) =>
       !searchText || (ds.datasetName && ds.datasetName.toLowerCase().includes(searchText.toLowerCase()))
     )
     .filter((ds) => statusFilter === 'ALL' || (ds.datasetStatus && ds.datasetStatus.toUpperCase() === statusFilter))
@@ -82,9 +82,9 @@ export default function AnnotatorProjectDatasetsPage() {
 
   return (
     <div className="p-6">
-      <Button 
-        type="text" 
-        icon={<ArrowLeftOutlined />} 
+      <Button
+        type="text"
+        icon={<ArrowLeftOutlined />}
         className="text-gray-400 hover:text-white mb-6"
         onClick={() => navigate(`/annotator/projects/${projectId}`)}
       >
