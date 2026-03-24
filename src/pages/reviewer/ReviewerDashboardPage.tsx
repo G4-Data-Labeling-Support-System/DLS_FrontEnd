@@ -290,103 +290,133 @@ export default function ReviewerDashboardPage() {
 
   return (
     <div className="p-6">
-      <ReviewerTabs activeTab={activeTab} onTabChange={handleTabChange} />
+      <div className="glass-panel rounded-2xl p-7 relative overflow-hidden min-h-[calc(100vh-3rem)]">
+        <div className="absolute -top-10 -right-10 w-56 h-56 rounded-full bg-violet-500/10 blur-[60px] pointer-events-none" />
+        <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-fuchsia-500/10 blur-[50px] pointer-events-none" />
+        <div className="relative z-10">
+          
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+            <div>
+               <div className="flex items-center gap-2 mb-2">
+                 <span className="material-symbols-outlined text-[14px] text-violet-400">
+                   dashboard
+                 </span>
+                 <span className="text-xs font-mono text-violet-400 tracking-widest uppercase">
+                   Reviewer Workspace
+                 </span>
+               </div>
+               <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                 {assignment?.name || 'Review Dashboard'}
+               </h1>
+               <p className="text-sm text-gray-400 mt-1 font-mono">
+                 {assignment?.id || 'Review and curate annotations'}
+               </p>
+            </div>
 
-      {activeTab === 'review' && (
-        <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatsCard
-              title="Total Reviewed"
-              value={stats.reviewed}
-              icon="verified"
-              gradient="from-blue-500 to-indigo-500"
-              label="Tasks processed"
-            />
-            <StatsCard
-              title="Approved"
-              value={stats.approved}
-              icon="check_circle"
-              gradient="from-emerald-500 to-teal-500"
-              label="Passed quality check"
-            />
-            <StatsCard
-              title="Rejected"
-              value={stats.rejected}
-              icon="cancel"
-              gradient="from-rose-500 to-orange-500"
-              label="Needs re-annotation"
-            />
-            <StatsCard
-              title="Awaiting Review"
-              value={stats.pending}
-              icon="hourglass_empty"
-              gradient="from-amber-500 to-yellow-500"
-              label="In the backlog"
-            />
+             <div className="flex flex-wrap gap-2 shrink-0">
+               <div
+                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold ${assignment ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' : 'border-gray-500/30 bg-gray-500/10 text-gray-400'}`}
+               >
+                 <span className="material-symbols-outlined text-[14px]">flag</span>
+                 {assignment?.status || 'UNKNOWN'}
+               </div>
+             </div>
           </div>
+          
+          <ReviewerTabs activeTab={activeTab} onTabChange={handleTabChange} />
 
-          {!assignment && loading ? (
-            <div className="text-center text-gray-400 py-20 flex flex-col items-center gap-4">
-              <div className="w-10 h-10 border-4 border-violet-500/20 border-t-violet-500 rounded-full animate-spin"></div>
-              <span className="font-mono text-sm animate-pulse">Scanning assignments...</span>
-            </div>
-          ) : (
-            <div
-              className={`${themeClasses.backgrounds.card} border ${themeClasses.borders.violet10} rounded-2xl p-6 shadow-2xl relative overflow-hidden`}
-            >
-              <div className="absolute top-0 right-0 w-64 h-64 bg-violet-600/5 blur-[100px] -z-10" />
-              <div className="absolute bottom-0 left-0 w-64 h-64 bg-fuchsia-600/5 blur-[100px] -z-10" />
-              <TasksSection tasks={assignment?.tasks || []} />
-            </div>
-          )}
-        </div>
-      )}
-
-      {activeTab === 'project' &&
-        (!projectDetail && loading ? (
-          <div className="text-center text-gray-400 py-20">Loading project...</div>
-        ) : projectDetail ? (
-          <>
-            {loading && (
-              <div className="flex items-center gap-2 mb-4 animate-pulse">
-                <div className="w-2 h-2 rounded-full bg-violet-500"></div>
-                <span className="text-xs text-violet-400 font-mono">Syncing with server...</span>
+          {activeTab === 'review' && (
+            <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              {/* Stats Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <StatsCard
+                  title="Total Reviewed"
+                  value={stats.reviewed}
+                  icon="verified"
+                  gradient="from-blue-500 to-indigo-500"
+                  label="Tasks processed"
+                />
+                <StatsCard
+                  title="Approved"
+                  value={stats.approved}
+                  icon="check_circle"
+                  gradient="from-emerald-500 to-teal-500"
+                  label="Passed quality check"
+                />
+                <StatsCard
+                  title="Rejected"
+                  value={stats.rejected}
+                  icon="cancel"
+                  gradient="from-rose-500 to-orange-500"
+                  label="Needs re-annotation"
+                />
+                <StatsCard
+                  title="Awaiting Review"
+                  value={stats.pending}
+                  icon="hourglass_empty"
+                  gradient="from-amber-500 to-yellow-500"
+                  label="In the backlog"
+                />
               </div>
-            )}
-            <div className="grid grid-cols-2 gap-6">
-              <AnnotatorProjectDetail project={projectDetail} />
-              {guideline && (
-                <div className="glass-panel border border-white/5 rounded-2xl p-6 shadow-xl relative overflow-hidden">
-                  <GuidelineSection guideline={guideline.content} />
+
+              {!assignment && loading ? (
+                <div className="text-center text-gray-400 py-20 flex flex-col items-center gap-4">
+                  <div className="w-10 h-10 border-4 border-violet-500/20 border-t-violet-500 rounded-full animate-spin"></div>
+                  <span className="font-mono text-sm animate-pulse">Scanning assignments...</span>
+                </div>
+              ) : (
+                <div
+                  className={`${themeClasses.backgrounds.card} border ${themeClasses.borders.violet10} rounded-2xl p-6 shadow-2xl relative overflow-hidden`}
+                >
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-violet-600/5 blur-[100px] -z-10" />
+                  <div className="absolute bottom-0 left-0 w-64 h-64 bg-fuchsia-600/5 blur-[100px] -z-10" />
+                  <TasksSection tasks={assignment?.tasks || []} />
                 </div>
               )}
             </div>
-          </>
-        ) : (
-          <div className="text-center text-gray-400 py-10 glass-panel rounded-2xl">
-            No project found.
-          </div>
-        ))}
+          )}
 
-      {activeTab === 'assignment' &&
-        (!assignment && loading ? (
-          <div className="text-center text-gray-400 py-20">Loading assignment...</div>
-        ) : error || !assignment ? (
-          <div className="text-center text-red-400 py-20">{error ?? 'Assignment not found'}</div>
-        ) : (
-          <>
-            <div className="rounded-2xl grid md:grid-cols-2 sm:grid-cols-1 gap-6">
-              {/* Assignment Header */}
-              <AssignmentHeader assignment={assignment} />
+          {activeTab === 'project' &&
+            (!projectDetail && loading ? (
+              <div className="text-center text-gray-400 py-20">Loading project...</div>
+            ) : projectDetail ? (
+              <>
+                {loading && (
+                  <div className="flex items-center gap-2 mb-4 animate-pulse">
+                    <div className="w-2 h-2 rounded-full bg-violet-500"></div>
+                    <span className="text-xs text-violet-400 font-mono">Syncing with server...</span>
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-6">
+                  <AnnotatorProjectDetail project={projectDetail} />
+                  {guideline && (
+                    <div className="glass-panel border border-white/5 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                      <GuidelineSection guideline={guideline.content} />
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="text-center text-gray-400 py-10 glass-panel rounded-2xl">
+                No project found.
+              </div>
+            ))}
 
-              {/* Guideline Section */}
-              {guideline && <GuidelineSection guideline={guideline.content ?? ''} />}
-
-              {/* Tasks Section removed from here as per request */}
-            </div>
-          </>
-        ))}
+          {activeTab === 'assignment' &&
+            (!assignment && loading ? (
+              <div className="text-center text-gray-400 py-20">Loading assignment...</div>
+            ) : error || !assignment ? (
+              <div className="text-center text-red-400 py-20">{error ?? 'Assignment not found'}</div>
+            ) : (
+              <>
+                <div className="rounded-2xl grid md:grid-cols-2 sm:grid-cols-1 gap-6">
+                  <AssignmentHeader assignment={assignment} />
+                  {guideline && <GuidelineSection guideline={guideline.content ?? ''} />}
+                </div>
+              </>
+            ))}
+        </div>
+      </div>
     </div>
   )
 }
