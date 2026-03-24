@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { Spin, Result, Button } from 'antd'
+import { Spin, message } from 'antd'
 import assignmentApi from '@/api/AssignmentApi'
 import taskApi from '@/api/TaskApi'
+import annotationApi from '@/api/annotation'
 import type { AnnotationSubmitItem } from '@/shared/types/api.types'
 
 interface Shape {
@@ -50,10 +51,10 @@ export default function AnnotationPage() {
   const [selectedLabels, setSelectedLabels] = useState<string[]>([])
   const [currentLabel, setCurrentLabel] = useState<Label | null>(null)
   const [comment, setComment] = useState('This is a preliminary scan observation.')
-  const [confidence, setConfidence] = useState<'LOW' | 'MEDIUM' | 'HIGH'>('LOW')
+  const [confidence, setConfidence] = useState<'LOW' | 'MEDIUM' | 'HIGH' | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [isSubmitted, setIsSubmitted] = useState(false)
+  const [isDirty, setIsDirty] = useState(false)
 
   // Zoom and Tool States
   const [zoom, setZoom] = useState(1)
@@ -103,11 +104,11 @@ export default function AnnotationPage() {
 
   // Save progress automatically
   useEffect(() => {
-    if (taskId && (sessionAnnotations.length > 0 || currentIndex > 0)) {
+    if (!loading && taskId && (sessionAnnotations.length > 0 || currentIndex > 0)) {
       localStorage.setItem(STORAGE_KEY_SESSIONS, JSON.stringify(sessionAnnotations))
       localStorage.setItem(STORAGE_KEY_INDEX, String(currentIndex))
     }
-  }, [sessionAnnotations, currentIndex, taskId, STORAGE_KEY_SESSIONS, STORAGE_KEY_INDEX])
+  }, [sessionAnnotations, currentIndex, taskId, STORAGE_KEY_SESSIONS, STORAGE_KEY_INDEX, loading])
 
   // Auto-save realtime changes (with debounce)
   useEffect(() => {
@@ -138,16 +139,17 @@ export default function AnnotationPage() {
       setCurrentShape(null)
       // Reset Redo Stack on page change
       setRedoStack([])
+      setIsDirty(false)
 
       if (existing) {
         setShapes((existing.annotationData.shapes as Shape[]) || (existing.annotationData.raw as Shape[]) || [])
         setComment(existing.comment || '')
         setSelectedLabels(existing.labelIds || [])
-        setConfidence((existing.annotationConfidence as 'LOW' | 'MEDIUM' | 'HIGH') || 'LOW')
+        setConfidence((existing.annotationConfidence as 'LOW' | 'MEDIUM' | 'HIGH') || null)
       } else {
         setShapes([])
         setComment('This is a preliminary scan observation.')
-        setConfidence('LOW')
+        setConfidence(null)
         if (labels.length > 0) {
           setSelectedLabels([labels[0].labelId])
         } else {
@@ -225,7 +227,7 @@ export default function AnnotationPage() {
                 setShapes((existing.annotationData.shapes as Shape[]) || (existing.annotationData.raw as Shape[]) || [])
                 setComment(existing.comment || '')
                 setSelectedLabels(existing.labelIds || [])
-                setConfidence((existing.annotationConfidence as 'LOW' | 'MEDIUM' | 'HIGH') || 'LOW')
+                setConfidence((existing.annotationConfidence as 'LOW' | 'MEDIUM' | 'HIGH') || null)
               }
             }
           } catch (e) {
@@ -254,6 +256,162 @@ export default function AnnotationPage() {
     (currentItem as any).dataItem?.itemId ||
     (currentItem as any).id) as string) : ''
   const currentAnnotation = sessionAnnotations.find(a => a.dataitemId === currentItemId)
+
+  // Background fetch all remote annotations to populate thumbnail statuses
+  useEffect(() => {
+    if (dataItems.length === 0) return
+
+    dataItems.forEach(async (item) => {
+      const itemId = ((item as any).dataItemId || (item as any).dataitemId || item.itemId || (item as any).dataItem?.itemId || (item as any).id) as string
+      if (!itemId) return
+      
+      try {
+        // Fire and forget
+        const res = await annotationApi.getAnnotationByDataItemId(itemId)
+        const remoteAnno = res.data?.data || res.data
+        if (remoteAnno && remoteAnno.annotationId) {
+          const rvComment = remoteAnno.reviews?.[0]?.comment || ''
+          let annoData = { shapes: [], raw: [] }
+          if (remoteAnno.annotationData) {
+            try {
+              annoData = typeof remoteAnno.annotationData === 'string'
+                ? JSON.parse(remoteAnno.annotationData)
+                : remoteAnno.annotationData
+            } catch (e) {}
+          }
+
+          const newAnno: AnnotationSubmitItem = {
+            annotationConfidence: remoteAnno.annotationConfidence || remoteAnno.annotation_confidence || null,
+            annotationData: annoData,
+            annotationStatus: (remoteAnno.annotationStatus || remoteAnno.annotation_status || 'DRAFT'),
+            annotationType: (remoteAnno.annotationType || remoteAnno.annotation_type || 'CLASSIFICATION'),
+            comment: remoteAnno.comment || '',
+            dataitemId: itemId,
+            labelIds: remoteAnno.labels || remoteAnno.labelIds || []
+          }
+          ;(newAnno as any).reviewerComment = rvComment
+          ;(newAnno as any).isRemote = true
+
+          setSessionAnnotations((prev) => {
+            const existingIndex = prev.findIndex((a) => a.dataitemId === itemId)
+            if (existingIndex >= 0) {
+               const existing = prev[existingIndex]
+               
+               // Always update if server status is more "definitive" (e.g. APPROVED/REJECTED) vs local SUBMITTED / DRAFT
+               // Or if local status is 'DRAFT' but server has real data
+               const serverStatus = newAnno.annotationStatus.toUpperCase()
+               const localStatus = (existing.annotationStatus || 'DRAFT').toUpperCase()
+               
+               // Decision: If server is REJECTED or APPROVED, we should definitely show that. 
+               // Also if server changed desde local, we update status/comments/shapes from server
+               // (This solves the conflict where local storage still thinks it's SUBMITTED)
+               if (serverStatus !== localStatus || !(existing as any).isRemote) {
+                  const updated = [...prev]
+                  updated[existingIndex] = {
+                    ...newAnno,
+                    // If server is REJECTED, we load its exact shapes/labels from server too
+                    annotationData: (serverStatus === 'REJECTED' || serverStatus === 'APPROVED') 
+                       ? newAnno.annotationData 
+                       : existing.annotationData
+                  } as any
+                  return updated
+               }
+               return prev
+            } else {
+               return [...prev, newAnno]
+            }
+          })
+        }
+      } catch (err) {
+        // Ignore errors (e.g. 404 Not Found if no annotation exists yet)
+      }
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataItems])
+
+  // Fetch remote annotation whenever currentItemId changes
+  useEffect(() => {
+    if (!currentItemId) return
+    let isMounted = true
+
+    const fetchRemote = async () => {
+      try {
+        const res = await annotationApi.getAnnotationByDataItemId(currentItemId)
+        if (!isMounted) return
+        
+        const remoteAnno = res.data?.data || res.data
+        if (remoteAnno && remoteAnno.annotationId) {
+          const rvComment = remoteAnno.reviews?.[0]?.comment || ''
+          let annoData = { shapes: [], raw: [] }
+          if (remoteAnno.annotationData) {
+            try {
+              annoData = typeof remoteAnno.annotationData === 'string'
+                ? JSON.parse(remoteAnno.annotationData)
+                : remoteAnno.annotationData
+            } catch (e) {
+              console.warn('Failed to parse annotationData', e)
+            }
+          }
+
+          const newAnno: AnnotationSubmitItem = {
+            annotationConfidence: remoteAnno.annotationConfidence || remoteAnno.annotation_confidence || null,
+            annotationData: annoData,
+            annotationStatus: (remoteAnno.annotationStatus || remoteAnno.annotation_status || 'DRAFT'),
+            annotationType: (remoteAnno.annotationType || remoteAnno.annotation_type || 'CLASSIFICATION'),
+            comment: remoteAnno.comment || '',
+            dataitemId: currentItemId,
+            labelIds: remoteAnno.labels || remoteAnno.labelIds || []
+          }
+          ;(newAnno as any).reviewerComment = rvComment
+          ;(newAnno as any).isRemote = true // Mark as fetched from remote
+
+          setSessionAnnotations((prev) => {
+            const existingIndex = prev.findIndex((a) => a.dataitemId === currentItemId)
+            const existing = prev[existingIndex]
+            
+            if (existingIndex >= 0) {
+              const serverStatus = newAnno.annotationStatus.toUpperCase()
+              const localStatus = (existing.annotationStatus || 'DRAFT').toUpperCase()
+              
+              // If server changed (REJECTED/APPROVED), always update the status/cache
+              if (serverStatus !== localStatus || !(existing as any).isRemote) {
+                 const updated = [...prev]
+                 updated[existingIndex] = {
+                   ...newAnno,
+                   annotationData: (serverStatus === 'REJECTED' || serverStatus === 'APPROVED') 
+                      ? newAnno.annotationData 
+                      : existing.annotationData
+                 } as any
+                 return updated
+              }
+              return prev
+            } else {
+              return [...prev, newAnno]
+            }
+          })
+
+          // Sync the UI directly
+          const shapesData = (annoData.shapes as Shape[]) || (annoData.raw as Shape[]) || []
+          setShapes(shapesData)
+          setComment(remoteAnno.comment || '')
+          setConfidence((remoteAnno.annotationConfidence as any) || null)
+          setSelectedLabels(remoteAnno.labels || [])
+        }
+      } catch (err) {
+        console.warn('No remote annotation found or error fetching', err)
+      }
+    }
+
+    // Only fetch if we don't already have it as remote
+    const existing = sessionAnnotations.find(a => a.dataitemId === currentItemId)
+    if (!existing || !(existing as any).isRemote) {
+      fetchRemote()
+    }
+
+    return () => {
+      isMounted = false
+    }
+  }, [currentItemId])
 
   const handleWheel = (e: React.WheelEvent) => {
     const delta = e.deltaY > 0 ? -0.1 : 0.1
@@ -366,6 +524,7 @@ export default function AnnotationPage() {
       setShapes([...shapes, currentShape])
       setRedoStack([])
       setCurrentShape(null)
+      setIsDirty(true)
     }
   }
 
@@ -378,6 +537,7 @@ export default function AnnotationPage() {
       if (finalPoints.length >= 2) {
         setShapes([...shapes, { ...currentShape, points: finalPoints, isPreview: false }])
         setRedoStack([])
+        setIsDirty(true)
       }
       setCurrentShape(null)
       setIsDrawing(false)
@@ -385,10 +545,8 @@ export default function AnnotationPage() {
   }
 
   const handleClearAll = () => {
-    setShapes([])
-    setRedoStack([])
-    setCurrentShape(null)
-    setIsDrawing(false)
+    loadFromSession(dataItems[currentIndex])
+    setIsDirty(false)
   }
 
   const handleUndo = () => {
@@ -396,6 +554,7 @@ export default function AnnotationPage() {
     const lastShape = shapes[shapes.length - 1]
     setShapes(shapes.slice(0, -1))
     setRedoStack((prev) => [...prev, lastShape])
+    setIsDirty(true)
   }
 
   const handleRedo = () => {
@@ -403,6 +562,7 @@ export default function AnnotationPage() {
     const shapeToRestore = redoStack[redoStack.length - 1]
     setRedoStack(redoStack.slice(0, -1))
     setShapes([...shapes, shapeToRestore])
+    setIsDirty(true)
   }
 
   const createAnnotationPayload = (
@@ -410,7 +570,7 @@ export default function AnnotationPage() {
     status: AnnotationSubmitItem['annotationStatus'] = 'DRAFT'
   ): AnnotationSubmitItem => {
     return {
-      annotationConfidence: confidence,
+      annotationConfidence: confidence || 'LOW',
       annotationData: {
         shapes: shapes,
         comment: comment,
@@ -438,12 +598,18 @@ export default function AnnotationPage() {
       (currentItem as any).id
     if (!itemId) return
 
-    const newAnnotation = createAnnotationPayload(itemId)
+    const existingStatus = sessionAnnotations.find((a) => a.dataitemId === itemId)?.annotationStatus || 'DRAFT'
+    const newAnnotation = createAnnotationPayload(itemId, existingStatus)
     setSessionAnnotations((prev) => {
       const existingIndex = prev.findIndex((a) => a.dataitemId === itemId)
       if (existingIndex >= 0) {
         const updated = [...prev]
-        updated[existingIndex] = newAnnotation
+        // Ensure we explicitly maintain any external flags like isRemote if we're saving local changes
+        updated[existingIndex] = { 
+          ...newAnnotation, 
+          isRemote: (prev[existingIndex] as any).isRemote,
+          reviewerComment: (prev[existingIndex] as any).reviewerComment
+        } as any
         return updated
       }
       return [...prev, newAnnotation]
@@ -463,77 +629,54 @@ export default function AnnotationPage() {
         ? prev.filter((l) => l !== labelObj.labelId)
         : [...prev, labelObj.labelId]
     )
+    setIsDirty(true)
   }
 
   const handleSubmitTask = async () => {
-    if (!taskId) return
+    if (!taskId || !currentItemId) return
     saveCurrentToSession()
 
     try {
       setLoading(true)
-      const currentItemId = ((currentItem as any)?.dataItemId ||
-        (currentItem as any)?.dataitemId ||
-        currentItem?.itemId ||
-        (currentItem as any)?.dataItem?.itemId ||
-        (currentItem as any)?.id ||
-        '') as string
-      // Create current annotation as SUBMITTED
       const currentAnnotation = createAnnotationPayload(currentItemId, 'SUBMITTED')
-
-      // Normalize all session annotations to SUBMITTED for the final push
-      const finalAnnotations: AnnotationSubmitItem[] = sessionAnnotations.map((a) => ({
-        ...a,
-        annotationStatus: 'SUBMITTED'
-      }))
-
-      const existingIndex = finalAnnotations.findIndex((a) => a.dataitemId === currentItemId)
-      if (existingIndex >= 0) {
-        finalAnnotations[existingIndex] = currentAnnotation
-      } else {
-        finalAnnotations.push(currentAnnotation)
-      }
 
       const payload = {
         taskId,
-        annotations: finalAnnotations.filter((a) => a.dataitemId && a.dataitemId.length > 5) // Filter out garbage
+        annotationConfidence: currentAnnotation.annotationConfidence,
+        annotationData: currentAnnotation.annotationData,
+        annotationStatus: currentAnnotation.annotationStatus,
+        annotationType: currentAnnotation.annotationType,
+        comment: currentAnnotation.comment,
+        dataitemId: currentAnnotation.dataitemId,
+        labelIds: currentAnnotation.labelIds
       }
 
-      console.log('🚀 SUBMITTING ANNOTATIONS TO BE:', payload)
+      console.log('🚀 SUBMITTING SINGLE ANNOTATION TO BE:', payload)
 
-      await taskApi.submitAnnotations(payload)
+      await annotationApi.submitSingleAnnotation(payload)
 
-      localStorage.removeItem(STORAGE_KEY_INDEX)
-
-      setIsSubmitted(true)
+      setIsDirty(false)
+      setSessionAnnotations((prev) => {
+        const existingIndex = prev.findIndex((a) => a.dataitemId === currentItemId)
+        const updated = [...prev]
+        if (existingIndex >= 0) {
+          updated[existingIndex] = { ...currentAnnotation, isRemote: true } as any
+        } else {
+          updated.push({ ...currentAnnotation, isRemote: true } as any)
+        }
+        return updated
+      })
+      
+      message.success('Annotation updated successfully!')
     } catch (err) {
       console.error(err)
-      setError('Failed to submit annotations.')
+      setError('Failed to submit annotation.')
     } finally {
       setLoading(false)
     }
   }
 
-  if (isSubmitted) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen bg-[#0f0e17] gap-4">
-        <Result
-          status="success"
-          title={<span className="text-white">Task Submitted Successfully!</span>}
-          subTitle={<span className="text-gray-400">Your annotations have been saved and securely submitted for review.</span>}
-          extra={[
-            <Button
-              key="back-to-assignment-btn"
-              type="primary"
-              onClick={() => navigate(assignmentId ? `/annotator/assignment/${assignmentId}` : '/annotator/assignment')}
-              className="bg-violet-600 hover:bg-violet-500 border-none px-6 h-10 font-bold rounded-lg"
-            >
-              Back to Assignment
-            </Button>
-          ]}
-        />
-      </div>
-    )
-  }
+
 
   if (loading) {
     return (
@@ -599,6 +742,8 @@ export default function AnnotationPage() {
               const shapeCount = ((annotation?.annotationData?.shapes as Shape[]) || []).length
               const labelCount = annotation?.labelIds?.length || 0
               
+              const displayStatus = annotation?.annotationStatus?.toUpperCase()
+              
               const isSelected = currentIndex === idx;
               return (
                 <div 
@@ -609,9 +754,9 @@ export default function AnnotationPage() {
                   {/* Status — w-10 to match header */}
                   <div className="w-10 shrink-0 flex justify-center">
                     <div className={`w-2.5 h-2.5 rounded-full ${
-                      (annotation?.annotationStatus?.toUpperCase() === 'SUBMITTED' || annotation?.annotationStatus?.toUpperCase() === 'APPROVED')
+                      (displayStatus === 'SUBMITTED' || displayStatus === 'APPROVED')
                         ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
-                        : (annotation?.annotationStatus?.toUpperCase() === 'REJECTED' || annotation?.annotationStatus?.toUpperCase() === 'NEEDS_EDITING')
+                        : (displayStatus === 'REJECTED' || displayStatus === 'NEEDS_EDITING')
                         ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]'
                         : 'bg-gray-500/50'
                     }`} />
@@ -772,7 +917,12 @@ export default function AnnotationPage() {
             {/* Submit on Right */}
             <button
                onClick={handleSubmitTask}
-               className="shrink-0 cursor-pointer bg-violet-600 hover:bg-violet-500 text-white px-6 py-2 rounded-lg text-sm font-bold transition-all shadow-lg shadow-violet-900/20"
+               disabled={!isDirty}
+               className={`shrink-0 px-6 py-2 rounded-lg text-sm font-bold transition-all shadow-lg ${
+                 isDirty
+                   ? 'bg-violet-600 hover:bg-violet-500 text-white shadow-violet-900/20 cursor-pointer'
+                   : 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'
+               }`}
             >
                Submit
             </button>
