@@ -68,7 +68,7 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
     try {
       await assignmentApi.deleteAssignment(deletingAssignmentId)
       message.success('Assignment deleted successfully!')
-      invalidateAssignments()
+      invalidateAssignments(projectId)
       setDeleteModalOpen(false)
       setDeletingAssignmentId(null)
       setDeletingAssignmentName('')
@@ -80,11 +80,30 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
     }
   }
 
-  const handleEdit = (id?: string) => {
+  const handleEdit = async (id?: string) => {
     if (!id) return
-    const asn = assignments.find((a) => a.assignmentId === id)
-    if (asn && onEdit) {
-      onEdit(asn)
+    try {
+      const response = await assignmentApi.getAssignmentById(id)
+      const data = response.data?.data || response.data
+      if (data && onEdit) {
+        // Map data similarly to AssignmentDetail or mapAssignment
+        const mappedAsn: GetAssignmentsParams = {
+          assignmentId: String(data.assignmentId || data.id || id),
+          assignmentName: String(data.assignmentName || data.name || ''),
+          status: String(data.assignmentStatus || data.status || ''),
+          description: String(data.descriptionAssignment || data.description || ''),
+          projectId: String(data.projectId || data.project?.id || data.project?.projectId || ''),
+          datasetId: String(data.datasetId || data.dataset?.id || data.dataset?.datasetId || ''),
+          assignedTo: String(data.assignedTo || data.user_id || data.annotatorId || ''),
+          reviewedBy: String(data.reviewedBy || data.reviewerId || data.reviewer?.id || ''),
+          dueDate: data.dueDate,
+          assignedBy: String(data.assignedBy || data.creatorId || '')
+        }
+        onEdit(mappedAsn)
+      }
+    } catch (error) {
+      console.error('Failed to fetch assignment detail for editing:', error)
+      message.error('Failed to load assignment details for editing.')
     }
   }
 

@@ -131,6 +131,11 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
           if (Array.isArray(items)) {
             const initialFileList = items
               .map((item: Record<string, unknown>) => {
+                const id =
+                  (item.dataItemId as string) || (item.itemId as string) || (item.id as string)
+                if (!id) {
+                  console.warn('Dataset item missing ID, using fallback:', item)
+                }
                 const url =
                   (item.content as string) ||
                   (item.url as string) ||
@@ -139,7 +144,7 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
                   (item.path as string) ||
                   ''
                 return {
-                  uid: String((item.dataItemId as string) || (item.id as string) || Math.random()),
+                  uid: String(id || Math.random()),
                   name: (item.name as string) || (item.filename as string) || 'Existing File',
                   status: 'done' as const,
                   url: url,
@@ -212,7 +217,10 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
       if (fileToRemove) {
         if (fileToRemove.preview) URL.revokeObjectURL(fileToRemove.preview)
         if (fileToRemove.status === 'done' && !fileToRemove.originFileObj && isEdit) {
-          setDeletedItemIds((prevDeleted) => [...prevDeleted, uid])
+          setDeletedItemIds((prevDeleted) => {
+            if (prevDeleted.includes(uid)) return prevDeleted
+            return [...prevDeleted, uid]
+          })
         }
       }
       return prev.filter((item) => item.uid !== uid)
@@ -292,6 +300,13 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
         files: filesToUpload.length > 0 ? filesToUpload : undefined,
         deleteDataItemId: isEdit && deletedItemIds.length > 0 ? deletedItemIds : undefined
       }
+
+      console.log('Update Dataset Final Payload:', {
+        ...payload,
+        filesCount: payload.files?.length || 0,
+        deletedIds: payload.deleteDataItemId
+      })
+
       const res = isEdit
         ? await datasetApi.updateDataset(initialData!.datasetId, payload, progressHandler)
         : await datasetApi.createDataset(payload, progressHandler)
@@ -508,7 +523,7 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
                 onClick={onFinish}
                 className="bg-fuchsia-600 border-none px-8"
               >
-                {isEdit ? 'Update Dataset' : 'Create Dataset'}
+                {isEdit ? 'Update Dataset' : 'Update Dataset'}
               </Button>
             </div>
           </Form>
