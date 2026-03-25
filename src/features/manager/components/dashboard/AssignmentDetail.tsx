@@ -283,7 +283,19 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
           }}
           loading={false}
           onBack={() => setViewTaskId(null)}
+          onRefresh={handleRefresh}
         />
+      )
+    }
+
+    if (tasksLoading) {
+      return (
+        <div className="flex flex-col items-center justify-center py-32 gap-4">
+          <Spin size="large" />
+          <p className="text-gray-500 font-mono text-xs uppercase tracking-widest animate-pulse">
+            Loading Task Details...
+          </p>
+        </div>
       )
     }
   }
