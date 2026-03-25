@@ -7,7 +7,7 @@ import { GuestGuard, RoleGuard } from './guards'
 import { Header } from '@/components/common/Header'
 import { LazyPage } from '@/components/common/LazyPage'
 import { Layout } from 'antd'
-import ReviewerDashboardPage from '@/pages/reviewer/ReviewerDashboardPage'
+// import ReviewerDashboardPage from '@/pages/reviewer/ReviewerDashboardPage'
 
 // Lazy load pages for code splitting
 const ProfilePage = lazy(() => import('@/pages/common/ProfilePage'))
@@ -41,6 +41,14 @@ const AnnotationPage = lazy(() => import('@/pages/annotator/AnnotationPage'))
 
 // Reviewer pages
 const ReviewerLayout = lazy(() => import('@/components/layout/ReviewerLayout'))
+const ReviewerAllProjectsPage = lazy(() => import('@/pages/reviewer/ReviewerAllProjectsPage'))
+const ReviewerProjectDetailPage = lazy(() => import('@/pages/reviewer/ReviewerProjectDetailPage'))
+const ReviewerProjectAssignmentsPage = lazy(
+  () => import('@/pages/reviewer/ReviewerProjectAssignmentsPage')
+)
+const ReviewerAssignmentDetailPage = lazy(
+  () => import('@/pages/reviewer/ReviewerAssignmentDetailPage')
+)
 const ReviewerWorkspacePage = lazy(() => import('@/pages/reviewer/ReviewerWorkspacePage'))
 const ReviewerTaskDetailPage = lazy(() => import('@/pages/reviewer/TaskDetailPage'))
 const ReviewerAnnotationPage = lazy(() => import('@/pages/reviewer/AnnotationPage'))
@@ -255,45 +263,37 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Navigate to="/reviewer/review" replace />
+        element: <Navigate to="/reviewer/projects" replace />
       },
       {
-        path: 'review',
+        path: 'projects',
         element: (
           <LazyPage>
-            <ReviewerDashboardPage />
+            <ReviewerAllProjectsPage />
           </LazyPage>
         )
       },
       {
-        path: 'project',
+        path: 'projects/:projectId',
         element: (
           <LazyPage>
-            <ReviewerDashboardPage />
+            <ReviewerProjectDetailPage />
           </LazyPage>
         )
       },
       {
-        path: 'project/:assignmentId',
+        path: 'projects/:projectId/assignments',
         element: (
           <LazyPage>
-            <ReviewerDashboardPage />
+            <ReviewerProjectAssignmentsPage />
           </LazyPage>
         )
       },
       {
-        path: 'assignment',
+        path: 'projects/:projectId/assignments/:assignmentId',
         element: (
           <LazyPage>
-            <ReviewerDashboardPage />
-          </LazyPage>
-        )
-      },
-      {
-        path: 'assignment/:assignmentId',
-        element: (
-          <LazyPage>
-            <ReviewerDashboardPage />
+            <ReviewerAssignmentDetailPage />
           </LazyPage>
         )
       },
