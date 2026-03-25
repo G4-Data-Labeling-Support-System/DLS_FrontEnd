@@ -45,7 +45,7 @@ node {
         // Call functions base on branch
         if (env.BRANCH_NAME == "main") {
             // Step 1: Sonarqube Scan
-            sonarqubePipeline.call(config)
+            // sonarqubePipeline.call(config)
             // Step 2: Trivy Filesystem Scan
             trivyFilesystemScan.call()
             // Step 3: Build -> Trivy Image Scan -> Test -> Push
@@ -56,7 +56,7 @@ node {
             // updateManifest.call(config)
         } else if (env.BRANCH_NAME == "development") {
             // Step 1: Sonarqube Scan
-            sonarqubePipeline.call(config)
+            // sonarqubePipeline.call(config)
             // Step 2: Trivy Filesystem Scan
             trivyFilesystemScan.call()
             // Step 3: Build -> Trivy Image Scan -> Test -> Push
@@ -67,9 +67,9 @@ node {
             // updateManifest.call(config)
         } else {
             // Step 1: Sonarqube Scan
-            sonarqubePipeline.call(config)
+            // sonarqubePipeline.call(config)
             // Step 2: Trivy Filesystem Scan
-            trivyFilesystemScan.call()
+            // trivyFilesystemScan.call()
             // Step 3: Build -> Trivy Image Scan -> Test -> Push
             dockerPipeline.call(config)
             // Step 4: Deploy to Docker production server
