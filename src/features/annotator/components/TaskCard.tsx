@@ -34,12 +34,7 @@ export default function TaskCard({ task, assignmentId }: { task: Task; assignmen
   return (
     <div
       onClick={() => navigate(`/annotator/task/${task.id}`, { state: { assignmentId } })}
-      className={`
-                relative group rounded-xl p-4 cursor-pointer overflow-hidden
-                bg-[#1a3a5c] border border-[#2a5a8c]/60
-                hover:border-violet-500/50 hover:bg-[#1e4470] hover:shadow-[0_0_20px_rgba(139,92,246,0.15)]
-                transition-all duration-300
-            `}
+      className="relative group rounded-xl p-5 cursor-pointer overflow-hidden bg-[#1A1625]/60 backdrop-blur-md border border-white/5 hover:border-violet-500/50 hover:bg-[#1A1625]/80 hover:shadow-[0_0_20px_rgba(139,92,246,0.15)] transition-all duration-300 shadow-xl"
     >
       {/* Top row: status info */}
       <div className="mb-3">

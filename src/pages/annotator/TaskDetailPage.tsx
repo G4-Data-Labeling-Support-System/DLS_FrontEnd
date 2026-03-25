@@ -87,7 +87,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({
 
   const [sessionAnnotations, setSessionAnnotations] = useState<any[]>([])
   const [remoteStatuses, setRemoteStatuses] = useState<Record<string, string>>({})
-  
+
   // Load local session to show real-time progress
   useEffect(() => {
     if (task?.taskId) {
@@ -109,7 +109,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({
     dataItems.forEach(async (item: any) => {
       const id = getCanonicalId(item)
       if (!id) return
-      
+
       console.log(`Fetching annotation for canonical ID: ${id}`);
       try {
         const res = await annotationApi.getAnnotationByDataItemId(id)
@@ -130,9 +130,9 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({
   // Improved progress calculation
   const getAnnotatedCount = () => {
     if (!dataItems.length) return 0
-    
+
     const annotatedIds = new Set<string>()
-    
+
     // Server side completion (original data)
     dataItems.forEach((item: TaskDataItemRecord) => {
       if (item.taskDataItemStatus === 'COMPLETED') {
@@ -142,18 +142,18 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({
 
     // Remote statuses fetched by background API calls
     Object.entries(remoteStatuses).forEach(([id, status]) => {
-        if (status === 'SUBMITTED' || status === 'APPROVED' || status === 'COMPLETED') {
-            annotatedIds.add(id)
-        }
+      if (status === 'SUBMITTED' || status === 'APPROVED' || status === 'COMPLETED') {
+        annotatedIds.add(id)
+      }
     })
-    
+
     // Local session submission
     sessionAnnotations.forEach((anno) => {
       if (anno.annotationStatus === 'SUBMITTED' || anno.annotationStatus === 'APPROVED') {
         annotatedIds.add(anno.dataitemId)
       }
     })
-    
+
     return annotatedIds.size
   }
 
@@ -220,33 +220,31 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({
         const canonicalId = record.dataItemId || record.dataitemId || record.itemId || record.dataItem?.itemId || record.id
         const localAnno = sessionAnnotations.find(a => a.dataitemId === canonicalId)
         const status = (
-            remoteStatuses[canonicalId] || 
-            localAnno?.annotationStatus || 
-            record.taskDataItemStatus || 
-            'NOT_STARTED'
+          remoteStatuses[canonicalId] ||
+          localAnno?.annotationStatus ||
+          record.taskDataItemStatus ||
+          'NOT_STARTED'
         ).toUpperCase()
-        
+
         const isApprove = status === 'APPROVED'
         const isSubmitted = status === 'COMPLETED' || status === 'SUBMITTED'
         const isRejected = status === 'REJECTED' || status === 'NEEDS_EDITING'
         const isInProgress = status === 'IN_PROGRESS' || status === 'IN_EDITING'
-        
+
         return (
           <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${
-              isApprove ? 'bg-violet-500 shadow-[0_0_8px_rgba(139,92,246,0.4)]' :
+            <div className={`w-2 h-2 rounded-full ${isApprove ? 'bg-violet-500 shadow-[0_0_8px_rgba(139,92,246,0.4)]' :
               isSubmitted ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' :
-              isRejected ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]' :
-              isInProgress ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]' :
-              'bg-gray-600'
-            }`} />
-            <span className={`text-xs font-bold uppercase tracking-wider ${
-              isApprove ? 'text-violet-400' :
+                isRejected ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]' :
+                  isInProgress ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]' :
+                    'bg-gray-600'
+              }`} />
+            <span className={`text-xs font-bold uppercase tracking-wider ${isApprove ? 'text-violet-400' :
               isSubmitted ? 'text-emerald-400' :
-              isRejected ? 'text-rose-400' :
-              isInProgress ? 'text-amber-400' :
-              'text-gray-500'
-            }`}>
+                isRejected ? 'text-rose-400' :
+                  isInProgress ? 'text-amber-400' :
+                    'text-gray-500'
+              }`}>
               {status}
             </span>
           </div>
@@ -589,10 +587,10 @@ export default function TaskDetailPage() {
         task={
           task
             ? {
-                ...task,
-                taskId: String(task.taskId || task.id),
-                taskName: String(task.taskName || task.name || 'Untitled Task')
-              }
+              ...task,
+              taskId: String(task.taskId || task.id),
+              taskName: String(task.taskName || task.name || 'Untitled Task')
+            }
             : null
         }
         loading={loading}

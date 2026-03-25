@@ -2,16 +2,12 @@ import React, { useEffect, useState, useCallback } from 'react'
 import {
   App,
   Spin,
-  Typography,
-  Card,
-  Descriptions,
   Empty,
   Pagination,
   Image,
-  Button,
-  Tag
+  Button
 } from 'antd'
-import { FolderOutlined, DatabaseOutlined, PictureOutlined, EditOutlined } from '@ant-design/icons'
+import { EditOutlined } from '@ant-design/icons'
 import datasetApi from '@/api/DatasetApi'
 import projectApi from '@/api/ProjectApi'
 import { ProjectDetail } from '../dashboard/ProjectDetail'
@@ -19,8 +15,9 @@ import { useSearchParams } from 'react-router-dom'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
 import { CreateDatasetModal } from './CreateDatasetModal'
 import { useLabelsByDataset } from '@/features/manager/hooks/useLabels'
+import { themeClasses } from '@/styles'
 
-const { Title } = Typography
+// Dataset Detail Component
 
 interface DatasetDetailData {
   datasetId?: string
@@ -258,258 +255,243 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
   }
 
   return (
-    <div className="w-full animate-fade-in">
-      {/* Header - same layout as ProjectDetail */}
-      <div className="flex justify-between items-start mb-6">
-        <div className="flex items-center gap-3">
+    <div className="relative overflow-hidden min-h-[600px] animate-fade-in pr-2">
+      {/* Background Glow */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-violet-600/10 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none" />
+
+      {/* Header */}
+      <div className="mb-8 relative z-10">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <Title level={3} className="!text-white !m-0 !font-display">
-              {dataset.datasetName || 'Unnamed Dataset'}
-            </Title>
-          </div>
-        </div>
-        <Button
-          type="primary"
-          icon={<EditOutlined />}
-          className="bg-violet-600 hover:bg-violet-500 border-none"
-          onClick={() => setIsEditModalVisible(true)}
-        >
-          Edit
-        </Button>
-      </div>
-
-      {/* Main Info Card */}
-      <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-2 p-0 overflow-hidden">
-        <div className="flex flex-col lg:flex-row h-full w-full">
-          {/* Left: Dataset Information */}
-          <div className="flex-1 p-6 border-b lg:border-b-0 lg:border-r border-gray-800">
-            <Descriptions
-              title={
-                <span className="text-white text-lg font-display flex items-center gap-2">
-                  <span className="material-symbols-outlined text-violet-400">info</span>
-                  Dataset Information
-                </span>
-              }
-              column={1}
-              className="custom-descriptions"
-              styles={{
-                label: { color: '#9ca3af', fontWeight: 500, width: '150px' },
-                content: { color: '#d1d5db' }
-              }}
-            >
-              <Descriptions.Item label="Dataset ID">
-                <span className="font-mono text-violet-300 bg-violet-500/10 px-2 py-0.5 rounded border border-violet-500/20">
-                  {dataset.datasetId}
-                </span>
-              </Descriptions.Item>
-              <Descriptions.Item label="Total Items">
-                {(dataset.totalItems ?? 0).toLocaleString()}
-              </Descriptions.Item>
-              <Descriptions.Item label="Created At">
-                {formatDate(dataset.createdAt)}
-              </Descriptions.Item>
-              <Descriptions.Item label="Status">
-                <Tag
-                  color={getStatusColor(dataset.datasetStatus)}
-                  className="m-0 font-medium px-2 py-0 border-0 rounded"
-                >
-                  {(dataset.datasetStatus || 'UNKNOWN').toUpperCase()}
-                </Tag>
-              </Descriptions.Item>
-            </Descriptions>
-          </div>
-
-          {/* Right: Description */}
-          <div className="flex-1 p-6 flex flex-col">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-white text-lg font-display flex items-center gap-2">
-                <span className="material-symbols-outlined text-green-400">description</span>
-                Description
+            <div className="flex items-center gap-2 mb-2">
+              <span className="material-symbols-outlined text-[18px] text-blue-400">database</span>
+              <span className="text-xs font-mono text-blue-400 tracking-widest uppercase">
+                Dataset Detail
               </span>
             </div>
-            <div className="flex-1 bg-[#231e31] p-4 rounded-xl border border-white/5">
-              <div className="text-gray-400 text-sm whitespace-pre-wrap">
-                {dataset.description || (
-                  <span className="text-gray-600 italic">No description provided.</span>
-                )}
+            <h1 className="text-3xl font-bold text-white tracking-tight">{dataset.datasetName}</h1>
+            <p className="text-sm text-gray-400 mt-1 font-mono">{dataset.datasetId}</p>
+          </div>
+          <Button
+            type="primary"
+            icon={<EditOutlined />}
+            className="bg-violet-600 hover:bg-violet-500 border-none shadow-[0_0_20px_rgba(139,92,246,0.3)] h-10 px-6 rounded-xl transition-all"
+            onClick={() => setIsEditModalVisible(true)}
+          >
+            Edit Dataset
+          </Button>
+        </div>
+      </div>
+
+      {/* Main Content Layout */}
+      <div className="flex flex-col gap-6 relative z-10">
+
+        {/* Top Row: Main Info (2 columns) matching Annotator structure */}
+        <div className={`glass-panel border ${themeClasses.borders.violet10} rounded-2xl overflow-hidden shadow-xl flex flex-col md:flex-row items-stretch`}>
+          {/* Left: Information */}
+          <div className="flex-1 p-7 border-b md:border-b-0 md:border-r border-white/10 relative">
+            <div className="absolute -top-10 -left-10 w-40 h-40 rounded-full bg-violet-500/5 blur-[50px] pointer-events-none" />
+            <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px] text-violet-400">info</span>
+              Dataset Information
+            </h3>
+            <div className="space-y-5">
+              <div className="flex justify-between items-center py-2 border-b border-white/5">
+                <label className="text-xs text-gray-500 font-mono uppercase tracking-wider">Dataset ID</label>
+                <span className="text-xs font-mono text-violet-300 bg-violet-500/10 px-2.5 py-1 rounded border border-violet-500/20">
+                  {dataset.datasetId}
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-white/5">
+                <label className="text-xs text-gray-500 font-mono uppercase tracking-wider">Total Items</label>
+                <span className="text-sm text-gray-200 font-bold">{(dataset.totalItems ?? 0).toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-white/5">
+                <label className="text-xs text-gray-500 font-mono uppercase tracking-wider">Created At</label>
+                <span className="text-sm text-gray-300">{formatDate(dataset.createdAt)}</span>
+              </div>
+              <div className="flex justify-between items-center py-2">
+                <label className="text-xs text-gray-500 font-mono uppercase tracking-wider">Status</label>
+                <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full bg-${getStatusColor(dataset.datasetStatus) === 'success' ? 'emerald' : getStatusColor(dataset.datasetStatus) === 'warning' ? 'orange' : getStatusColor(dataset.datasetStatus) === 'error' ? 'red' : 'violet'}-500/10 border border-${getStatusColor(dataset.datasetStatus) === 'success' ? 'emerald' : getStatusColor(dataset.datasetStatus) === 'warning' ? 'orange' : getStatusColor(dataset.datasetStatus) === 'error' ? 'red' : 'violet'}-500/20 text-[10px] font-bold text-${getStatusColor(dataset.datasetStatus) === 'success' ? 'emerald' : getStatusColor(dataset.datasetStatus) === 'warning' ? 'orange' : getStatusColor(dataset.datasetStatus) === 'error' ? 'red' : 'violet'}-400 uppercase tracking-widest`}>
+                  <div className={`w-1.5 h-1.5 rounded-full bg-${getStatusColor(dataset.datasetStatus) === 'success' ? 'emerald' : getStatusColor(dataset.datasetStatus) === 'warning' ? 'orange' : getStatusColor(dataset.datasetStatus) === 'error' ? 'red' : 'violet'}-400 animate-pulse`} />
+                  {dataset.datasetStatus || 'UNKNOWN'}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2 mt-2">
-        <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-white text-lg font-display flex items-center gap-2">
-              <FolderOutlined className="text-blue-400" />
-              Associated Project
-            </span>
-          </div>
-          {dataset.projectId ? (
-            <div
-              className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-blue-500/30 transition-colors cursor-pointer"
-              onClick={() => setViewProjectId(dataset.projectId || null)}
-            >
-              <h4 className="text-white font-bold text-sm truncate">
-                {projectName ? projectName : `Project ID: ${dataset.projectId}`}
-              </h4>
-              <div className="text-gray-400 text-xs mt-1">Click to view project details</div>
+          {/* Right: Description */}
+          <div className="flex-1 p-7 flex flex-col relative overflow-hidden">
+            <div className="absolute -bottom-10 -right-10 w-40 h-40 rounded-full bg-fuchsia-500/5 blur-[50px] pointer-events-none" />
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px] text-fuchsia-400">description</span>
+              Description
+            </h3>
+            <div className="flex-1 bg-black/20 p-5 rounded-2xl border border-white/5 min-h-[120px]">
+              <p className="text-sm text-gray-300 leading-relaxed italic">
+                {dataset.description || 'No description provided for this dataset.'}
+              </p>
             </div>
-          ) : (
-            <div className="text-gray-500 italic py-4 text-center">No associated project</div>
-          )}
-        </Card>
-
-        <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-white text-lg font-display flex items-center gap-2">
-              <span className="material-symbols-outlined text-emerald-400">label</span>
-              Dataset Labels
-            </span>
           </div>
-          <div className="space-y-3 max-h-[150px] overflow-y-auto custom-scrollbar pr-2">
-            {labels.length === 0 ? (
-              <div className="text-gray-500 italic py-4 text-center">No labels defined</div>
+        </div>
+
+        {/* Middle Row: Project & Labels (2 columns) matching Annotator structure */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+          {/* Associated Project */}
+          <div className={`glass-panel border ${themeClasses.borders.violet10} rounded-2xl p-6 shadow-xl relative overflow-hidden`}>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-3xl pointer-events-none" />
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px] text-blue-400">folder_special</span>
+              Associated Project
+            </h3>
+            {dataset.projectId ? (
+              <div
+                className="bg-black/20 p-5 rounded-xl border border-white/10 hover:border-blue-500/50 hover:bg-black/30 transition-all cursor-pointer group"
+                onClick={() => setViewProjectId(dataset.projectId || null)}
+              >
+                <h4 className="text-white font-bold group-hover:text-blue-400 transition-colors">
+                  {projectName || `Project ID: ${dataset.projectId}`}
+                </h4>
+                <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[12px]">visibility</span>
+                  Click to view project details
+                </p>
+              </div>
             ) : (
-              labels.map((label) => (
-                <div
-                  key={label.labelId}
-                  className="flex items-center gap-3 bg-[#231e31] p-3 rounded-lg border border-white/5"
-                >
-                  <div
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: label.color || '#6366f1' }}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-white font-medium truncate">{label.labelName}</p>
-                    {label.description && (
-                      <p className="text-[10px] text-gray-500 truncate">{label.description}</p>
-                    )}
-                  </div>
-                </div>
-              ))
+              <div className="bg-black/20 p-5 rounded-xl border border-white/5 text-center italic text-gray-500">
+                No associated project
+              </div>
             )}
           </div>
-        </Card>
-      </div>
 
-      {/* Data Items Section */}
-      <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-2 flex flex-col">
-        <div className="flex items-center justify-between mb-6">
-          <span className="text-white text-lg font-display flex items-center gap-2">
-            <DatabaseOutlined className="text-emerald-400" />
-            Data Items
-          </span>
-          <div className="bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full text-xs font-mono border border-emerald-500/20">
-            Total: {dataItems.length}
+          {/* Labels Section */}
+          <div className={`glass-panel border ${themeClasses.borders.violet10} rounded-2xl p-6 shadow-xl relative overflow-hidden`}>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl pointer-events-none" />
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px] text-emerald-400">label</span>
+              Dataset Labels
+            </h3>
+            <div className="flex flex-wrap gap-2 max-h-[140px] overflow-y-auto pr-2 custom-scrollbar">
+              {labels.length === 0 ? (
+                <p className="text-gray-500 text-sm italic py-2">No labels defined.</p>
+              ) : (
+                labels.map((label) => (
+                  <div
+                    key={label.labelId}
+                    className="flex items-center gap-2.5 bg-black/20 px-3 py-2 rounded-lg border border-white/5 hover:border-white/10 transition-colors"
+                  >
+                    <div
+                      className="w-2.5 h-2.5 rounded-full shadow-sm"
+                      style={{ backgroundColor: label.color || '#6366f1' }}
+                    />
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-200 font-medium">{label.labelName}</span>
+                      {label.description && (
+                        <span className="text-[9px] text-gray-500 truncate max-w-[100px]">{label.description}</span>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
 
-        {itemsLoading ? (
-          <div className="w-full h-40 flex justify-center items-center">
-            <Spin />
+        {/* Bottom Row: Data Items Grid (Full Width) */}
+        <div
+          className={`glass-panel border ${themeClasses.borders.violet10} rounded-2xl p-7 flex flex-col shadow-xl min-h-[550px]`}
+        >
+          <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/5">
+            <h3 className="text-xl font-bold text-white flex items-center gap-3">
+              <span className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                <span className="material-symbols-outlined text-[20px] text-blue-400">grid_view</span>
+              </span>
+              Data Items
+            </h3>
+            <span className="text-xs font-mono bg-blue-500/10 px-4 py-1.5 rounded-full border border-blue-500/20 text-blue-400 font-medium tracking-tight">
+              {dataItems.length} items total
+            </span>
           </div>
-        ) : dataItems.length === 0 ? (
-          <Empty
-            description={<span className="text-gray-500">No data items found</span>}
-            className="my-10"
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-          />
-        ) : (
-          <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 mb-6">
-              {dataItems
-                .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-                .map((item: DataItem, index: number) => (
-                  <div
-                    key={item.dataItemId || item.id || item.itemId || `item-${index}`}
-                    className="relative group rounded-xl overflow-hidden border border-white/5 bg-[#231e31] aspect-square flex flex-col cursor-pointer transition-all hover:border-emerald-500/30"
-                    onClick={() => handleItemClick(item)}
-                  >
-                    {/* Thumbnail / Image preview */}
-                    <div className="flex-1 bg-black/40 overflow-hidden relative">
-                      {item.imageUrl || item.url || item.previewUrl || item.path ? (
-                        <img
-                          src={item.imageUrl || item.url || item.previewUrl || item.path}
-                          alt={
-                            item.name || item.filename || item.fileName || item.title || 'Data Item'
-                          }
-                          className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement
-                            if (!target.src.includes('picsum.photos')) {
-                              target.src = `https://picsum.photos/seed/${item.id || item.dataItemId || index}/200/200`
-                            }
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-600 bg-gray-900/50">
-                          <PictureOutlined className="text-3xl opacity-50" />
+
+          {itemsLoading ? (
+            <div className="flex-1 flex items-center justify-center">
+              <Spin size="large" />
+            </div>
+          ) : dataItems.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-white/5 rounded-2xl bg-black/10">
+              <span className="material-symbols-outlined text-gray-600 text-6xl mb-4 opacity-10">
+                image_not_supported
+              </span>
+              <p className="text-gray-400 text-base font-medium">No data items found</p>
+              <p className="text-gray-600 text-xs mt-2">Images will appear here once uploaded.</p>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-5 overflow-y-auto max-h-[800px] pr-2 custom-scrollbar p-1 flex-1">
+                {dataItems
+                  .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                  .map((item, index) => (
+                    <div
+                      key={item.dataItemId || item.id || item.itemId || index}
+                      className="relative group rounded-xl overflow-hidden border border-white/10 bg-black/40 aspect-square flex items-center justify-center cursor-pointer hover:border-blue-500/50 transition-all shadow-lg hover:shadow-blue-500/5"
+                      onClick={() => handleItemClick(item)}
+                    >
+                      <div className="absolute inset-0 flex items-center justify-center bg-blue-500/5 group-hover:bg-blue-500/10 transition-colors">
+                        <span className="material-symbols-outlined text-gray-700 text-4xl opacity-10">
+                          image
+                        </span>
+                      </div>
+                      <img
+                        src={
+                          item.imageUrl ||
+                          item.url ||
+                          item.previewUrl ||
+                          item.path ||
+                          `https://picsum.photos/seed/${item.dataItemId || item.id || index}/300/300`
+                        }
+                        alt={item.name || item.filename || item.fileName || item.title}
+                        className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
+                        loading="lazy"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement
+                          target.src = 'https://picsum.photos/seed/placeholder/300/300'
+                        }}
+                      />
+
+                      {/* Overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end">
+                        <span className="text-[11px] text-white line-clamp-2 font-medium leading-snug font-mono">
+                          {item.name || item.filename || item.fileName || item.title}
+                        </span>
+                      </div>
+
+                      {/* Badges */}
+                      {(item.labeled || item.status?.toUpperCase() === 'ACTIVE' || item.status?.toUpperCase() === 'COMPLETED') && (
+                        <div className={`absolute top-2 right-2 flex items-center gap-1.5 bg-${item.status?.toLowerCase() === 'active' || item.labeled ? 'emerald' : 'gray'}-500/20 border border-${item.status?.toLowerCase() === 'active' || item.labeled ? 'emerald' : 'gray'}-500/50 text-${item.status?.toLowerCase() === 'active' || item.labeled ? 'emerald' : 'gray'}-400 text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-md backdrop-blur-md shadow-lg shadow-black/20`}>
+                          <span className={`w-1.5 h-1.5 rounded-full bg-${item.status?.toLowerCase() === 'active' || item.labeled ? 'emerald' : 'gray'}-400 animate-pulse`} />
+                          {item.status || (item.labeled ? 'Labeled' : 'Pending')}
                         </div>
                       )}
-
-                      {/* Status Badge */}
-                      <div className="absolute top-2 right-2">
-                        <div
-                          className={`w-2.5 h-2.5 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.5)] ${item.status?.toLowerCase() === 'active'
-                            ? 'bg-emerald-500'
-                            : item.status?.toLowerCase() === 'inactive'
-                              ? 'bg-red-500'
-                              : item.labeled
-                                ? 'bg-emerald-500'
-                                : 'bg-gray-400'
-                            }`}
-                          title={
-                            item.status
-                              ? item.status.toUpperCase()
-                              : item.labeled
-                                ? 'COMPLETED'
-                                : 'PENDING'
-                          }
-                        />
-                      </div>
                     </div>
+                  ))}
+              </div>
 
-                    {/* Details */}
-                    <div className="p-3 border-t border-white/5 bg-[#2a2438]">
-                      <div
-                        className="text-xs text-gray-300 truncate font-mono"
-                        title={
-                          item.name ||
-                          item.filename ||
-                          item.fileName ||
-                          item.title ||
-                          `Item ${index + 1}`
-                        }
-                      >
-                        {item.name ||
-                          item.filename ||
-                          item.fileName ||
-                          item.title ||
-                          item.dataItemId ||
-                          item.id ||
-                          item.itemId ||
-                          `Item ${index + 1}`}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-            </div>
-
-            <div className="flex justify-end pt-4 border-t border-gray-800">
-              <Pagination
-                current={currentPage}
-                pageSize={itemsPerPage}
-                total={dataItems.length}
-                onChange={setCurrentPage}
-                showSizeChanger={false}
-                className="custom-pagination"
-              />
-            </div>
-          </>
-        )}
-      </Card>
+              {/* Pagination Controls */}
+              <div className="mt-8 pt-6 border-t border-white/5 flex justify-end">
+                <Pagination
+                  current={currentPage}
+                  pageSize={itemsPerPage}
+                  total={dataItems.length}
+                  onChange={(page) => setCurrentPage(page)}
+                  showSizeChanger={false}
+                  className="custom-pagination"
+                />
+              </div>
+            </>
+          )}
+        </div>
+      </div>
 
       {/* Data Item Detail Modal */}
       <GlassModal
@@ -522,7 +504,7 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
         <div className="px-8 pt-10 pb-8 min-h-[400px]">
           <div className="flex justify-between items-center border-b border-white/5 pb-4 mb-6">
             <h2 className="text-white text-xl font-bold font-display flex items-center gap-2">
-              <DatabaseOutlined className="text-emerald-400" />
+              <span className="material-symbols-outlined text-emerald-400">database</span>
               {selectedItem
                 ? selectedItem.name || selectedItem.filename || 'Item Details'
                 : 'Item Details'}
@@ -586,7 +568,7 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
                     }}
                   />
                 ) : (
-                  <PictureOutlined className="text-5xl text-gray-600 opacity-50" />
+                  <span className="material-symbols-outlined text-5xl text-gray-600 opacity-50">image</span>
                 )}
 
                 <div className="absolute inset-y-0 right-0 flex items-center p-2 z-10">
@@ -610,27 +592,21 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
               </div>
 
               <div className="bg-[#231e31]/50 border border-white/5 rounded-xl p-4">
-                <Descriptions
-                  column={1}
-                  className="custom-descriptions"
-                  styles={{
-                    label: { color: '#9ca3af', fontWeight: 500, width: '140px' },
-                    content: { color: '#d1d5db' }
-                  }}
-                >
-                  <Descriptions.Item label="Item ID">
-                    <span className="font-mono text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded border border-emerald-400/20">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center py-2 border-b border-white/5">
+                    <label className="text-xs text-gray-500 font-mono uppercase tracking-wider">Item ID</label>
+                    <span className="font-mono text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded border border-emerald-400/20 text-xs">
                       {selectedItem.dataItemId || selectedItem.id || selectedItem.itemId || 'N/A'}
                     </span>
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Filename">
-                    {selectedItem.name ||
-                      selectedItem.filename ||
-                      selectedItem.fileName ||
-                      selectedItem.title ||
-                      'N/A'}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Status">
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-white/5">
+                    <label className="text-xs text-gray-500 font-mono uppercase tracking-wider">Filename</label>
+                    <span className="text-sm text-gray-200 truncate max-w-[300px]">
+                      {selectedItem.name || selectedItem.filename || selectedItem.fileName || selectedItem.title || 'N/A'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-2">
+                    <label className="text-xs text-gray-500 font-mono uppercase tracking-wider">Status</label>
                     <div className="flex items-center gap-2">
                       <div
                         className={`w-2.5 h-2.5 rounded-full ${selectedItem.status?.toLowerCase() === 'active'
@@ -659,8 +635,8 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
                             : 'PENDING'}
                       </span>
                     </div>
-                  </Descriptions.Item>
-                </Descriptions>
+                  </div>
+                </div>
               </div>
             </div>
           ) : itemDetailLoading ? (
@@ -693,41 +669,49 @@ export const DatasetDetail: React.FC<DatasetDetailProps> = ({ datasetId, onBack 
       />
 
       <style>{`
-        .custom-descriptions .ant-descriptions-title {
-          margin-bottom: 20px;
-        }
-        .custom-descriptions .ant-descriptions-item-container {
-          border-bottom: 1px solid #2d263b;
-          padding-bottom: 12px;
-          margin-bottom: 12px;
-        }
-        .custom-descriptions .ant-descriptions-item-container:last-child {
-          border-bottom: none;
-          margin-bottom: 0;
-          padding-bottom: 0;
-        }
         .custom-pagination .ant-pagination-item {
           background: rgba(255, 255, 255, 0.05);
           border-color: rgba(255, 255, 255, 0.1);
+          border-radius: 8px;
         }
         .custom-pagination .ant-pagination-item a {
           color: #9ca3af;
         }
         .custom-pagination .ant-pagination-item-active {
-          background: rgba(59, 130, 246, 0.2);
-          border-color: rgba(59, 130, 246, 0.5);
+          background: rgba(59, 130, 246, 0.2) !important;
+          border-color: rgba(59, 130, 246, 0.5) !important;
         }
         .custom-pagination .ant-pagination-item-active a {
-          color: #60a5fa;
+          color: #60a5fa !important;
         }
         .custom-pagination .ant-pagination-prev .ant-pagination-item-link,
         .custom-pagination .ant-pagination-next .ant-pagination-item-link {
-          background: rgba(255, 255, 255, 0.05);
-          color: #9ca3af;
-          border-color: rgba(255, 255, 255, 0.1);
+          background: rgba(255, 255, 255, 0.05) !important;
+          color: #9ca3af !important;
+          border-color: rgba(255, 255, 255, 0.1) !important;
+          border-radius: 8px;
         }
         .custom-pagination .ant-pagination-disabled .ant-pagination-item-link {
-          opacity: 0.5;
+          opacity: 0.3;
+        }
+        .custom-pagination .ant-pagination-jump-prev .ant-pagination-item-container .ant-pagination-item-ellipsis,
+        .custom-pagination .ant-pagination-jump-next .ant-pagination-item-container .ant-pagination-item-ellipsis {
+          color: #4b5563;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.02);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.2);
         }
       `}</style>
     </div>
