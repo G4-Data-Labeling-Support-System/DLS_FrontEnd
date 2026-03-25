@@ -11,13 +11,21 @@ interface Task {
   name?: string
   filename?: string
   annotationStatus?: string
+  completedItems?: number
+  totalItems?: number
+  reviewStatus?: string
+  [key: string]: string | number | boolean | undefined | object | null
 }
 
-export default function TaskCard({ task }: { task: Task }) {
+export default function TaskCard({ task, assignmentId }: { task: Task; assignmentId?: string }) {
   const navigate = useNavigate()
   if (!task.id) return null // Guard against missing ID
-  const taskStatus = task.taskStatus || task.status || 'PENDING'
+  const taskStatus = task.taskStatus || task.status || task.reviewStatus || 'NOT_STARTED'
   const taskName = task.name || task.filename || 'Untitled Task'
+
+  const completed = task.completedItems ?? 0
+  const total = task.totalItems ?? 0
+  const progress = total > 0 ? Math.round((completed / total) * 100) : 0
 
   const statusStyle = getTaskStatusStyle(taskStatus)
   const annotationLabel = getAnnotationStatusLabel(task.annotationStatus || '')
@@ -25,13 +33,8 @@ export default function TaskCard({ task }: { task: Task }) {
 
   return (
     <div
-      onClick={() => navigate(`/annotator/task/${task.id}`)}
-      className={`
-                relative group rounded-xl p-4 cursor-pointer overflow-hidden
-                bg-[#1a3a5c] border border-[#2a5a8c]/60
-                hover:border-violet-500/50 hover:bg-[#1e4470] hover:shadow-[0_0_20px_rgba(139,92,246,0.15)]
-                transition-all duration-300
-            `}
+      onClick={() => navigate(`/annotator/task/${task.id}`, { state: { assignmentId } })}
+      className="relative group rounded-xl p-5 cursor-pointer overflow-hidden bg-[#1A1625]/60 backdrop-blur-md border border-white/5 hover:border-violet-500/50 hover:bg-[#1A1625]/80 hover:shadow-[0_0_20px_rgba(139,92,246,0.15)] transition-all duration-300 shadow-xl"
     >
       {/* Top row: status info */}
       <div className="mb-3">
@@ -53,12 +56,28 @@ export default function TaskCard({ task }: { task: Task }) {
       <div className="border-t border-white/10 mb-3" />
 
       {/* Task name + action */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-3">
         <h4 className="text-base font-bold text-white">{taskName}</h4>
         <button className="flex items-center gap-1 text-[10px] font-bold text-violet-300 hover:text-white transition-colors opacity-0 group-hover:opacity-100">
           <span>Open</span>
           <span className="material-symbols-outlined text-[13px]">arrow_forward</span>
         </button>
+      </div>
+
+      {/* Progress Bar */}
+      <div className="space-y-1.5">
+        <div className="flex justify-between items-center text-[10px]">
+          <span className="text-gray-500 font-medium">Progress</span>
+          <span className="text-violet-400 font-bold">
+            {completed}/{total} items
+          </span>
+        </div>
+        <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+          <div
+            className="h-full bg-gradient-to-r from-violet-600 to-fuchsia-500 transition-all duration-500 rounded-full"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
       </div>
 
       {/* Corner accent */}

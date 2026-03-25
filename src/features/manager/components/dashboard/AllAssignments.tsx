@@ -1,25 +1,40 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Space, Typography, Spin, App, Input, Select, Empty, Button } from 'antd'
 import { SearchOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import { AssignmentCard } from './AssignmentCard'
 import { AssignmentDetail } from './AssignmentDetail'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
-
+import {
+  useAllAssignments,
+  useAssignmentsByProject,
+  useInvalidateAssignments
+} from '@/features/manager/hooks/useProjectDetail'
 import assignmentApi, { type GetAssignmentsParams } from '@/api/AssignmentApi'
+
 const { Title } = Typography
 
 interface AllAssignmentsProps {
   selectedAssignmentId?: string | null
   onAssignmentSelect?: (id: string | null) => void
+  onEdit?: (assignment: GetAssignmentsParams) => void
+  projectId?: string
 }
 
 export const AllAssignments: React.FC<AllAssignmentsProps> = ({
   selectedAssignmentId,
-  onAssignmentSelect
+  onAssignmentSelect,
+  onEdit,
+  projectId
 }) => {
   const { message } = App.useApp()
-  const [assignments, setAssignments] = useState<GetAssignmentsParams[]>([])
-  const [loading, setLoading] = useState<boolean>(true)
+  const { data: allAssignments = [], isLoading: loadingAll } = useAllAssignments({ enabled: !projectId })
+  const { data: projectAssignments = [], isLoading: loadingProject } = useAssignmentsByProject(projectId || '')
+
+  const assignments = projectId ? projectAssignments : allAssignments
+  const loading = projectId ? loadingProject : loadingAll
+
+  const invalidateAssignments = useInvalidateAssignments()
+
   const [searchText, setSearchText] = useState<string>('')
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
   const [internalAssignmentId, setInternalAssignmentId] = useState<string | null>(null)
@@ -39,70 +54,6 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
     }
   }
 
-  const fetchAssignments = async () => {
-    try {
-      setLoading(true)
-      const response = await assignmentApi.getAssignments()
-      const data = response.data?.data || response.data || []
-
-      if (Array.isArray(data)) {
-        // Dynamically map properties checking multiple possible backend formats natively
-        const mappedAssignments: GetAssignmentsParams[] = data.map((a: Record<string, unknown>) => {
-          const mapped: GetAssignmentsParams = {}
-          if (a.assignmentId || a.id) {
-            mapped.assignmentId = String(a.assignmentId || a.id)
-          }
-          if (a.assignmentName || a.name) {
-            mapped.assignmentName = String(a.assignmentName || a.name)
-          }
-          if (a.assignmentStatus || a.status) {
-            mapped.status = String(a.assignmentStatus || a.status)
-          }
-          if (a.descriptionAssignment || a.description) {
-            mapped.description = String(a.descriptionAssignment || a.description)
-          }
-          if (a.projectId || a.project_id) {
-            mapped.projectId = String(a.projectId || a.project_id)
-          }
-          if (a.datasetId || a.dataset_id) {
-            mapped.datasetId = String(a.datasetId || a.dataset_id)
-          }
-          if (a.createdAt) {
-            mapped.createdAt = String(a.createdAt)
-          }
-          if (a.updatedAt) {
-            mapped.updatedAt = String(a.updatedAt)
-          }
-          return mapped
-        })
-        setAssignments(mappedAssignments)
-      } else {
-        console.warn('API returned non-array data:', data)
-        setAssignments([])
-      }
-    } catch (error) {
-      const assignError = error as Record<string, unknown>
-      const responseData = assignError?.response as Record<string, unknown>
-      const data = responseData?.data as Record<string, unknown>
-      const isNotFoundError = data?.code === 404 && data?.message === 'Assignment not found'
-
-      if (isNotFoundError) {
-        // Backend confirmed 0 assignments exist system-wide
-        setAssignments([])
-      } else {
-        console.error('Failed to load assignments.', error)
-      }
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    if (!currentAssignmentId) {
-      fetchAssignments()
-    }
-  }, [currentAssignmentId])
-
   const handleDelete = (id?: string) => {
     if (!id) return
     const asn = assignments.find((a) => a.assignmentId === id)
@@ -117,7 +68,7 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
     try {
       await assignmentApi.deleteAssignment(deletingAssignmentId)
       message.success('Assignment deleted successfully!')
-      setAssignments((prev) => prev.filter((a) => a.assignmentId !== deletingAssignmentId))
+      invalidateAssignments()
       setDeleteModalOpen(false)
       setDeletingAssignmentId(null)
       setDeletingAssignmentName('')
@@ -131,8 +82,27 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
 
   const handleEdit = (id?: string) => {
     if (!id) return
-    message.info(`Editing assignment ID: ${id} is currently not supported.`)
+    const asn = assignments.find((a) => a.assignmentId === id)
+    if (asn && onEdit) {
+      onEdit(asn)
+    }
   }
+
+  const filteredAssignments = assignments
+    .filter(
+      (a) =>
+        !searchText || (a.assignmentName && a.assignmentName.toLowerCase().includes(searchText.toLowerCase()))
+    )
+    .filter((a) => statusFilter === 'ALL' || (a.status && a.status.toUpperCase() === statusFilter))
+    .sort((a, b) => {
+      const aIsInactive = a.status?.toUpperCase() === 'INACTIVE'
+      const bIsInactive = b.status?.toUpperCase() === 'INACTIVE'
+
+      if (aIsInactive && !bIsInactive) return 1
+      if (!aIsInactive && bIsInactive) return -1
+
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+    })
 
   if (loading && !currentAssignmentId) {
     return (
@@ -147,6 +117,7 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
       <AssignmentDetail
         assignmentId={currentAssignmentId}
         onBack={() => handleAssignmentSelect(null)}
+        onEdit={onEdit}
       />
     )
   }
@@ -165,10 +136,10 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
             options={[
               { value: 'ALL', label: 'All Statuses' },
               { value: 'ASSIGNED', label: 'Assigned' },
-              { value: 'CANCLED', label: 'Cancled' },
-              { value: 'COMPLETED', label: 'Completed' },
               { value: 'IN_PROGRESS', label: 'In Progress' },
-              { value: 'REVIEWING', label: 'Reviewing' }
+              { value: 'REVIEWING', label: 'Reviewing' },
+              { value: 'COMPLETED', label: 'Completed' },
+              { value: 'INACTIVE', label: 'Inactive' }
             ]}
           />
           <Input
@@ -181,7 +152,7 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
         </Space>
       </div>
 
-      {assignments.length === 0 ? (
+      {filteredAssignments.length === 0 ? (
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
           description={<span className="text-gray-500">No assignments created yet.</span>}
@@ -189,34 +160,28 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 items-stretch">
-          {assignments
-            .filter(
-              (a) =>
-                !searchText ||
-                (a.assignmentName &&
-                  a.assignmentName.toLowerCase().includes(searchText.toLowerCase()))
+          {filteredAssignments.map((a, index) => {
+            const uniqueId = a.assignmentId || String(index)
+            return (
+              <AssignmentCard
+                key={uniqueId}
+                {...a}
+                onClick={() => handleAssignmentSelect(uniqueId)}
+                onEdit={() => handleEdit(uniqueId)}
+                onDelete={() => handleDelete(uniqueId)}
+              />
             )
-            .filter(
-              (a) => statusFilter === 'ALL' || (a.status && a.status.toUpperCase() === statusFilter)
-            )
-            .map((a, index) => {
-              const uniqueId = a.assignmentId || String(index)
-              return (
-                <AssignmentCard
-                  key={uniqueId}
-                  {...a}
-                  onClick={() => handleAssignmentSelect(uniqueId)}
-                  onEdit={() => handleEdit(uniqueId)}
-                  onDelete={() => handleDelete(uniqueId)}
-                />
-              )
-            })}
+          })}
         </div>
       )}
 
       <GlassModal
         open={deleteModalOpen}
-        onCancel={() => { setDeleteModalOpen(false); setDeletingAssignmentId(null); setDeletingAssignmentName('') }}
+        onCancel={() => {
+          setDeleteModalOpen(false)
+          setDeletingAssignmentId(null)
+          setDeletingAssignmentName('')
+        }}
         destroyOnHidden
         width={480}
       >
@@ -228,16 +193,22 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
               </div>
             </div>
             <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
-              Delete Assignment
+              Deactivate Assignment
             </h2>
             <p className="text-white/50 text-sm">
-              Are you sure you want to delete <span className="text-white/80 font-medium">{deletingAssignmentName}</span>? This action cannot be undone.
+              Are you sure you want to deactivate{' '}
+              <span className="text-white/80 font-medium">{deletingAssignmentName}</span>? This
+              action cannot be undone.
             </p>
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
             <Button
-              onClick={() => { setDeleteModalOpen(false); setDeletingAssignmentId(null); setDeletingAssignmentName('') }}
+              onClick={() => {
+                setDeleteModalOpen(false)
+                setDeletingAssignmentId(null)
+                setDeletingAssignmentName('')
+              }}
               className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
             >
               Cancel
@@ -249,7 +220,7 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
               onClick={confirmDelete}
               className="bg-red-600 hover:bg-red-500 border-none"
             >
-              Delete Assignment
+              Deactivate Assignment
             </Button>
           </div>
         </div>

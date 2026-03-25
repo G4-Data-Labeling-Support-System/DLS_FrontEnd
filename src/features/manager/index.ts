@@ -13,5 +13,4 @@ export const ManagerFeatures = {
 
 export type ProjectDataType = 'image' | 'video' | 'text'
 
-export * from './components/CreateProjectForm'
 export * from './types'

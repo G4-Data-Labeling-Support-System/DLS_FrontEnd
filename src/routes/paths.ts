@@ -19,25 +19,31 @@ export const PATH_MANAGER = {
   root: '/manager',
   createProject: '/manager/create-project',
   editProject: '/manager/projects/edit/:id',
-  datasetSetup: '/manager/datasets/setup',
-  guidelinesSetup: '/manager/create-project/guidelines-setup',
-  editGuidelines: '/manager/projects/edit/:id/guidelines',
   teamAssignment: '/manager/create-project/team-assignment',
-  datasetManagement: '/manager/datasets',
-  createDataset: '/manager/datasets/create',
-  datasetDetail: '/manager/datasets/:id'
+  manageProjectThings: '/manager/manage',
+  datasetDetail: '/manager/datasets/:id',
+  createDataset: '/manager/datasets/create'
 }
 
 export const PATH_ANNOTATOR = {
   root: '/annotator',
-  project: '/annotator/project',
-  assignment: '/annotator/assignment',
+  projects: '/annotator/projects',
+  projectDetail: '/annotator/projects/:projectId',
+  projectAssignments: '/annotator/projects/:projectId/assignments',
+  projectDatasets: '/annotator/projects/:projectId/datasets',
+  assignmentDetail: '/annotator/projects/:projectId/assignments/:assignmentId',
   taskDetail: (taskId: string) => `/annotator/task/${taskId}`,
-  annotation: (taskId: string) => `/annotator/task/${taskId}/annotate`
+  annotation: (taskId: string) => `/annotator/task/${taskId}/annotate`,
+  datasetDetail: '/annotator/project/:projectId/dataset/:datasetId'
 }
 
 export const PATH_REVIEWER = {
   root: '/reviewer',
-  dashboard: '/reviewer',
-  workspace: '/reviewer/workspace'
+  projects: '/reviewer/projects',
+  projectDetail: '/reviewer/projects/:projectId',
+  projectAssignments: '/reviewer/projects/:projectId/assignments',
+  assignmentDetail: '/reviewer/projects/:projectId/assignments/:assignmentId',
+  taskDetail: (taskId: string) => `/reviewer/task/${taskId}`,
+  annotation: (taskId: string) => `/reviewer/task/${taskId}/annotate`,
+  workspace: (projectId: string) => `/reviewer/workspace/${projectId}`
 }

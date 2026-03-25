@@ -27,6 +27,21 @@ export const useCreateUser = () => {
   })
 }
 
+export const useDeactivateUser = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (userId: string) => userApi.deactivateUser(userId),
+    onSuccess: () => {
+      // Update the user list cache
+      queryClient.invalidateQueries({ queryKey: ['users'] })
+    },
+    onError: (error: AxiosError) => {
+      console.error('Deactivate user error:', error)
+    }
+  })
+}
+
 export const useDeleteUser = () => {
   const queryClient = useQueryClient()
 

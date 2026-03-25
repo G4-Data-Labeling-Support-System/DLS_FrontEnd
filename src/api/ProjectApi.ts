@@ -55,6 +55,34 @@ const projectApi = {
       console.error('Failed to delete project', error)
       throw error
     }
+  },
+  async updateProjectStatus(id: string, status: string) {
+    try {
+      const url = ENDPOINTS.PROJECTS.STATUS(id)
+      const response = await axiosClient.put(url, { status: status })
+      return response
+    } catch (error) {
+      console.error('Failed to update project status', error)
+      throw error
+    }
+  },
+  getProjectMembers(id: string) {
+    try {
+      const url = ENDPOINTS.PROJECTS.MEMBERS(id)
+      return axiosClient.get(url)
+    } catch (error) {
+      console.error('Failed to fetch project members', error)
+      throw error
+    }
+  },
+  getProjectByDatasetId(datasetId: string) {
+    try {
+      const url = ENDPOINTS.PROJECTS.BY_DATASET(datasetId)
+      return axiosClient.get(url)
+    } catch (error) {
+      console.error('Failed to fetch project by dataset id', error)
+      throw error
+    }
   }
 }
 

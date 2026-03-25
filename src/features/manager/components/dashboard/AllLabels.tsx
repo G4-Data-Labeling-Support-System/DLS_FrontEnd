@@ -5,8 +5,14 @@ import { LabelCard } from './LabelCard'
 import { LabelDetail } from './LabelDetail'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
 
-import labelApiClient, { type GetLabelsParams, type CreateLabelPayload, type UpdateLabelPayload } from '@/api/LabelApi'
+import labelApiClient, {
+  type GetLabelsParams,
+  type CreateLabelPayload,
+  type UpdateLabelPayload
+} from '@/api/LabelApi'
 import datasetApi, { type GetDatasetsParams } from '@/api/DatasetApi'
+import { useDatasetsByProject } from '@/features/manager/hooks/useProjectDetail'
+import { useAllLabels, useInvalidateLabels } from '@/features/manager/hooks/useLabels'
 const { Title } = Typography
 
 interface AllLabelsProps {
@@ -14,15 +20,24 @@ interface AllLabelsProps {
   onLabelSelect?: (id: string | null) => void
   openCreateModal?: boolean
   onCreateModalClose?: () => void
+  projectId?: string
 }
 
-export const AllLabels: React.FC<AllLabelsProps> = ({ selectedLabelId: _selectedLabelId, onLabelSelect, openCreateModal, onCreateModalClose }) => {
+export const AllLabels: React.FC<AllLabelsProps> = ({
+  selectedLabelId: _selectedLabelId,
+  onLabelSelect,
+  openCreateModal,
+  onCreateModalClose,
+  projectId
+}) => {
   const { message } = App.useApp()
   const [form] = Form.useForm()
   const [editForm] = Form.useForm()
-  const [labels, setLabels] = useState<GetLabelsParams[]>([])
-  const [loading, setLoading] = useState<boolean>(true)
+  const { data: labels = [], isLoading: loading } = useAllLabels()
+  const invalidateLabels = useInvalidateLabels()
+  const { data: projectDatasets = [] } = useDatasetsByProject(projectId || '')
   const [searchText, setSearchText] = useState<string>('')
+  const [statusFilter, setStatusFilter] = useState<string>('ALL')
   const [_internalLabelId, setInternalLabelId] = useState<string | null>(null)
 
   const [createModalOpen, setCreateModalOpen] = useState(false)
@@ -49,64 +64,9 @@ export const AllLabels: React.FC<AllLabelsProps> = ({ selectedLabelId: _selected
   }
 
   const fetchLabels = async () => {
-    try {
-      setLoading(true)
-      const response = await labelApiClient.getLabels()
-      const data = response.data?.data || response.data?.content || response.data || []
-
-      if (Array.isArray(data)) {
-        const mappedLabels: GetLabelsParams[] = data.map((l: Record<string, unknown>) => {
-          const mapped: GetLabelsParams = {}
-          if (l.labelId || l.id) {
-            mapped.labelId = String(l.labelId || l.id)
-          }
-          if (l.labelName || l.name) {
-            mapped.labelName = String(l.labelName || l.name)
-          }
-          if (l.labelStatus || l.status) {
-            mapped.labelStatus = String(l.labelStatus || l.status)
-          }
-          if (l.description) {
-            mapped.description = String(l.description)
-          }
-          if (l.color) {
-            mapped.color = String(l.color)
-          }
-          if (l.projectId || l.project_id) {
-            mapped.projectId = String(l.projectId || l.project_id)
-          }
-          if (l.createdAt) {
-            mapped.createdAt = String(l.createdAt)
-          }
-          if (l.updatedAt) {
-            mapped.updatedAt = String(l.updatedAt)
-          }
-          return mapped
-        })
-        setLabels(mappedLabels)
-      } else {
-        console.warn('API returned non-array data:', data)
-        setLabels([])
-      }
-    } catch (error) {
-      const labelError = error as Record<string, unknown>
-      const responseData = labelError?.response as Record<string, unknown>
-      const data = responseData?.data as Record<string, unknown>
-      const isNotFoundError = data?.code === 404 && data?.message === 'Label not found'
-
-      if (isNotFoundError) {
-        setLabels([])
-      } else {
-        console.error('Failed to load labels.', error)
-      }
-    } finally {
-      setLoading(false)
-    }
+    invalidateLabels()
   }
 
-  useEffect(() => {
-    fetchLabels()
-  }, [])
 
   useEffect(() => {
     if (openCreateModal) {
@@ -129,7 +89,7 @@ export const AllLabels: React.FC<AllLabelsProps> = ({ selectedLabelId: _selected
       setDeleting(true)
       await labelApiClient.deleteLabel(deletingLabelId)
       message.success('Label deleted successfully!')
-      setLabels((prev) => prev.filter((l) => l.labelId !== deletingLabelId))
+      invalidateLabels()
       setDeleteModalOpen(false)
       setDeletingLabelId(null)
       setDeletingLabelName('')
@@ -141,17 +101,22 @@ export const AllLabels: React.FC<AllLabelsProps> = ({ selectedLabelId: _selected
     }
   }
 
+  useEffect(() => {
+    if (editModalOpen && editingLabel) {
+      editForm.setFieldsValue({
+        labelName: editingLabel.labelName || '',
+        color: editingLabel.color || '#1677ff',
+        description: editingLabel.description || ''
+      })
+    }
+  }, [editModalOpen, editingLabel, editForm])
+
   const handleEdit = (id?: string) => {
     if (!id) return
     const label = labels.find((l) => l.labelId === id)
     if (!label) return
     setEditingLabelId(id)
     setEditingLabel(label)
-    editForm.setFieldsValue({
-      labelName: label.labelName || '',
-      color: label.color || '#1677ff',
-      description: label.description || '',
-    })
     setEditModalOpen(true)
   }
 
@@ -161,20 +126,20 @@ export const AllLabels: React.FC<AllLabelsProps> = ({ selectedLabelId: _selected
       const values = await editForm.validateFields()
       setEditing(true)
 
-      const colorValue = typeof values.color === 'string'
-        ? values.color
-        : values.color?.toHexString?.() || editingLabel.color || '#1677ff'
+      const colorValue =
+        typeof values.color === 'string'
+          ? values.color
+          : values.color?.toHexString?.() || editingLabel.color || '#1677ff'
 
       const payload: UpdateLabelPayload = {
         labelName: values.labelName || editingLabel.labelName,
         color: colorValue,
-        description: values.description ?? editingLabel.description ?? '',
+        description: values.description ?? editingLabel.description ?? ''
       }
 
       await labelApiClient.updateLabel(editingLabelId, payload)
       message.success('Label updated successfully!')
       setEditModalOpen(false)
-      editForm.resetFields()
       setEditingLabelId(null)
       setEditingLabel(null)
       fetchLabels()
@@ -192,15 +157,27 @@ export const AllLabels: React.FC<AllLabelsProps> = ({ selectedLabelId: _selected
   const fetchDatasets = async () => {
     setDatasetsLoading(true)
     try {
-      const response = await datasetApi.getDatasets()
+      const response = projectId
+        ? await datasetApi.getDatasetsByProjectId(projectId)
+        : await datasetApi.getDatasets()
       const rawData = response.data?.data || response.data?.content || response.data || []
       if (Array.isArray(rawData)) {
         const mapped: GetDatasetsParams[] = rawData
-          .map((d: Record<string, unknown>) => ({
-            datasetId: String(d.id || d.datasetId || ''),
-            datasetName: String(d.name || d.datasetName || ''),
-          } as GetDatasetsParams))
-          .filter((d) => d.datasetId && d.datasetId !== 'undefined' && d.datasetId !== 'null')
+          .map(
+            (d: Record<string, unknown>) =>
+              ({
+                datasetId: String(d.id || d.datasetId || ''),
+                datasetName: String(d.name || d.datasetName || ''),
+                datasetStatus: String(d.datasetStatus || d.status || d.dataset_status || '')
+              }) as GetDatasetsParams
+          )
+          .filter(
+            (d) =>
+              d.datasetId &&
+              d.datasetId !== 'undefined' &&
+              d.datasetId !== 'null' &&
+              d.datasetStatus?.toUpperCase() === 'ACTIVE'
+          )
         setDatasets(mapped)
       }
     } catch (error) {
@@ -212,7 +189,6 @@ export const AllLabels: React.FC<AllLabelsProps> = ({ selectedLabelId: _selected
   }
 
   const handleOpenCreateModal = () => {
-    form.resetFields()
     setCreateModalOpen(true)
     fetchDatasets()
   }
@@ -222,20 +198,18 @@ export const AllLabels: React.FC<AllLabelsProps> = ({ selectedLabelId: _selected
       const values = await form.validateFields()
       setCreating(true)
 
-      const colorValue = typeof values.color === 'string'
-        ? values.color
-        : values.color?.toHexString?.() || '#1677ff'
+      const colorValue =
+        typeof values.color === 'string' ? values.color : values.color?.toHexString?.() || '#1677ff'
 
       const payload: CreateLabelPayload = {
         labelName: values.labelName,
         color: colorValue,
-        description: values.description || '',
+        description: values.description || ''
       }
 
       await labelApiClient.createLabel(values.datasetId, payload)
       message.success('Label created successfully!')
       setCreateModalOpen(false)
-      form.resetFields()
       onCreateModalClose?.()
       fetchLabels()
     } catch (error) {
@@ -249,8 +223,29 @@ export const AllLabels: React.FC<AllLabelsProps> = ({ selectedLabelId: _selected
     }
   }
 
-  const currentLabelId =
-    _selectedLabelId !== undefined ? _selectedLabelId : _internalLabelId
+  const filteredLabels = labels
+    .filter((l) => {
+      if (!projectId) return true
+      return projectDatasets.some((d) => String(d.datasetId) === String(l.datasetId))
+    })
+    .filter((l) => {
+      const matchesSearch =
+        !searchText || (l.labelName && l.labelName.toLowerCase().includes(searchText.toLowerCase()))
+      const matchesStatus = statusFilter === 'ALL' || l.labelStatus === statusFilter
+
+      return matchesSearch && matchesStatus
+    })
+    .sort((a, b) => {
+      const aIsInactive = a.labelStatus?.toUpperCase() === 'INACTIVE'
+      const bIsInactive = b.labelStatus?.toUpperCase() === 'INACTIVE'
+
+      if (aIsInactive && !bIsInactive) return 1
+      if (!aIsInactive && bIsInactive) return -1
+
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+    })
+
+  const currentLabelId = _selectedLabelId !== undefined ? _selectedLabelId : _internalLabelId
 
   if (loading && !currentLabelId) {
     return (
@@ -261,12 +256,7 @@ export const AllLabels: React.FC<AllLabelsProps> = ({ selectedLabelId: _selected
   }
 
   if (currentLabelId) {
-    return (
-      <LabelDetail
-        labelId={currentLabelId}
-        onBack={() => handleLabelSelect(null)}
-      />
-    )
+    return <LabelDetail labelId={currentLabelId} onBack={() => handleLabelSelect(null)} />
   }
 
   return (
@@ -276,6 +266,16 @@ export const AllLabels: React.FC<AllLabelsProps> = ({ selectedLabelId: _selected
           All Labels
         </Title>
         <Space>
+          <Select
+            value={statusFilter}
+            onChange={(value) => setStatusFilter(value)}
+            className="w-36"
+            options={[
+              { value: 'ALL', label: 'All Statuses' },
+              { value: 'ACTIVE', label: 'Active' },
+              { value: 'INACTIVE', label: 'Inactive' }
+            ]}
+          />
           <Input
             placeholder="Search labels..."
             prefix={<SearchOutlined className="text-gray-400" />}
@@ -286,7 +286,7 @@ export const AllLabels: React.FC<AllLabelsProps> = ({ selectedLabelId: _selected
         </Space>
       </div>
 
-      {labels.length === 0 ? (
+      {filteredLabels.length === 0 ? (
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
           description={<span className="text-gray-500">No labels created yet.</span>}
@@ -294,30 +294,27 @@ export const AllLabels: React.FC<AllLabelsProps> = ({ selectedLabelId: _selected
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 items-stretch">
-          {labels
-            .filter(
-              (l) =>
-                !searchText ||
-                (l.labelName && l.labelName.toLowerCase().includes(searchText.toLowerCase()))
+          {filteredLabels.map((l, index) => {
+            const uniqueId = l.labelId || String(index)
+            return (
+              <LabelCard
+                key={uniqueId}
+                {...l}
+                onClick={() => handleLabelSelect(uniqueId)}
+                onEdit={() => handleEdit(uniqueId)}
+                onDelete={() => handleDelete(uniqueId)}
+              />
             )
-            .map((l, index) => {
-              const uniqueId = l.labelId || String(index)
-              return (
-                <LabelCard
-                  key={uniqueId}
-                  {...l}
-                  onClick={() => handleLabelSelect(uniqueId)}
-                  onEdit={() => handleEdit(uniqueId)}
-                  onDelete={() => handleDelete(uniqueId)}
-                />
-              )
-            })}
+          })}
         </div>
       )}
 
       <GlassModal
         open={createModalOpen}
-        onCancel={() => { setCreateModalOpen(false); onCreateModalClose?.() }}
+        onCancel={() => {
+          setCreateModalOpen(false)
+          onCreateModalClose?.()
+        }}
         destroyOnHidden
         width={640}
       >
@@ -326,9 +323,7 @@ export const AllLabels: React.FC<AllLabelsProps> = ({ selectedLabelId: _selected
             <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
               Create Label
             </h2>
-            <p className="text-white/50 text-sm">
-              Add a new label to a dataset.
-            </p>
+            <p className="text-white/50 text-sm">Add a new label to a dataset.</p>
           </div>
           <Form form={form} layout="vertical">
             <Form.Item
@@ -378,7 +373,11 @@ export const AllLabels: React.FC<AllLabelsProps> = ({ selectedLabelId: _selected
 
             <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
               <Button
-                onClick={() => { form.resetFields(); setCreateModalOpen(false); onCreateModalClose?.() }}
+                onClick={() => {
+                  form.resetFields()
+                  setCreateModalOpen(false)
+                  onCreateModalClose?.()
+                }}
                 className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
               >
                 Cancel
@@ -398,7 +397,11 @@ export const AllLabels: React.FC<AllLabelsProps> = ({ selectedLabelId: _selected
 
       <GlassModal
         open={editModalOpen}
-        onCancel={() => { setEditModalOpen(false); editForm.resetFields(); setEditingLabelId(null); setEditingLabel(null) }}
+        onCancel={() => {
+          setEditModalOpen(false)
+          setEditingLabelId(null)
+          setEditingLabel(null)
+        }}
         destroyOnHidden
         width={640}
       >
@@ -407,9 +410,7 @@ export const AllLabels: React.FC<AllLabelsProps> = ({ selectedLabelId: _selected
             <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
               Edit Label
             </h2>
-            <p className="text-white/50 text-sm">
-              Update label information.
-            </p>
+            <p className="text-white/50 text-sm">Update label information.</p>
           </div>
           <Form form={editForm} layout="vertical">
             <Form.Item
@@ -438,7 +439,12 @@ export const AllLabels: React.FC<AllLabelsProps> = ({ selectedLabelId: _selected
 
             <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
               <Button
-                onClick={() => { editForm.resetFields(); setEditModalOpen(false); setEditingLabelId(null); setEditingLabel(null) }}
+                onClick={() => {
+                  editForm.resetFields()
+                  setEditModalOpen(false)
+                  setEditingLabelId(null)
+                  setEditingLabel(null)
+                }}
                 className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
               >
                 Cancel
@@ -458,7 +464,11 @@ export const AllLabels: React.FC<AllLabelsProps> = ({ selectedLabelId: _selected
 
       <GlassModal
         open={deleteModalOpen}
-        onCancel={() => { setDeleteModalOpen(false); setDeletingLabelId(null); setDeletingLabelName('') }}
+        onCancel={() => {
+          setDeleteModalOpen(false)
+          setDeletingLabelId(null)
+          setDeletingLabelName('')
+        }}
         destroyOnHidden
         width={480}
       >
@@ -470,16 +480,22 @@ export const AllLabels: React.FC<AllLabelsProps> = ({ selectedLabelId: _selected
               </div>
             </div>
             <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
-              Delete Label
+              Deactivate Label
             </h2>
             <p className="text-white/50 text-sm">
-              Are you sure you want to delete <span className="text-white/80 font-medium">{deletingLabelName}</span>? This action cannot be undone.
+              Are you sure you want to deactivate{' '}
+              <span className="text-white/80 font-medium">{deletingLabelName}</span>? This action
+              cannot be undone.
             </p>
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
             <Button
-              onClick={() => { setDeleteModalOpen(false); setDeletingLabelId(null); setDeletingLabelName('') }}
+              onClick={() => {
+                setDeleteModalOpen(false)
+                setDeletingLabelId(null)
+                setDeletingLabelName('')
+              }}
               className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
             >
               Cancel
@@ -491,7 +507,7 @@ export const AllLabels: React.FC<AllLabelsProps> = ({ selectedLabelId: _selected
               onClick={confirmDelete}
               className="bg-red-600 hover:bg-red-500 border-none"
             >
-              Delete Label
+              Deactivate Label
             </Button>
           </div>
         </div>

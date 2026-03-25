@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react'
-import { App, Spin, Typography, Card, Descriptions } from 'antd'
+import { App, Spin, Typography, Card, Descriptions, Tag } from 'antd'
 import { DatabaseOutlined } from '@ant-design/icons'
 import labelApiClient from '@/api/LabelApi'
 import datasetApi from '@/api/DatasetApi'
-import { useNavigate } from 'react-router-dom'
+import { DatasetDetail } from '../dataset/DatasetDetail'
+import { useSearchParams } from 'react-router-dom'
 
 const { Title } = Typography
 
@@ -14,6 +15,7 @@ interface LabelDetailData {
   description?: string
   datasetId?: string
   createAt?: string
+  labelStatus?: string
 }
 
 interface LabelDetailProps {
@@ -26,7 +28,20 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
   const [label, setLabel] = useState<LabelDetailData | null>(null)
   const [datasetName, setDatasetName] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
-  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const viewDatasetId = searchParams.get('viewDatasetId')
+  const setViewDatasetId = (id: string | null) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      if (id) {
+        next.set('viewDatasetId', id)
+      } else {
+        next.delete('viewDatasetId')
+      }
+      return next
+    })
+  }
 
   useEffect(() => {
     let isMounted = true
@@ -44,7 +59,8 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
             color: data.color ? String(data.color) : undefined,
             description: data.description ? String(data.description) : undefined,
             datasetId: data.datasetId ? String(data.datasetId) : undefined,
-            createAt: data.createAt ? String(data.createAt) : undefined
+            createAt: data.createAt ? String(data.createAt) : undefined,
+            labelStatus: data.labelStatus ? String(data.labelStatus).toUpperCase() : undefined
           })
 
           if (data.datasetId) {
@@ -83,7 +99,22 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A'
-    return new Date(dateString).toLocaleDateString('vi-VN')
+    return new Date(dateString).toLocaleString('vi-VN')
+  }
+
+  const getStatusColor = (status?: string) => {
+    switch (status?.toUpperCase()) {
+      case 'ACTIVE':
+        return 'processing'
+      case 'COMPLETED':
+        return 'success'
+      case 'INACTIVE':
+        return 'error'
+      case 'DRAFT':
+        return 'default'
+      default:
+        return 'default'
+    }
   }
 
   if (loading) {
@@ -96,10 +127,12 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
 
   if (!label) {
     return (
-      <div className="w-full text-center py-10 text-gray-400">
-        Error loading label information.
-      </div>
+      <div className="w-full text-center py-10 text-gray-400">Error loading label information.</div>
     )
+  }
+
+  if (viewDatasetId) {
+    return <DatasetDetail datasetId={viewDatasetId} onBack={() => setViewDatasetId(null)} />
   }
 
   return (
@@ -117,12 +150,20 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
             <Title level={3} className="!text-white !m-0 !font-display">
               {label.labelName || 'Unnamed Label'}
             </Title>
+            <div className="mt-2">
+              <Tag
+                color={getStatusColor(label.labelStatus)}
+                className="m-0 font-medium text-sm px-3 py-1"
+              >
+                {label.labelStatus || 'UNKNOWN'}
+              </Tag>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Main Info Card */}
-      <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-6 p-0 overflow-hidden">
+      <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-2 p-0 overflow-hidden">
         <div className="flex flex-col lg:flex-row h-full w-full">
           {/* Left: Label Information */}
           <div className="flex-1 p-6 border-b lg:border-b-0 lg:border-r border-gray-800">
@@ -145,6 +186,13 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
                   {label.labelId}
                 </span>
               </Descriptions.Item>
+              {label.labelStatus && (
+                <Descriptions.Item label="Status">
+                  <span className={`font-semibold ${label.labelStatus === 'ACTIVE' ? 'text-green-400' : 'text-red-400'}`}>
+                    {label.labelStatus}
+                  </span>
+                </Descriptions.Item>
+              )}
               <Descriptions.Item label="Color">
                 {label.color ? (
                   <div className="flex items-center gap-2">
@@ -158,28 +206,13 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
                   <span className="text-gray-600 italic">N/A</span>
                 )}
               </Descriptions.Item>
-              <Descriptions.Item label="Created At">
-                {formatDate(label.createAt)}
-              </Descriptions.Item>
-              <Descriptions.Item label="Associated Dataset">
-                {label.datasetId ? (
-                  <span
-                    className="text-blue-400 hover:text-blue-300 cursor-pointer transition-colors"
-                    onClick={() => navigate(`/manager/datasets?tab=label&labelId=${labelId}&datasetId=${label.datasetId}`)}
-                  >
-                    <DatabaseOutlined className="mr-1" />
-                    {datasetName || `Dataset ID: ${label.datasetId}`}
-                  </span>
-                ) : (
-                  <span className="text-gray-600 italic">No dataset associated</span>
-                )}
-              </Descriptions.Item>
+              <Descriptions.Item label="Created At">{formatDate(label.createAt)}</Descriptions.Item>
             </Descriptions>
           </div>
 
           {/* Right: Description */}
           <div className="flex-1 p-6 flex flex-col">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-2">
               <span className="text-white text-lg font-display flex items-center gap-2">
                 <span className="material-symbols-outlined text-green-400">description</span>
                 Description
@@ -195,6 +228,30 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
           </div>
         </div>
       </Card>
+
+      <div className="grid grid-cols-1 mb-2 mt-2">
+        <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-white text-lg font-display flex items-center gap-2">
+              <DatabaseOutlined className="text-fuchsia-400" />
+              Associated Dataset
+            </span>
+          </div>
+          {label.datasetId ? (
+            <div
+              className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-fuchsia-500/30 transition-colors cursor-pointer"
+              onClick={() => setViewDatasetId(label.datasetId || null)}
+            >
+              <h4 className="text-white font-bold text-sm truncate">
+                {datasetName ? datasetName : `Dataset ID: ${label.datasetId}`}
+              </h4>
+              <div className="text-gray-400 text-xs mt-1">Click to view dataset details</div>
+            </div>
+          ) : (
+            <div className="text-gray-500 italic py-4 text-center">No associated dataset</div>
+          )}
+        </Card>
+      </div>
 
       <style>{`
         .custom-descriptions .ant-descriptions-title {

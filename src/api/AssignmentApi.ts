@@ -3,9 +3,11 @@ import { ENDPOINTS } from './endpoints'
 
 interface GetAssignmentsParams {
   assignmentId?: string
+  id?: string
   projectId?: string
   datasetId?: string
   assignmentName?: string
+  name?: string
   assignedTo?: string
   assignedBy?: string
   reviewerId?: string
@@ -13,6 +15,7 @@ interface GetAssignmentsParams {
   totalItems?: number
   completedItems?: number
   description?: string
+  descriptionAssignment?: string
   status?: string
   assignmentStatus?: string
   dueDate?: string
@@ -59,6 +62,18 @@ const assignmentApi = {
       throw error
     }
   },
+  getAssignmentsByReviewer(reviewerId: string) {
+    try {
+      // Giả sử lấy assignments tổng có thể filter theo reviewer
+      // Hiện tại API assignments của Annotator đang dùng `BY_ANNOTATOR`, do backend quyết định
+      // Theo ý người dùng, api này dùng chung với annotator
+      const url = ENDPOINTS.ASSIGNMENTS.BY_ANNOTATOR(reviewerId)
+      return axiosClient.get(url)
+    } catch (error) {
+      console.error('Failed to fetch assignments by reviewer', error)
+      throw error
+    }
+  },
   createAssignment(assignmentData?: GetAssignmentsParams) {
     try {
       const url = ENDPOINTS.ASSIGNMENTS.CREATE_BY_PROJECT(assignmentData?.projectId || '')
@@ -70,7 +85,7 @@ const assignmentApi = {
   },
   updateAssignment(id: string, assignmentData?: GetAssignmentsParams) {
     try {
-      const url = ENDPOINTS.ASSIGNMENTS.DETAIL(id)
+      const url = ENDPOINTS.ASSIGNMENTS.UPDATE(id)
       return axiosClient.put(url, assignmentData)
     } catch (error) {
       console.error('Failed to update assignment', error)
@@ -80,7 +95,7 @@ const assignmentApi = {
   deleteAssignment(id: string) {
     try {
       const url = ENDPOINTS.ASSIGNMENTS.DELETE(id)
-      return axiosClient.patch(url)
+      return axiosClient.delete(url)
     } catch (error) {
       console.error('Failed to delete assignment', error)
       throw error
@@ -101,6 +116,33 @@ const assignmentApi = {
       return axiosClient.post(url, assignmentData)
     } catch (error) {
       console.error('Failed to create assignment for project', error)
+      throw error
+    }
+  },
+  getLabelsByAssignmentId(assignmentId: string) {
+    try {
+      const url = ENDPOINTS.ASSIGNMENTS.LABELS(assignmentId)
+      return axiosClient.get(url)
+    } catch (error) {
+      console.error('Failed to fetch labels for assignment', error)
+      throw error
+    }
+  },
+  getDatasetByAssignmentId(assignmentId: string) {
+    try {
+      const url = ENDPOINTS.ASSIGNMENTS.DATASET(assignmentId)
+      return axiosClient.get(url)
+    } catch (error) {
+      console.error('Failed to fetch dataset for assignment', error)
+      throw error
+    }
+  },
+  changeAssignmentDataset(assignmentId: string, datasetId: string) {
+    try {
+      const url = ENDPOINTS.ASSIGNMENTS.CHANGE_DATASET(assignmentId)
+      return axiosClient.put(url, { datasetId })
+    } catch (error) {
+      console.error('Failed to change assignment dataset', error)
       throw error
     }
   }

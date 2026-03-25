@@ -1,6 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { Tooltip } from 'antd'
+import { Spin, message } from 'antd'
+import assignmentApi from '@/api/AssignmentApi'
+import taskApi from '@/api/TaskApi'
+import annotationApi from '@/api/annotation'
+import type { AnnotationSubmitItem } from '@/shared/types/api.types'
 
 interface Shape {
   type: 'bounding_box' | 'polygon'
@@ -16,25 +20,48 @@ interface Shape {
   isPreview?: boolean
 }
 
-import {
-  MOCK_DATA_ITEMS,
-  AVAILABLE_LABELS,
-  MOCK_TEST_ANNOTATION_ITEMS
-} from '@/features/annotator'
+interface Label {
+  labelId: string
+  labelName: string
+  color: string
+  description?: string
+}
 
+interface DataItem {
+  itemId: string
+  fileName: string
+  url: string
+  fileFormat: string
+  dataType: string
+  dataItem?: {
+    itemId?: string
+    fileName?: string
+    url?: string
+    fileFormat?: string
+    dataType?: string
+  }
+}
 
 export default function AnnotationPage() {
   const { taskId } = useParams<{ taskId: string }>()
   const navigate = useNavigate()
   const location = useLocation()
 
-  // Get starting index from state if passed, otherwise 0
-  const state = location.state as { startIndex?: number } | null
+  // Get starting index and assignmentId from state if passed
+  const state = location.state as { startIndex?: number; assignmentId?: string } | null
   const startIdx = state?.startIndex || 0
+  const assignmentId = state?.assignmentId
+
+  const [dataItems, setDataItems] = useState<DataItem[]>([])
+  const [labels, setLabels] = useState<Label[]>([])
   const [currentIndex, setCurrentIndex] = useState(startIdx)
-  const [selectedLabels, setSelectedLabels] = useState<string[]>([AVAILABLE_LABELS[0].name])
-  const [currentLabel, setCurrentLabel] = useState(AVAILABLE_LABELS[0])
+  const [selectedLabels, setSelectedLabels] = useState<string[]>([])
+  const [currentLabel, setCurrentLabel] = useState<Label | null>(null)
   const [comment, setComment] = useState('This is a preliminary scan observation.')
+  const [confidence, setConfidence] = useState<'LOW' | 'MEDIUM' | 'HIGH' | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [isDirty, setIsDirty] = useState(false)
 
   // Zoom and Tool States
   const [zoom, setZoom] = useState(1)
@@ -46,11 +73,352 @@ export default function AnnotationPage() {
   const [currentShape, setCurrentShape] = useState<Shape | null>(null)
   const [shapes, setShapes] = useState<Shape[]>([])
 
-  const dataItems = taskId === 'test-task-1' ? MOCK_TEST_ANNOTATION_ITEMS : MOCK_DATA_ITEMS
+  // New: Redo Stack
+  const [redoStack, setRedoStack] = useState<Shape[]>([])
+
+  // Resizable sidebars
+  const [leftWidth, setLeftWidth] = useState(260)
+  const [rightWidth, setRightWidth] = useState(320)
+  const draggingRef = useRef<'left' | 'right' | null>(null)
+  const dragStartXRef = useRef(0)
+  const dragStartWidthRef = useRef(0)
+
+  useEffect(() => {
+    const onMouseMove = (e: MouseEvent) => {
+      if (!draggingRef.current) return
+      const delta = e.clientX - dragStartXRef.current
+      if (draggingRef.current === 'left') {
+        setLeftWidth(Math.max(160, Math.min(500, dragStartWidthRef.current + delta)))
+      } else {
+        setRightWidth(Math.max(200, Math.min(600, dragStartWidthRef.current - delta)))
+      }
+    }
+    const onMouseUp = () => { draggingRef.current = null; document.body.style.cursor = '' }
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
+    return () => {
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+    }
+  }, [])
+
+  // Store all annotations in current session before bulk submit
+  const [sessionAnnotations, setSessionAnnotations] = useState<AnnotationSubmitItem[]>([])
+
+  // Persistence Keys
+  const STORAGE_KEY_SESSIONS = `annotation_session_${taskId}`
+  const STORAGE_KEY_INDEX = `annotation_index_${taskId}`
+
+  // Save progress automatically
+  useEffect(() => {
+    if (!loading && taskId && (sessionAnnotations.length > 0 || currentIndex > 0)) {
+      localStorage.setItem(STORAGE_KEY_SESSIONS, JSON.stringify(sessionAnnotations))
+      localStorage.setItem(STORAGE_KEY_INDEX, String(currentIndex))
+    }
+  }, [sessionAnnotations, currentIndex, taskId, STORAGE_KEY_SESSIONS, STORAGE_KEY_INDEX, loading])
+
+  // Auto-save realtime changes (with debounce)
+  useEffect(() => {
+    if (loading || !dataItems[currentIndex]) return
+    const timeout = setTimeout(() => {
+      saveCurrentToSession()
+    }, 500)
+    return () => clearTimeout(timeout)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shapes, comment, selectedLabels, confidence, loading])
+
+  const loadFromSession = useCallback(
+    (item: DataItem | undefined, annotationsToSearch?: AnnotationSubmitItem[]) => {
+      if (!item) return
+      const itemId =
+        (item as any).dataItemId ||
+        (item as any).dataitemId ||
+        item.itemId ||
+        (item as any).dataItem?.itemId ||
+        (item as any).id
+      const sourceAnnotations = annotationsToSearch || sessionAnnotations
+      const existing = sourceAnnotations.find((a) => a.dataitemId === itemId)
+
+      // Zoom and pan reset
+      setZoom(1)
+      setOffset({ x: 0, y: 0 })
+      setIsDrawing(false)
+      setCurrentShape(null)
+      // Reset Redo Stack on page change
+      setRedoStack([])
+      setIsDirty(false)
+
+      if (existing) {
+        setShapes((existing.annotationData.shapes as Shape[]) || (existing.annotationData.raw as Shape[]) || [])
+        setComment(existing.comment || '')
+        setSelectedLabels(existing.labelIds || [])
+        setConfidence((existing.annotationConfidence as 'LOW' | 'MEDIUM' | 'HIGH') || null)
+      } else {
+        setShapes([])
+        setComment('This is a preliminary scan observation.')
+        setConfidence(null)
+        if (labels.length > 0) {
+          setSelectedLabels([labels[0].labelId])
+        } else {
+          setSelectedLabels([])
+        }
+      }
+    },
+    [sessionAnnotations, labels]
+  )
+
+  useEffect(() => {
+    async function fetchData() {
+      if (!taskId) return
+      setLoading(true)
+      try {
+        // 1. Fetch task items
+        const taskRes = await taskApi.getTaskDataItems(taskId)
+        const items = taskRes.data?.data || taskRes.data || []
+        setDataItems(Array.isArray(items) ? items : [])
+
+        // Try to recover assignmentId from task if missing (e.g., on refresh)
+        let effectiveAssignmentId = assignmentId
+        if (!effectiveAssignmentId && items.length > 0) {
+          effectiveAssignmentId = items[0].assignmentId
+        }
+
+        // 2. Fetch labels if effectiveAssignmentId is available
+        if (effectiveAssignmentId) {
+          try {
+            const labelsRes = await assignmentApi.getLabelsByAssignmentId(effectiveAssignmentId)
+            const labelsData = labelsRes.data?.data || labelsRes.data || []
+            if (Array.isArray(labelsData)) {
+              // Normalize internal label structure to match UI expectations
+              const normLabels = labelsData.map((l: any) => ({
+                ...l,
+                labelId: l.labelId || l.id,
+                labelName: l.labelName || l.name,
+                color: l.color || '#8b5cf6'
+              }))
+              setLabels(normLabels)
+              if (normLabels.length > 0) {
+                setCurrentLabel(normLabels[0])
+                setSelectedLabels([normLabels[0].labelId])
+              }
+            }
+          } catch (labelErr) {
+            console.error('Failed to fetch labels for assignment:', labelErr)
+          }
+        }
+
+        // 3. Restore from localStorage if available
+        const savedSessions = localStorage.getItem(STORAGE_KEY_SESSIONS)
+        const savedIndex = localStorage.getItem(STORAGE_KEY_INDEX)
+
+        if (savedSessions) {
+          try {
+            const parsed = JSON.parse(savedSessions)
+            setSessionAnnotations(parsed)
+
+            const restoredIdx = savedIndex !== null ? parseInt(savedIndex) : startIdx
+            if (restoredIdx >= 0 && restoredIdx < items.length) {
+              setCurrentIndex(restoredIdx)
+              // We need to load from the RESTORED session, not the state yet
+              const restoredItem = items[restoredIdx]
+              const restoredItemId =
+                (restoredItem as any).dataItemId ||
+                (restoredItem as any).dataitemId ||
+                restoredItem.itemId ||
+                (restoredItem as any).dataItem?.itemId ||
+                restoredItem.id
+              const existing = parsed.find(
+                (a: AnnotationSubmitItem) => a.dataitemId === restoredItemId
+              )
+              if (existing) {
+                setShapes((existing.annotationData.shapes as Shape[]) || (existing.annotationData.raw as Shape[]) || [])
+                setComment(existing.comment || '')
+                setSelectedLabels(existing.labelIds || [])
+                setConfidence((existing.annotationConfidence as 'LOW' | 'MEDIUM' | 'HIGH') || null)
+              }
+            }
+          } catch (e) {
+            console.warn('Failed to restore session:', e)
+          }
+        } else {
+          // Normal first-time load
+          loadFromSession(items[currentIndex])
+        }
+      } catch (err) {
+        console.error('Failed to load annotation data:', err)
+        setError('Failed to load annotation data. Please try again.')
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taskId, assignmentId])
+
   const currentItem = dataItems[currentIndex]
   const totalItems = dataItems.length
+  const currentItemId = currentItem ? (((currentItem as any).dataItemId ||
+    (currentItem as any).dataitemId ||
+    currentItem.itemId ||
+    (currentItem as any).dataItem?.itemId ||
+    (currentItem as any).id) as string) : ''
+  const currentAnnotation = sessionAnnotations.find(a => a.dataitemId === currentItemId)
 
-  // Reset zoom and tools when changing image is now handled in handleNext/handlePrevious
+  // Background fetch all remote annotations to populate thumbnail statuses
+  useEffect(() => {
+    if (dataItems.length === 0) return
+
+    dataItems.forEach(async (item) => {
+      const itemId = ((item as any).dataItemId || (item as any).dataitemId || item.itemId || (item as any).dataItem?.itemId || (item as any).id) as string
+      if (!itemId) return
+
+      try {
+        // Fire and forget
+        const res = await annotationApi.getAnnotationByDataItemId(itemId)
+        const remoteAnno = res.data?.data || res.data
+        if (remoteAnno && remoteAnno.annotationId) {
+          const rvComment = remoteAnno.reviews?.[0]?.comment || ''
+          let annoData = { shapes: [], raw: [] }
+          if (remoteAnno.annotationData) {
+            try {
+              annoData = typeof remoteAnno.annotationData === 'string'
+                ? JSON.parse(remoteAnno.annotationData)
+                : remoteAnno.annotationData
+            } catch (e) { }
+          }
+
+          const newAnno: AnnotationSubmitItem = {
+            annotationConfidence: remoteAnno.annotationConfidence || remoteAnno.annotation_confidence || null,
+            annotationData: annoData,
+            annotationStatus: (remoteAnno.annotationStatus || remoteAnno.annotation_status || 'DRAFT'),
+            annotationType: (remoteAnno.annotationType || remoteAnno.annotation_type || 'CLASSIFICATION'),
+            comment: remoteAnno.comment || '',
+            dataitemId: itemId,
+            labelIds: remoteAnno.labels || remoteAnno.labelIds || []
+          }
+            ; (newAnno as any).reviewerComment = rvComment
+            ; (newAnno as any).isRemote = true
+
+          setSessionAnnotations((prev) => {
+            const existingIndex = prev.findIndex((a) => a.dataitemId === itemId)
+            if (existingIndex >= 0) {
+              const existing = prev[existingIndex]
+
+              // Always update if server status is more "definitive" (e.g. APPROVED/REJECTED) vs local SUBMITTED / DRAFT
+              // Or if local status is 'DRAFT' but server has real data
+              const serverStatus = newAnno.annotationStatus.toUpperCase()
+              const localStatus = (existing.annotationStatus || 'DRAFT').toUpperCase()
+
+              // Decision: If server is REJECTED or APPROVED, we should definitely show that. 
+              // Also if server changed desde local, we update status/comments/shapes from server
+              // (This solves the conflict where local storage still thinks it's SUBMITTED)
+              if (serverStatus !== localStatus || !(existing as any).isRemote) {
+                const updated = [...prev]
+                updated[existingIndex] = {
+                  ...newAnno,
+                  // If server is REJECTED, we load its exact shapes/labels from server too
+                  annotationData: (serverStatus === 'REJECTED' || serverStatus === 'APPROVED')
+                    ? newAnno.annotationData
+                    : existing.annotationData
+                } as any
+                return updated
+              }
+              return prev
+            } else {
+              return [...prev, newAnno]
+            }
+          })
+        }
+      } catch (err) {
+        // Ignore errors (e.g. 404 Not Found if no annotation exists yet)
+      }
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataItems])
+
+  // Fetch remote annotation whenever currentItemId changes
+  useEffect(() => {
+    if (!currentItemId) return
+    let isMounted = true
+
+    const fetchRemote = async () => {
+      try {
+        const res = await annotationApi.getAnnotationByDataItemId(currentItemId)
+        if (!isMounted) return
+
+        const remoteAnno = res.data?.data || res.data
+        if (remoteAnno && remoteAnno.annotationId) {
+          const rvComment = remoteAnno.reviews?.[0]?.comment || ''
+          let annoData = { shapes: [], raw: [] }
+          if (remoteAnno.annotationData) {
+            try {
+              annoData = typeof remoteAnno.annotationData === 'string'
+                ? JSON.parse(remoteAnno.annotationData)
+                : remoteAnno.annotationData
+            } catch (e) {
+              console.warn('Failed to parse annotationData', e)
+            }
+          }
+
+          const newAnno: AnnotationSubmitItem = {
+            annotationConfidence: remoteAnno.annotationConfidence || remoteAnno.annotation_confidence || null,
+            annotationData: annoData,
+            annotationStatus: (remoteAnno.annotationStatus || remoteAnno.annotation_status || 'DRAFT'),
+            annotationType: (remoteAnno.annotationType || remoteAnno.annotation_type || 'CLASSIFICATION'),
+            comment: remoteAnno.comment || '',
+            dataitemId: currentItemId,
+            labelIds: remoteAnno.labels || remoteAnno.labelIds || []
+          }
+            ; (newAnno as any).reviewerComment = rvComment
+            ; (newAnno as any).isRemote = true // Mark as fetched from remote
+
+          setSessionAnnotations((prev) => {
+            const existingIndex = prev.findIndex((a) => a.dataitemId === currentItemId)
+            const existing = prev[existingIndex]
+
+            if (existingIndex >= 0) {
+              const serverStatus = newAnno.annotationStatus.toUpperCase()
+              const localStatus = (existing.annotationStatus || 'DRAFT').toUpperCase()
+
+              // If server changed (REJECTED/APPROVED), always update the status/cache
+              if (serverStatus !== localStatus || !(existing as any).isRemote) {
+                const updated = [...prev]
+                updated[existingIndex] = {
+                  ...newAnno,
+                  annotationData: (serverStatus === 'REJECTED' || serverStatus === 'APPROVED')
+                    ? newAnno.annotationData
+                    : existing.annotationData
+                } as any
+                return updated
+              }
+              return prev
+            } else {
+              return [...prev, newAnno]
+            }
+          })
+
+          // Sync the UI directly
+          const shapesData = (annoData.shapes as Shape[]) || (annoData.raw as Shape[]) || []
+          setShapes(shapesData)
+          setComment(remoteAnno.comment || '')
+          setConfidence((remoteAnno.annotationConfidence as any) || null)
+          setSelectedLabels(remoteAnno.labels || [])
+        }
+      } catch (err) {
+        console.warn('No remote annotation found or error fetching', err)
+      }
+    }
+
+    // Only fetch if we don't already have it as remote
+    const existing = sessionAnnotations.find(a => a.dataitemId === currentItemId)
+    if (!existing || !(existing as any).isRemote) {
+      fetchRemote()
+    }
+
+    return () => {
+      isMounted = false
+    }
+  }, [currentItemId])
 
   const handleWheel = (e: React.WheelEvent) => {
     const delta = e.deltaY > 0 ? -0.1 : 0.1
@@ -71,6 +439,11 @@ export default function AnnotationPage() {
       return
     }
 
+    if (!currentLabel) {
+      message.warning('Please select a label to start drawing.')
+      return
+    }
+
     const rect = e.currentTarget.getBoundingClientRect()
     const x = (e.clientX - rect.left) / zoom
     const y = (e.clientY - rect.top) / zoom
@@ -81,11 +454,10 @@ export default function AnnotationPage() {
         setCurrentShape({
           type: 'polygon',
           points: [[x, y]],
-          label: currentLabel.name,
+          label: currentLabel.labelName,
           color: currentLabel.color
         })
       } else if (currentShape && currentShape.points) {
-        // Add more points - strip preview if exists
         const points = currentShape.isPreview
           ? currentShape.points.slice(0, -1)
           : currentShape.points
@@ -104,7 +476,7 @@ export default function AnnotationPage() {
         height: 0,
         startX: x,
         startY: y,
-        label: currentLabel.name,
+        label: currentLabel.labelName,
         color: currentLabel.color
       })
     }
@@ -142,7 +514,6 @@ export default function AnnotationPage() {
 
     if (tool === 'polygon' && currentShape && currentShape.points) {
       const points = [...currentShape.points]
-      // If already has a preview point (from previous mouse move), replace it
       if (points.length > 1 && currentShape.isPreview) {
         points[points.length - 1] = [x, y]
       } else {
@@ -161,20 +532,22 @@ export default function AnnotationPage() {
     setIsDrawing(false)
     if (currentShape) {
       setShapes([...shapes, currentShape])
+      setRedoStack([])
       setCurrentShape(null)
+      setIsDirty(true)
     }
   }
 
-  // Close polygon or handle double click simulation
   const finishPolygon = () => {
     if (tool === 'polygon' && currentShape && currentShape.points) {
-      // Remove preview point if exists
       const finalPoints = currentShape.isPreview
         ? currentShape.points.slice(0, -1)
         : currentShape.points
 
       if (finalPoints.length >= 2) {
         setShapes([...shapes, { ...currentShape, points: finalPoints, isPreview: false }])
+        setRedoStack([])
+        setIsDirty(true)
       }
       setCurrentShape(null)
       setIsDrawing(false)
@@ -182,306 +555,494 @@ export default function AnnotationPage() {
   }
 
   const handleClearAll = () => {
-    setShapes([])
-    setCurrentShape(null)
-    setIsDrawing(false)
+    loadFromSession(dataItems[currentIndex])
+    setIsDirty(false)
   }
 
-  const resetAnnotationState = () => {
-    setZoom(1)
-    setOffset({ x: 0, y: 0 })
-    setShapes([])
-    setIsDrawing(false)
-    setCurrentShape(null)
+  const handleUndo = () => {
+    if (shapes.length === 0) return
+    const lastShape = shapes[shapes.length - 1]
+    setShapes(shapes.slice(0, -1))
+    setRedoStack((prev) => [...prev, lastShape])
+    setIsDirty(true)
   }
 
-  const handleNext = () => {
-    resetAnnotationState()
-    if (currentIndex < totalItems - 1) {
-      setCurrentIndex(currentIndex + 1)
-    } else {
-      setCurrentIndex(0)
+  const handleRedo = () => {
+    if (redoStack.length === 0) return
+    const shapeToRestore = redoStack[redoStack.length - 1]
+    setRedoStack(redoStack.slice(0, -1))
+    setShapes([...shapes, shapeToRestore])
+    setIsDirty(true)
+  }
+
+  const createAnnotationPayload = (
+    itemId: string,
+    status: AnnotationSubmitItem['annotationStatus'] = 'DRAFT'
+  ): AnnotationSubmitItem => {
+    return {
+      annotationConfidence: confidence || 'LOW',
+      annotationData: {
+        shapes: shapes,
+        comment: comment,
+        labels: selectedLabels
+      },
+      annotationStatus: status,
+      annotationType: shapes.some((s) => s.type === 'bounding_box')
+        ? 'BOUNDING_BOX'
+        : shapes.some((s) => s.type === 'polygon')
+          ? 'POLYGON'
+          : 'CLASSIFICATION',
+      comment: comment,
+      dataitemId: itemId,
+      labelIds: selectedLabels
     }
   }
 
-  const handlePrevious = () => {
-    resetAnnotationState()
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1)
-    } else {
-      setCurrentIndex(totalItems - 1)
-    }
+  const saveCurrentToSession = () => {
+    if (!currentItem) return
+    const itemId =
+      (currentItem as any).dataItemId ||
+      (currentItem as any).dataitemId ||
+      currentItem.itemId ||
+      (currentItem as any).dataItem?.itemId ||
+      (currentItem as any).id
+    if (!itemId) return
+
+    const existingStatus = sessionAnnotations.find((a) => a.dataitemId === itemId)?.annotationStatus || 'DRAFT'
+    const newAnnotation = createAnnotationPayload(itemId, existingStatus)
+    setSessionAnnotations((prev) => {
+      const existingIndex = prev.findIndex((a) => a.dataitemId === itemId)
+      if (existingIndex >= 0) {
+        const updated = [...prev]
+        // Ensure we explicitly maintain any external flags like isRemote if we're saving local changes
+        updated[existingIndex] = {
+          ...newAnnotation,
+          isRemote: (prev[existingIndex] as any).isRemote,
+          reviewerComment: (prev[existingIndex] as any).reviewerComment
+        } as any
+        return updated
+      }
+      return [...prev, newAnnotation]
+    })
   }
 
-  const toggleLabel = (labelObj: (typeof AVAILABLE_LABELS)[0]) => {
+  const handleItemSelect = (idx: number) => {
+    saveCurrentToSession()
+    loadFromSession(dataItems[idx])
+    setCurrentIndex(idx)
+  }
+
+  const toggleLabel = (labelObj: Label) => {
     setCurrentLabel(labelObj)
     setSelectedLabels((prev) =>
-      prev.includes(labelObj.name)
-        ? prev.filter((l) => l !== labelObj.name)
-        : [...prev, labelObj.name]
+      prev.includes(labelObj.labelId)
+        ? prev.filter((l) => l !== labelObj.labelId)
+        : [...prev, labelObj.labelId]
+    )
+    setIsDirty(true)
+  }
+
+  const handleSubmitTask = async () => {
+    if (!taskId || !currentItemId) return
+    saveCurrentToSession()
+
+    try {
+      setLoading(true)
+      const currentAnnotation = createAnnotationPayload(currentItemId, 'SUBMITTED')
+
+      const payload = {
+        taskId,
+        annotationConfidence: currentAnnotation.annotationConfidence,
+        annotationData: currentAnnotation.annotationData,
+        annotationStatus: currentAnnotation.annotationStatus,
+        annotationType: currentAnnotation.annotationType,
+        comment: currentAnnotation.comment,
+        dataitemId: currentAnnotation.dataitemId,
+        labelIds: currentAnnotation.labelIds
+      }
+
+      console.log('🚀 SUBMITTING SINGLE ANNOTATION TO BE:', payload)
+
+      await annotationApi.submitSingleAnnotation(payload)
+
+      setIsDirty(false)
+      setSessionAnnotations((prev) => {
+        const existingIndex = prev.findIndex((a) => a.dataitemId === currentItemId)
+        const updated = [...prev]
+        if (existingIndex >= 0) {
+          updated[existingIndex] = { ...currentAnnotation, isRemote: true } as any
+        } else {
+          updated.push({ ...currentAnnotation, isRemote: true } as any)
+        }
+        return updated
+      })
+
+      message.success('Annotation updated successfully!')
+    } catch (err) {
+      console.error(err)
+      setError('Failed to submit annotation.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-[#0f0e17] gap-4">
+        <Spin size="large" />
+        <span className="text-violet-400 font-mono text-sm animate-pulse">
+          Loading annotation workspace...
+        </span>
+      </div>
+    )
+  }
+
+  if (error || !currentItem) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-[#0f0e17] gap-4">
+        <span className="material-symbols-outlined text-red-500 text-5xl">error</span>
+        <span className="text-red-400 font-medium">{error || 'No data items found.'}</span>
+        <button
+          onClick={() => navigate(-1)}
+          className="mt-4 px-6 py-2 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-all font-bold"
+        >
+          Go Back
+        </button>
+      </div>
     )
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col h-screen overflow-hidden bg-[#0f0e17]">
-      {/* Top Navigation / Breadcrumb */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-[#16161a]">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-1.5 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors cursor-pointer"
-          >
-            <span className="material-symbols-outlined text-[20px]">arrow_back</span>
-          </button>
-          <div className="h-4 w-[1px] bg-white/10" />
-          <div className="flex flex-col">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-violet-400">
-              Assignment
-            </span>
-            <h2 className="text-sm font-bold text-white tracking-tight">
-              Image Classification - Batch A
-            </h2>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-6">
-          <div className="flex flex-col items-end">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">
-              Task ID
-            </span>
-            <span className="text-xs font-mono text-gray-300">{taskId}</span>
-          </div>
-          <button className="bg-violet-600 hover:bg-violet-500 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow-lg shadow-violet-900/20 transition-all cursor-pointer">
-            Submit Task
-          </button>
-        </div>
+    <div className="fixed inset-0 z-[100] flex flex-col h-screen bg-[#111116] text-white overflow-hidden font-sans">
+      {/* Optional minimal top bar for backing out */}
+      <div className="absolute top-4 left-4 z-[200]">
+        <button
+          onClick={() => {
+            saveCurrentToSession()
+            navigate(-1)
+          }}
+          className="px-4 py-2 bg-black/40 backdrop-blur border border-white/10 rounded-xl hover:bg-white/10 text-gray-400 flex items-center gap-2 transition text-sm font-medium shadow-xl absolute top-4 left-4 cursor-pointer"
+        >
+          <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+          <span>Back</span>
+        </button>
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left: Image Viewer */}
-        <div
-          className="flex-1 relative bg-black/40 flex items-center justify-center p-8 group overflow-hidden"
-          onWheel={handleWheel}
-        >
-          <div
-            className="relative shadow-2xl rounded-lg border border-white/5 transition-transform duration-200 ease-out will-change-transform"
-            style={{ transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})` }}
-          >
-            <img
-              src={currentItem.url}
-              alt={currentItem.filename}
-              className="max-w-full max-h-[70vh] object-contain select-none pointer-events-none"
-            />
+      <div className="flex flex-1 overflow-hidden h-full">
 
-            <svg
-              className={`absolute inset-0 w-full h-full ${tool === 'pan' ? 'cursor-pointer' : 'cursor-crosshair'}`}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onDoubleClick={finishPolygon}
-            >
-              {/* Existing Shapes */}
-              {shapes.map((shape, i) => (
-                <g key={i}>
-                  {shape.type === 'bounding_box' ? (
-                    <rect
-                      x={shape.x}
-                      y={shape.y}
-                      width={shape.width}
-                      height={shape.height}
-                      fill={`${shape.color}33`}
-                      stroke={shape.color}
-                      strokeWidth={2 / zoom}
-                    />
-                  ) : (
-                    <polyline
-                      points={shape.points?.map((p: [number, number]) => p.join(',')).join(' ')}
-                      fill={`${shape.color}33`}
-                      stroke={shape.color}
-                      strokeWidth={2 / zoom}
-                    />
-                  )}
-                </g>
-              ))}
-              {/* Current Shape */}
-              {currentShape && (
-                <g>
-                  {currentShape.type === 'bounding_box' ? (
-                    <rect
-                      x={currentShape.x}
-                      y={currentShape.y}
-                      width={currentShape.width}
-                      height={currentShape.height}
-                      fill={`${currentShape.color}66`}
-                      stroke={currentShape.color}
-                      strokeWidth={2 / zoom}
-                    />
-                  ) : (
-                    <polyline
-                      points={currentShape.points
-                        ?.map((p: [number, number]) => p.join(','))
-                        .join(' ')}
-                      fill={`${currentShape.color}66`}
-                      stroke={currentShape.color}
-                      strokeWidth={2 / zoom}
-                    />
-                  )}
-                </g>
-              )}
-            </svg>
+        {/* Left Column: Thumbnail List */}
+        <div style={{ width: leftWidth, minWidth: 160 }} className="border-r border-white/10 overflow-y-auto custom-scrollbar flex flex-col pt-16 mt-4 pb-4 shrink-0">
+          <div className="flex items-center px-2 py-2 border-b border-white/10 mx-4 mb-2 gap-3 text-[10px] font-bold uppercase tracking-widest text-gray-500">
+            <span className="w-10 shrink-0 text-center">Status</span>
+            <span className="w-16 shrink-0 text-center">Image</span>
+            <span className="flex-1">Shapes</span>
           </div>
 
-          {/* Tools Overlay - Moved outside scaling container to keep size fixed */}
-          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/80 backdrop-blur-md rounded-2xl border border-white/10 flex items-center gap-2 shadow-2xl z-20">
-            <ToolbarButton
-              icon="pan_tool"
-              title="Pan Tool"
-              active={tool === 'pan'}
-              onClick={() => setTool('pan')}
-            />
-            <ToolbarButton icon="zoom_in" title="Zoom In" onClick={handleZoomIn} />
-            <ToolbarButton icon="zoom_out" title="Zoom Out" onClick={handleZoomOut} />
-            <ToolbarButton icon="restart_alt" title="Reset Zoom" onClick={handleZoomReset} />
-            <div className="w-[1px] h-4 bg-white/20 mx-1" />
-            <ToolbarButton
-              icon="crop_free"
-              title="Bounding Box"
-              active={tool === 'box'}
-              onClick={() => setTool('box')}
-            />
-            <ToolbarButton
-              icon="polyline"
-              title="Polygon Tool"
-              active={tool === 'polygon'}
-              onClick={() => setTool('polygon')}
-            />
-            <div className="w-[1px] h-4 bg-white/20 mx-1" />
-            <ToolbarButton
-              icon="undo"
-              title="Undo"
-              onClick={() => setShapes(shapes.slice(0, -1))}
-            />
-            <ToolbarButton icon="delete" title="Clear All" onClick={handleClearAll} />
-          </div>
+          <div className="flex-1 flex flex-col px-4 gap-4">
+            {dataItems.map((item, idx) => {
+              const currentId =
+                (item as any).dataItemId ||
+                (item as any).dataitemId ||
+                item.itemId ||
+                (item as any).dataItem?.itemId ||
+                (item as any).id
+              const annotation = sessionAnnotations.find(a => a.dataitemId === currentId)
+              const shapeCount = ((annotation?.annotationData?.shapes as Shape[]) || []).length
+              const labelCount = annotation?.labelIds?.length || 0
 
-          {/* Zoom Indicator */}
-          <div className="absolute top-6 right-6 px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 flex items-center gap-2">
-            <span className="material-symbols-outlined text-[16px] text-gray-400">zoom_in</span>
-            <span className="text-xs font-mono text-gray-300">{(zoom * 100).toFixed(0)}%</span>
-          </div>
+              const displayStatus = annotation?.annotationStatus?.toUpperCase()
 
-          {/* Image Filename Overlay */}
-          <div className="absolute top-6 left-6 px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-white/10">
-            <span className="text-xs font-mono text-gray-300">{currentItem.filename}</span>
-          </div>
+              const isSelected = currentIndex === idx;
+              return (
+                <div
+                  key={currentId || idx}
+                  onClick={() => handleItemSelect(idx)}
+                  className="flex items-center gap-3 cursor-pointer transition-all hover:bg-white/5 rounded-lg px-2 py-1.5"
+                >
+                  {/* Status — w-10 to match header */}
+                  <div className="w-10 shrink-0 flex justify-center">
+                    <div className={`w-2.5 h-2.5 rounded-full ${displayStatus === 'APPROVED'
+                        ? 'bg-violet-500 shadow-[0_0_8px_rgba(139,92,246,0.6)]'
+                        : (displayStatus === 'SUBMITTED')
+                          ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
+                          : (displayStatus === 'REJECTED' || displayStatus === 'NEEDS_EDITING')
+                            ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]'
+                            : 'bg-gray-500/50'
+                      }`} />
+                  </div>
 
-          {/* Pagination Indicator */}
-          <div className="absolute bottom-6 left-6 px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 flex items-center gap-2">
-            <span className="material-symbols-outlined text-[16px] text-gray-400">
-              photo_library
-            </span>
-            <div className="text-xs font-mono text-gray-500">
-              <span className="text-white font-bold">{currentIndex + 1}</span> / {totalItems}
-            </div>
+                  {/* Image — w-16 to match header */}
+                  <div className="relative shrink-0 w-16">
+                    <img
+                      src={item.url || (item as any).dataItem?.url || (item as any).dataitem?.url || (item as any).previewUrl}
+                      alt={item.fileName || (item as any).dataItem?.fileName || (item as any).dataitem?.fileName || (item as any).filename}
+                      className={`w-16 h-12 object-cover rounded-md bg-black/50 border-[2px] ${isSelected ? 'border-violet-500 shadow-[0_0_12px_rgba(139,92,246,0.4)]' : 'border-white/10'}`}
+                    />
+                    {/* Shape count badge */}
+                    <div className={`absolute -bottom-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center text-[10px] font-bold border ${shapeCount > 0
+                        ? 'bg-violet-600 border-violet-400/50 text-white'
+                        : 'bg-black/70 border-white/10 text-gray-500'
+                      }`}>
+                      {shapeCount}
+                    </div>
+                  </div>
+
+                  {/* Shapes — flex-1 to match header */}
+                  <div className="flex flex-col min-w-0 flex-1">
+                    <span className="text-[10px] text-gray-600 leading-tight">
+                      {shapeCount > 0 ? `${shapeCount} shape${shapeCount !== 1 ? 's' : ''}` : 'no shapes'}
+                      {labelCount > 0 ? ` · ${labelCount} label${labelCount !== 1 ? 's' : ''}` : ''}
+                    </span>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
 
-        {/* Right: Annotation Sidebar */}
-        <div className="w-[380px] border-l border-white/5 bg-[#16161a] flex flex-col overflow-y-auto custom-scrollbar">
-          <div className="p-6 flex flex-col gap-8">
-            {/* Labels Section */}
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px] text-violet-400">label</span>
-                <span className="text-xs font-bold uppercase tracking-widest text-gray-400">
-                  Labels
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {AVAILABLE_LABELS.map((label) => (
-                  <button
-                    key={label.name}
-                    onClick={() => toggleLabel(label)}
-                    className={`
-                                            px-3 py-1.5 rounded-lg text-xs font-bold transition-all border
-                                            ${selectedLabels.includes(label.name)
-                        ? 'bg-white/10 text-white'
-                        : 'bg-white/5 border-transparent text-gray-500 hover:bg-white/10 hover:text-gray-300'
-                      }
-                                        `}
-                    style={{
-                      borderColor: selectedLabels.includes(label.name)
-                        ? label.color
-                        : 'transparent',
-                      color: selectedLabels.includes(label.name) ? label.color : undefined
-                    }}
-                  >
-                    {label.name}
-                  </button>
-                ))}
+        {/* Left Resize Handle */}
+        <div
+          className="w-1 shrink-0 cursor-col-resize hover:bg-violet-500/40 transition-colors bg-transparent group relative"
+          onMouseDown={(e) => {
+            draggingRef.current = 'left'
+            dragStartXRef.current = e.clientX
+            dragStartWidthRef.current = leftWidth
+            document.body.style.cursor = 'col-resize'
+            e.preventDefault()
+          }}
+        >
+          <div className="absolute inset-y-0 left-0 w-[3px] group-hover:bg-violet-500/40 transition-colors" />
+        </div>
+        <div className="flex-[2] flex flex-col relative overflow-hidden bg-[#111116] pt-12 pb-6 px-5 border-l-[2px] border-white/5 mx-2 my-2">
+
+          <div className="text-left mb-3">
+            <h2 className={`text-2xl font-medium tracking-wide transition-colors ${currentLabel ? 'text-gray-200' : 'text-gray-500'}`}>
+              Select label and click the image to start
+            </h2>
+          </div>
+
+          {/* Image Container */}
+          <div className="flex-1 relative flex">
+
+            {/* The Viewer */}
+            <div
+              className="relative shadow-2xl transition-transform duration-200 ease-out will-change-transform bg-[#1e293b]/50 overflow-hidden flex items-center justify-center w-full h-full mx-auto border-[1px] border-gray-600/80 shadow-[0_0_30px_rgba(96,165,250,0.15)]"
+              onWheel={handleWheel}
+            >
+              <div
+                className="relative transition-transform duration-200 ease-out will-change-transform flex items-center justify-center h-full w-full"
+                style={{ transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`, transformOrigin: 'center' }}
+              >
+                <img 
+                  src={currentItem.url || (currentItem as any).dataItem?.url || (currentItem as any).dataitem?.url || (currentItem as any).previewUrl} 
+                  alt={currentItem.fileName || (currentItem as any).dataItem?.fileName || (currentItem as any).dataitem?.fileName || (currentItem as any).filename} 
+                  className="max-w-full max-h-full object-contain pointer-events-none select-none" 
+                />
+
+                <svg
+                  className={`absolute inset-0 w-full h-full ${tool === 'pan' ? 'cursor-grab' : 'cursor-crosshair'}`}
+                  onMouseDown={handleMouseDown}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUp}
+                  onDoubleClick={finishPolygon}
+                >
+                  {shapes.map((shape, i) => (
+                    <g key={`shape-${i}-${shape.label}`}>
+                      {shape.type === 'bounding_box' ? (
+                        <rect
+                          x={shape.x}
+                          y={shape.y}
+                          width={shape.width}
+                          height={shape.height}
+                          fill={`${shape.color}33`}
+                          stroke={shape.color}
+                          strokeWidth={3 / zoom}
+                        />
+                      ) : (
+                        <polyline
+                          points={shape.points?.map((p: [number, number]) => p.join(',')).join(' ')}
+                          fill={`${shape.color}33`}
+                          stroke={shape.color}
+                          strokeWidth={3 / zoom}
+                        />
+                      )}
+                    </g>
+                  ))}
+                  {currentShape && (
+                    <g>
+                      {currentShape.type === 'bounding_box' ? (
+                        <rect
+                          x={currentShape.x}
+                          y={currentShape.y}
+                          width={currentShape.width}
+                          height={currentShape.height}
+                          fill={`${currentShape.color}66`}
+                          stroke={currentShape.color}
+                          strokeWidth={3 / zoom}
+                        />
+                      ) : (
+                        <polyline
+                          points={currentShape.points
+                            ?.map((p: [number, number]) => p.join(','))
+                            .join(' ')}
+                          fill={`${currentShape.color}66`}
+                          stroke={currentShape.color}
+                          strokeWidth={3 / zoom}
+                        />
+                      )}
+                    </g>
+                  )}
+                </svg>
               </div>
             </div>
 
-            {/* Comment Section */}
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px] text-amber-400">
-                  chat_bubble
-                </span>
-                <span className="text-xs font-bold uppercase tracking-widest text-gray-400">
-                  Comment
-                </span>
-              </div>
-              <textarea
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                className="w-full h-24 bg-white/5 rounded-xl border border-white/10 p-4 text-sm text-gray-300 focus:outline-none focus:border-violet-500/50 transition-colors resize-none"
-                placeholder="Add a comment about this data item..."
-              />
+            {/* Floating Tools on the right */}
+            <div className="absolute top-1/2 -translate-y-1/2 flex flex-col gap-2 bg-[#1e1b29] px-1.5 py-3 rounded-xl shadow-2xl border border-violet-500/20 z-20" style={{ right: '20px' }}>
+              {/* <span className="text-[9px] font-bold uppercase tracking-widest text-violet-400/60 text-center mb-2">Tools</span> */}
+              <ToolbarButton icon="pan_tool" active={tool === 'pan'} onClick={() => setTool('pan')} />
+              <ToolbarButton icon="zoom_in" onClick={handleZoomIn} />
+              <ToolbarButton icon="zoom_out" onClick={handleZoomOut} />
+              <ToolbarButton icon="restart_alt" onClick={handleZoomReset} />
+              <div className="w-full h-px bg-violet-500/20 my-1" />
+              <ToolbarButton icon="crop_free" active={tool === 'box'} onClick={() => setTool('box')} />
+              <ToolbarButton icon="polyline" active={tool === 'polygon'} onClick={() => setTool('polygon')} />
+            </div>
+          </div>
+
+
+          {/* Bottom Action Bar */}
+          <div className="mt-8 border-t border-white/10 pt-5 flex w-full items-center justify-between gap-4">
+
+            {/* Left: task counter */}
+            <span className="text-xs  font-mono text-gray-500">task {currentIndex + 1}/{totalItems}</span>
+
+            {/* Center: Undo / Redo / Reset */}
+            <div className="flex items-center gap-1 flex-1 justify-center">
+              <button onClick={handleUndo} className="px-3 py-1.5 cursor-pointer rounded-lg text-xs font-bold text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-all">undo</button>
+              <button onClick={handleRedo} className="px-3 py-1.5 cursor-pointer rounded-lg text-xs font-bold text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-all">redo</button>
+              <button onClick={handleClearAll} className="px-3 py-1.5 cursor-pointer rounded-lg text-xs font-bold text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-all">reset</button>
             </div>
 
-            {/* Version Info */}
-            <div className="flex flex-col gap-4">
+
+            {/* Submit on Right */}
+            <button
+              onClick={handleSubmitTask}
+              disabled={!isDirty || selectedLabels.length === 0 || !confidence}
+              className={`shrink-0 px-6 py-2 rounded-lg text-sm font-bold transition-all shadow-lg ${isDirty && selectedLabels.length > 0 && confidence
+                  ? 'bg-violet-600 hover:bg-violet-500 text-white shadow-violet-900/20 cursor-pointer'
+                  : 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'
+                }`}
+            >
+              Submit
+            </button>
+          </div>
+        </div>
+
+        {/* Right Resize Handle */}
+        <div
+          className="w-1 shrink-0 cursor-col-resize hover:bg-violet-500/40 transition-colors bg-transparent group relative"
+          onMouseDown={(e) => {
+            draggingRef.current = 'right'
+            dragStartXRef.current = e.clientX
+            dragStartWidthRef.current = rightWidth
+            document.body.style.cursor = 'col-resize'
+            e.preventDefault()
+          }}
+        >
+          <div className="absolute inset-y-0 left-0 w-[3px] group-hover:bg-violet-500/40 transition-colors" />
+        </div>
+
+        {/* Right Column: Comment, Labels, Confidence & Geometry */}
+        <div style={{ width: rightWidth, minWidth: 200 }} className="border-l border-white/5 px-6 py-6 flex flex-col gap-6 overflow-y-auto custom-scrollbar bg-[#16161a] shrink-0">
+
+          {/* Review Feedback (Only if Rejected) */}
+          {(currentAnnotation?.annotationStatus?.toUpperCase() === 'REJECTED' || currentAnnotation?.annotationStatus?.toUpperCase() === 'NEEDS_EDITING') && (
+            <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px] text-emerald-400">
-                  history
-                </span>
-                <span className="text-xs font-bold uppercase tracking-widest text-gray-400">
-                  Version
-                </span>
+                <span className="material-symbols-outlined text-[16px] text-rose-400">rate_review</span>
+                <span className="text-xs font-bold uppercase tracking-widest text-rose-400">Review Feedback</span>
               </div>
-              <div className="flex items-center justify-between px-4 py-3 bg-white/5 rounded-xl border border-white/10">
-                <span className="text-sm font-bold text-gray-300">Version 1</span>
-                <span className="text-[10px] font-mono text-gray-500 italic">Latest</span>
+              <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl text-sm text-rose-200/90 italic cursor-not-allowed select-none">
+                {(currentAnnotation as any)?.reviewerComment ||
+                  (currentAnnotation as any)?.review?.comment ||
+                  (currentItem as any)?.reviewerComment ||
+                  'Please update this annotation based on the project guidelines. Reviewer rejected this submission.'}
               </div>
             </div>
+          )}
 
-            {/* Geometry Section */}
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px] text-blue-400">poly</span>
-                <span className="text-xs font-bold uppercase tracking-widest text-gray-400">
-                  Geometry
-                </span>
-              </div>
-              <div className="bg-black/40 rounded-xl border border-white/5 p-4 h-48 overflow-y-auto custom-scrollbar">
+          {/* Labels */}
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[16px] text-violet-400">label</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Labels</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {labels.map(label => (
+                <button
+                  key={label.labelId}
+                  onClick={() => toggleLabel(label)}
+                  className={`px-4 py-1.5 rounded-lg border text-xs font-bold transition-all`}
+                  style={{
+                    borderColor: selectedLabels.includes(label.labelId) ? label.color : 'transparent',
+                    backgroundColor: selectedLabels.includes(label.labelId) ? `${label.color}22` : 'rgba(255,255,255,0.05)',
+                    color: selectedLabels.includes(label.labelId) ? '#fff' : '#6b7280'
+                  }}
+                >
+                  {label.labelName}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Confidence */}
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[16px] text-orange-400">psychology</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Confidence</span>
+            </div>
+            <div className="flex bg-black/40 rounded-xl border border-white/5 p-1 gap-1">
+              {(['LOW', 'MEDIUM', 'HIGH'] as const).map(level => (
+                <button
+                  key={level}
+                  onClick={() => setConfidence(level)}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${confidence === level
+                      ? 'bg-orange-500/20 text-orange-400 border border-orange-500/50'
+                      : 'text-gray-500 hover:text-gray-300 hover:bg-white/5 border border-transparent'
+                    }`}
+                >
+                  {level}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[16px] text-amber-400">chat_bubble</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Comment</span>
+            </div>
+            <textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              className="w-full h-24 bg-white/5 rounded-xl border border-white/10 p-4 text-sm text-gray-300 focus:outline-none focus:border-violet-500/50 transition-colors resize-none"
+            />
+          </div>
+
+          <div className="flex flex-col gap-3 flex-1">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[16px] text-blue-400">poly</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Geometry</span>
+            </div>
+            <div className="flex-1 bg-black/40 rounded-xl border border-white/5 p-4 overflow-y-auto min-h-[300px] custom-scrollbar">
+              {shapes.length === 0 ? (
+                <div className="h-full flex items-center justify-center text-gray-600 text-xs font-mono">JSON</div>
+              ) : (
                 <pre className="text-[10px] font-mono text-blue-300 whitespace-pre-wrap leading-relaxed">
                   {JSON.stringify(
                     {
-                      active: currentShape
-                        ? {
-                          type: currentShape.type,
-                          points: currentShape.points ? currentShape.points.length : undefined,
-                          dimensions:
-                            currentShape.type === 'bounding_box'
-                              ? {
-                                w: Math.round(currentShape.width || 0),
-                                h: Math.round(currentShape.height || 0)
-                              }
-                              : undefined
-                        }
-                        : null,
                       session: shapes.map((s) => ({ type: s.type, label: s.label })),
                       raw: shapes
                     },
@@ -489,33 +1050,12 @@ export default function AnnotationPage() {
                     2
                   )}
                 </pre>
-              </div>
+              )}
             </div>
           </div>
 
-          {/* Bottom Actions */}
-          <div className="mt-auto p-6 bg-black/20 border-t border-white/5 flex flex-col gap-3">
-            <div className="flex gap-3">
-              <button
-                onClick={handlePrevious}
-                className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-sm font-bold text-gray-300 hover:bg-white/10 transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-                <span>Previous</span>
-              </button>
-              <button
-                onClick={handleNext}
-                className="flex-1 px-4 py-3 rounded-xl bg-violet-600 text-sm font-bold text-white hover:bg-violet-500 shadow-lg shadow-violet-900/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span>Next image</span>
-                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-              </button>
-            </div>
-            <button className="w-full px-4 py-3 rounded-xl bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 text-sm font-bold hover:bg-emerald-600/30 transition-all cursor-pointer">
-              Save Annotations
-            </button>
-          </div>
         </div>
+
       </div>
     </div>
   )
@@ -523,26 +1063,22 @@ export default function AnnotationPage() {
 
 function ToolbarButton({
   icon,
-  title,
   active = false,
   onClick
 }: {
   icon: string
-  title?: string
   active?: boolean
   onClick?: () => void
 }) {
   return (
-    <Tooltip title={title} placement="top" mouseEnterDelay={0.3}>
-      <button
-        onClick={onClick}
-        className={`
-                    w-10 h-10 flex items-center justify-center rounded-lg transition-all cursor-pointer
-                    ${active ? 'bg-violet-600 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/10'}
-                `}
-      >
-        <span className="material-symbols-outlined text-[20px]">{icon}</span>
-      </button>
-    </Tooltip>
+    <button
+      onClick={onClick}
+      className={`
+          w-7 h-7 p-4 flex items-center justify-center transition-all cursor-pointer rounded-md
+          ${active ? 'bg-violet-600 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/10'}
+      `}
+    >
+      <span className="material-symbols-outlined text-[16px]">{icon}</span>
+    </button>
   )
 }

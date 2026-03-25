@@ -2,39 +2,38 @@ import { useEffect, useState } from 'react'
 import { Space, Typography, Spin, Input, Select, Empty, App, Button } from 'antd'
 import { SearchOutlined, PlusOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import { ProjectCard } from './ProjectCard'
-import { ProjectDetail } from './ProjectDetail'
-import { Link, useNavigate } from 'react-router-dom'
-import { PATH_MANAGER } from '@/routes/paths'
-import { GlassModal } from '@/shared/components/ui/GlassModal'
-
 import projectApi, { type GetProjectsParams } from '@/api/ProjectApi'
+import { GlassModal } from '@/shared/components/ui/GlassModal'
 const { Title } = Typography
 
 interface AllProjectsProps {
   selectedProjectId?: string | null
   onProjectSelect?: (id: string | null) => void
+  refreshTrigger?: number
+  onEdit?: (id: string) => void
+  onCreate?: () => void
 }
 
-export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onProjectSelect }) => {
+export const AllProjects: React.FC<AllProjectsProps> = ({
+  onProjectSelect,
+  refreshTrigger,
+  onEdit,
+  onCreate
+}) => {
   const { message: messageApi } = App.useApp()
   // Khai báo state sử dụng mảng của GetProjectsParams
   const [projects, setProjects] = useState<GetProjectsParams[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [searchText, setSearchText] = useState<string>('')
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
-  const [internalProjectId, setInternalProjectId] = useState<string | null>(null)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null)
   const [deletingProjectName, setDeletingProjectName] = useState('')
-  const navigate = useNavigate()
 
-  const currentProjectId = selectedProjectId !== undefined ? selectedProjectId : internalProjectId
   const handleProjectSelect = (id: string | null) => {
     if (onProjectSelect) {
       onProjectSelect(id)
-    } else {
-      setInternalProjectId(id)
     }
   }
 
@@ -42,38 +41,20 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
     try {
       setLoading(true)
       const response = await projectApi.getProjects()
-
-      const data = response.data?.data || response.data || []
-
-      if (Array.isArray(data)) {
-        // Map the data to ensure properties match GetProjectsParams expected by ProjectCard
-        const mappedProjects: GetProjectsParams[] = data.map((p: Record<string, unknown>) => {
-          const mapped: GetProjectsParams = {}
-          if (p.projectId || p.id) {
-            mapped.projectId = String(p.projectId || p.id)
-          }
-          if (p.projectName || p.name) {
-            mapped.projectName = String(p.projectName || p.name)
-          }
-          if (p.projectStatus || p.status) {
-            mapped.projectStatus = String(p.projectStatus || p.status)
-          }
-          if (p.description) {
-            mapped.description = String(p.description)
-          }
-          if (p.createdAt) {
-            mapped.createdAt = String(p.createdAt)
-          }
-          if (p.updatedAt) {
-            mapped.updatedAt = String(p.updatedAt)
-          }
-          return mapped
-        })
-        setProjects(mappedProjects)
-      } else {
-        console.warn('API returned non-array data:', data)
-        setProjects([])
-      }
+      const raw = response.data?.data || response.data || []
+      const list: unknown[] = Array.isArray(raw) ? raw : []
+      const mapped: GetProjectsParams[] = list.map((item) => {
+        const p = item as Record<string, unknown>
+        return {
+          projectId: String(p.projectId),
+          projectName: String(p.projectName),
+          projectStatus: String(p.projectStatus || p.status || ''),
+          description: p.description ? String(p.description) : undefined,
+          createdAt: p.createdAt ? String(p.createdAt) : undefined,
+          updatedAt: p.updatedAt ? String(p.updatedAt) : undefined
+        }
+      })
+      setProjects(mapped)
     } catch (error) {
       console.error('Failed to load projects.', error)
     } finally {
@@ -83,7 +64,7 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
 
   useEffect(() => {
     fetchProjects()
-  }, [])
+  }, [refreshTrigger])
 
   const handleDelete = (id?: string) => {
     if (!id) return
@@ -112,9 +93,11 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
   }
 
   const handleEdit = (id?: string) => {
-    if (!id) return
-    navigate(`/manager/projects/edit/${id}`)
+    if (!id || !onEdit) return
+    onEdit(id)
   }
+
+  // Removed handleCreateProjectSuccess as it is now in the parent
 
   if (loading) {
     return (
@@ -124,10 +107,7 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
     )
   }
 
-  if (currentProjectId) {
-    return <ProjectDetail projectId={currentProjectId} onBack={() => handleProjectSelect(null)} />
-  }
-
+  // ProjectDetail is now handled by the parent component
   return (
     <div className="w-full">
       <div className="flex justify-between items-center mb-6">
@@ -142,8 +122,7 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
             options={[
               { value: 'ALL', label: 'All Statuses' },
               { value: 'NOT_STARTED', label: 'Not Started' },
-              { value: 'ACTIVE', label: 'Active' },
-              { value: 'INPROCESS', label: 'In Process' },
+              { value: 'IN_PROGRESS', label: 'In Progress' },
               { value: 'COMPLETED', label: 'Completed' },
               { value: 'INACTIVE', label: 'Inactive' }
             ]}
@@ -177,13 +156,22 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
                 statusFilter === 'ALL' ||
                 (p.projectStatus && p.projectStatus.toUpperCase() === statusFilter)
             )
+            .sort((a, b) => {
+              const aIsInactive = a.projectStatus?.toUpperCase() === 'INACTIVE'
+              const bIsInactive = b.projectStatus?.toUpperCase() === 'INACTIVE'
+
+              if (aIsInactive && !bIsInactive) return 1
+              if (!aIsInactive && bIsInactive) return -1
+
+              return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+            })
             .map((p) => {
               if (!p.projectId) return null // Bỏ qua nếu data rác không có ID
 
               return (
                 <ProjectCard
                   key={p.projectId}
-                  {...p} // Spread toàn bộ thuộc tính chuẩn từ API vào Card
+                  {...p}
                   onClick={() => handleProjectSelect(p.projectId as string)}
                   onEdit={() => handleEdit(p.projectId)}
                   onDelete={() => handleDelete(p.projectId)}
@@ -192,8 +180,8 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
             })}
 
           {/* Start New Project Card */}
-          <Link to={PATH_MANAGER.createProject} className="block group">
-            <div className="h-full min-h-[180px] border-2 border-dashed border-gray-700 rounded-xl flex flex-col items-center justify-center gap-4 bg-[#1A1625]/30 hover:bg-[#1A1625] hover:border-violet-500 transition-all cursor-pointer">
+          <div className="block group cursor-pointer" onClick={onCreate}>
+            <div className="h-full min-h-[160px] border-2 border-dashed border-gray-700 rounded-xl flex flex-col items-center justify-center gap-4 bg-[#1A1625]/30 hover:bg-[#1A1625] hover:border-violet-500 transition-all">
               <div className="w-12 h-12 rounded-full bg-[#231e31] group-hover:bg-violet-600 flex items-center justify-center transition-colors">
                 <PlusOutlined className="text-gray-400 group-hover:text-white text-xl" />
               </div>
@@ -201,13 +189,17 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
                 Start New Project
               </span>
             </div>
-          </Link>
+          </div>
         </div>
       )}
 
       <GlassModal
         open={deleteModalOpen}
-        onCancel={() => { setDeleteModalOpen(false); setDeletingProjectId(null); setDeletingProjectName('') }}
+        onCancel={() => {
+          setDeleteModalOpen(false)
+          setDeletingProjectId(null)
+          setDeletingProjectName('')
+        }}
         destroyOnHidden
         width={480}
       >
@@ -222,13 +214,19 @@ export const AllProjects: React.FC<AllProjectsProps> = ({ selectedProjectId, onP
               Deactivate Project
             </h2>
             <p className="text-white/50 text-sm">
-              Are you sure you want to deactivate <span className="text-white/80 font-medium">{deletingProjectName}</span>? This action cannot be undone.
+              Are you sure you want to deactivate{' '}
+              <span className="text-white/80 font-medium">{deletingProjectName}</span>? This action
+              cannot be undone.
             </p>
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
             <Button
-              onClick={() => { setDeleteModalOpen(false); setDeletingProjectId(null); setDeletingProjectName('') }}
+              onClick={() => {
+                setDeleteModalOpen(false)
+                setDeletingProjectId(null)
+                setDeletingProjectName('')
+              }}
               className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
             >
               Cancel

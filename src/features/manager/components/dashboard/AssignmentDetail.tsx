@@ -1,23 +1,101 @@
 import React, { useEffect, useState } from 'react'
-import { App, Spin, Typography, Card, Button, Descriptions, Tag, Empty } from 'antd'
-import { EditOutlined, FolderOutlined, DatabaseOutlined } from '@ant-design/icons'
+import { App, Spin, Button } from 'antd'
+import { EditOutlined } from '@ant-design/icons'
 import assignmentApi, { type GetAssignmentsParams } from '@/api/AssignmentApi'
+import taskApi from '@/api/TaskApi'
 import projectApi from '@/api/ProjectApi'
-import { useNavigate } from 'react-router-dom'
-
-const { Title } = Typography
+import datasetApi from '@/api/DatasetApi'
+import { ProjectDetail } from './ProjectDetail'
+import { DatasetDetail } from '../dataset/DatasetDetail'
+import { TaskDetail } from '@/pages/annotator/TaskDetailPage'
+import { ChangeDatasetModal } from '../dataset/ChangeDatasetModal'
+import { useAuthStore } from '@/store'
+import { useSearchParams } from 'react-router-dom'
+import { themeClasses } from '@/styles'
 
 interface AssignmentDetailProps {
   assignmentId: string
   onBack: () => void
+  onEdit?: (assignment: GetAssignmentsParams) => void
 }
 
-export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId, onBack }) => {
+interface Task {
+  taskId: string
+  completedCount?: number
+  createdAt?: string
+  taskName?: string
+  reviewStatus?: string
+  taskStatus?: string
+  status?: string
+  taskType?: string
+  assignmentId?: string
+  [key: string]: unknown
+}
+
+export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
+  assignmentId,
+  onBack,
+  onEdit
+}) => {
   const { message } = App.useApp()
   const [assignment, setAssignment] = useState<GetAssignmentsParams | null>(null)
   const [projectName, setProjectName] = useState<string | null>(null)
+  const [datasetName, setDatasetName] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
-  const navigate = useNavigate()
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [tasksLoading, setTasksLoading] = useState<boolean>(false)
+  const [isChangeDatasetModalOpen, setIsChangeDatasetModalOpen] = useState(false)
+  const { user } = useAuthStore()
+
+  const isManager =
+    user?.role?.toLowerCase().includes('manager') ||
+    user?.role?.toLowerCase().includes('admin') ||
+    user?.userRole?.toLowerCase().includes('manager') ||
+    user?.userRole?.toLowerCase().includes('admin')
+
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const handleRefresh = () => setRefreshTrigger((prev) => prev + 1)
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const viewProjectId = searchParams.get('viewProjectId')
+  const viewDatasetId = searchParams.get('viewDatasetId')
+  const viewTaskId = searchParams.get('viewTaskId')
+
+  const setViewProjectId = (id: string | null) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      if (id) {
+        next.set('viewProjectId', id)
+      } else {
+        next.delete('viewProjectId')
+      }
+      return next
+    })
+  }
+
+  const setViewDatasetId = (id: string | null) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      if (id) {
+        next.set('viewDatasetId', id)
+      } else {
+        next.delete('viewDatasetId')
+      }
+      return next
+    })
+  }
+
+  const setViewTaskId = (id: string | null) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      if (id) {
+        next.set('viewTaskId', id)
+      } else {
+        next.delete('viewTaskId')
+      }
+      return next
+    })
+  }
 
   useEffect(() => {
     let isMounted = true
@@ -29,31 +107,61 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId
         const data = response.data?.data || response.data
 
         if (data && isMounted) {
+          const extractedProjectId = data.projectId || data.project?.id || data.project?.projectId
+          const extractedDatasetId = data.datasetId || data.dataset?.id || data.dataset?.datasetId
+
           setAssignment({
             assignmentId: String(data.assignmentId || data.id),
-            assignmentName: String(data.assignmentName || data.name),
-            status: String(data.status || data.assignmentStatus),
+            assignmentName: String(data.assignmentName || data.name || ''),
+            status: String(data.status || data.assignmentStatus || ''),
             description: data.description
               ? String(data.description)
               : data.descriptionAssignment
                 ? String(data.descriptionAssignment)
                 : undefined,
-            projectId: data.projectId ? String(data.projectId) : undefined,
-            datasetId: data.datasetId ? String(data.datasetId) : undefined,
+            projectId: extractedProjectId ? String(extractedProjectId) : undefined,
+            datasetId: extractedDatasetId ? String(extractedDatasetId) : undefined,
             createdAt: data.createdAt ? String(data.createdAt) : undefined,
-            updatedAt: data.updatedAt ? String(data.updatedAt) : undefined
+            updatedAt: data.updatedAt ? String(data.updatedAt) : undefined,
+            assignedTo:
+              data.assignedTo || data.user_id || data.annotatorId
+                ? String(data.assignedTo || data.user_id || data.annotatorId)
+                : undefined,
+            reviewedBy:
+              data.reviewedBy || data.reviewerId
+                ? String(data.reviewedBy || data.reviewerId)
+                : undefined,
+            dueDate:
+              data.dueDate || data.due_date ? String(data.dueDate || data.due_date) : undefined,
+            assignedBy:
+              data.assignedBy || data.creatorId
+                ? String(data.assignedBy || data.creatorId)
+                : undefined
           })
 
           // Fetch associated project name if projectId exists
-          if (data.projectId) {
+          if (extractedProjectId) {
             try {
-              const projRes = await projectApi.getProjectById(data.projectId)
+              const projRes = await projectApi.getProjectById(extractedProjectId)
               const projData = projRes.data?.data || projRes.data
               if (projData && isMounted) {
-                setProjectName(String(projData.projectName || projData.name || data.projectId))
+                setProjectName(String(projData.projectName || projData.name || extractedProjectId))
               }
             } catch (projErr) {
               console.error('Failed to fetch associated project details:', projErr)
+            }
+          }
+
+          // Fetch associated dataset name if datasetId exists
+          if (extractedDatasetId) {
+            try {
+              const dsRes = await datasetApi.getDatasetById(extractedDatasetId)
+              const dsData = dsRes.data?.data || dsRes.data
+              if (dsData && isMounted) {
+                setDatasetName(String(dsData.datasetName || dsData.name || extractedDatasetId))
+              }
+            } catch (dsErr) {
+              console.error('Failed to fetch associated dataset details:', dsErr)
             }
           }
         }
@@ -70,14 +178,44 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId
       }
     }
 
+    const fetchTasks = async () => {
+      try {
+        setTasksLoading(true)
+        const response = await taskApi.getTasksByAssignmentId(assignmentId)
+        const rawData = (response.data?.data || response.data || []) as Record<string, unknown>[]
+        if (isMounted && Array.isArray(rawData)) {
+          const mappedTasks: Task[] = rawData
+            .map((t) => ({
+              ...t,
+              taskId: String(t.taskId || t.id || '')
+            }))
+            .filter((t: unknown) => {
+              const taskObj = t as Task
+              const status = String(taskObj.taskStatus || taskObj.status || '').toUpperCase()
+              return status !== 'INACTIVE' && status !== 'DELETED'
+            }) as Task[]
+          setTasks(mappedTasks)
+        }
+      } catch (error) {
+        console.error('Error fetching tasks:', error)
+        // We don't necessarily want to block the whole view if tasks fail,
+        // but it's good to log it.
+      } finally {
+        if (isMounted) {
+          setTasksLoading(false)
+        }
+      }
+    }
+
     if (assignmentId) {
       fetchDetail()
+      fetchTasks()
     }
 
     return () => {
       isMounted = false
     }
-  }, [assignmentId, onBack])
+  }, [assignmentId, onBack, message, refreshTrigger])
 
   const getStatusColor = (status?: string) => {
     switch (status?.toUpperCase()) {
@@ -88,7 +226,13 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId
       case 'PAUSED':
         return 'warning'
       case 'ARCHIVE':
+      case 'REJECTED':
+      case 'INACTIVE':
         return 'error'
+      case 'PENDING':
+        return 'default'
+      case 'IN_PROGRESS':
+        return 'processing'
       default:
         return 'default'
     }
@@ -96,7 +240,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A'
-    return new Date(dateString).toLocaleDateString('vi-VN')
+    return new Date(dateString).toLocaleString('vi-VN')
   }
 
   if (loading) {
@@ -115,138 +259,300 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId
     )
   }
 
+  if (viewProjectId) {
+    return (
+      <ProjectDetail
+        projectId={viewProjectId}
+        onBack={() => setViewProjectId(null)}
+      />
+    )
+  }
+
+  if (viewDatasetId) {
+    return <DatasetDetail datasetId={viewDatasetId} onBack={() => setViewDatasetId(null)} />
+  }
+
+  if (viewTaskId) {
+    const selectedTask = tasks.find((t) => String(t.taskId) === String(viewTaskId))
+    if (selectedTask) {
+      return (
+        <TaskDetail
+          task={{
+            ...selectedTask,
+            assignmentName: assignment.assignmentName
+          }}
+          loading={false}
+          onBack={() => setViewTaskId(null)}
+          onRefresh={handleRefresh}
+        />
+      )
+    }
+
+    if (tasksLoading) {
+      return (
+        <div className="flex flex-col items-center justify-center py-32 gap-4">
+          <Spin size="large" />
+          <p className="text-gray-500 font-mono text-xs uppercase tracking-widest animate-pulse">
+            Loading Task Details...
+          </p>
+        </div>
+      )
+    }
+  }
+
+  const completedTasks = tasks.filter(
+    (t) => t.taskStatus?.toUpperCase() === 'COMPLETED' || t.status?.toUpperCase() === 'COMPLETED'
+  ).length
+  const totalTasks = tasks.length || Number(assignment.totalItems) || 0
+  const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
+
   return (
-    <div className="w-full animate-fade-in">
-      <div className="flex justify-between items-start mb-6">
-        <div>
-          <Title level={3} className="!text-white !m-0 !font-display">
-            {assignment.assignmentName}
-          </Title>
-          <div className="mt-2">
-            <Tag
-              color={getStatusColor(assignment.status)}
-              className="m-0 font-medium text-sm px-3 py-1"
+    <div className="relative overflow-hidden min-h-[600px] animate-fade-in pr-2">
+      {/* Background Glow */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-violet-600/10 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none" />
+
+      {/* Header */}
+      <div className="mb-8 relative z-10">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="material-symbols-outlined text-[18px] text-violet-400">assignment</span>
+              <span className="text-xs font-mono text-violet-400 tracking-widest uppercase">
+                Assignment Detail
+              </span>
+            </div>
+            <h1 className="text-3xl font-bold text-white tracking-tight">{assignment.assignmentName}</h1>
+            <p className="text-sm text-gray-400 mt-1 font-mono">{assignment.assignmentId}</p>
+          </div>
+          {onEdit && (
+            <Button
+              type="primary"
+              icon={<EditOutlined />}
+              className="bg-violet-600 hover:bg-violet-500 border-none shadow-[0_0_20px_rgba(139,92,246,0.3)] h-10 px-6 rounded-xl transition-all"
+              onClick={() => onEdit(assignment)}
             >
-              {assignment.status || 'UNKNOWN'}
-            </Tag>
+              Edit Assignment
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Main Content Layout */}
+      <div className="flex flex-col gap-6 relative z-10">
+
+        {/* Top Row: Main Info (2 columns) */}
+        <div className={`glass-panel border ${themeClasses.borders.violet10} rounded-2xl overflow-hidden shadow-xl flex flex-col md:flex-row items-stretch`}>
+          {/* Left: Information */}
+          <div className="flex-1 p-7 border-b md:border-b-0 md:border-r border-white/10 relative">
+            <div className="absolute -top-10 -left-10 w-40 h-40 rounded-full bg-violet-500/5 blur-[50px] pointer-events-none" />
+            <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px] text-violet-400">info</span>
+              Assignment Information
+            </h3>
+            <div className="space-y-5">
+              <div className="flex justify-between items-center py-2 border-b border-white/5">
+                <label className="text-xs text-gray-500 font-mono uppercase tracking-wider">Assignment ID</label>
+                <span className="text-xs font-mono text-violet-300 bg-violet-500/10 px-2.5 py-1 rounded border border-violet-500/20">
+                  {assignment.assignmentId}
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-white/5">
+                <label className="text-xs text-gray-500 font-mono uppercase tracking-wider">Status</label>
+                <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full bg-${getStatusColor(assignment.status) === 'success' ? 'emerald' : getStatusColor(assignment.status) === 'warning' ? 'orange' : getStatusColor(assignment.status) === 'error' ? 'red' : 'violet'}-500/10 border border-${getStatusColor(assignment.status) === 'success' ? 'emerald' : getStatusColor(assignment.status) === 'warning' ? 'orange' : getStatusColor(assignment.status) === 'error' ? 'red' : 'violet'}-500/20 text-[10px] font-bold text-${getStatusColor(assignment.status) === 'success' ? 'emerald' : getStatusColor(assignment.status) === 'warning' ? 'orange' : getStatusColor(assignment.status) === 'error' ? 'red' : 'violet'}-400 uppercase tracking-widest`}>
+                  <div className={`w-1.5 h-1.5 rounded-full bg-${getStatusColor(assignment.status) === 'success' ? 'emerald' : getStatusColor(assignment.status) === 'warning' ? 'orange' : getStatusColor(assignment.status) === 'error' ? 'red' : 'violet'}-400 animate-pulse`} />
+                  {assignment.status || 'UNKNOWN'}
+                </div>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-white/5">
+                <label className="text-xs text-gray-500 font-mono uppercase tracking-wider">Created At</label>
+                <span className="text-sm text-gray-300">{formatDate(assignment.createdAt)}</span>
+              </div>
+              <div className="mt-4">
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-xs text-gray-500 font-mono uppercase tracking-wider">Progress</label>
+                  <span className="text-xs font-mono text-violet-400">{completedTasks}/{totalTasks} tasks ({progress}%)</span>
+                </div>
+                <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-violet-600 to-fuchsia-500 transition-all duration-700"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Description */}
+          <div className="flex-1 p-7 flex flex-col relative overflow-hidden">
+            <div className="absolute -bottom-10 -right-10 w-40 h-40 rounded-full bg-fuchsia-500/5 blur-[50px] pointer-events-none" />
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px] text-fuchsia-400">description</span>
+              Description
+            </h3>
+            <div className="flex-1 bg-black/20 p-5 rounded-2xl border border-white/5 min-h-[120px]">
+              <p className="text-sm text-gray-300 leading-relaxed italic">
+                {assignment.description || 'No description provided for this assignment.'}
+              </p>
+            </div>
           </div>
         </div>
-        {/* 
-                  Quick Action removed specifically as requested by user.
-                  "không bao gồm quick action" could also mean omitting the Edit button if considered a quick action,
-                  but Edit is standard. If needed to remove edit, we can just comment it out. Let's keep the Edit button for now
-                  but omit features like "Add Subtask", etc. Actually, I will remove the edit button to be safe, since there is no edit endpoint connected safely in AllAssignments either yet.
-                  Wait, ProjectDetail has an Edit button. Let's include it but maybe it does a message.info for now.
-                */}
-        <Button
-          type="primary"
-          icon={<EditOutlined />}
-          className="bg-violet-600 hover:bg-violet-500 border-none hidden"
-          onClick={() => message.info('Edit mode not fully supported yet.')}
-        >
-          Edit
-        </Button>
-      </div>
 
-      <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-6">
-        <Descriptions
-          title={
-            <span className="text-white text-lg font-display flex items-center gap-2">
-              <span className="material-symbols-outlined text-violet-400">info</span>Assignment
-              Information
-            </span>
-          }
-          column={1}
-          className="custom-descriptions"
-          styles={{
-            label: { color: '#9ca3af', fontWeight: 500, width: '150px' },
-            content: { color: '#d1d5db' }
-          }}
-        >
-          <Descriptions.Item label="Assignment ID">
-            <span className="font-mono text-violet-300 bg-violet-500/10 px-2 py-0.5 rounded border border-violet-500/20">
-              {assignment.assignmentId}
-            </span>
-          </Descriptions.Item>
-          <Descriptions.Item label="Description">
-            {assignment.description || <span className="text-gray-600 italic">No description</span>}
-          </Descriptions.Item>
-          <Descriptions.Item label="Created At">
-            {formatDate(assignment.createdAt)}
-          </Descriptions.Item>
-          <Descriptions.Item label="Last Updated">
-            {formatDate(assignment.updatedAt)}
-          </Descriptions.Item>
-        </Descriptions>
-      </Card>
-
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-1 mb-6 mt-1">
-        <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-white text-lg font-display flex items-center gap-2">
-              <FolderOutlined className="text-blue-400" />
+        {/* Middle Row: Project & Dataset (2 columns) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+          {/* Associated Project */}
+          <div className={`glass-panel border ${themeClasses.borders.violet10} rounded-2xl p-6 shadow-xl relative overflow-hidden`}>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-3xl pointer-events-none" />
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px] text-blue-400">folder_special</span>
               Associated Project
-            </span>
+            </h3>
+            {assignment.projectId ? (
+              <div
+                className="bg-black/20 p-5 rounded-xl border border-white/10 hover:border-blue-500/50 hover:bg-black/30 transition-all cursor-pointer group"
+                onClick={() => setViewProjectId(assignment.projectId || null)}
+              >
+                <h4 className="text-white font-bold group-hover:text-blue-400 transition-colors">
+                  {projectName || `Project ID: ${assignment.projectId}`}
+                </h4>
+                <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[12px]">visibility</span>
+                  Click to view project details
+                </p>
+              </div>
+            ) : (
+              <div className="bg-black/20 p-5 rounded-xl border border-white/5 text-center italic text-gray-500">
+                No associated project
+              </div>
+            )}
           </div>
-          {assignment.projectId ? (
-            <div
-              className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-blue-500/30 transition-colors cursor-pointer"
-              onClick={() => navigate(`/manager/projects/${assignment.projectId}`)}
-            >
-              <h4 className="text-white font-bold text-sm truncate">
-                {projectName ? projectName : `Project ID: ${assignment.projectId}`}
-              </h4>
-              <div className="text-gray-400 text-xs mt-1">Click to view project details</div>
-            </div>
-          ) : (
-            <Empty
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description={<span className="text-gray-500">No associated project</span>}
-            />
-          )}
-        </Card>
 
-        <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-white text-lg font-display flex items-center gap-2">
-              <DatabaseOutlined className="text-fuchsia-400" />
-              Assigned Dataset
+          {/* Assigned Dataset */}
+          <div className={`glass-panel border ${themeClasses.borders.violet10} rounded-2xl p-6 shadow-xl relative overflow-hidden`}>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-fuchsia-500/5 blur-3xl pointer-events-none" />
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px] text-fuchsia-400">database</span>
+                Assigned Dataset
+              </h3>
+              {isManager && (
+                <Button
+                  type="link"
+                  size="small"
+                  className="text-fuchsia-400 hover:text-fuchsia-300 p-0 h-auto font-mono text-[10px] uppercase tracking-wider"
+                  onClick={() => setIsChangeDatasetModalOpen(true)}
+                >
+                  Change
+                </Button>
+              )}
+            </div>
+            {assignment.datasetId ? (
+              <div
+                className="bg-black/20 p-5 rounded-xl border border-white/10 hover:border-fuchsia-500/50 hover:bg-black/30 transition-all cursor-pointer group"
+                onClick={() => setViewDatasetId(assignment.datasetId || null)}
+              >
+                <h4 className="text-white font-bold group-hover:text-fuchsia-400 transition-colors">
+                  {datasetName || `Dataset ID: ${assignment.datasetId}`}
+                </h4>
+                <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[12px]">visibility</span>
+                  Click to view dataset details
+                </p>
+              </div>
+            ) : (
+              <div className="bg-black/20 p-5 rounded-xl border border-white/5 text-center italic text-gray-500">
+                No assigned dataset
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Bottom Row: Tasks (Full Width) */}
+        <div className={`glass-panel border ${themeClasses.borders.violet10} rounded-2xl p-7 flex flex-col shadow-xl min-h-[400px]`}>
+          <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/5">
+            <h3 className="text-xl font-bold text-white flex items-center gap-3">
+              <span className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                <span className="material-symbols-outlined text-[20px] text-emerald-400">task</span>
+              </span>
+              Assignment Tasks
+            </h3>
+            <span className="text-xs font-mono bg-emerald-500/10 px-4 py-1.5 rounded-full border border-emerald-500/20 text-emerald-400 font-medium tracking-tight">
+              {tasks.length} tasks total
             </span>
           </div>
-          {assignment.datasetId ? (
-            <div
-              className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-fuchsia-500/30 transition-colors cursor-pointer"
-              onClick={() => navigate(`/manager/datasets/${assignment.datasetId}`)}
-            >
-              <h4 className="text-white font-bold text-sm truncate">
-                Dataset ID: {assignment.datasetId}
-              </h4>
-              <div className="text-gray-400 text-xs mt-1">Click to view dataset details</div>
+
+          {tasksLoading ? (
+            <div className="flex-1 flex items-center justify-center py-20">
+              <Spin size="large" />
+            </div>
+          ) : tasks.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-white/5 rounded-2xl bg-black/10">
+              <span className="material-symbols-outlined text-gray-600 text-6xl mb-4 opacity-10">
+                assignment_late
+              </span>
+              <p className="text-gray-400 text-base font-medium">No tasks found</p>
+              <p className="text-gray-600 text-xs mt-2">Tasks will appear here once created.</p>
             </div>
           ) : (
-            <Empty
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description={<span className="text-gray-500">No assigned dataset</span>}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar p-1">
+              {tasks.map((task) => (
+                <div
+                  key={task.taskId}
+                  onClick={() => setViewTaskId(task.taskId)}
+                  className="group bg-black/20 p-5 rounded-xl border border-white/5 hover:border-emerald-500/50 hover:bg-black/30 transition-all cursor-pointer relative overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/5 blur-2xl pointer-events-none" />
+                  <div className="flex flex-col gap-3 relative z-10">
+                    <div className="flex justify-between items-start">
+                      <span className="text-white font-bold text-sm line-clamp-2 group-hover:text-emerald-400 transition-colors">
+                        {task.taskName || 'Untitled Task'}
+                      </span>
+                      <div className={`w-2 h-2 rounded-full ${task.taskStatus?.toUpperCase() === 'COMPLETED' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-gray-600'}`} />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[10px] font-mono text-gray-500 tracking-wider">ID: {task.taskId}</span>
+                      {task.createdAt && (
+                        <span className="text-[10px] text-gray-600">
+                          {new Date(task.createdAt).toLocaleDateString('vi-VN')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
-        </Card>
+        </div>
       </div>
+
+      <ChangeDatasetModal
+        open={isChangeDatasetModalOpen}
+        assignmentId={assignment.assignmentId || ''}
+        projectId={assignment.projectId || ''}
+        currentDatasetId={assignment.datasetId}
+        onCancel={() => setIsChangeDatasetModalOpen(false)}
+        onSuccess={() => {
+          setIsChangeDatasetModalOpen(false)
+          handleRefresh()
+        }}
+      />
 
       <style>{`
-                .custom-descriptions .ant-descriptions-title {
-                    margin-bottom: 20px;
-                }
-                .custom-descriptions .ant-descriptions-item-container {
-                    border-bottom: 1px solid #2d263b;
-                    padding-bottom: 12px;
-                    margin-bottom: 12px;
-                }
-                .custom-descriptions .ant-descriptions-item-container:last-child {
-                    border-bottom: none;
-                    margin-bottom: 0;
-                    padding-bottom: 0;
-                }
-            `}</style>
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.02);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.2);
+        }
+      `}</style>
     </div>
   )
 }

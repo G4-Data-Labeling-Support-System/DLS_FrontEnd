@@ -17,6 +17,7 @@ export const LabelCard: React.FC<LabelCardProps> = ({
   description,
   createdAt,
   updatedAt,
+  color,
   onEdit,
   onDelete,
   onClick
@@ -27,7 +28,7 @@ export const LabelCard: React.FC<LabelCardProps> = ({
     { type: 'divider' },
     {
       key: '4',
-      label: <span className="text-red-500">Delete Label</span>,
+      label: <span className="text-red-500">Deactivate Label</span>,
       icon: <DeleteOutlined className="text-red-500" />,
       onClick: onDelete
     }
@@ -50,16 +51,25 @@ export const LabelCard: React.FC<LabelCardProps> = ({
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A'
-    return new Date(dateString).toLocaleDateString('vi-VN')
+    return new Date(dateString).toLocaleString('vi-VN')
   }
+
+  const isInactive = labelStatus?.toUpperCase() === 'INACTIVE'
 
   return (
     <Card
-      className="bg-[#1A1625] border border-violet-500/20 rounded-xl overflow-hidden hover:bg-violet-500/10 hover:border-fuchsia-500/50 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(139,92,246,0.15)] transition-all duration-500 flex flex-col h-full cursor-pointer"
+      className={`bg-[#1A1625] border border-violet-500/20 rounded-xl overflow-hidden hover:bg-violet-500/10 hover:border-fuchsia-500/50 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(139,92,246,0.15)] transition-all duration-500 flex flex-col h-full cursor-pointer ${isInactive ? 'opacity-60 grayscale' : ''
+        }`}
       onClick={onClick}
     >
       <div className="flex justify-between items-start mb-2">
-        <div className="flex-1 pr-2">
+        <div className="flex-1 pr-2 flex items-center gap-2">
+          {color && (
+            <div
+              className="w-4 h-4 rounded-full border border-white/20 shrink-0"
+              style={{ backgroundColor: color }}
+            />
+          )}
           <Title
             level={5}
             className="!text-white !m-0 !text-sm leading-tight line-clamp-2"
@@ -68,7 +78,14 @@ export const LabelCard: React.FC<LabelCardProps> = ({
             {labelName || 'Unnamed Label'}
           </Title>
         </div>
-        <div onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+          <Tag
+            color={getStatusColor(labelStatus)}
+            className={`m-0 text-[10px] px-1.5 py-0 font-medium whitespace-nowrap border-0 rounded ${isInactive ? 'text-red-500' : ''
+              }`}
+          >
+            {(labelStatus || '').toUpperCase()}
+          </Tag>
           <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
             <Button
               type="text"
@@ -79,17 +96,7 @@ export const LabelCard: React.FC<LabelCardProps> = ({
         </div>
       </div>
 
-      {labelStatus && (
-        <div className="mb-2">
-          <Tag color={getStatusColor(labelStatus)} className="m-0 font-medium">
-            {labelStatus}
-          </Tag>
-        </div>
-      )}
-
-      {description && (
-        <p className="text-gray-400 text-xs line-clamp-2 mb-4">{description}</p>
-      )}
+      {description && <p className="text-gray-400 text-xs line-clamp-2 mb-4">{description}</p>}
 
       <div className="grid grid-cols-2 gap-2 bg-[#231e31] p-3 rounded-lg mt-auto">
         <div>

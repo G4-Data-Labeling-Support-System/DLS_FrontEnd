@@ -1,7 +1,9 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import projectApi from '@/api/ProjectApi'
-import assignmentApi from '@/api/AssignmentApi'
+import assignmentApi, { type GetAssignmentsParams } from '@/api/AssignmentApi'
 import guidelineApi from '@/api/GuidelineApi'
+import datasetApi from '@/api/DatasetApi'
+import { useInvalidateLabels } from './useLabels'
 
 export const useProjectById = (projectId: string) => {
   return useQuery({
@@ -19,10 +21,48 @@ export const useProjectById = (projectId: string) => {
           users: data.users || data.members || data.assignees || []
         }
       }),
-    enabled: !!projectId,
-    staleTime: 1000 * 60 * 5
+    enabled: !!projectId
   })
 }
+
+export const useDatasetsByProject = (projectId: string) => {
+  return useQuery({
+    queryKey: ['datasets', 'project', projectId],
+    queryFn: () =>
+      datasetApi.getDatasetsByProjectId(projectId).then((res) => {
+        const data = res.data?.data || res.data || []
+        return Array.isArray(data) ? data : []
+      }),
+    enabled: !!projectId
+  })
+}
+
+export const useAllDatasets = () => {
+  return useQuery({
+    queryKey: ['datasets', 'all'],
+    queryFn: () =>
+      datasetApi.getDatasets().then((res) => {
+        const data = res.data?.data || res.data || []
+        return Array.isArray(data) ? data : []
+      }),
+    staleTime: 0
+  })
+}
+
+const mapAssignment = (a: Record<string, unknown>): GetAssignmentsParams => ({
+  assignmentId: String(a.assignmentId || a.id || ''),
+  assignmentName: String(a.assignmentName || a.name || ''),
+  status: String(a.assignmentStatus || a.status || ''),
+  description: String(a.descriptionAssignment || a.description || ''),
+  projectId: String(a.projectId || a.project_id || ''),
+  datasetId: String(a.datasetId || a.dataset_id || ''),
+  createdAt: String(a.createdAt || a.created_at || a.createdDate || ''),
+  updatedAt: String(a.updatedAt || ''),
+  assignedTo: String(a.assignedTo || a.user_id || a.annotatorId || ''),
+  reviewedBy: String(a.reviewedBy || a.reviewerId || ''),
+  dueDate: String(a.dueDate || a.due_date || ''),
+  assignedBy: String(a.assignedBy || a.creatorId || '')
+})
 
 export const useAssignmentsByProject = (projectId: string) => {
   return useQuery({
@@ -30,10 +70,9 @@ export const useAssignmentsByProject = (projectId: string) => {
     queryFn: () =>
       assignmentApi.getAssignmentsByProjectId(projectId).then((res) => {
         const data = res.data?.data || res.data || []
-        return Array.isArray(data) ? data : []
+        return (Array.isArray(data) ? data : []).map(mapAssignment)
       }),
-    enabled: !!projectId,
-    staleTime: 1000 * 60 * 5
+    enabled: !!projectId
   })
 }
 
@@ -45,17 +84,56 @@ export const useGuidelinesByProject = (projectId: string) => {
         const data = res.data?.data || res.data
         return Array.isArray(data) ? data : data ? [data] : []
       }),
-    enabled: !!projectId,
-    staleTime: 1000 * 60 * 5
+    enabled: !!projectId
   })
 }
 
+export const useProjectMembers = (projectId: string) => {
+  return useQuery({
+    queryKey: ['project', projectId, 'members'],
+    queryFn: () =>
+      projectApi.getProjectMembers(projectId).then((res) => {
+        const data = res.data?.data || res.data || []
+        return Array.isArray(data) ? data : []
+      }),
+    enabled: !!projectId
+  })
+}
+
+export const useAllAssignments = (options?: { enabled?: boolean }) => {
+  return useQuery({
+    queryKey: ['assignments', 'all'],
+    queryFn: () =>
+      assignmentApi.getAssignments().then((res) => {
+        const data = res.data?.data || res.data || []
+        return (Array.isArray(data) ? data : []).map(mapAssignment)
+      }),
+    staleTime: 0,
+    enabled: options?.enabled !== false
+  })
+}
+
+export const useInvalidateAssignments = () => {
+  const queryClient = useQueryClient()
+
+  return (projectId?: string) => {
+    queryClient.invalidateQueries({ queryKey: ['assignments', 'all'] })
+    if (projectId) {
+      queryClient.invalidateQueries({ queryKey: ['assignments', 'project', projectId] })
+      queryClient.invalidateQueries({ queryKey: ['project', projectId] })
+    }
+  }
+}
+
 export const useInvalidateProjectDetail = () => {
+  const invalidateAssignments = useInvalidateAssignments()
+  const invalidateLabels = useInvalidateLabels()
   const queryClient = useQueryClient()
 
   return (projectId: string) => {
-    queryClient.invalidateQueries({ queryKey: ['project', projectId] })
-    queryClient.invalidateQueries({ queryKey: ['assignments', 'project', projectId] })
+    invalidateAssignments(projectId)
+    invalidateLabels()
     queryClient.invalidateQueries({ queryKey: ['guidelines', 'project', projectId] })
+    queryClient.invalidateQueries({ queryKey: ['datasets', 'project', projectId] })
   }
 }

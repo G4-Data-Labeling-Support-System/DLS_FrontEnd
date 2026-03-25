@@ -1,32 +1,95 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import TaskCard from './TaskCard'
 
 /** Groups tasks by their batchLabel */
-interface Task {
+export interface Task {
   id: string
+  taskId?: string
+  assignmentId?: string
+  batchId?: string
   batchLabel: string
+  taskName?: string
   name?: string
   filename?: string
   taskStatus?: string
   status?: string
   annotationStatus?: string
+  completedItems?: number
+  totalItems?: number
+  reviewStatus?: string
   [key: string]: string | number | boolean | undefined | object | null
 }
 
-export default function TasksSection({ tasks }: { tasks: Task[] }) {
+interface TasksSectionProps {
+  tasks?: Task[]
+  assignmentId?: string
+}
+
+export default function TasksSection({
+  tasks: initialTasks = [],
+  assignmentId
+}: TasksSectionProps) {
+  const [tasks, setTasks] = useState<Task[]>(initialTasks)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 6
 
+  useEffect(() => {
+    // Sync tasks when parent passes new tasks (such as from Annotated Dashboard API)
+    const mappedTasks: Task[] = initialTasks.map((t: any, idx: number) => {
+      let status = String(t.task_status || t.taskStatus || t.status || 'PENDING').toUpperCase()
+      if (status === 'NOT_STARTED') status = 'PENDING'
+
+      const completedItems = Number(
+        t.completedItems ?? t.completed_items ?? t.completedCount ?? t.completed_count ?? 0
+      )
+      const totalItems = Number(
+        t.totalItems ?? t.total_items ?? t.itemsCount ?? t.totalCount ?? 0
+      )
+
+      return {
+        ...t,
+        id: String(t.taskId || t.id || t.dataItemId || t.dataitemId || `task-${idx}`),
+        name: String(t.taskName || t.name || t.filename || `Task ${idx + 1}`),
+        batchLabel: String(t.batchLabel || t.taskType || 'Unbatched'),
+        taskStatus: status,
+        completedItems,
+        totalItems
+      }
+    })
+    setTasks(mappedTasks)
+  }, [initialTasks])
+
   // 1. Filter tasks based on search and status
   const filteredTasks = useMemo(() => {
-    return tasks.filter((task) => {
+    const filtered = tasks.filter((task) => {
       const name = (task.name || task.filename || '').toLowerCase()
-      const status = (task.taskStatus || task.status || 'PENDING').toUpperCase()
+      const taskStatus = (
+        task.taskStatus ||
+        task.status ||
+        task.reviewStatus ||
+        'PENDING'
+      ).toUpperCase()
       const matchesSearch = name.includes(searchTerm.toLowerCase())
-      const matchesStatus = statusFilter === 'ALL' || status === statusFilter
+      const matchesStatus = statusFilter === 'ALL' || taskStatus === statusFilter
       return matchesSearch && matchesStatus
+    })
+
+    // Sort by TASK-XX number
+    return filtered.sort((a, b) => {
+      const aName = a.name || a.filename || ''
+      const bName = b.name || b.filename || ''
+
+      const aMatch = aName.match(/TASK-(\d+)/i)
+      const bMatch = bName.match(/TASK-(\d+)/i)
+
+      if (aMatch && bMatch) {
+        return parseInt(aMatch[1]) - parseInt(bMatch[1])
+      }
+
+      // Fallback for non-matching names
+      return aName.localeCompare(bName, undefined, { numeric: true, sensitivity: 'base' })
     })
   }, [tasks, searchTerm, statusFilter])
 
@@ -45,6 +108,18 @@ export default function TasksSection({ tasks }: { tasks: Task[] }) {
     }, {})
   }, [paginatedTasks])
 
+  if (!tasks || tasks.length === 0) {
+    return (
+      <div className="w-full py-10 text-center glass-panel rounded-2xl border border-gray-500/10">
+        <span className="material-symbols-outlined text-gray-500 text-4xl mb-4">folder_open</span>
+        <h3 className="text-xl font-bold text-gray-400 font-space mb-2">No Tasks Found</h3>
+        <p className="text-sm text-gray-500 max-w-md mx-auto">
+          There are currently no tasks available for this assignment.
+        </p>
+      </div>
+    )
+  }
+
   const availableStatuses = ['ALL', 'PENDING', 'IN_PROGRESS', 'COMPLETED']
 
   return (
@@ -53,13 +128,17 @@ export default function TasksSection({ tasks }: { tasks: Task[] }) {
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-fuchsia-500/10 border border-fuchsia-500/20 flex items-center justify-center">
-            <span className="material-symbols-outlined text-[20px] text-fuchsia-400">grid_view</span>
+            <span className="material-symbols-outlined text-[20px] text-fuchsia-400">
+              grid_view
+            </span>
           </div>
           <div>
             <h2 className="text-xl font-bold text-white tracking-tight">Tasks</h2>
-            <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">
-              {filteredTasks.length} of {tasks.length} tasks matched
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">
+                {filteredTasks.length} of {tasks.length} tasks matched
+              </span>
+            </div>
           </div>
         </div>
 
@@ -69,7 +148,10 @@ export default function TasksSection({ tasks }: { tasks: Task[] }) {
             {availableStatuses.map((status) => (
               <button
                 key={status}
-                onClick={() => { setStatusFilter(status); setCurrentPage(1); }}
+                onClick={() => {
+                  setStatusFilter(status)
+                  setCurrentPage(1)
+                }}
                 className={`
                                     px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap
                                     ${statusFilter === status
@@ -92,7 +174,10 @@ export default function TasksSection({ tasks }: { tasks: Task[] }) {
               type="text"
               placeholder="Search tasks by name..."
               value={searchTerm}
-              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+              onChange={(e) => {
+                setSearchTerm(e.target.value)
+                setCurrentPage(1)
+              }}
               className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pl-10 pr-4 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-fuchsia-500/50 focus:bg-white/10 transition-all"
             />
           </div>
@@ -108,7 +193,11 @@ export default function TasksSection({ tasks }: { tasks: Task[] }) {
           <p className="text-gray-400 text-base font-medium">No tasks found</p>
           <p className="text-gray-600 text-sm mt-1">Try adjusting your filters or search term</p>
           <button
-            onClick={() => { setSearchTerm(''); setStatusFilter('ALL'); setCurrentPage(1); }}
+            onClick={() => {
+              setSearchTerm('')
+              setStatusFilter('ALL')
+              setCurrentPage(1)
+            }}
             className="mt-6 text-violet-400 text-xs font-bold hover:text-violet-300 underline underline-offset-4"
           >
             Clear all filters
@@ -117,7 +206,10 @@ export default function TasksSection({ tasks }: { tasks: Task[] }) {
       ) : (
         <div className="flex flex-col gap-8 flex-1">
           {Object.entries(groupedPaginated).map(([batchLabel, batchTasks]) => (
-            <div key={batchLabel} className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div
+              key={batchLabel}
+              className="animate-in fade-in slide-in-from-bottom-2 duration-300"
+            >
               {/* Batch label */}
               <div className="flex items-center gap-3 mb-4">
                 <span className="text-[10px] font-black tracking-[0.2em] uppercase text-violet-400/80">
@@ -128,8 +220,12 @@ export default function TasksSection({ tasks }: { tasks: Task[] }) {
 
               {/* Grid space */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {batchTasks.map((task) => (
-                  <TaskCard key={`${batchLabel}-${task.id}`} task={task} />
+                {batchTasks.map((task, idx) => (
+                  <TaskCard
+                    key={`${batchLabel}-${task.id}-${idx}`}
+                    task={task}
+                    assignmentId={assignmentId}
+                  />
                 ))}
               </div>
             </div>
@@ -141,7 +237,11 @@ export default function TasksSection({ tasks }: { tasks: Task[] }) {
       {totalPages > 1 && (
         <div className="mt-10 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-xs text-gray-500 font-medium">
-            Showing <span className="text-gray-300">{startIndex + 1}</span> - <span className="text-gray-300">{Math.min(startIndex + itemsPerPage, filteredTasks.length)}</span> of <span className="text-gray-300">{filteredTasks.length}</span> tasks
+            Showing <span className="text-gray-300">{startIndex + 1}</span> -{' '}
+            <span className="text-gray-300">
+              {Math.min(startIndex + itemsPerPage, filteredTasks.length)}
+            </span>{' '}
+            of <span className="text-gray-300">{filteredTasks.length}</span> tasks
           </div>
 
           <div className="flex items-center gap-2">

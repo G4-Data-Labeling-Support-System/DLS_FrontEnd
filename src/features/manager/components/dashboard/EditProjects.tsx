@@ -47,7 +47,7 @@ export const EditProject = () => {
     }
 
     fetchProjectDetail()
-  }, [id, form, navigate])
+  }, [id, form, navigate, message])
 
   // 2. Xử lý khi submit Form thành công
   const onFinish = async (values: {

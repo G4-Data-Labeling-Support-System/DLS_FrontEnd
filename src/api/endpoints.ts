@@ -25,29 +25,45 @@ export const ENDPOINTS = {
     LIST: '/projects',
     DETAIL: (id: string) => `/projects/${id}`,
     CREATE: '/projects',
-    DELETE: (id: string) => `/projects/${id}/remove`
+    DELETE: (id: string) => `/projects/${id}/remove`,
+    STATUS: (id: string) => `/projects/${id}/status`,
+    MEMBERS: (id: string) => `/projects/${id}/members`,
+    BY_DATASET: (datasetId: string) => `/projects/datasets/${datasetId}`
   },
 
   DATASETS: {
     LIST: '/datasets',
     DETAIL: (id: string) => `/datasets/${id}`,
-    ITEMS: (id: string) => `/datasets/${id}/items`,
+    ITEMS: (id: string) => `/dataitems/datasets/${id}`,
+    UPDATE: (id: string) => `/datasets/${id}`,
     CREATE: '/datasets',
-    BY_PROJECT: (projectId: string) => `/datasets/project/${projectId}`
+    BY_PROJECT: (projectId: string) => `/datasets/project/${projectId}`,
+    DELETE: (id: string) => `/datasets/remove/${id}`
+  },
+
+  DATA_ITEMS: {
+    DETAIL: (id: string) => `/v1/dataitems/${id}`
   },
 
   ASSIGNMENTS: {
     LIST: '/assignments',
     DETAIL: (id: string) => `/assignments/${id}`,
+    UPDATE: (id: string) => `/assignments/${id}`,
     BY_PROJECT: (projectId: string) => `assignments/projects/${projectId}`,
     BY_ANNOTATOR: (annotatorId: string) => `/assignments/annotators/${annotatorId}`,
-    DELETE: (id: string) => `/assignments/${id}`,
-    CREATE_BY_PROJECT: (projectId: string) => `/assignments/projects/${projectId}`
+    DELETE: (id: string) => `/assignments/remove/${id}`,
+    CREATE_BY_PROJECT: (projectId: string) => `/assignments/projects/${projectId}`,
+    LABELS: (assignmentId: string) => `/assignments/${assignmentId}/labels`,
+    DATASET: (assignmentId: string) => `/assignments/${assignmentId}/dataset`,
+    CHANGE_DATASET: (assignmentId: string) =>
+      `/assignments/change-dataset/assignment/${assignmentId}`
   },
 
   ANNOTATIONS: {
     LIST: '/annotations',
-    DETAIL: (id: string) => `/annotations/${id}`
+    DETAIL: (id: string) => `/annotations/${id}`,
+    BY_DATAITEM: (dataItemId: string) => `/annotations/dataitem/${dataItemId}`,
+    SUBMIT_SINGLE: '/annotations/submit'
   },
 
   GUIDELINES: {
@@ -63,13 +79,23 @@ export const ENDPOINTS = {
     DETAIL: (id: string) => `/labels/${id}`,
     CREATE: (datasetId: string) => `/datasets/${datasetId}/labels`,
     UPDATE: (id: string) => `/labels/${id}`,
-    DELETE: (id: string) => `/labels/${id}`
+    DELETE: (id: string) => `/labels/${id}`,
+    BY_DATASET: (datasetId: string) => `/datasets/${datasetId}/labels`
   },
 
-  REVIEWER: {
-    STATS: '/reviewer/stats',
-    PROJECT_ITEMS: (projectId: string) => `/reviewer/projects/${projectId}/items`,
-    ITEM_DETAIL: (itemId: string) => `/reviewer/items/${itemId}`,
-    REVIEW_DECISION: (itemId: string) => `/reviewer/items/${itemId}/review`
+  REVIEWS: {
+    UPDATE: '/reviews/update',
+    BY_ANNOTATION: (annotationId: string) => `/reviews/annotation/${annotationId}`
+  },
+
+  DATAITEMS: {
+    BY_DATASET: (datasetId: string) => `/dataitems/datasets/${datasetId}`,
+    DELETE: (id: string) => `/images/delete/${id}`
+  },
+
+  TASKS: {
+    BY_ASSIGNMENT: (assignmentId: string) => `/tasks/assignments/${assignmentId}`,
+    DETAIL: (taskId: string) => `/tasks/${taskId}`,
+    DATA_ITEMS: (taskId: string) => `/tasks/${taskId}/taskDataitems`
   }
 } as const

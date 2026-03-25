@@ -1,757 +1,380 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
-    Spin,
-    Typography,
-    Card,
-    Button,
-    Descriptions,
-    Tag,
-    Avatar,
-    Empty,
-    App,
-    Form,
-    Input,
-    Dropdown,
-    Select,
-    DatePicker
+  Spin,
+  Button,
+  Tag,
+  Avatar,
+  App,
+  Form,
+  Input,
+  Dropdown
 } from 'antd'
-import dayjs from 'dayjs'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
-import { EditOutlined, UserOutlined, MoreOutlined, DeleteOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
-import assignmentApi from '@/api/AssignmentApi'
+import { EditOutlined, MoreOutlined } from '@ant-design/icons'
 import guidelineApi from '@/api/GuidelineApi'
-import { userApi } from '@/api/userApi'
-import { AssignmentDetail } from './AssignmentDetail'
-import { CreateAssignmentModal } from './CreateAssignmentModal'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { CreateProjectModal } from './CreateProjectModal'
 import {
-    useProjectById,
-    useAssignmentsByProject,
-    useGuidelinesByProject,
-    useInvalidateProjectDetail
+  useProjectById,
+  useGuidelinesByProject,
+  useProjectMembers,
+  useInvalidateProjectDetail
 } from '@/features/manager/hooks/useProjectDetail'
 
-const { Title } = Typography
-
 interface ProjectDetailProps {
-    projectId: string
-    onBack: () => void
+  projectId: string
+  onBack?: () => void
 }
 
-export const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack }) => {
-    const { message } = App.useApp()
-    const {
-        data: project,
-        isLoading: projectLoading,
-        isError: projectError
-    } = useProjectById(projectId)
-    const {
-        data: assignments = [],
-        isLoading: assignmentsLoading
-    } = useAssignmentsByProject(projectId)
-    const { data: guidelines = [], isLoading: guidelinesLoading } = useGuidelinesByProject(projectId)
-    const invalidateProjectDetail = useInvalidateProjectDetail()
+export const ProjectDetail: React.FC<ProjectDetailProps> = ({
+  projectId,
+  onBack
+}) => {
+  const { message } = App.useApp()
+  const {
+    data: project,
+    isLoading: projectLoading,
+    isError: projectError
+  } = useProjectById(projectId)
+  const { data: guidelines = [], isLoading: guidelinesLoading } = useGuidelinesByProject(projectId)
+  const { data: members = [], isLoading: membersLoading } = useProjectMembers(projectId)
+  const invalidateProjectDetail = useInvalidateProjectDetail()
 
-    const loading = projectLoading || assignmentsLoading || guidelinesLoading
+  const loading = projectLoading || guidelinesLoading || membersLoading
 
-    const [isCreateAssignmentModalVisible, setIsCreateAssignmentModalVisible] = useState(false)
-    const hasShownFirstAssignmentModal = useRef(false)
-    const [guidelineForm] = Form.useForm()
-    const [assignmentEditForm] = Form.useForm()
-    const navigate = useNavigate()
-    const [searchParams, setSearchParams] = useSearchParams()
+  const [isEditProjectModalVisible, setIsEditProjectModalVisible] = useState(false)
+  const [guidelineForm] = Form.useForm()
 
-    // Edit/Delete state for guidelines
-    const [editingGuideline, setEditingGuideline] = useState<Record<string, unknown> | null>(null)
-    const [isGuidelineEditModalVisible, setIsGuidelineEditModalVisible] = useState(false)
+  const [editingGuideline, setEditingGuideline] = useState<Record<string, unknown> | null>(null)
+  const [isGuidelineEditModalVisible, setIsGuidelineEditModalVisible] = useState(false)
 
-    // Edit/Delete state for assignments
-    const [editingAssignment, setEditingAssignment] = useState<Record<string, unknown> | null>(null)
-    const [isAssignmentEditModalVisible, setIsAssignmentEditModalVisible] = useState(false)
-    const [deleteAssignmentModalOpen, setDeleteAssignmentModalOpen] = useState(false)
-    const [deletingAssignment, setDeletingAssignment] = useState(false)
-    const [deletingAssignmentId, setDeletingAssignmentId] = useState<string | null>(null)
-    const [deletingAssignmentName, setDeletingAssignmentName] = useState('')
-
-    // User lists for assignment edit
-    const [editAnnotators, setEditAnnotators] = useState<Record<string, unknown>[]>([])
-    const [editReviewers, setEditReviewers] = useState<Record<string, unknown>[]>([])
-    const [editUsersLoading, setEditUsersLoading] = useState(false)
-
-    // Assignment detail view via URL search params (enables browser back button)
-    const selectedAssignmentId = searchParams.get('assignmentId')
-    const setSelectedAssignmentId = (id: string | null) => {
-        const params = new URLSearchParams(searchParams)
-        if (id) {
-            params.set('assignmentId', id)
-        } else {
-            params.delete('assignmentId')
-        }
-        setSearchParams(params)
+  useEffect(() => {
+    if (projectError) {
+      message.error('Cannot load project details.')
+      if (onBack) onBack()
     }
+  }, [projectError, onBack, message])
 
-    useEffect(() => {
-        if (projectError) {
-            message.error('Cannot load project details.')
-            onBack()
-        }
-    }, [projectError, onBack, message])
-
-    useEffect(() => {
-        if (!assignmentsLoading && assignments.length === 0 && !hasShownFirstAssignmentModal.current) {
-            hasShownFirstAssignmentModal.current = true
-            queueMicrotask(() => setIsCreateAssignmentModalVisible(true))
-        }
-    }, [assignments, assignmentsLoading])
-
-    const getStatusColor = (status?: string) => {
-        switch (status?.toUpperCase()) {
-            case 'ACTIVE':
-                return 'processing'
-            case 'COMPLETED':
-                return 'success'
-            case 'PAUSED':
-                return 'warning'
-            case 'ARCHIVE':
-                return 'error'
-            default:
-                return 'default'
-        }
+  const getStatusColor = (status?: string) => {
+    switch (status?.toUpperCase()) {
+      case 'ACTIVE':
+        return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+      case 'COMPLETED':
+        return 'border-indigo-500/30 bg-indigo-500/10 text-indigo-400'
+      case 'PAUSED':
+        return 'border-amber-500/30 bg-amber-500/10 text-amber-400'
+      case 'ARCHIVE':
+        return 'border-red-500/30 bg-red-500/10 text-red-400'
+      default:
+        return 'border-gray-500/30 bg-gray-500/10 text-gray-400'
     }
+  }
 
-    // --- Guideline Edit/Delete ---
-    const handleEditGuideline = (guideline: Record<string, unknown>) => {
+  const handleEditGuideline = (guideline: Record<string, unknown>) => {
+    setEditingGuideline(guideline)
+    guidelineForm.setFieldsValue({
+      title: guideline.title,
+      content: guideline.content
+    })
+    setIsGuidelineEditModalVisible(true)
+  }
 
-        setEditingGuideline(guideline)
-        guidelineForm.setFieldsValue({
-            title: guideline.title,
-            content: guideline.content
-        })
-        setIsGuidelineEditModalVisible(true)
+  const handleGuidelineEditSubmit = async () => {
+    try {
+      const values = await guidelineForm.validateFields()
+      const guideId = String(editingGuideline?.guideId)
+      await guidelineApi.updateGuideline(guideId, {
+        title: values.title,
+        content: values.content
+      })
+      message.success('Guideline updated successfully!')
+      setIsGuidelineEditModalVisible(false)
+      setEditingGuideline(null)
+      guidelineForm.resetFields()
+      invalidateProjectDetail(projectId)
+    } catch {
+      message.error('Failed to update guideline')
     }
+  }
 
-    const handleGuidelineEditSubmit = async () => {
-        try {
-            const values = await guidelineForm.validateFields()
-            const guideId = String(editingGuideline?.guideId)
-            await guidelineApi.updateGuideline(guideId, {
-                title: values.title,
-                content: values.content
-            })
-            message.success('Guideline updated successfully!')
-            setIsGuidelineEditModalVisible(false)
-            setEditingGuideline(null)
-            guidelineForm.resetFields()
-            invalidateProjectDetail(projectId)
-        } catch {
-            message.error('Failed to update guideline')
-        }
-    }
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'N/A'
+    return new Date(dateString).toLocaleString('vi-VN')
+  }
 
-    // --- Assignment Edit/Delete ---
-    const fetchUsersForEdit = async () => {
-        setEditUsersLoading(true)
-        try {
-            const userRes = await userApi.getUsers()
-            const allUsers = (
-                Array.isArray(userRes)
-                    ? userRes
-                    : (userRes as unknown as { data?: Record<string, unknown>[] })?.data || []
-            ) as Record<string, unknown>[]
-
-            setEditAnnotators(
-                allUsers.filter((u) => {
-                    const role = String(u.role || u.userRole || '').toUpperCase()
-                    return role.includes('ANNOTATOR')
-                })
-            )
-            setEditReviewers(
-                allUsers.filter((u) => {
-                    const role = String(u.role || u.userRole || '').toUpperCase()
-                    return role.includes('REVIEWER')
-                })
-            )
-        } catch (error) {
-            console.error('Failed to fetch users for edit', error)
-        } finally {
-            setEditUsersLoading(false)
-        }
-    }
-
-    const renderEditUserOption = (u: Record<string, unknown>) => {
-        const userId = String(u.userId || u.id || '')
-        const name = (u.fullName as string) || (u.username as string) || (u.name as string) || 'Unknown'
-        const avatarSrc =
-            (u.avatar as string) ||
-            (u.coverImage as string) ||
-            `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`
-        return (
-            <Select.Option key={userId} value={userId}>
-                <div className="flex items-center gap-2">
-                    <Avatar src={avatarSrc} size="small" />
-                    <span>{name}</span>
-                </div>
-            </Select.Option>
-        )
-    }
-
-    const handleEditAssignment = (assignment: Record<string, unknown>) => {
-        setEditingAssignment(assignment)
-        assignmentEditForm.setFieldsValue({
-            assignmentName: assignment.assignmentName || assignment.name,
-            assignedTo: assignment.assignedTo,
-            reviewedBy: assignment.reviewedBy || assignment.reviewerId,
-            description: assignment.description || assignment.descriptionAssignment,
-            dueDate: assignment.dueDate ? dayjs(assignment.dueDate as string) : null,
-            assignmentStatus: assignment.assignmentStatus || assignment.status
-        })
-        setIsAssignmentEditModalVisible(true)
-        fetchUsersForEdit()
-    }
-
-    const handleAssignmentEditSubmit = async () => {
-        try {
-            const values = await assignmentEditForm.validateFields()
-            const assignmentId = String(editingAssignment?.assignmentId)
-            await assignmentApi.updateAssignment(assignmentId, {
-                assignmentName: values.assignmentName,
-                assignedTo: values.assignedTo,
-                reviewedBy: values.reviewedBy,
-                description: values.description,
-                dueDate: values.dueDate ? values.dueDate.toISOString() : undefined,
-                assignmentStatus: values.assignmentStatus
-            })
-            message.success('Assignment updated successfully!')
-            setIsAssignmentEditModalVisible(false)
-            setEditingAssignment(null)
-            assignmentEditForm.resetFields()
-            invalidateProjectDetail(projectId)
-        } catch {
-            message.error('Failed to update assignment')
-        }
-    }
-
-    const handleDeleteAssignment = (assignment: Record<string, unknown>) => {
-        const assignmentId = String(assignment.assignmentId)
-        const name = String(assignment.assignmentName || assignment.name || 'this assignment')
-        setDeletingAssignmentId(assignmentId)
-        setDeletingAssignmentName(name)
-        setDeleteAssignmentModalOpen(true)
-    }
-
-    const confirmDeleteAssignment = async () => {
-        if (!deletingAssignmentId) return
-        setDeletingAssignment(true)
-        try {
-            await assignmentApi.deleteAssignment(deletingAssignmentId)
-            message.success('Assignment deleted successfully!')
-            setDeleteAssignmentModalOpen(false)
-            setDeletingAssignmentId(null)
-            setDeletingAssignmentName('')
-            invalidateProjectDetail(projectId)
-        } catch {
-            message.error('Failed to delete assignment')
-        } finally {
-            setDeletingAssignment(false)
-        }
-    }
-
-    const formatDate = (dateString?: string) => {
-        if (!dateString) return 'N/A'
-        return new Date(dateString).toLocaleDateString('vi-VN')
-    }
-
-    if (loading) {
-        return (
-            <div className="w-full h-64 flex justify-center items-center">
-                <Spin size="large" />
-            </div>
-        )
-    }
-
-    if (selectedAssignmentId) {
-        return (
-            <AssignmentDetail
-                assignmentId={selectedAssignmentId}
-                onBack={() => setSelectedAssignmentId(null)}
-            />
-        )
-    }
-
-    if (!project) {
-        return (
-            <div className="w-full text-center py-10 text-gray-400">
-                Error loading project information.
-            </div>
-        )
-    }
-
+  if (loading) {
     return (
-        <div className="w-full animate-fade-in">
-            <div className="flex justify-between items-start mb-6">
-                <div>
-                    <Title level={3} className="!text-white !m-0 !font-display">
-                        {project.projectName}
-                    </Title>
-                    <div className="mt-2">
-                        <Tag
-                            color={getStatusColor(project.projectStatus as string)}
-                            className="m-0 font-medium text-sm px-3 py-1"
-                        >
-                            {(project.projectStatus as string) || 'UNKNOWN'}
-                        </Tag>
-                    </div>
-                </div>
-                <Button
-                    type="primary"
-                    icon={<EditOutlined />}
-                    className="bg-violet-600 hover:bg-violet-500 border-none"
-                    onClick={() => navigate(`/manager/projects/edit/${project.projectId}`)}
-                >
-                    Edit
-                </Button>
-            </div>
-
-            <Card className="bg-[#1A1625] border-gray-800 rounded-xl mb-6 p-0 overflow-hidden">
-                <div className="flex flex-col lg:flex-row h-full w-full">
-                    <div className="flex-1 p-6 border-b lg:border-b-0 lg:border-r border-gray-800">
-                        <Descriptions
-                            title={
-                                <span className="text-white text-lg font-display flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-violet-400">info</span>Project
-                                    Information
-                                </span>
-                            }
-                            column={1}
-                            className="custom-descriptions"
-                            styles={{
-                                label: { color: '#9ca3af', fontWeight: 500, width: '150px' },
-                                content: { color: '#d1d5db' }
-                            }}
-                        >
-                            <Descriptions.Item label="Project ID">
-                                <span className="font-mono text-violet-300 bg-violet-500/10 px-2 py-0.5 rounded border border-violet-500/20">
-                                    {project.projectId}
-                                </span>
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Description">
-                                {project.description || (
-                                    <span className="text-gray-600 italic">No description</span>
-                                )}
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Created At">
-                                {formatDate(project.createdAt as string)}
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Last Updated">
-                                {formatDate(project.updatedAt as string)}
-                            </Descriptions.Item>
-                        </Descriptions>
-                    </div>
-
-                    <div className="flex-1 p-6">
-                        <h3 className="text-white text-lg font-display flex items-center gap-2 mb-4">
-                            <span className="material-symbols-outlined text-green-400">menu_book</span>
-                            Project Guidelines
-                        </h3>
-                        {guidelines.length === 0 ? (
-                            <div className="flex-1 flex flex-col items-center justify-center min-h-[150px]">
-                                <Empty
-                                    image={Empty.PRESENTED_IMAGE_SIMPLE}
-                                    description={<span className="text-gray-500">No guidelines created yet</span>}
-                                />
-                            </div>
-                        ) : (
-                            <div
-                                className="grid grid-cols-1 gap-4 overflow-y-auto pr-1"
-                                style={{ maxHeight: '300px' }}
-                            >
-                                {guidelines.map((guideline: Record<string, unknown>, index: number) => (
-                                    <div
-                                        key={(guideline.guideId as string) || index}
-                                        className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-green-500/30 transition-colors"
-                                    >
-                                        <div className="flex justify-between items-start">
-                                            <h4
-                                                className="text-white font-bold text-sm truncate pr-2"
-                                                title={(guideline.title as string) || 'Unnamed Guideline'}
-                                            >
-                                                {(guideline.title as string) || 'Unnamed Guideline'}
-                                            </h4>
-                                            <Dropdown
-                                                menu={{
-                                                    items: [
-                                                        {
-                                                            key: 'edit',
-                                                            label: 'Edit',
-                                                            icon: <EditOutlined />,
-                                                            onClick: () => handleEditGuideline(guideline)
-                                                        },
-                                                    ]
-                                                }}
-                                                trigger={['click']}
-                                                placement="bottomRight"
-                                            >
-                                                <Button
-                                                    type="text"
-                                                    size="small"
-                                                    icon={<MoreOutlined />}
-                                                    className="text-gray-400 hover:text-white flex-shrink-0"
-                                                />
-                                            </Dropdown>
-                                        </div>
-                                        <div className="text-gray-400 text-sm mt-2 whitespace-pre-wrap">
-                                            {(guideline.content as string) || 'No content provided.'}
-                                        </div>
-                                        <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/5">
-                                            <span className="text-gray-500 text-xs">
-                                                {formatDate(guideline.createdAt as string)}
-                                            </span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </Card>
-
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-6 mt-1">
-                <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
-                    <div className="flex items-center justify-between mb-4">
-                        <span className="text-white text-lg font-display flex items-center gap-2">
-                            <span className="material-symbols-outlined text-fuchsia-400">group</span>
-                            Project Members
-                        </span>
-                        <Tag
-                            color="#8b5cf6"
-                            className="border-0 bg-violet-600/20 text-violet-300 font-bold px-3 rounded-full"
-                        >
-                            {project.users?.length || 0} Members
-                        </Tag>
-                    </div>
-                </Card>
-
-                <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
-                    <div className="flex items-center justify-between mb-4">
-                        <span className="text-white text-lg font-display flex items-center gap-2">
-                            <span className="material-symbols-outlined text-blue-400">assignment</span>
-                            Project Assignments
-                        </span>
-                        <div className="flex items-center gap-2">
-                            <Tag
-                                color="#3b82f6"
-                                className="border-0 bg-blue-600/20 text-blue-300 font-bold px-3 rounded-full"
-                            >
-                                {assignments.length} Assignments
-                            </Tag>
-                            <Button
-                                type="primary"
-                                size="small"
-                                className="bg-violet-600 hover:bg-violet-500 border-none"
-                                onClick={() => setIsCreateAssignmentModalVisible(true)}
-                            >
-                                + New
-                            </Button>
-                        </div>
-                    </div>
-
-                    {assignments.length === 0 ? (
-                        <Empty
-                            image={Empty.PRESENTED_IMAGE_SIMPLE}
-                            description={<span className="text-gray-500">No assignments created yet</span>}
-                            className="my-8"
-                        />
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {assignments.map((assignment: Record<string, unknown>, index: number) => (
-                                <div
-                                    key={(assignment.assignmentId as string) || index}
-                                    className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-blue-500/30 transition-colors cursor-pointer"
-                                    onClick={() => setSelectedAssignmentId(String(assignment.assignmentId))}
-                                >
-                                    <div className="flex justify-between items-start">
-                                        <h4
-                                            className="text-white font-bold text-sm truncate pr-2"
-                                            title={(assignment.assignmentName as string) || (assignment.name as string)}
-                                        >
-                                            {(assignment.assignmentName as string) ||
-                                                (assignment.name as string) ||
-                                                'Unnamed Assignment'}
-                                        </h4>
-                                        <div className="flex items-center gap-1 flex-shrink-0">
-                                            <Tag
-                                                color={getStatusColor(
-                                                    (assignment.status as string) || (assignment.assignmentStatus as string)
-                                                )}
-                                                className="m-0 text-[10px] px-1.5 py-0"
-                                            >
-                                                {(assignment.status as string) ||
-                                                    (assignment.assignmentStatus as string) ||
-                                                    'UNKNOWN'}
-                                            </Tag>
-                                            <Dropdown
-                                                menu={{
-                                                    items: [
-                                                        {
-                                                            key: 'edit',
-                                                            label: 'Edit',
-                                                            icon: <EditOutlined />,
-                                                            onClick: (info) => {
-                                                                info.domEvent.stopPropagation()
-                                                                handleEditAssignment(assignment)
-                                                            }
-                                                        },
-                                                        {
-                                                            key: 'delete',
-                                                            label: 'Delete',
-                                                            icon: <DeleteOutlined />,
-                                                            danger: true,
-                                                            onClick: (info) => {
-                                                                info.domEvent.stopPropagation()
-                                                                handleDeleteAssignment(assignment)
-                                                            }
-                                                        }
-                                                    ]
-                                                }}
-                                                trigger={['click']}
-                                                placement="bottomRight"
-                                            >
-                                                <Button
-                                                    type="text"
-                                                    size="small"
-                                                    icon={<MoreOutlined />}
-                                                    className="text-gray-400 hover:text-white"
-                                                    onClick={(e) => e.stopPropagation()}
-                                                />
-                                            </Dropdown>
-                                        </div>
-                                    </div>
-                                    <div className="text-gray-400 text-xs line-clamp-2 mt-1 min-h-[32px]">
-                                        {(assignment.description as string) ||
-                                            (assignment.descriptionAssignment as string) ||
-                                            'No description provided.'}
-                                    </div>
-                                    <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/5">
-                                        <span className="text-gray-500 text-xs">
-                                            {formatDate(assignment.createdAt as string)}
-                                        </span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </Card>
-            </div>
-
-            <CreateAssignmentModal
-                open={isCreateAssignmentModalVisible}
-                projectId={projectId}
-                onCancel={() => setIsCreateAssignmentModalVisible(false)}
-                onSuccess={() => {
-                    setIsCreateAssignmentModalVisible(false)
-                    invalidateProjectDetail(projectId)
-                }}
-            />
-
-            {/* Guideline Edit Modal */}
-            <GlassModal
-                open={isGuidelineEditModalVisible}
-                onCancel={() => {
-                    setIsGuidelineEditModalVisible(false)
-                    setEditingGuideline(null)
-                    guidelineForm.resetFields()
-                }}
-                destroyOnHidden
-                width={520}
-            >
-                <div className="px-8 pt-10 pb-8">
-                    <div className="text-center border-b border-white/5 pb-6 mb-6">
-                        <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">Edit Guideline</h2>
-                    </div>
-                    <Form form={guidelineForm} layout="vertical">
-                        <Form.Item
-                            label="Title"
-                            name="title"
-                            rules={[{ required: true, message: 'Please enter title' }]}
-                        >
-                            <Input placeholder="Enter guideline title" />
-                        </Form.Item>
-                        <Form.Item
-                            label="Content"
-                            name="content"
-                            rules={[{ required: true, message: 'Please enter content' }]}
-                        >
-                            <Input.TextArea placeholder="Enter guideline content" rows={5} />
-                        </Form.Item>
-                        <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
-                            <Button
-                                onClick={() => {
-                                    setIsGuidelineEditModalVisible(false)
-                                    setEditingGuideline(null)
-                                    guidelineForm.resetFields()
-                                }}
-                                className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="primary"
-                                onClick={handleGuidelineEditSubmit}
-                                className="bg-violet-600 hover:bg-violet-500 border-none"
-                            >
-                                Save
-                            </Button>
-                        </div>
-                    </Form>
-                </div>
-            </GlassModal>
-
-            {/* Assignment Edit Modal */}
-            <GlassModal
-                open={isAssignmentEditModalVisible}
-                onCancel={() => {
-                    setIsAssignmentEditModalVisible(false)
-                    setEditingAssignment(null)
-                    assignmentEditForm.resetFields()
-                }}
-                destroyOnHidden
-                width={600}
-            >
-                <div className="px-8 pt-10 pb-8">
-                    <div className="text-center border-b border-white/5 pb-6 mb-6">
-                        <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">Edit Assignment</h2>
-                    </div>
-                    <Form form={assignmentEditForm} layout="vertical">
-                        <Form.Item
-                            label="Assignment Name"
-                            name="assignmentName"
-                            rules={[{ required: true, message: 'Please enter assignment name' }]}
-                        >
-                            <Input placeholder="Enter assignment name" />
-                        </Form.Item>
-                        <Form.Item label="Assigned To" name="assignedTo">
-                            <Select
-                                placeholder="Select annotator"
-                                allowClear
-                                showSearch
-                                optionFilterProp="children"
-                                loading={editUsersLoading}
-                            >
-                                {editAnnotators.map(renderEditUserOption)}
-                            </Select>
-                        </Form.Item>
-                        <Form.Item label="Reviewed By" name="reviewedBy">
-                            <Select
-                                placeholder="Select reviewer"
-                                allowClear
-                                showSearch
-                                optionFilterProp="children"
-                                loading={editUsersLoading}
-                            >
-                                {editReviewers.map(renderEditUserOption)}
-                            </Select>
-                        </Form.Item>
-                        <Form.Item label="Description" name="description">
-                            <Input.TextArea placeholder="Enter description" rows={3} />
-                        </Form.Item>
-                        <Form.Item label="Due Date" name="dueDate">
-                            <DatePicker
-                                className="w-full"
-                                showTime
-                                format="DD/MM/YYYY HH:mm"
-                                placeholder="Select due date"
-                            />
-                        </Form.Item>
-                        <Form.Item label="Status" name="assignmentStatus">
-                            <Select
-                                placeholder="Select status"
-                                options={[
-                                    { value: 'ASSIGNED', label: 'Assigned' },
-                                    { value: 'ACTIVE', label: 'Active' },
-                                    { value: 'COMPLETED', label: 'Completed' },
-                                    { value: 'PAUSED', label: 'Paused' }
-                                ]}
-                            />
-                        </Form.Item>
-                        <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
-                            <Button
-                                onClick={() => {
-                                    setIsAssignmentEditModalVisible(false)
-                                    setEditingAssignment(null)
-                                    assignmentEditForm.resetFields()
-                                }}
-                                className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="primary"
-                                onClick={handleAssignmentEditSubmit}
-                                className="bg-violet-600 hover:bg-violet-500 border-none"
-                            >
-                                Save
-                            </Button>
-                        </div>
-                    </Form>
-                </div>
-            </GlassModal>
-
-            <GlassModal
-                open={deleteAssignmentModalOpen}
-                onCancel={() => { setDeleteAssignmentModalOpen(false); setDeletingAssignmentId(null); setDeletingAssignmentName('') }}
-                destroyOnHidden
-                width={480}
-            >
-                <div className="px-8 pt-10 pb-8">
-                    <div className="text-center pb-6 mb-6">
-                        <div className="flex justify-center mb-4">
-                            <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center">
-                                <ExclamationCircleOutlined className="text-red-500 text-2xl" />
-                            </div>
-                        </div>
-                        <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
-                            Delete Assignment
-                        </h2>
-                        <p className="text-white/50 text-sm">
-                            Are you sure you want to delete <span className="text-white/80 font-medium">{deletingAssignmentName}</span>? This action cannot be undone.
-                        </p>
-                    </div>
-
-                    <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
-                        <Button
-                            onClick={() => { setDeleteAssignmentModalOpen(false); setDeletingAssignmentId(null); setDeletingAssignmentName('') }}
-                            className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            danger
-                            type="primary"
-                            loading={deletingAssignment}
-                            onClick={confirmDeleteAssignment}
-                            className="bg-red-600 hover:bg-red-500 border-none"
-                        >
-                            Delete Assignment
-                        </Button>
-                    </div>
-                </div>
-            </GlassModal>
-
-            <style>{`
-                .custom-descriptions .ant-descriptions-title {
-                    margin-bottom: 20px;
-                }
-                .custom-descriptions .ant-descriptions-item-container {
-                    border-bottom: 1px solid #2d263b;
-                    padding-bottom: 12px;
-                    margin-bottom: 12px;
-                }
-                .custom-descriptions .ant-descriptions-item-container:last-child {
-                    border-bottom: none;
-                    margin-bottom: 0;
-                    padding-bottom: 0;
-                }
-            `}</style>
-        </div>
+      <div className="w-full h-64 flex justify-center items-center">
+        <Spin size="large" />
+      </div>
     )
+  }
+
+  if (!project) {
+    return (
+      <div className="w-full text-center py-10 text-gray-400">
+        Error loading project information.
+      </div>
+    )
+  }
+
+  return (
+    <div className="w-full animate-fade-in">
+      <div className="flex justify-end mb-4">
+        <Button
+          type="primary"
+          icon={<EditOutlined />}
+          className="bg-violet-600 hover:bg-violet-500 border-none rounded-lg font-medium shadow-none"
+          onClick={() => setIsEditProjectModalVisible(true)}
+          disabled={project.projectStatus?.toUpperCase() === 'INACTIVE'}
+        >
+          Edit Project
+        </Button>
+      </div>
+
+      <div className="rounded-2xl grid lg:grid-cols-2 md:grid-cols-1 gap-6 mb-8 mt-2 items-stretch">
+
+        {/* DESIGN APPLIED FROM ANNOTATOR FOR PROJECT INFO */}
+        <div className="glass-panel rounded-2xl p-7 relative overflow-hidden flex flex-col border border-white/5 bg-[#1A1625]/60 backdrop-blur-md shadow-xl">
+          <div className="absolute -top-10 -right-10 w-56 h-56 rounded-full bg-violet-500/10 blur-[60px] pointer-events-none" />
+          <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-fuchsia-500/10 blur-[50px] pointer-events-none" />
+
+          <div className="relative z-10 flex-1 flex flex-col">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="material-symbols-outlined text-[14px] text-violet-400">
+                    folder_special
+                  </span>
+                  <span className="text-xs font-mono text-violet-400 tracking-widest uppercase font-bold">
+                    Project Information
+                  </span>
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                  {project.projectName}
+                </h1>
+                <p className="text-sm text-gray-400 mt-1 font-mono hover:text-gray-300 transition-colors cursor-default">
+                  {project.projectId}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-2 shrink-0">
+                <div
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold uppercase ${getStatusColor(project.projectStatus as string)}`}
+                >
+                  <span className="material-symbols-outlined text-[14px]">flag</span>
+                  {(project.projectStatus as string) || 'UNKNOWN'}
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-6 flex-1">
+              <h3 className="text-sm font-semibold text-white mb-2">Description</h3>
+              <p className="text-sm text-gray-300 leading-relaxed max-w-3xl">
+                {project.description || (
+                  <span className="text-gray-500 italic">No description provided for this project.</span>
+                )}
+              </p>
+            </div>
+
+            {/* Members Section Integrated into Glass Design */}
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-white mb-2">Members</h3>
+              <div className="max-h-[120px] overflow-y-auto pr-2 custom-scrollbar space-y-2 py-1">
+                {members.length > 0 ? (
+                  members.map(
+                    (
+                      member: {
+                        user: {
+                          coverImage?: string
+                          username?: string
+                          role?: string
+                        }
+                      },
+                      i: number
+                    ) => (
+                      <div key={i} className="flex items-center gap-3 bg-white/5 p-2 rounded-lg border border-white/5 hover:bg-white/10 hover:border-violet-500/30 transition-all cursor-default">
+                        <Avatar
+                          size="small"
+                          className="border border-violet-500/30 ring-2 ring-violet-500/10"
+                          src={
+                            member.user.coverImage ||
+                            `https://ui-avatars.com/api/?name=${encodeURIComponent(member.user.username || 'U')}&background=random`
+                          }
+                        />
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-gray-200">
+                            {member.user.username || 'Unknown User'}
+                          </span>
+                          {member.user.role && (
+                            <span className="text-[10px] text-gray-400 tracking-wider">
+                              {member.user.role}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  )
+                ) : (
+                  <span className="text-gray-500 italic text-sm">No members yet.</span>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 border-t border-white/10 pt-4 mt-auto">
+              <div>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Created At</p>
+                <p className="text-sm font-semibold text-gray-300">{formatDate(project.createdAt as string)}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Last Updated</p>
+                <p className="text-sm font-semibold text-gray-300">{formatDate(project.updatedAt as string)}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* PROJECT GUIDELINES SIDE */}
+        <div className="bg-[#1A1625]/60 backdrop-blur-md border border-violet-500/20 rounded-2xl overflow-hidden shadow-xl flex flex-col h-full min-h-[400px]">
+          <div className="w-full flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#231e31]/60">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-inner">
+                <span className="material-symbols-outlined text-[16px] text-emerald-400">menu_book</span>
+              </div>
+              <span className="font-semibold text-white text-base font-display">Project Guidelines</span>
+            </div>
+            <Tag color="#10b981" className="border-0 bg-emerald-500/10 text-emerald-400 border-emerald-500/20 border shadow-inner rounded-full font-bold px-3 py-0.5 m-0 text-xs">
+              {guidelines.length} total
+            </Tag>
+          </div>
+
+          <div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
+            {guidelines.length === 0 ? (
+              <div className="w-full h-full flex flex-col items-center justify-center opacity-60">
+                <span className="material-symbols-outlined text-5xl mb-3 text-gray-600">article</span>
+                <p className="text-gray-400 text-sm">No guidelines available</p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                {guidelines.map((guideline: Record<string, unknown>, index: number) => (
+                  <div
+                    key={(guideline.guideId as string) || index}
+                    className="flex flex-col gap-3 bg-white/5 p-5 rounded-xl border border-white/10 hover:border-emerald-500/30 transition-all shadow-inner group"
+                  >
+                    <div className="flex justify-between items-start gap-2 border-b border-white/5 pb-3">
+                      <div className="flex items-center gap-3 font-display text-white font-semibold">
+                        <span className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[11px] flex items-center justify-center font-bold font-sans">
+                          {index + 1}
+                        </span>
+                        <h4 className="truncate" title={(guideline.title as string) || 'Guideline'}>
+                          {(guideline.title as string) || 'Guideline'}
+                        </h4>
+                      </div>
+
+                      <Dropdown
+                        menu={{
+                          items: [
+                            {
+                              key: 'edit',
+                              label: <span className="text-gray-300 hover:text-white font-medium">Edit Guideline</span>,
+                              icon: <EditOutlined className="text-gray-400" />,
+                              onClick: () => handleEditGuideline(guideline)
+                            }
+                          ]
+                        }}
+                        trigger={['click']}
+                        placement="bottomRight"
+                      >
+                        <Button
+                          type="text"
+                          size="small"
+                          icon={<MoreOutlined className="text-gray-400 group-hover:text-white transition-colors" />}
+                          className="hover:bg-white/10 border-none flex-shrink-0 -mr-2 shadow-none"
+                        />
+                      </Dropdown>
+                    </div>
+
+                    <div className="text-gray-300 text-sm whitespace-pre-wrap leading-relaxed mt-1">
+                      {(guideline.content as string) || 'No content provided.'}
+                    </div>
+
+                    <div className="mt-2 text-[10px] text-gray-500 tracking-wider uppercase font-medium mt-auto w-full text-right">
+                      {formatDate(guideline.createdAt as string)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+      </div>
+
+      <CreateProjectModal
+        open={isEditProjectModalVisible}
+        editId={projectId}
+        onCancel={() => setIsEditProjectModalVisible(false)}
+        onSuccess={() => {
+          setIsEditProjectModalVisible(false)
+          invalidateProjectDetail(projectId)
+        }}
+      />
+
+      {/* Guideline Edit Modal */}
+      <GlassModal
+        open={isGuidelineEditModalVisible}
+        onCancel={() => {
+          setIsGuidelineEditModalVisible(false)
+          setEditingGuideline(null)
+          guidelineForm.resetFields()
+        }}
+        destroyOnHidden
+        width={520}
+      >
+        <div className="px-8 pt-10 pb-8">
+          <div className="text-center border-b border-white/5 pb-6 mb-6">
+            <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
+              Edit Guideline
+            </h2>
+          </div>
+          <Form form={guidelineForm} layout="vertical">
+            <Form.Item
+              label={<span className="text-gray-300 font-medium tracking-wide">Title</span>}
+              name="title"
+              rules={[{ required: true, message: 'Please enter title' }]}
+            >
+              <Input placeholder="Enter guideline title" className="bg-[#1A1625] border-gray-700 text-white hover:border-violet-500 focus:border-violet-500 rounded-lg px-3 py-2" />
+            </Form.Item>
+            <Form.Item
+              label={<span className="text-gray-300 font-medium tracking-wide">Content</span>}
+              name="content"
+              rules={[{ required: true, message: 'Please enter content' }]}
+            >
+              <Input.TextArea placeholder="Enter guideline content" rows={5} className="bg-[#1A1625] border-gray-700 text-white hover:border-violet-500 focus:border-violet-500 rounded-lg p-3 custom-scrollbar" />
+            </Form.Item>
+            <div className="flex justify-end gap-3 pt-6 border-t border-white/5 mt-6">
+              <Button
+                onClick={() => {
+                  setIsGuidelineEditModalVisible(false)
+                  setEditingGuideline(null)
+                  guidelineForm.resetFields()
+                }}
+                className="border-white/10 text-white/70 hover:text-white hover:border-white/30 bg-transparent rounded-lg px-6 shadow-none"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="primary"
+                onClick={handleGuidelineEditSubmit}
+                className="bg-violet-600 hover:bg-violet-500 border-none rounded-lg px-8 shadow-md"
+              >
+                Save
+              </Button>
+            </div>
+          </Form>
+        </div>
+      </GlassModal>
+    </div>
+  )
 }
+
+export default ProjectDetail

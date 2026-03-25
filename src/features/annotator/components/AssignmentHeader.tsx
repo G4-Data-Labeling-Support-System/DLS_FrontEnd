@@ -26,7 +26,7 @@ interface Assignment {
 export default function AssignmentHeader({ assignment }: { assignment: Assignment }) {
   const completed = assignment.completedTasks ?? 0
   const total = assignment.totalTasks ?? assignment.dataset?.totalItems ?? 1
-  const progress = Math.round((completed / total) * 100)
+  const progress = total > 0 ? Math.round((completed / total) * 100) : 0
 
   const deadlineStr =
     assignment.dueDate || assignment.deadline || assignment.updatedAt || new Date().toISOString()
@@ -99,7 +99,7 @@ export default function AssignmentHeader({ assignment }: { assignment: Assignmen
             />
           </div>
           <span className="text-xs font-mono text-violet-400 shrink-0">
-            {completed}/{total === 1 && completed === 0 ? 0 : total} tasks · {progress}%
+            {completed}/{total} tasks · {progress}%
           </span>
         </div>
       </div>

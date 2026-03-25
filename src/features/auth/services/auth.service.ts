@@ -1,5 +1,5 @@
 // Auth Service - Business Logic
-import { publicAuthClient } from '@/api/ApiClients'
+import { publicAuthClient } from '@/api/apiClients'
 import { ENDPOINTS } from '@/api/endpoints'
 import { useAuthStore } from '@/store'
 import type { LoginInformation } from '../types/auth.types'
@@ -50,13 +50,14 @@ export class AuthService {
 
       // 4. Gọi API profile (Sử dụng authClient vì đã có token trong localStorage)
       try {
-        const { authClient } = await import('@/api/ApiClients')
+        const { authClient } = await import('@/api/apiClients')
         const profileResponse = await authClient.get(ENDPOINTS.AUTH.PROFILE)
         const user = profileResponse.data.data || profileResponse.data
 
         // Merge JWT info with API Profile (API profile is more detailed)
         const finalUser = { ...(jwtUser as User), ...user }
         useAuthStore.getState().setUser(finalUser as User)
+        localStorage.setItem('user', JSON.stringify(finalUser))
         // console.log('Final User from API:', finalUser);
         return finalUser
       } catch (profileErr) {
@@ -68,9 +69,14 @@ export class AuthService {
       }
 
       return { userRole: 'USER' } // Last resort
-    } catch (err) {
-      console.error('Login/Profile Flow Error:', err)
-      return null
+    } catch (err: unknown) {
+      const errorDetail =
+        (err as { response?: { data?: unknown } }).response?.data ||
+        (err as { message?: string }).message ||
+        err
+      console.error('🚨 LOGIN FAILED:', errorDetail)
+      // Ném lỗi ra ngoài kèm message chi tiết từ BE nếu có
+      throw err
     }
   }
 }

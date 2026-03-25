@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import AddUserModal from '../../features/admin/components/AddUserModal'
 import EditUserModal from '../../features/admin/components/EditUserModal'
 import AddUserSuccessModal from '../../features/admin/components/AddUserSuccessModal'
@@ -7,26 +7,50 @@ import type { User } from '@/shared/types/api.types'
 import { Button } from '@/shared/components/ui/Button'
 import {
   UserAddOutlined,
-  PlusOutlined,
   TeamOutlined,
   EditOutlined,
-  DeleteOutlined,
   MoreOutlined,
-  CheckCircleOutlined
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  SearchOutlined
 } from '@ant-design/icons'
-import { App, Dropdown, type MenuProps } from 'antd'
-import { useUsers, useDeleteUser, useActivateUser } from '@/features/admin/hooks/useUsers'
+import { App, Dropdown, Input, type MenuProps } from 'antd'
+import { useUsers, useDeactivateUser } from '@/features/admin/hooks/useUsers'
+import assignmentApi from '@/api/AssignmentApi'
+import { useAuthStore } from '@/store/auth.store'
 
 export default function UserManagement() {
   const { message } = App.useApp()
+  const { user: currentUser } = useAuthStore()
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false)
   const [editModal, setEditModal] = useState<{ isOpen: boolean; data?: User }>({ isOpen: false })
   const [successModal, setSuccessModal] = useState<{ isOpen: boolean; data?: User }>({
     isOpen: false
   })
+  const [searchTerm, setSearchTerm] = useState('')
   const { data: rawUsers, isLoading } = useUsers()
-  const deleteUserMutation = useDeleteUser()
-  const activateUserMutation = useActivateUser()
+  const deactivateUserMutation = useDeactivateUser()
+  const [taskCountMap, setTaskCountMap] = useState<Record<string, number>>({})
+
+  // Fetch all assignments once, then group by assignedTo to show task count per user
+  useEffect(() => {
+    const fetchTaskCounts = async () => {
+      try {
+        const res = await assignmentApi.getAssignments()
+        const assignments: Record<string, unknown>[] = res.data?.data ?? res.data ?? []
+        if (!Array.isArray(assignments)) return
+        const countMap: Record<string, number> = {}
+        assignments.forEach((a) => {
+          const userId = String(a.assignedTo || a.annotatorId || a.userId || '')
+          if (userId) countMap[userId] = (countMap[userId] || 0) + 1
+        })
+        setTaskCountMap(countMap)
+      } catch {
+        // silently fail - task count is non-critical
+      }
+    }
+    fetchTaskCounts()
+  }, [])
 
   // [Logic: Safety Check] Kiểm tra cấu trúc trả về từ API
   // React Query có thể trả về array trực tiếp hoặc object chứa data (VD: response.data)
@@ -35,12 +59,29 @@ export default function UserManagement() {
     : (rawUsers as unknown as { data: User[] })?.data || []
   // console.log("Users API Response:", rawUsers, "Parsed Users:", users);
 
-  const activeUsersCount = users.filter(
-    (u: User) =>
-      (u.userRole || u.role || '').toUpperCase() === 'ACTIVE' ||
-      u.userStatus?.toUpperCase() === 'ACTIVE' ||
-      (u.status || '').toUpperCase() === 'ACTIVE'
-  ).length
+  // Lọc users theo status và search term (Client-side)
+  const displayedUsers = users.filter((u: User) => {
+    const status = (u.userStatus || u.status || '').toUpperCase()
+    if (status !== 'ACTIVE') return false
+
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase()
+      const matchesName =
+        (u.fullName || '').toLowerCase().includes(term) ||
+        (u.username || '').toLowerCase().includes(term)
+      const matchesEmail = (u.email || '').toLowerCase().includes(term)
+      // Tìm bằng user ID nếu users nhập ID số
+      const matchesId = String(u.userId || u.id).includes(term)
+      return matchesName || matchesEmail || matchesId
+    }
+
+    return true
+  })
+
+  const totalActiveUsers = users.filter(
+    (u: User) => (u.userStatus || u.status || '').toUpperCase() === 'ACTIVE'
+  )
+  const activeUsersCount = totalActiveUsers.length
   const inactiveUsersCount = users.length - activeUsersCount
 
   const handleUserCreateSuccess = (data: User) => {
@@ -49,10 +90,10 @@ export default function UserManagement() {
   }
 
   const getActionItems = (user: User): MenuProps['items'] => {
-    const rawStatus = user.userStatus || user.status || 'Active'
-    const isUserActive = rawStatus.toUpperCase() === 'ACTIVE'
+    const isCurrentUser =
+      String(user.userId || user.id) === String(currentUser?.userId || currentUser?.id)
 
-    return [
+    const items: MenuProps['items'] = [
       {
         key: 'edit',
         label: 'Edit User',
@@ -60,46 +101,34 @@ export default function UserManagement() {
         onClick: () => {
           setEditModal({ isOpen: true, data: user })
         }
-      },
-      isUserActive
-        ? {
-            key: 'delete',
-            label: 'Remove User',
-            icon: <DeleteOutlined />,
-            danger: true,
-            onClick: () => {
-              const userId = user.userId || user.id
-              if (window.confirm(`Are you sure you want to deactivate ${user.username}?`)) {
-                deleteUserMutation.mutate(userId, {
-                  onSuccess: () => {
-                    message.success(`User ${user.username} has been deactivated.`)
-                  },
-                  onError: (error) => {
-                    message.error(`Failed to deactivate user: ${error.message || 'Unknown error'}`)
-                  }
-                })
-              }
-            }
-          }
-        : {
-            key: 'activate',
-            label: 'Activate User',
-            icon: <CheckCircleOutlined style={{ color: '#10b981' }} />,
-            onClick: () => {
-              const userId = user.userId || user.id
-              if (window.confirm(`Are you sure you want to activate ${user.username}?`)) {
-                activateUserMutation.mutate(userId, {
-                  onSuccess: () => {
-                    message.success(`User ${user.username} has been activated.`)
-                  },
-                  onError: (error) => {
-                    message.error(`Failed to activate user: ${error.message || 'Unknown error'}`)
-                  }
-                })
-              }
-            }
-          }
+      }
     ]
+
+    if (!isCurrentUser) {
+      items.push({
+        key: 'deactivate',
+        label: <span className="text-red-500 font-semibold">Inactive User</span>,
+        icon: <CloseCircleOutlined style={{ color: '#ef4444' }} />,
+        danger: true,
+        onClick: () => {
+          const userId = user.userId || user.id
+          if (
+            window.confirm(`Are you sure you want to deactivate ${user.username || user.fullName}?`)
+          ) {
+            deactivateUserMutation.mutate(userId, {
+              onSuccess: () => {
+                message.success(`User ${user.username || user.fullName} has been deactivated.`)
+              },
+              onError: (error) => {
+                message.error(`Failed to deactivate user: ${error.message || 'Unknown error'}`)
+              }
+            })
+          }
+        }
+      })
+    }
+
+    return items
   }
 
   return (
@@ -208,7 +237,7 @@ export default function UserManagement() {
             <div
               className={`h-10 w-10 rounded-lg bg-gray-500/10 flex items-center justify-center text-gray-400`}
             >
-              <DeleteOutlined className="text-xl" />
+              <CloseCircleOutlined className="text-xl" />
             </div>
           </div>
           <div className="mt-4">
@@ -241,15 +270,15 @@ export default function UserManagement() {
             </p>
           </div>
           <div className="flex gap-3">
-            <Button
-              onClick={() => setIsAddUserModalOpen(true)}
-              variant="primary"
-              className="group relative flex items-center gap-2 overflow-hidden px-4 py-2 font-body text-sm font-semibold"
-            >
-              <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity group-hover:opacity-100"></div>
-              <PlusOutlined className="text-lg" />
-              <span>Add User</span>
-            </Button>
+            <Input
+              placeholder="Search user by name, email, or ID..."
+              prefix={<SearchOutlined className="text-gray-400" />}
+              allowClear
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="bg-white/5 border-white/10 text-white w-64 md:w-80 h-10 rounded-lg hover:border-violet-500/50 focus:border-violet-500 focus:bg-white/10"
+              style={{ color: 'white' }}
+            />
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -272,14 +301,14 @@ export default function UserManagement() {
                     Loading users...
                   </td>
                 </tr>
-              ) : users?.length === 0 ? (
+              ) : displayedUsers?.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                    No users found.
+                    No active users found.
                   </td>
                 </tr>
               ) : (
-                users?.map((user: User) => {
+                displayedUsers?.map((user: User) => {
                   // Handle backend field difference and normalize
                   const rawRole = user.userRole || user.role || 'Unknown'
                   const roleLower = rawRole.toLowerCase()
@@ -296,7 +325,7 @@ export default function UserManagement() {
                   return (
                     <tr
                       key={userId}
-                      className={`group transition-colors hover:${themeClasses.backgrounds.whiteAlpha5}`}
+                      className={`group hover:${themeClasses.backgrounds.whiteAlpha5}`}
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
@@ -354,7 +383,21 @@ export default function UserManagement() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="font-bold text-white text-[15px]">0</span>
+                        {(() => {
+                          const count = taskCountMap[userId] || 0
+                          return (
+                            <span
+                              className={`inline-flex items-center justify-center min-w-[28px] h-7 px-2 rounded-full text-xs font-bold
+                              ${
+                                count > 0
+                                  ? 'bg-violet-500/10 text-violet-400 border border-violet-500/20'
+                                  : 'bg-white/5 text-gray-500 border border-white/10'
+                              }`}
+                            >
+                              {count}
+                            </span>
+                          )
+                        })()}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <Dropdown

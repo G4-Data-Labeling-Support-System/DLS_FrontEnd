@@ -7,7 +7,7 @@ import {
   StopOutlined,
   LoadingOutlined
 } from '@ant-design/icons'
-import { mainClient } from '@/api/ApiClients'
+import { mainClient } from '@/api/apiClients'
 import { ENDPOINTS } from '@/api/endpoints'
 import { FormFooter } from '@/features/manager/components/common/FormFooter'
 
@@ -32,13 +32,13 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({
   onLaunch,
   onBack
 }) => {
-    const { message } = App.useApp()
-    const [availableUsers, setAvailableUsers] = useState<UserUI[]>([])
-    const [selectedUsers, setSelectedUsers] = useState<UserUI[]>([])
-    const [loading, setLoading] = useState(true)
-    const [isLaunching, setIsLaunching] = useState(false)
-    const [filterRole, setFilterRole] = useState<string>('All')
-    const [searchTerm, setSearchTerm] = useState('')
+  const { message } = App.useApp()
+  const [availableUsers, setAvailableUsers] = useState<UserUI[]>([])
+  const [selectedUsers, setSelectedUsers] = useState<UserUI[]>([])
+  const [loading, setLoading] = useState(true)
+  const [isLaunching, setIsLaunching] = useState(false)
+  const [filterRole, setFilterRole] = useState<string>('All')
+  const [searchTerm, setSearchTerm] = useState('')
 
   // --- API CALL ---
   useEffect(() => {
@@ -81,7 +81,7 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({
     }
 
     fetchUsers()
-  }, [])
+  }, [message])
 
   // --- HANDLERS ---
   const handleAddUser = (user: UserUI) => {
@@ -214,7 +214,7 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({
                         size={{ height: 4 }}
                         showInfo={false}
                         strokeColor="#a855f7"
-                        trailColor="rgba(255,255,255,0.05)"
+                        railColor="rgba(255,255,255,0.1)"
                       />
                     </div>
                     <Button
@@ -258,7 +258,7 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({
             <Progress
               percent={progressPercent}
               strokeColor={{ '0%': '#8b5cf6', '100%': '#d946ef' }}
-              trailColor="rgba(255,255,255,0.1)"
+              railColor="rgba(255,255,255,0.1)"
               size={{ height: 6 }}
               showInfo={false}
             />

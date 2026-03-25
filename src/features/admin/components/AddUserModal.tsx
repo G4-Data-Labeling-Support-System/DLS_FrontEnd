@@ -23,7 +23,6 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModa
 
   const handleSubmit = async (values: {
     username: string
-    fullName: string
     email: string
     password?: string
     role: string
@@ -39,7 +38,8 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModa
 
     const payload: User & { password?: string; status: string } = {
       ...values,
-      id: '', // Temporary for cast if needed, but createUser usually returns User
+      id: '',
+      fullName: values.username, // fullName not collected, default to username
       role: roleMapping[values.role] || values.role,
       status: 'ACTIVE',
       coverImage: 'https://placehold.co/400'
@@ -93,19 +93,6 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModa
               size="large"
               prefix={<UserOutlined className="text-gray-500" />}
               placeholder="e.g. jdoe123"
-            />
-          </Form.Item>
-
-          {/* Full Name Field - NEW */}
-          <Form.Item
-            name="fullName"
-            label={<span className="text-gray-300 font-medium">Full Name</span>}
-            rules={[{ required: true, message: 'Please enter full name' }]}
-          >
-            <Input
-              size="large"
-              prefix={<UserOutlined className="text-gray-500" />}
-              placeholder="e.g. John Doe"
             />
           </Form.Item>
 
