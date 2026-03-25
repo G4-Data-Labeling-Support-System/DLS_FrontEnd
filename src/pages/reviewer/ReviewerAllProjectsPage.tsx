@@ -4,13 +4,27 @@ import { useAuthStore } from '@/store/auth.store'
 import assignmentApi from '@/api/AssignmentApi'
 import projectApi from '@/api/ProjectApi'
 import { ProjectCard } from '@/features/reviewer/components/ProjectCard'
-import { Spin, Empty } from 'antd'
-import { LoadingOutlined, FolderOpenOutlined } from '@ant-design/icons'
+import { FolderOpenOutlined } from '@ant-design/icons'
+import { type AxiosResponse } from 'axios'
+
+interface Project {
+  id: string
+  name: string
+  status: string
+  createdAt?: string
+  updatedAt?: string
+  descriptionProject?: string
+  description?: string
+  projectStatus?: string
+  projectName?: string
+  projectId?: string
+  [key: string]: unknown
+}
 
 export default function ReviewerAllProjectsPage() {
   const navigate = useNavigate()
   const { user } = useAuthStore()
-  const [projects, setProjects] = useState<any[]>([])
+  const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -25,32 +39,35 @@ export default function ReviewerAllProjectsPage() {
           return
         }
 
-        // 1. Get assignments for reviewer
+        // 1. Lấy danh sách Assignments của reviewer
         const assignRes = await assignmentApi.getAssignmentsByReviewer(user.id)
         const assignments = assignRes.data?.data || assignRes.data || []
 
-        // 2. Extract unique project IDs
+        // 2. Lọc ra danh sách projectId duy nhất
         const projectIds = [
           ...new Set(
             assignments
-              .map((a: any) => a.projectId || a.project?.projectId || a.project?.id)
-              .filter((id: any) => id && !String(id).startsWith('PROJ-MOCK'))
+              .map((a: { projectId?: string; project?: { projectId?: string; id?: string } }) => a.projectId || a.project?.projectId || a.project?.id)
+              .filter((id: string | undefined) => id && !String(id).startsWith('PROJ-MOCK'))
           )
         ] as string[]
 
         if (projectIds.length > 0) {
-          // 3. Fetch project details
+          // 3. Lấy thông tin chi tiết của từng project
           const projectPromises = projectIds.map((pId) => projectApi.getProjectById(pId))
           const projectResponses = await Promise.allSettled(projectPromises)
 
           const validProjects = projectResponses
-            .filter((res) => res.status === 'fulfilled')
-            .map((res: any) => res.value.data?.data || res.value.data)
-            .filter((p) => {
+            .filter((res): res is PromiseFulfilledResult<AxiosResponse<any>> => res.status === 'fulfilled')
+            .map((res) => {
+              const d = res.value.data as Record<string, unknown>
+              return (d?.data || d) as Project
+            })
+            .filter((p: Project) => {
               const status = (p.projectStatus || p.status || '').toUpperCase()
               return status && status !== 'INACTIVE'
             })
-            .map((p) => ({
+            .map((p: Project) => ({
               ...p,
               id: p.projectId || p.id,
               name: p.projectName || p.name,
@@ -59,7 +76,23 @@ export default function ReviewerAllProjectsPage() {
 
           setProjects(validProjects)
         } else {
-          setProjects([])
+          // Fallback: Nếu reviewer chưa được gán assignment nào nhưng vẫn muốn xem danh sách project (theo logic annotator)
+          const projectsRes = await projectApi.getProjects()
+          const projectsList = projectsRes.data?.data || projectsRes.data || []
+
+          const validProjects = projectsList
+            .filter((p: Project) => {
+              const status = (p.projectStatus || p.status || '').toUpperCase()
+              return status && status !== 'INACTIVE' && !String(p.projectId || p.id).startsWith('PROJ-MOCK')
+            })
+            .map((p: Project) => ({
+              ...p,
+              id: p.projectId || p.id,
+              name: p.projectName || p.name,
+              status: p.projectStatus || p.status
+            }))
+
+          setProjects(validProjects)
         }
       } catch (err) {
         console.error('Failed to fetch projects for reviewer:', err)
@@ -80,16 +113,16 @@ export default function ReviewerAllProjectsPage() {
       </div>
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-20">
-          <Spin indicator={<LoadingOutlined className="text-4xl text-violet-500" spin />} />
-          <span className="mt-4 text-violet-400 font-mono animate-pulse">Syncing projects with server...</span>
+        <div className="flex items-center gap-2 mb-4 animate-pulse">
+          <div className="w-2 h-2 rounded-full bg-violet-500"></div>
+          <span className="text-xs text-violet-400 font-mono">Syncing projects with server...</span>
         </div>
       ) : error ? (
-        <div className="text-center text-gray-400 py-20 glass-panel rounded-xl border border-dashed border-gray-700">
+        <div className="text-center text-gray-400 py-20 bg-[#1A1625]/40 rounded-xl border border-dashed border-gray-700">
           {error}
         </div>
       ) : projects.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
           {projects.map((p) => (
             <ProjectCard
               key={p.id}
@@ -104,8 +137,8 @@ export default function ReviewerAllProjectsPage() {
           ))}
         </div>
       ) : (
-        <div className="text-center py-20 glass-panel rounded-xl border border-dashed border-gray-700">
-          <Empty description={<span className="text-gray-400">No projects assigned for review.</span>} />
+        <div className="text-center text-gray-400 py-20 bg-[#1A1625]/40 rounded-xl border border-dashed border-gray-700">
+          No projects available for review.
         </div>
       )}
     </div>
