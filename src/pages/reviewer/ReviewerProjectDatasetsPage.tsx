@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Spin, Button, Typography, Space, Select, Input, Empty } from 'antd'
 import { ArrowLeftOutlined, LoadingOutlined, SearchOutlined } from '@ant-design/icons'
+import type { AxiosError } from 'axios'
 
 import datasetApi from '@/api/DatasetApi'
 import { DatasetCard } from '@/features/manager/components/dataset/DatasetCard'
@@ -56,9 +57,16 @@ export default function ReviewerProjectDatasetsPage() {
         } else {
           setDatasets([])
         }
-      } catch (err) {
-        console.error('Failed to fetch datasets for reviewer:', err)
-        setError('Failed to load datasets.')
+      } catch (err: unknown) {
+        const error = err as AxiosError
+        console.error('Failed to fetch datasets for reviewer:', error)
+        if (error.response?.status === 403) {
+          setError(
+            'Access Denied: You may not have permission to view all datasets for this project. Please access datasets through your assigned tasks.'
+          )
+        } else {
+          setError('Failed to load datasets.')
+        }
       } finally {
         setLoading(false)
       }

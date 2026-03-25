@@ -64,10 +64,7 @@ const assignmentApi = {
   },
   getAssignmentsByReviewer(reviewerId: string) {
     try {
-      // Giả sử lấy assignments tổng có thể filter theo reviewer
-      // Hiện tại API assignments của Annotator đang dùng `BY_ANNOTATOR`, do backend quyết định
-      // Theo ý người dùng, api này dùng chung với annotator
-      const url = ENDPOINTS.ASSIGNMENTS.BY_ANNOTATOR(reviewerId)
+      const url = ENDPOINTS.ASSIGNMENTS.BY_REVIEWER(reviewerId)
       return axiosClient.get(url)
     } catch (error) {
       console.error('Failed to fetch assignments by reviewer', error)

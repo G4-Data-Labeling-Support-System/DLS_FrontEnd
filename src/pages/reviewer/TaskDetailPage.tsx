@@ -11,6 +11,7 @@ import {
 import taskApi from '@/api/TaskApi'
 import assignmentApi from '@/api/AssignmentApi'
 import { useTaskDetail } from '@/features/annotator/hooks/useTaskDetail'
+import type { AxiosError } from 'axios'
 
 const { Title, Text } = Typography
 
@@ -100,9 +101,19 @@ export default function ReviewerTaskDetailPage() {
           taskName: String(currentTask.taskName || currentTask.name || 'Untitled Task'),
           assignmentName: assignmentName || 'N/A'
         })
-      } catch (err) {
-        console.error('Failed to load reviewer task details:', err)
-        setError('Failed to load task details.')
+      } catch (err: unknown) {
+        const error = err as AxiosError
+        console.error('Failed to load reviewer task details:', error)
+        if (error.response) {
+          console.error('❌ BE Error Detail:', error.response.data)
+          setError(
+            `Error ${error.response.status}: Failed to load task details. ${
+              (error.response.data as { message?: string })?.message || ''
+            }`
+          )
+        } else {
+          setError('Failed to load task details.')
+        }
       } finally {
         setLoading(false)
       }
