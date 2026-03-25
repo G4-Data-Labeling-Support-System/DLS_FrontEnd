@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { Spin, message, Result, Button } from 'antd'
-import taskApi from '@/api/TaskApi'
+import taskApi, { type TaskDataItem } from '@/api/TaskApi'
 import annotationApi from '@/api/annotation'
-import { reviewerApi, type ReviewUpdateRequest } from '@/api/ReviewerApi'
+import { reviewerApi, type ReviewUpdateRequest, type Annotation as ReviewAnnotation } from '@/api/ReviewerApi'
 import assignmentApi from '@/api/AssignmentApi'
 
 interface Shape {
@@ -28,14 +28,13 @@ interface Label {
   description?: string
 }
 
-interface DataItem {
+interface DataItem extends TaskDataItem {
   itemId: string
-  fileName: string
-  url: string
-  fileFormat: string
-  dataType: string
-  annotationResponseList?: any[]
-  annotations?: any[]
+  assignmentId?: string
+  taskDataItemStatus?: string
+  taskItemId?: string
+  annotationResponseList?: ReviewAnnotation[]
+  annotations?: ReviewAnnotation[]
 }
 
 type ReviewStatus = 'APPROVED' | 'REJECTED' | 'IN_PROGRESS' | 'INACTIVE' | null
@@ -45,7 +44,7 @@ interface ReviewSessionData {
   comment: string
 }
 
-export default function ReviewerAnnotationPage() {
+const ReviewerAnnotationPage: React.FC = () => {
   const { taskId } = useParams<{ taskId: string }>()
   const navigate = useNavigate()
   const location = useLocation()
@@ -109,34 +108,29 @@ export default function ReviewerAnnotationPage() {
   const parseAnnotations = useCallback((item: DataItem | undefined): Shape[] => {
     if (!item) return []
     const rawAnns = item.annotationResponseList || item.annotations || []
-    return rawAnns.map((ann: any) => {
+    return rawAnns.map((ann: ReviewAnnotation) => {
       try {
         const rawData = typeof ann.annotationData === 'string' ? JSON.parse(ann.annotationData) : ann.annotationData || {}
         if (rawData.shapes && Array.isArray(rawData.shapes)) {
-          return rawData.shapes.map((s: any) => ({
+          return (rawData.shapes as { type: string; label: string; color: string; [key: string]: unknown }[]).map((s) => ({
             ...s,
-            annotationId: ann.annotationId || ann.id
+            type: s.type as Shape['type'], // refined cast
+            label: s.label,
+            color: s.color,
+            annotationId: ann.annotationId
           }))
         }
         if (rawData.bbox) {
+          const bbox = rawData.bbox as { x: number; y: number; w?: number; width?: number; h?: number; height?: number }
           return [{
-            annotationId: ann.annotationId || ann.id,
+            annotationId: ann.annotationId,
             type: 'bounding_box' as const,
-            x: rawData.bbox.x,
-            y: rawData.bbox.y,
-            width: rawData.bbox.w || rawData.bbox.width,
-            height: rawData.bbox.h || rawData.bbox.height,
-            label: ann.labelName || 'Unknown',
+            x: bbox.x,
+            y: bbox.y,
+            width: bbox.w || bbox.width,
+            height: bbox.h || bbox.height,
+            label: 'Labeled Object',
             color: '#8b5cf6'
-          }]
-        }
-        if (rawData.points) {
-          return [{
-            annotationId: ann.annotationId || ann.id,
-            type: 'polygon' as const,
-            points: rawData.points,
-            label: ann.labelName || 'Unknown',
-            color: '#f43f5e'
           }]
         }
       } catch (err) {
@@ -155,12 +149,6 @@ export default function ReviewerAnnotationPage() {
     setRedoStack([])
     const loadedShapes = parseAnnotations(item)
     setShapes(loadedShapes)
-
-    // Auto-select labels if found in existing shapes
-    const existingLabels = loadedShapes.map(s => s.label)
-    if (existingLabels.length > 0) {
-      // Just for display logic if we wanted to sync labels checkboxes
-    }
   }, [parseAnnotations])
 
   useEffect(() => {
@@ -169,21 +157,25 @@ export default function ReviewerAnnotationPage() {
       setLoading(true)
       try {
         const taskRes = await taskApi.getTaskDataItems(taskId)
-        const rawItems = taskRes.data?.data || taskRes.data || []
-        const items = Array.isArray(rawItems)
-          ? rawItems.map((tdi: any) => ({
-            ...(tdi.dataItem || {}),
-            itemId: tdi.dataItemId || tdi.dataitemId || tdi.id,
-            taskDataItemStatus: tdi.taskDataItemStatus,
-            taskItemId: tdi.id || tdi.taskItemId,
-            annotationResponseList: tdi.annotationResponseList || [],
-            annotations: tdi.annotations || []
-          }))
+        const rawItems = (taskRes.data?.data || taskRes.data || []) as unknown[]
+        const items: DataItem[] = Array.isArray(rawItems)
+          ? rawItems.map((tdi: unknown) => {
+            const item = tdi as Record<string, unknown>
+            const dataItem = (item.dataItem || {}) as Record<string, unknown>
+            return {
+              ...dataItem,
+              itemId: (item.dataItemId as string) || (item.dataitemId as string) || (item.id as string) || '',
+              taskDataItemStatus: item.taskDataItemStatus as string,
+              taskItemId: (item.id as string) || (item.taskItemId as string) || '',
+              filename: (dataItem.fileName as string) || (item.filename as string) || 'Unknown',
+              annotationResponseList: (item.annotationResponseList || item.annotations || []) as ReviewAnnotation[]
+            } as DataItem
+          })
           : []
 
         let effectiveAssignmentId = assignmentId
         if (!effectiveAssignmentId && items.length > 0) {
-          effectiveAssignmentId = items[0].assignmentId
+          effectiveAssignmentId = (items[0] as DataItem).assignmentId
         }
 
         if (effectiveAssignmentId) {
@@ -206,12 +198,12 @@ export default function ReviewerAnnotationPage() {
         }
 
         const enrichedItems = await Promise.all(
-          items.map(async (item: any) => {
+          items.map(async (item: DataItem) => {
             try {
               const annoRes = await annotationApi.getAnnotationByDataItemId(item.itemId)
               const annoData = annoRes.data?.data || annoRes.data
               if (annoData) {
-                const annos = Array.isArray(annoData) ? annoData : [annoData]
+                const annos = (Array.isArray(annoData) ? annoData : [annoData]) as ReviewAnnotation[]
                 return { ...item, annotationResponseList: annos, annotations: annos }
               }
             } catch (err) {
@@ -345,13 +337,13 @@ export default function ReviewerAnnotationPage() {
 
   const setItemReviewStatus = (status: ReviewStatus) => {
     if (!currentItem) return
-    const id = currentItem.itemId || (currentItem as any).id
+    const id = currentItem.itemId
     setReviewMap(prev => ({ ...prev, [id]: { ...prev[id], status, comment: prev[id]?.comment || '' } }))
   }
 
   const setItemReviewComment = (comment: string) => {
     if (!currentItem) return
-    const id = currentItem.itemId || (currentItem as any).id
+    const id = currentItem.itemId
     setReviewMap(prev => ({ ...prev, [id]: { ...prev[id], status: prev[id]?.status || null, comment } }))
   }
 
@@ -369,11 +361,15 @@ export default function ReviewerAnnotationPage() {
       Object.keys(reviewMap).forEach(itemId => {
         const review = reviewMap[itemId]
         if (review.status === 'APPROVED' || review.status === 'REJECTED') {
-          const dItem = dataItems.find(d => (d.itemId || (d as any).id) === itemId)
+          const dItem = dataItems.find(d => d.itemId === itemId)
           if (dItem) {
-            const rawAnns = dItem.annotationResponseList || dItem.annotations || []
-            rawAnns.forEach((ann: any) => {
-              payload.reviews.push({ annotationId: ann.annotationId || ann.id, reviewStatus: review.status!, comment: review.comment || undefined })
+            const rawAnns = (dItem.annotationResponseList || dItem.annotations || []) as ReviewAnnotation[]
+            rawAnns.forEach((ann: ReviewAnnotation) => {
+              payload.reviews.push({
+                annotationId: ann.annotationId,
+                reviewStatus: review.status as 'APPROVED' | 'REJECTED',
+                comment: review.comment || undefined
+              })
             })
           }
         }
@@ -420,7 +416,7 @@ export default function ReviewerAnnotationPage() {
     )
   }
 
-  const currentId = currentItem.itemId || (currentItem as any).id
+  const currentId = currentItem.itemId
   const currentReview = reviewMap[currentId] || { status: null, comment: '' }
 
   return (
@@ -441,7 +437,7 @@ export default function ReviewerAnnotationPage() {
           </div>
           <div className="flex-1 flex flex-col px-4 gap-4">
             {dataItems.map((item, idx) => {
-              const itemId = item.itemId || (item as any).id
+              const itemId = item.itemId
               const rev = reviewMap[itemId]
               const isSelected = currentIndex === idx
               let revColor = 'bg-gray-800'
@@ -451,7 +447,7 @@ export default function ReviewerAnnotationPage() {
                 <div key={itemId} onClick={() => handleItemSelect(idx)} className={`flex items-center gap-3 cursor-pointer p-2 rounded-lg transition-all ${isSelected ? 'bg-white/10' : 'hover:bg-white/5'}`}>
                   <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${revColor}`} />
                   <img src={item.url} alt="t" className={`w-14 h-11 object-cover rounded-md border-[2px] ${isSelected ? 'border-violet-500' : 'border-white/5'}`} />
-                  <span className="text-[10px] text-gray-500 truncate flex-1 font-mono">{item.fileName}</span>
+                  <span className="text-[10px] text-gray-500 truncate flex-1 font-mono">{item.filename}</span>
                 </div>
               )
             })}
@@ -466,7 +462,7 @@ export default function ReviewerAnnotationPage() {
           <div className="text-left mb-4 flex items-center justify-between">
             <div>
               <span className="text-[10px] font-black tracking-widest uppercase text-violet-500/60 block mb-1">Reviewing Item</span>
-              <h2 className="text-xl font-bold text-gray-100 tracking-tight truncate max-w-[70%]">{currentItem.fileName}</h2>
+              <h2 className="text-xl font-bold text-gray-100 tracking-tight truncate max-w-[70%]">{currentItem.filename}</h2>
             </div>
             <div className="px-3 py-1 bg-violet-500/10 rounded-lg border border-violet-500/20 text-[10px] font-bold text-violet-400 uppercase tracking-widest">
               {shapes.length} Shapes
@@ -482,13 +478,13 @@ export default function ReviewerAnnotationPage() {
                   {shapes.map((s, i) => (
                     <g key={i}>
                       {s.type === 'bounding_box' ? <rect x={s.x} y={s.y} width={s.width} height={s.height} fill={`${s.color}33`} stroke={s.color} strokeWidth={2 / zoom} />
-                        : s.type === 'polygon' && s.points ? <polyline points={s.points.map(p => p.join(',')).join(' ')} fill={`${s.color}33`} stroke={s.color} strokeWidth={2 / zoom} /> : null}
+                        : s.type === 'polygon' && s.points ? <polyline points={(s.points as [number, number][]).map(p => p.join(',')).join(' ')} fill={`${s.color}33`} stroke={s.color} strokeWidth={2 / zoom} /> : null}
                     </g>
                   ))}
                   {currentShape && (
                     <g>
                       {currentShape.type === 'bounding_box' ? <rect x={currentShape.x} y={currentShape.y} width={currentShape.width} height={currentShape.height} fill={`${currentShape.color}66`} stroke={currentShape.color} strokeWidth={2 / zoom} />
-                        : <polyline points={currentShape.points?.map(p => p.join(',')).join(' ')} fill={`${currentShape.color}66`} stroke={currentShape.color} strokeWidth={2 / zoom} />}
+                        : <polyline points={(currentShape.points as [number, number][])?.map(p => p.join(',')).join(' ')} fill={`${currentShape.color}66`} stroke={currentShape.color} strokeWidth={2 / zoom} />}
                     </g>
                   )}
                 </svg>
@@ -562,7 +558,7 @@ export default function ReviewerAnnotationPage() {
           </div>
 
           <div className="mt-auto glass-panel p-5 rounded-2xl border border-white/5 space-y-3">
-            <div className="flex justify-between text-[10px] font-mono">
+            <div className="justify-between text-[10px] font-mono flex">
               <span className="text-gray-600 uppercase">Progress</span>
               <span className="text-violet-400 font-bold">{Object.values(reviewMap).filter(r => r.status).length} / {totalItems}</span>
             </div>
@@ -581,3 +577,5 @@ function ToolbarButton({ icon, active = false, onClick }: { icon: string; active
     </button>
   )
 }
+
+export default ReviewerAnnotationPage
