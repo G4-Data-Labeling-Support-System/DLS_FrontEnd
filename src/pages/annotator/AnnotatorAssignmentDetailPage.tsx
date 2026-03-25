@@ -7,7 +7,6 @@ import assignmentApi from '@/api/AssignmentApi'
 import taskApi from '@/api/TaskApi'
 import datasetApi from '@/api/DatasetApi'
 import { TasksSection } from '@/features/annotator'
-import { themeClasses } from '@/styles'
 
 interface AssignmentTask {
   id: string
@@ -166,7 +165,7 @@ export default function AnnotatorAssignmentDetailPage() {
         >
           Back to Assignments
         </Button>
-        <div className="text-center text-gray-400 py-20 bg-black/20 rounded-2xl border-2 border-dashed border-white/5">
+        <div className="text-center text-gray-400 py-20 bg-[#1A1625]/40 rounded-2xl border-2 border-dashed border-white/5">
           <span className="material-symbols-outlined text-5xl mb-4 opacity-20">assignment_late</span>
           <p className="font-medium">{error || 'Assignment not found.'}</p>
         </div>
@@ -205,7 +204,7 @@ export default function AnnotatorAssignmentDetailPage() {
       <div className="flex flex-col gap-6 relative z-10">
 
         {/* Top Row: Main Info (2 columns) */}
-        <div className={`glass-panel border ${themeClasses.borders.violet10} rounded-2xl overflow-hidden shadow-xl flex flex-col md:flex-row items-stretch`}>
+        <div className="glass-panel rounded-2xl overflow-hidden shadow-xl flex flex-col md:flex-row items-stretch border border-white/5 bg-[#1A1625]/60 backdrop-blur-md">
           {/* Left: Information */}
           <div className="flex-1 p-7 border-b md:border-b-0 md:border-r border-white/10 relative">
             <div className="absolute -top-10 -left-10 w-40 h-40 rounded-full bg-violet-500/5 blur-[50px] pointer-events-none" />
@@ -258,7 +257,7 @@ export default function AnnotatorAssignmentDetailPage() {
               <span className="material-symbols-outlined text-[18px] text-fuchsia-400">description</span>
               Description
             </h3>
-            <div className="flex-1 bg-black/20 p-5 rounded-2xl border border-white/5 min-h-[120px]">
+            <div className="flex-1 bg-white/5 p-5 rounded-2xl border border-white/10 min-h-[120px]">
               <p className="text-sm text-gray-300 leading-relaxed italic">
                 {assignment.description || 'No description provided for this assignment.'}
               </p>
@@ -269,7 +268,7 @@ export default function AnnotatorAssignmentDetailPage() {
         {/* Middle Row: Project & Dataset (2 columns) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
           {/* Associated Project */}
-          <div className={`glass-panel border ${themeClasses.borders.violet10} rounded-2xl p-6 shadow-xl relative overflow-hidden`}>
+          <div className="glass-panel border border-white/5 bg-[#1A1625]/60 backdrop-blur-md rounded-2xl p-6 shadow-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-3xl pointer-events-none" />
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px] text-blue-400">folder_special</span>
@@ -277,7 +276,7 @@ export default function AnnotatorAssignmentDetailPage() {
             </h3>
             {assignment.projectId ? (
               <div
-                className="bg-black/20 p-5 rounded-xl border border-white/10 hover:border-blue-500/50 hover:bg-black/30 transition-all cursor-pointer group"
+                className="bg-white/5 p-5 rounded-xl border border-white/10 hover:border-blue-500/50 hover:bg-white/10 transition-all cursor-pointer group"
                 onClick={() => navigate(`/annotator/projects/${assignment.projectId}`)}
               >
                 <h4 className="text-white font-bold group-hover:text-blue-400 transition-colors">
@@ -289,14 +288,14 @@ export default function AnnotatorAssignmentDetailPage() {
                 </p>
               </div>
             ) : (
-              <div className="bg-black/20 p-5 rounded-xl border border-white/5 text-center italic text-gray-500">
+              <div className="bg-white/5 p-5 rounded-xl border border-white/5 text-center italic text-gray-500">
                 No associated project
               </div>
             )}
           </div>
 
           {/* Assigned Dataset */}
-          <div className={`glass-panel border ${themeClasses.borders.violet10} rounded-2xl p-6 shadow-xl relative overflow-hidden`}>
+          <div className="glass-panel border border-white/5 bg-[#1A1625]/60 backdrop-blur-md rounded-2xl p-6 shadow-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-fuchsia-500/5 blur-3xl pointer-events-none" />
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-white flex items-center gap-2">
@@ -306,7 +305,7 @@ export default function AnnotatorAssignmentDetailPage() {
             </div>
             {datasetName ? (
               <div
-                className="bg-black/20 p-5 rounded-xl border border-white/10 hover:border-fuchsia-500/50 hover:bg-black/30 transition-all cursor-pointer group"
+                className="bg-white/5 p-5 rounded-xl border border-white/10 hover:border-fuchsia-500/50 hover:bg-white/10 transition-all cursor-pointer group"
                 onClick={() => navigate(`/annotator/datasets/${(assignment as any).datasetId}`)}
               >
                 <h4 className="text-white font-bold group-hover:text-fuchsia-400 transition-colors">
@@ -318,7 +317,7 @@ export default function AnnotatorAssignmentDetailPage() {
                 </p>
               </div>
             ) : (
-              <div className="bg-black/20 p-5 rounded-xl border border-white/5 text-center italic text-gray-500">
+              <div className="bg-white/5 p-5 rounded-xl border border-white/5 text-center italic text-gray-500">
                 {assignment.datasetId || 'No assigned dataset'}
               </div>
             )}
@@ -326,7 +325,7 @@ export default function AnnotatorAssignmentDetailPage() {
         </div>
 
         {/* Bottom Row: Tasks (Full Width) */}
-        <div className={`glass-panel border ${themeClasses.borders.violet10} rounded-2xl p-7 flex flex-col shadow-xl`}>
+        <div className="glass-panel border border-white/5 bg-[#1A1625]/60 backdrop-blur-md rounded-2xl p-7 flex flex-col shadow-xl">
           <TasksSection
             tasks={assignment.tasks}
             assignmentId={assignment.id}
