@@ -157,22 +157,20 @@ export default function ReviewerAnnotationPage() {
       if (!taskId) return
       setLoading(true)
       try {
-        const taskRes = await taskApi.getTaskById(taskId)
-        let items = taskRes.data?.data || taskRes.data || []
+        const taskRes = await taskApi.getTaskDataItems(taskId)
+        const rawItems = taskRes.data?.data || taskRes.data || []
         
-        // If items are not returned directly, perhaps they are inside taskDataItems?
-        if (!Array.isArray(items) && items.taskDataItems) {
-            items = items.taskDataItems.map((tdi: any) => ({
-                ...tdi.dataItem,
+        // Consistent flattening of the wrapper format
+        const items = Array.isArray(rawItems)
+           ? rawItems.map((tdi: any) => ({
+                ...(tdi.dataItem || {}),
+                itemId: tdi.dataItemId || tdi.dataitemId || tdi.id,
                 taskDataItemStatus: tdi.taskDataItemStatus,
-                taskItemId: tdi.id
-            }))
-        } else if (!Array.isArray(items)) {
-            // Default fallback if we only got the task obj
-            const itemsRes = await taskApi.getTaskDataItems(taskId)
-            const itmList = itemsRes.data?.data || itemsRes.data || []
-            items = itmList.map((tdi: any) => ({ ...tdi.dataItem, ...tdi }))
-        }
+                taskItemId: tdi.id || tdi.taskItemId,
+                annotationResponseList: tdi.annotationResponseList || [],
+                annotations: tdi.annotations || []
+             }))
+           : []
 
         setDataItems(items)
 
