@@ -222,8 +222,8 @@ const ReviewerWorkspacePage: React.FC = () => {
           duration: 2
         })
 
-        // ⚡ Navigate to dashboard for both Approved and Rejected
-        navigate('/reviewer', { replace: true })
+        // ⚡ Navigate back to the previous page (Task Detail or Assignment Detail)
+        navigate(-1)
       } catch (error) {
         setIsSubmitting(false)
         console.error('Review submission error:', error)

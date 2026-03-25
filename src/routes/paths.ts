@@ -39,6 +39,11 @@ export const PATH_ANNOTATOR = {
 
 export const PATH_REVIEWER = {
   root: '/reviewer',
-  dashboard: '/reviewer',
-  workspace: '/reviewer/workspace'
+  projects: '/reviewer/projects',
+  projectDetail: '/reviewer/projects/:projectId',
+  projectAssignments: '/reviewer/projects/:projectId/assignments',
+  assignmentDetail: '/reviewer/projects/:projectId/assignments/:assignmentId',
+  taskDetail: (taskId: string) => `/reviewer/task/${taskId}`,
+  annotation: (taskId: string) => `/reviewer/task/${taskId}/annotate`,
+  workspace: (projectId: string) => `/reviewer/workspace/${projectId}`
 }
