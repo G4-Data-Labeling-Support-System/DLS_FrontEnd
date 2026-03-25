@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Spin, Button, Tag } from 'antd'
-import { ArrowLeftOutlined, LoadingOutlined, RocketOutlined, InfoCircleOutlined, DatabaseOutlined, CheckCircleOutlined, EyeOutlined } from '@ant-design/icons'
+import { ArrowLeftOutlined, LoadingOutlined, RocketOutlined, InfoCircleOutlined, DatabaseOutlined, CheckCircleOutlined } from '@ant-design/icons'
 import taskApi from '@/api/TaskApi'
 
 export default function ReviewerTaskDetailPage() {
