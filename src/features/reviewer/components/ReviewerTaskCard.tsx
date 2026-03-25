@@ -42,6 +42,8 @@ export default function ReviewerTaskCard({ task, assignmentId }: { task: Task; a
         return <Tag icon={<ExclamationCircleOutlined />} color="error">REJECTED</Tag>
       case 'IN_PROGRESS':
         return <Tag icon={<PlayCircleOutlined />} color="processing">IN PROGRESS</Tag>
+      case 'IN_REVIEW':
+        return <Tag icon={<ClockCircleOutlined />} color="processing">IN REVIEW</Tag>
       case 'PENDING':
         return <Tag icon={<ClockCircleOutlined />} color="default">PENDING</Tag>
       default:

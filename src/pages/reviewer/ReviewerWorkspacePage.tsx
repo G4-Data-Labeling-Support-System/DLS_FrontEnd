@@ -1,376 +1,409 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { App, Spin } from 'antd'
+import { App, Spin, Button, Result, message } from 'antd'
 import type { AxiosError } from 'axios'
-
-import {
-  DatasetItemList,
-  type DatasetItem
-} from '@/features/reviewer/components/workspace/DatasetItemList'
-import { AnnotationCanvas } from '@/features/reviewer/components/workspace/AnnotationCanvas'
-import { ReviewDetailPanel } from '@/features/reviewer/components/workspace/ReviewDetailPanel'
-import { ReviewerEmptyState } from '@/features/reviewer/components/workspace/ReviewerEmptyState'
-import { ReviewerLoadingState } from '@/features/reviewer/components/workspace/ReviewerLoadingState'
-import { ApproveModal } from '@/features/reviewer/components/workspace/ApproveModal'
-import { RejectModal } from '@/features/reviewer/components/workspace/RejectModal'
 import { reviewerApi, type ReviewerItem, type ReviewerItemDetail } from '@/api/ReviewerApi'
 import assignmentApi from '@/api/AssignmentApi'
 import taskApi from '@/api/TaskApi'
-import { LoadingOutlined } from '@ant-design/icons'
 
 // ⚡ Cache for item details - prevents refetching
 const detailCache = new Map<string, ReviewerItemDetail>()
 
 const ReviewerWorkspacePage: React.FC = () => {
-  const { message } = App.useApp()
-  const { projectId } = useParams()
+  const { projectId } = useParams<{ projectId: string }>()
   const navigate = useNavigate()
 
   // State
-  const [selectedId, setSelectedId] = useState<string | null>(null)
   const [items, setItems] = useState<ReviewerItem[]>([])
+  const [selectedId, setSelectedId] = useState<string | null>(null)
   const [itemDetail, setItemDetail] = useState<ReviewerItemDetail | null>(null)
   const [loadingItems, setLoadingItems] = useState(false)
   const [loadingDetail, setLoadingDetail] = useState(false)
   const [prefetchedIds, setPrefetchedIds] = useState<Set<string>>(new Set())
-
-  // Modal State
-  const [isApproveModalOpen, setIsApproveModalOpen] = useState(false)
-  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Zoom and Pan States
+  const [zoom, setZoom] = useState(1)
+  const [offset, setOffset] = useState({ x: 0, y: 0 })
+  const [isPanning, setIsPanning] = useState(false)
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 })
+  const [tool, setTool] = useState<'pan' | 'box' | 'polygon'>('pan')
+
+  // Resizable sidebars
+  const [leftWidth, setLeftWidth] = useState(300)
+  const [rightWidth, setRightWidth] = useState(320)
+  const draggingRef = useRef<'left' | 'right' | null>(null)
+  const dragStartXRef = useRef(0)
+  const dragStartWidthRef = useRef(0)
 
   const abortControllerRef = useRef<AbortController | null>(null)
   const prefetchAbortRef = useRef<AbortController | null>(null)
 
-  // 🎯 Memoized dataset items - prevents unnecessary recalculation
-  const datasetListItems: DatasetItem[] = useMemo(
-    () =>
-      items.map((i) => ({
-        id: i.id,
-        filename: i.filename,
-        status: i.status,
-        imageUrl: i.imageUrl,
-        lastModified: i.lastModified
-      })),
-    [items]
-  )
+  // Review status per item
+  const [reviewMap, setReviewMap] = useState<Record<string, { status: 'approved' | 'rejected' | null; reason: string }>>({})
 
-  // 🎯 Get next item ID for prefetch
+  useEffect(() => {
+    const onMouseMove = (e: MouseEvent) => {
+      if (!draggingRef.current) return
+      const delta = e.clientX - dragStartXRef.current
+      if (draggingRef.current === 'left') {
+        setLeftWidth(Math.max(160, Math.min(500, dragStartWidthRef.current + delta)))
+      } else {
+        setRightWidth(Math.max(200, Math.min(600, dragStartWidthRef.current - delta)))
+      }
+    }
+    const onMouseUp = () => { draggingRef.current = null; document.body.style.cursor = '' }
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
+    return () => {
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+    }
+  }, [])
+
   const getNextItemId = useCallback(
     (currentId: string): string | null => {
       const currentIndex = items.findIndex((i) => i.id === currentId)
-      if (currentIndex >= 0 && currentIndex < items.length - 1) {
-        return items[currentIndex + 1].id
-      }
-      return null
+      return currentIndex >= 0 && currentIndex < items.length - 1 ? items[currentIndex + 1].id : null
     },
     [items]
   )
 
-  // ⚡ Prefetch next item detail in background
   const prefetchNextItem = useCallback(
     async (currentId: string) => {
       const nextId = getNextItemId(currentId)
       if (!nextId || prefetchedIds.has(nextId) || detailCache.has(nextId)) return
-
-      // Cancel previous prefetch
-      if (prefetchAbortRef.current) {
-        prefetchAbortRef.current.abort()
-      }
-
+      if (prefetchAbortRef.current) prefetchAbortRef.current.abort()
       prefetchAbortRef.current = new AbortController()
-
       try {
         const data = await reviewerApi.getItemDetail(nextId)
         detailCache.set(nextId, data)
         setPrefetchedIds((prev) => new Set(prev).add(nextId))
-      } catch (error) {
-        // Silent fail for prefetch
-        const axiosError = error as AxiosError
-        if (axiosError.name !== 'AbortError') {
-          // console.debug('Prefetch failed for next item:', error);
-        }
-      }
+      } catch (error) { }
     },
     [getNextItemId, prefetchedIds]
   )
 
-  // 📥 Fetch Items on mount
   useEffect(() => {
     if (!projectId) return
-
     const fetchItems = async () => {
       setLoadingItems(true)
       try {
-        // ⚡ Standard real flow: Project -> Assignments -> Tasks
         const assignRes = await assignmentApi.getAssignmentsByProjectId(projectId)
         const assignments = assignRes.data?.data || assignRes.data || []
-        
         if (assignments.length === 0) {
           message.warning('No assignments found for this project')
-          setItems([])
-          return
+          setItems([]); return
         }
-
-        // Get tasks for the first assignment assigned to reviewer
         const assignmentId = assignments[0].assignmentId || assignments[0].id
         const taskRes = await taskApi.getTasksByAssignmentId(assignmentId)
         const tasks = taskRes.data?.data || taskRes.data || []
-
-        if (tasks.length > 0) {
-          const mappedItems: ReviewerItem[] = tasks.map((t: any) => ({
-            id: t.taskId || t.id,
-            filename: t.taskName || t.name || `Task ${t.taskId}`,
-            status: (t.taskStatus || 'pending').toLowerCase() as any,
-            imageUrl: '', // Will be loaded in detail
-            lastModified: t.createdAt || ''
-          }))
-          setItems(mappedItems)
-          if (mappedItems.length > 0) {
-            setSelectedId(mappedItems[0].id)
-          }
-        } else {
-          setItems([])
-          message.warning('No tasks found in this assignment')
-        }
+        const mappedItems: ReviewerItem[] = tasks.map((t: any) => ({
+          id: t.taskId || t.id,
+          filename: t.taskName || t.name || `Task ${t.taskId}`,
+          status: (t.taskStatus || 'pending').toLowerCase() as any,
+          imageUrl: '',
+          lastModified: t.createdAt || ''
+        }))
+        setItems(mappedItems)
+        if (mappedItems.length > 0) setSelectedId(mappedItems[0].id)
       } catch (error) {
         message.error('Failed to load project tasks')
-        console.error('Error fetching reviewer items:', error)
       } finally {
         setLoadingItems(false)
       }
     }
-
     fetchItems()
-  }, [projectId, message])
+  }, [projectId])
 
-  // 📥 Fetch Detail with cache and prefetch
   useEffect(() => {
     if (!selectedId) return
-
-    // Cancel previous request if still pending
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort()
-    }
-
+    if (abortControllerRef.current) abortControllerRef.current.abort()
     const fetchDetail = async () => {
-      // ⚡ Check cache first - instant load
       if (detailCache.has(selectedId)) {
         setItemDetail(detailCache.get(selectedId)!)
-        // Prefetch next in background
-        prefetchNextItem(selectedId)
-        return
+        prefetchNextItem(selectedId); return
       }
-
       setLoadingDetail(true)
       abortControllerRef.current = new AbortController()
-
       try {
         const data = await reviewerApi.getItemDetail(selectedId)
         detailCache.set(selectedId, data)
         setItemDetail(data)
-
-        // ⚡ Prefetch next item in background
         prefetchNextItem(selectedId)
       } catch (error) {
         const axiosError = error as AxiosError
-        if (axiosError.name !== 'AbortError') {
-          message.error('Failed to load item details')
-          // console.error('Error fetching detail:', error);
-        }
+        if (axiosError.name !== 'AbortError') message.error('Failed to load task details')
       } finally {
         setLoadingDetail(false)
       }
     }
-
     fetchDetail()
+    return () => { if (abortControllerRef.current) abortControllerRef.current.abort() }
+  }, [selectedId, prefetchNextItem])
 
-    return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort()
+  const handleReviewDecision = async (status: 'approved' | 'rejected') => {
+    if (!selectedId || !itemDetail?.annotations) return
+    setIsSubmitting(true)
+    try {
+      const currentRev = reviewMap[selectedId] || { reason: '' }
+      const reviews = itemDetail.annotations
+        .filter((ann: any) => ann.id || ann.annotationId)
+        .map((ann: any) => ({
+          annotationId: ann.id || ann.annotationId,
+          reviewStatus: (status === 'approved' ? 'APPROVED' : 'REJECTED') as any,
+          comment: currentRev.reason || ''
+        }))
+      if (reviews.length === 0) {
+        message.warning('No annotations to review')
+        setIsSubmitting(false); return
       }
+      await reviewerApi.submitReviewDecision({ reviews })
+      message.success(`Item ${status} successfully`)
+
+      // Update local state and move to next item
+      setReviewMap(prev => ({ ...prev, [selectedId]: { status, reason: currentRev.reason } }))
+      const nextId = getNextItemId(selectedId)
+      if (nextId) setSelectedId(nextId)
+      else message.info('You have reached the end of the project tasks.')
+    } catch (error) {
+      message.error('Failed to submit review')
+    } finally {
+      setIsSubmitting(false)
     }
-  }, [selectedId, prefetchNextItem, message])
+  }
 
-  // ⚡ Optimistic review decision with instant feedback
-  const handleReviewDecision = useCallback(
-    async (status: 'approved' | 'rejected', _reason?: string, _feedback?: string[]) => {
-      if (!selectedId || !itemDetail?.annotations) return
+  const handleWheel = (e: React.WheelEvent) => {
+    const delta = e.deltaY > 0 ? -0.1 : 0.1
+    setZoom((prev) => Math.min(Math.max(prev + delta, 0.5), 10))
+  }
 
-      setIsSubmitting(true)
-
-      try {
-        const reviews = itemDetail.annotations
-          .filter((ann: any) => ann.id || ann.annotationId)
-          .map((ann: any) => ({
-            annotationId: ann.id || ann.annotationId,
-            reviewStatus: (status === 'approved' ? 'APPROVED' : 'REJECTED') as any,
-            comment: _reason || ''
-          }))
-
-        if (reviews.length === 0) {
-          message.warning('No annotations to review on this item')
-          setIsSubmitting(false)
-          return
-        }
-
-        await reviewerApi.submitReviewDecision({ reviews })
-
-        message.success({
-          content: `Item ${status} successfully`,
-          key: 'review',
-          duration: 2
-        })
-
-        // ⚡ Navigate back to the previous page (Task Detail or Assignment Detail)
-        navigate(-1)
-      } catch (error) {
-        setIsSubmitting(false)
-        console.error('Review submission error:', error)
-        message.error({
-          content: 'Failed to submit review',
-          key: 'review',
-          duration: 3
-        })
-      }
-    },
-    [selectedId, itemDetail, navigate, message]
-  )
-
-  // ⌨️ Keyboard shortcuts for faster workflow
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      // Don't trigger if typing in input/textarea or if modals are open
-      if (
-        e.target instanceof HTMLInputElement ||
-        e.target instanceof HTMLTextAreaElement ||
-        isApproveModalOpen ||
-        isRejectModalOpen
-      ) {
-        return
-      }
-
-      if (!selectedId || items.length === 0) return
-
-      const currentIndex = items.findIndex((i) => i.id === selectedId)
-
-      // Arrow Right or J - Next item
-      if ((e.key === 'ArrowRight' || e.key === 'j') && currentIndex < items.length - 1) {
-        e.preventDefault()
-        setSelectedId(items[currentIndex + 1].id)
-      }
-
-      // Arrow Left or K - Previous item
-      if ((e.key === 'ArrowLeft' || e.key === 'k') && currentIndex > 0) {
-        e.preventDefault()
-        setSelectedId(items[currentIndex - 1].id)
-      }
-
-      // A - Approve (Open Modal)
-      if (e.key === 'a' && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
-        e.preventDefault()
-        setIsApproveModalOpen(true)
-      }
-
-      // R - Reject (Open Modal)
-      if (e.key === 'r' && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
-        e.preventDefault()
-        setIsRejectModalOpen(true)
-      }
+  const handleMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (tool === 'pan') {
+      setIsPanning(true)
+      setPanStart({ x: e.clientX - offset.x, y: e.clientY - offset.y })
     }
+  }
 
-    window.addEventListener('keydown', handleKeyPress)
-    return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [selectedId, items, isApproveModalOpen, isRejectModalOpen])
+  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (isPanning) setOffset({ x: e.clientX - panStart.x, y: e.clientY - panStart.y })
+  }
 
-  // Clean up on unmount
-  useEffect(() => {
-    return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort()
-      }
-      if (prefetchAbortRef.current) {
-        prefetchAbortRef.current.abort()
-      }
-    }
-  }, [])
+  const handleMouseUp = () => { if (isPanning) setIsPanning(false) }
+
+  const handleZoomReset = () => { setZoom(1); setOffset({ x: 0, y: 0 }) }
+
+  if (error) {
+    return <div className="h-screen bg-[#111116] flex items-center justify-center text-white"><Result status="warning" title="Failed to load workspace" extra={<Button onClick={() => navigate(-1)}>Go Back</Button>} /></div>
+  }
+
+  const currentReview = reviewMap[selectedId || ''] || { status: null, reason: '' }
 
   return (
-    <div className="h-[calc(100vh-160px)]">
-      <div className="flex gap-6 h-full">
-        {/* 📋 Left Panel - Dataset List */}
-        <div className="relative w-80 shrink-0 flex-none">
-          <div
-            className={`h-full transition-all duration-300 ${loadingItems ? 'opacity-60' : 'opacity-100'}`}
-          >
-            {loadingItems && (
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-900/30 via-blue-900/20 to-transparent z-50 flex items-center justify-center backdrop-blur-sm rounded-2xl border border-purple-500/40 shadow-2xl shadow-purple-500/20">
-                <Spin
-                  indicator={<LoadingOutlined className="text-4xl text-purple-400" spin />}
-                  size="large"
-                />
+    <div className="fixed inset-0 z-[100] flex flex-col h-screen bg-[#111116] text-white overflow-hidden font-sans">
+      <div className="absolute top-4 left-4 z-[200]">
+        <button onClick={() => navigate(-1)} className="px-4 py-2 bg-black/40 backdrop-blur border border-white/10 rounded-xl hover:bg-white/10 text-gray-400 flex items-center gap-2 transition text-sm font-medium shadow-xl">
+          <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+          <span>Exit Workspace</span>
+        </button>
+      </div>
+
+      <div className="flex flex-1 overflow-hidden h-full">
+        {/* Left Sidebar: Tasks List */}
+        <div style={{ width: leftWidth, minWidth: 160 }} className="border-r border-white/10 overflow-y-auto custom-scrollbar flex flex-col pt-20 pb-4 shrink-0 bg-[#0d0d12]">
+          <div className="px-6 mb-6">
+            <h1 className="text-xl font-bold tracking-tight text-gray-100">Project Workspace</h1>
+            <p className="text-[10px] uppercase tracking-[0.2em] font-black text-violet-500/60 mt-1">Reviewing Tasks</p>
+          </div>
+
+          <div className="flex-1 flex flex-col px-4 gap-3">
+            {loadingItems ? (
+              <div className="flex flex-col items-center justify-center h-40 gap-3">
+                <Spin size="small" />
+                <span className="text-[10px] font-mono text-gray-600">Loading tasks...</span>
               </div>
-            )}
-            <DatasetItemList
-              items={datasetListItems}
-              selectedId={selectedId || ''}
-              onSelect={setSelectedId}
-            />
+            ) : items.length === 0 ? (
+              <div className="text-center py-10 text-gray-600 text-[10px] font-bold uppercase tracking-widest">No tasks found</div>
+            ) : items.map((item) => {
+              const isSelected = selectedId === item.id
+              const rev = reviewMap[item.id]
+              let statusColor = 'bg-gray-800'
+              if (item.status === 'completed' || rev?.status === 'approved') statusColor = 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
+              else if (item.status === 'rejected' || rev?.status === 'rejected') statusColor = 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]'
+              else if (item.status === 'in_progress') statusColor = 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]'
+
+              return (
+                <div key={item.id} onClick={() => setSelectedId(item.id)} className={`group relative flex items-center gap-4 cursor-pointer p-3 rounded-xl transition-all border ${isSelected ? 'bg-violet-600/10 border-violet-500/30' : 'bg-white/2 border-transparent hover:bg-white/5'}`}>
+                  <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusColor}`} />
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-xs font-bold text-gray-300 truncate">{item.filename}</span>
+                    <span className="text-[9px] font-mono text-gray-600 mt-1">{item.lastModified.split('T')[0]}</span>
+                  </div>
+                  {isSelected && <div className="absolute right-3 w-1.5 h-1.5 rounded-full bg-violet-400 animate-ping" />}
+                </div>
+              )
+            })}
           </div>
         </div>
 
-        {/* 🖼️ Center Panel - Annotation Canvas */}
-        <div className="flex-1 relative min-w-0 overflow-hidden">
+        {/* Resizer */}
+        <div className="w-1 shrink-0 cursor-col-resize hover:bg-violet-500/40 z-30" onMouseDown={e => { draggingRef.current = 'left'; dragStartXRef.current = e.clientX; dragStartWidthRef.current = leftWidth; e.preventDefault() }} />
+
+        {/* Middle Viewer */}
+        <div className="flex-[2] flex flex-col relative overflow-hidden bg-[#111116] pt-12 pb-6 px-5 border-l-[2px] border-white/5 mx-2 my-2">
           {loadingDetail ? (
-            <ReviewerLoadingState />
-          ) : itemDetail ? (
-            <div className="h-full transition-all duration-300 ease-out animate-in fade-in zoom-in-95">
-              <AnnotationCanvas
-                imageUrl={itemDetail.imageUrl}
-                annotations={itemDetail.annotations}
-              />
+            <div className="flex-1 flex flex-col items-center justify-center gap-4">
+              <Spin size="large" />
+              <span className="text-violet-400 font-mono text-sm animate-pulse tracking-widest uppercase font-bold">Retrieving Task Detail</span>
             </div>
+          ) : itemDetail ? (
+            <>
+              <div className="text-left mb-4 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-black tracking-widest uppercase text-violet-500/60 block mb-1">Active Selection</span>
+                  <h2 className="text-xl font-bold text-gray-100 tracking-tight truncate max-w-[70%]">{itemDetail.filename || 'Untitled Task'}</h2>
+                </div>
+                <div className="flex gap-4">
+                  <div className="flex flex-col items-end">
+                    <span className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Annotator</span>
+                    <span className="text-[11px] font-bold text-violet-300">{itemDetail.annotator || 'System'}</span>
+                  </div>
+                  <div className="px-3 py-1 bg-violet-500/10 rounded-lg border border-violet-500/20 text-[10px] font-bold text-violet-400 uppercase tracking-widest self-center">
+                    {itemDetail.annotations?.length || 0} Annotations
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex-1 relative flex overflow-hidden rounded-2xl border border-white/5 shadow-2xl">
+                <div className="relative bg-[#0d0d12]/50 overflow-hidden flex items-center justify-center w-full h-full" onWheel={handleWheel}>
+                  <div className="relative transition-transform duration-200 ease-out flex items-center justify-center h-full w-full"
+                    style={{ transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`, transformOrigin: 'center' }}>
+                    <img src={itemDetail.imageUrl} alt="main" className="max-w-full max-h-full object-contain pointer-events-none select-none" />
+                    <svg className={`absolute inset-0 w-full h-full cursor-grab`} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
+                      {itemDetail.annotations?.map((ann: any, i: number) => {
+                        const data = typeof ann.annotationData === 'string' ? JSON.parse(ann.annotationData) : ann.annotationData
+                        if (!data || !data.shapes) return null
+                        return data.shapes.map((s: any, j: number) => (
+                          <g key={`${i}-${j}`}>
+                            {s.type === 'bounding_box' ? (
+                              <rect x={s.x} y={s.y} width={s.width} height={s.height} fill={`${s.color || '#8b5cf6'}33`} stroke={s.color || '#8b5cf6'} strokeWidth={2 / zoom} />
+                            ) : s.type === 'polygon' && s.points ? (
+                              <polyline points={s.points.map((p: any) => p.join(',')).join(' ')} fill={`${s.color || '#8b5cf6'}33`} stroke={s.color || '#8b5cf6'} strokeWidth={2 / zoom} />
+                            ) : null}
+                          </g>
+                        ))
+                      })}
+                    </svg>
+                  </div>
+                </div>
+                <div className="absolute top-1/2 -translate-y-1/2 right-4 flex flex-col gap-2 bg-[#1A1625]/80 backdrop-blur-md p-2 rounded-2xl border border-white/10 shadow-2xl z-20">
+                  <ToolbarButton icon="pan_tool" active={tool === 'pan'} onClick={() => setTool('pan')} />
+                  <ToolbarButton icon="zoom_in" onClick={() => setZoom(prev => Math.min(prev + 0.2, 10))} />
+                  <ToolbarButton icon="zoom_out" onClick={() => setZoom(prev => Math.max(prev - 0.2, 0.5))} />
+                  <ToolbarButton icon="restart_alt" onClick={handleZoomReset} />
+                </div>
+              </div>
+
+              <div className="mt-8 border-t border-white/5 pt-6 flex items-center justify-between">
+                <div className="flex gap-4 items-center">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-black tracking-widest uppercase text-gray-600 mb-1">Queue Status</span>
+                    <span className="text-xs font-mono text-gray-400 font-bold">{items.findIndex(i => i.id === selectedId) + 1} / {items.length} Tasks</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <button onClick={() => {
+                    const idx = items.findIndex(i => i.id === selectedId)
+                    if (idx > 0) setSelectedId(items[idx - 1].id)
+                  }} disabled={items.findIndex(i => i.id === selectedId) === 0} className="px-6 py-2.5 disabled:opacity-30 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-bold transition-all border border-white/5 shadow-lg">Previous</button>
+                  <button onClick={() => {
+                    const idx = items.findIndex(i => i.id === selectedId)
+                    if (idx < items.length - 1) setSelectedId(items[idx + 1].id)
+                  }} disabled={items.findIndex(i => i.id === selectedId) === items.length - 1} className="px-6 py-2.5 disabled:opacity-30 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-bold transition-all border border-white/5 shadow-lg">Next</button>
+                  <div className="w-px h-10 bg-white/5 mx-2" />
+                  <button onClick={() => navigate(`/reviewer/task/${selectedId}/annotate`)} className="px-6 py-2.5 bg-white/10 hover:bg-white/20 text-violet-400 rounded-xl text-xs font-black uppercase tracking-widest transition-all border border-violet-500/20">Open High-Def Editor</button>
+                </div>
+              </div>
+            </>
           ) : (
-            <ReviewerEmptyState />
+            <div className="flex-1 flex flex-col items-center justify-center gap-6 opacity-30">
+              <span className="material-symbols-outlined text-8xl">space_dashboard</span>
+              <span className="text-sm font-bold tracking-[0.3em] uppercase">Select a task to review</span>
+            </div>
           )}
         </div>
 
-        {/* 📝 Right Panel - Review Details */}
-        <div className="relative w-80 shrink-0 flex-none">
-          <div
-            className={`h-full transition-all duration-300 ${loadingDetail ? 'opacity-60' : 'opacity-100'}`}
-          >
-            {loadingDetail && (
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-900/30 via-blue-900/20 to-transparent z-50 flex items-center justify-center backdrop-blur-sm rounded-2xl border border-purple-500/40 shadow-2xl shadow-purple-500/20">
-                <Spin indicator={<LoadingOutlined className="text-3xl text-purple-400" spin />} />
-              </div>
-            )}
-            <ReviewDetailPanel
-              annotations={itemDetail?.annotations || []}
-              history={(itemDetail as ReviewerItemDetail & { history?: unknown[] })?.history || []}
-              annotator={itemDetail?.annotator}
-              onApprove={() => setIsApproveModalOpen(true)}
-              onReject={() => setIsRejectModalOpen(true)}
+        <div className="w-1 shrink-0 cursor-col-resize hover:bg-violet-500/40 z-30" onMouseDown={e => { draggingRef.current = 'right'; dragStartXRef.current = e.clientX; dragStartWidthRef.current = rightWidth; e.preventDefault() }} />
+
+        {/* Right Action Panel */}
+        <div style={{ width: rightWidth, minWidth: 200 }} className="border-l border-white/10 px-8 py-10 flex flex-col gap-8 overflow-y-auto custom-scrollbar bg-[#0d0d12] shrink-0">
+          <div className="flex items-center gap-3 mb-2 border-b border-white/5 pb-6">
+            <div className="w-10 h-10 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center">
+              <span className="material-symbols-outlined text-[20px] text-violet-400">gavel</span>
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-gray-100 italic">Review Panel</h3>
+              <span className="text-[9px] font-black tracking-[0.2em] uppercase text-gray-600">Decision Center</span>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-5">
+            <span className="text-[10px] font-black tracking-widest uppercase text-gray-600">Quick Actions</span>
+            <div className="grid grid-cols-2 gap-3">
+              <button onClick={() => handleReviewDecision('approved')} disabled={isSubmitting || !itemDetail}
+                className={`h-24 rounded-2xl flex flex-col items-center justify-center gap-2 border-[2px] transition-all font-bold group ${currentReview.status === 'approved' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500' : 'bg-white/5 text-gray-600 border-transparent hover:bg-white/10 hover:text-gray-300'} disabled:opacity-30`}>
+                <span className="material-symbols-outlined text-[24px]">verified</span>
+                <span className="text-[10px] uppercase tracking-widest">Approve</span>
+              </button>
+              <button onClick={() => handleReviewDecision('rejected')} disabled={isSubmitting || !itemDetail}
+                className={`h-24 rounded-2xl flex flex-col items-center justify-center gap-2 border-[2px] transition-all font-bold group ${currentReview.status === 'rejected' ? 'bg-rose-500/10 text-rose-400 border-rose-500' : 'bg-white/5 text-gray-600 border-transparent hover:bg-white/10 hover:text-gray-300'} disabled:opacity-30`}>
+                <span className="material-symbols-outlined text-[24px]">cancel</span>
+                <span className="text-[10px] uppercase tracking-widest">Reject</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-4">
+            <span className="text-[10px] font-black tracking-widest uppercase text-gray-600">Review Feedback</span>
+            <textarea
+              value={reviewMap[selectedId || '']?.reason || ''}
+              onChange={(e) => setReviewMap(prev => ({ ...prev, [selectedId || '']: { ...prev[selectedId || ''], reason: e.target.value } }))}
+              placeholder="Provide feedback for the annotator..."
+              className={`w-full h-48 rounded-2xl border p-5 text-sm text-gray-300 focus:outline-none transition-all resize-none shadow-inner ${currentReview.status === 'rejected' ? 'bg-rose-500/5 border-rose-500/20 focus:border-rose-500/50' : 'bg-[#111116] border-white/5 focus:border-violet-500/30'}`}
             />
+          </div>
+
+          <div className="mt-auto glass-panel p-6 rounded-3xl border border-white/5 space-y-5 bg-white/2">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-violet-600/20 flex items-center justify-center">
+                <span className="material-symbols-outlined text-[16px] text-violet-400">history</span>
+              </div>
+              <span className="text-[10px] font-black tracking-widest uppercase text-gray-500">History Log</span>
+            </div>
+
+            <div className="space-y-4 max-h-40 overflow-y-auto custom-scrollbar-thin pr-4">
+              {itemDetail?.history?.map((h: any, i: number) => (
+                <div key={i} className="relative pl-4 border-l border-white/10">
+                  <p className="text-[11px] text-gray-400 leading-relaxed font-medium">{h.message || 'Updated annotation'}</p>
+                  <span className="text-[9px] text-gray-600 font-mono italic">{h.timestamp || 'Just now'}</span>
+                </div>
+              )) || (
+                  <div className="text-[10px] text-gray-600 italic font-mono text-center py-4">No recent activity</div>
+                )}
+            </div>
           </div>
         </div>
       </div>
-
-      {/* Modals */}
-      <ApproveModal
-        open={isApproveModalOpen}
-        onCancel={() => setIsApproveModalOpen(false)}
-        onConfirm={() => handleReviewDecision('approved')}
-        confirmLoading={isSubmitting}
-      />
-
-      <RejectModal
-        open={isRejectModalOpen}
-        onCancel={() => setIsRejectModalOpen(false)}
-        onConfirm={(reason, feedback) => handleReviewDecision('rejected', reason, feedback)}
-        confirmLoading={isSubmitting}
-      />
     </div>
+  )
+}
+
+function ToolbarButton({ icon, active = false, onClick }: { icon: string; active?: boolean; onClick?: () => void }) {
+  return (
+    <button onClick={onClick} className={`w-11 h-11 flex items-center justify-center transition-all cursor-pointer rounded-xl border-2 ${active ? 'bg-violet-600/20 text-violet-400 border-violet-500/50 shadow-lg shadow-violet-500/20' : 'bg-transparent text-gray-500 border-transparent hover:text-white hover:bg-white/5'}`}>
+      <span className="material-symbols-outlined text-[20px]">{icon}</span>
+    </button>
   )
 }
 

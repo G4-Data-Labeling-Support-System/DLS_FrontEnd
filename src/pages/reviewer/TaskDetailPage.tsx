@@ -10,24 +10,30 @@ import {
 } from '@ant-design/icons'
 import taskApi from '@/api/TaskApi'
 import assignmentApi from '@/api/AssignmentApi'
+import annotationApi from '@/api/annotation'
 import { useTaskDetail } from '@/features/annotator/hooks/useTaskDetail'
 import type { AxiosError } from 'axios'
 
 const { Title, Text } = Typography
 
-export interface TaskDataItem {
-  taskItemId: string
+export interface TaskDataItemRecord {
   dataItemId: string
+  dataitemId?: string // Aliases for different API response formats
+  itemId?: string
+  id?: string
   taskDataItemStatus?: string
-  dataItem?: {
+  dataItem: {
     id?: string
     name?: string
-    fileName?: string
-    url?: string
+    fileName: string
+    url: string
+    fileFormat: string
+    dataType: string
+    uploadedAt: string
     previewUrl?: string
-    [key: string]: unknown
+    itemId?: string
   }
-  [key: string]: unknown
+  taskItemId?: string
 }
 
 export interface Task {
@@ -53,12 +59,15 @@ export default function ReviewerTaskDetailPage() {
 
   const [task, setTask] = useState<Task | null>(null)
   const [loading, setLoading] = useState(true)
-  const [, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const {
     data: dataItems = [],
     isLoading: itemsLoading,
+    error: itemsError
   } = useTaskDetail(taskId || '')
+
+  const [remoteStatuses, setRemoteStatuses] = useState<Record<string, string>>({})
 
   useEffect(() => {
     async function load() {
@@ -69,29 +78,53 @@ export default function ReviewerTaskDetailPage() {
       }
       setLoading(true)
       try {
-        const assignmentId = (location.state?.assignmentId || '') as string
+        const assignmentIdFromState = (location.state?.assignmentId || '') as string
 
-        // 1. Fetch task details
-        const res = await taskApi.getTaskById(taskId)
-        const currentTask = res.data?.data || res.data
+        // 1. Try to fetch tasks by assignment ID first (more reliable)
+        let currentTask: Task | null = null
+        let assignmentName = (location.state as { assignmentName?: string })?.assignmentName
+        let resolvedAssignmentId = assignmentIdFromState
+
+        if (resolvedAssignmentId) {
+          try {
+            const tasksRes = await taskApi.getTasksByAssignmentId(resolvedAssignmentId)
+            const tasksData = tasksRes.data?.data || tasksRes.data || []
+            if (Array.isArray(tasksData)) {
+              currentTask = tasksData.find((t: Task) => String(t.taskId || t.id) === String(taskId)) || null
+            }
+          } catch (e) {
+            console.warn('Failed to fetch tasks by assignmentId, falling back to direct ID', e)
+          }
+        }
+
+        // 2. Fallback to direct task fetch if not found
+        if (!currentTask && taskId) {
+          try {
+            const res = await taskApi.getTaskById(taskId)
+            currentTask = res.data?.data || res.data
+          } catch (e) {
+            console.error('Direct task fetch also failed:', e)
+          }
+        }
 
         if (!currentTask) {
-          setError('Task not found.')
+          setError('Task not found or server error.')
           setLoading(false)
           return
         }
 
-        // 2. Fetch assignment details to get the name
-        const realAssignmentId = (currentTask.assignmentId || assignmentId) as string
-        let assignmentName = (location.state as { assignmentName?: string })?.assignmentName
-
-        if (!assignmentName && realAssignmentId) {
+        // 3. Resolve assignment details if missing
+        resolvedAssignmentId = (currentTask.assignmentId || resolvedAssignmentId) as string
+        if (!assignmentName && resolvedAssignmentId) {
           try {
-            const assignRes = await assignmentApi.getAssignmentById(realAssignmentId)
+            const assignRes = await assignmentApi.getAssignmentById(resolvedAssignmentId)
             const assignData = assignRes.data?.data || assignRes.data
             assignmentName = assignData.assignmentName || assignData.name || assignData.title
+            
+            // Add assignment status to the task object for UI logic
+            currentTask.assignmentStatus = assignData.assignmentStatus || assignData.status
           } catch (e) {
-            console.warn('Could not fetch assignment details for reviewer task name:', e)
+            console.warn('Could not fetch assignment details for reviewer task:', e)
           }
         }
 
@@ -104,16 +137,7 @@ export default function ReviewerTaskDetailPage() {
       } catch (err: unknown) {
         const error = err as AxiosError
         console.error('Failed to load reviewer task details:', error)
-        if (error.response) {
-          console.error('❌ BE Error Detail:', error.response.data)
-          setError(
-            `Error ${error.response.status}: Failed to load task details. ${
-              (error.response.data as { message?: string })?.message || ''
-            }`
-          )
-        } else {
-          setError('Failed to load task details.')
-        }
+        setError('Failed to load task details.')
       } finally {
         setLoading(false)
       }
@@ -121,9 +145,58 @@ export default function ReviewerTaskDetailPage() {
     load()
   }, [taskId, location.state])
 
+  // Background fetch remote statuses for all items to calculate progress correctly
+  useEffect(() => {
+    if (dataItems.length === 0) return
+
+    dataItems.forEach(async (item: TaskDataItemRecord) => {
+      const id = item.dataItemId || item.dataitemId || item.itemId || item.dataItem?.itemId || item.dataItem?.id || item.id
+      if (!id) return
+
+      try {
+        const res = await annotationApi.getAnnotationByDataItemId(id)
+        const remoteAnno = res.data?.data || res.data
+        if (remoteAnno && (remoteAnno.annotationStatus || remoteAnno.annotation_status || remoteAnno.status)) {
+          const status = (remoteAnno.annotationStatus || remoteAnno.annotation_status || remoteAnno.status).toUpperCase()
+          setRemoteStatuses(prev => ({
+            ...prev,
+            [id]: status
+          }))
+        }
+      } catch {
+        // Silently skip
+      }
+    })
+  }, [dataItems])
+
+  const getAnnotatedCount = () => {
+    if (!dataItems.length) return 0
+    const annotatedIds = new Set<string>()
+
+    dataItems.forEach((item: TaskDataItemRecord) => {
+      if (item.taskDataItemStatus === 'COMPLETED') {
+        annotatedIds.add(item.dataItemId)
+      }
+    })
+
+    Object.entries(remoteStatuses).forEach(([id, status]) => {
+      if (status === 'SUBMITTED' || status === 'APPROVED' || status === 'COMPLETED') {
+        annotatedIds.add(id)
+      }
+    })
+
+    return annotatedIds.size
+  }
+
+  const annotatedCount = getAnnotatedCount()
+  const progressPercent = Math.round((annotatedCount / (dataItems.length || 1)) * 100)
+
   const handleStartReview = () => {
     if (!taskId) return
-    navigate(`/reviewer/workspace/${task?.projectId || 'all'}`)
+    // Navigate to workspace with specific state if needed
+    navigate(`/reviewer/workspace/${task?.projectId || 'all'}`, {
+      state: { taskId, assignmentId: task?.assignmentId }
+    })
   }
 
   const columns = [
@@ -131,7 +204,7 @@ export default function ReviewerTaskDetailPage() {
       title: 'Preview',
       key: 'preview',
       width: '10%',
-      render: (_: string, record: TaskDataItem) => (
+      render: (_: string, record: TaskDataItemRecord) => (
         <div className="w-10 h-10 rounded-lg border border-white/5 overflow-hidden bg-black/20 flex items-center justify-center transition-all hover:border-violet-500/30">
           {record.dataItem?.url || record.dataItem?.previewUrl ? (
             <img
@@ -148,37 +221,97 @@ export default function ReviewerTaskDetailPage() {
     {
       title: 'Filename',
       key: 'filename',
-      width: '30%',
-      render: (_: unknown, record: TaskDataItem) => (
-        <Text className="text-gray-200 font-medium truncate block max-w-[300px]">
+      width: '20%',
+      render: (_: unknown, record: TaskDataItemRecord) => (
+        <Text
+          className="text-gray-200 font-medium truncate block max-w-[200px]"
+          title={record.dataItem?.fileName || record.dataItem?.name}
+        >
           {record.dataItem?.fileName || record.dataItem?.name || 'N/A'}
         </Text>
       )
     },
     {
+      title: 'Format',
+      key: 'fileFormat',
+      width: '12%',
+      render: (_: unknown, record: TaskDataItemRecord) => (
+        <Tag className="bg-blue-500/10 border-blue-500/20 text-blue-400 font-medium rounded-md px-2 py-0.5">
+          {record.dataItem?.fileFormat || 'N/A'}
+        </Tag>
+      )
+    },
+    {
+      title: 'Data Type',
+      key: 'dataType',
+      width: '12%',
+      render: (_: unknown, record: TaskDataItemRecord) => (
+        <Tag className="bg-violet-500/10 border-violet-500/20 text-violet-400 font-medium rounded-md px-2 py-0.5">
+          {record.dataItem?.dataType || 'N/A'}
+        </Tag>
+      )
+    },
+    {
       title: 'Status',
       key: 'status',
-      width: '20%',
-      render: (_: unknown, record: TaskDataItem) => {
-        const status = String(record.taskDataItemStatus || 'PENDING').toUpperCase()
+      width: '12%',
+      render: (_: unknown, record: TaskDataItemRecord) => {
+        const canonicalId = (record.dataItemId || record.dataitemId || record.itemId || record.id || '') as string
+        const status = (
+          (canonicalId ? remoteStatuses[canonicalId] : undefined) ||
+          record.taskDataItemStatus ||
+          'NOT_STARTED'
+        ).toUpperCase()
+
+        const isApprove = status === 'APPROVED'
+        const isSubmitted = status === 'COMPLETED' || status === 'SUBMITTED'
+        const isRejected = status === 'REJECTED' || status === 'NEEDS_EDITING'
+        const isInProgress = status === 'IN_PROGRESS' || status === 'IN_EDITING'
+        const isInReview = status === 'IN_REVIEW'
+
         return (
-          <Tag color={status === 'COMPLETED' ? 'success' : 'processing'}>
-            {status}
-          </Tag>
+          <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${isApprove || isInReview ? 'bg-violet-500 shadow-[0_0_8px_rgba(139,92,246,0.4)]' :
+              isSubmitted ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' :
+                isRejected ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]' :
+                  isInProgress ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]' :
+                    'bg-gray-600'
+              }`} />
+            <span className={`text-xs font-bold uppercase tracking-wider ${isApprove || isInReview ? 'text-violet-400' :
+              isSubmitted ? 'text-emerald-400' :
+                isRejected ? 'text-rose-400' :
+                  isInProgress ? 'text-amber-400' :
+                    'text-gray-500'
+              }`}>
+              {status}
+            </span>
+          </div>
         )
       }
     },
-     {
+    {
+      title: 'Uploaded At',
+      key: 'uploadedAt',
+      width: '18%',
+      render: (_: unknown, record: TaskDataItemRecord) => (
+        <Text className="text-gray-400 text-sm">
+          {record.dataItem?.uploadedAt
+            ? new Date(record.dataItem.uploadedAt).toLocaleDateString()
+            : 'N/A'}
+        </Text>
+      )
+    },
+    {
       title: 'Action',
       key: 'action',
-      width: '10%',
+      width: '6%',
       render: () => (
-        <Button
-          type="text"
-          icon={<ArrowRightOutlined />}
-          className="text-gray-400 hover:text-violet-400"
+        <button
           onClick={handleStartReview}
-        />
+          className="p-1.5 rounded-lg hover:bg-white/5 text-gray-400 hover:text-violet-400 transition-all cursor-pointer flex items-center justify-center"
+        >
+          <ArrowRightOutlined className="text-lg" />
+        </button>
       )
     }
   ]
@@ -194,18 +327,32 @@ export default function ReviewerTaskDetailPage() {
     )
   }
 
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-4 min-h-screen bg-[#0f0e17]">
+        <span className="material-symbols-outlined text-red-500 text-5xl opacity-80">error</span>
+        <span className="text-red-400 font-medium">{error}</span>
+        <button
+          onClick={() => navigate(-1)}
+          className="text-white text-sm font-bold px-6 py-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors"
+        >
+          Go Back
+        </button>
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-[#0f0e17] p-8 animate-in fade-in duration-700">
+    <div className="min-h-screen bg-[#0f0e17] p-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-4">
-          <Button
-            type="text"
-            icon={<ArrowLeftOutlined />}
-            className="text-gray-400 hover:text-white bg-white/5"
+          <button
             onClick={() => navigate(-1)}
+            className="group flex items-center gap-2 text-gray-400 hover:text-white transition-all bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg border border-white/5 hover:border-white/10"
           >
-            Back
-          </Button>
+            <ArrowLeftOutlined className="text-xs group-hover:-translate-x-0.5 transition-transform" />
+            <span className="text-xs font-bold uppercase tracking-wider">Back</span>
+          </button>
           <div className="flex flex-col">
             <Title level={4} className="!text-white !mb-0 tracking-tight font-bold">
               {task.taskName}
@@ -213,41 +360,65 @@ export default function ReviewerTaskDetailPage() {
             <Text className="text-gray-500 font-mono text-xs select-all">ID: {task.taskId}</Text>
           </div>
         </div>
-        <Button
-          type="primary"
-          icon={<PlayCircleOutlined />}
-          onClick={handleStartReview}
-          className="bg-violet-600 border-none hover:bg-violet-500 rounded-xl py-2 px-6 h-auto flex items-center"
-        >
-          <span className="text-sm font-bold">Start Reviewing</span>
-        </Button>
+        {task.assignmentStatus === 'REVIEWING' && (
+          <Button
+            type="primary"
+            icon={<PlayCircleOutlined />}
+            onClick={handleStartReview}
+            className="bg-violet-600 border-none hover:bg-violet-500 rounded-xl h-[38px] flex items-center shadow-[0_4px_12px_rgba(139,92,246,0.3)]"
+          >
+            <span className="text-sm font-medium">Start Reviewing</span>
+          </Button>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 gap-6">
-        <Card className="bg-[#16161a]/60 border-white/5 rounded-2xl shadow-xl">
-          <Descriptions
-            column={{ xxl: 4, xl: 3, lg: 2, md: 2, sm: 1, xs: 1 }}
-            layout="vertical"
-            className="custom-descriptions"
-          >
-            <Descriptions.Item label="Assignment">
-              <div className="flex items-center gap-2">
-                <DatabaseOutlined className="text-violet-400" />
-                <span className="text-gray-200 font-medium">{task.assignmentName}</span>
-              </div>
-            </Descriptions.Item>
-            <Descriptions.Item label="Status">
-               <Tag color="processing">{task.reviewStatus || task.status || 'PENDING'}</Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="Created At">
-              <span className="text-gray-400 text-xs font-mono">
-                {task.createdAt ? new Date(task.createdAt).toLocaleDateString() : 'N/A'}
-              </span>
-            </Descriptions.Item>
-          </Descriptions>
-        </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-2">
+        <div className="lg:col-span-12">
+          <Card className="bg-[#16161a]/60 border-white/5 backdrop-blur-xl rounded-2xl shadow-xl overflow-hidden hover:border-white/10 transition-all duration-500">
+            <div className="p-2">
+              <Descriptions
+                column={{ xxl: 4, xl: 3, lg: 2, md: 2, sm: 1, xs: 1 }}
+                layout="vertical"
+                className="custom-descriptions"
+              >
+                <Descriptions.Item label="Assignment">
+                  <div className="flex items-center gap-2">
+                    <DatabaseOutlined className="text-violet-400" />
+                    <span className="text-gray-200 font-medium">{task.assignmentName}</span>
+                  </div>
+                </Descriptions.Item>
+                <Descriptions.Item label="Progress">
+                  <div className="flex flex-col gap-1 w-full max-w-[200px]">
+                    <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider">
+                      <span className="text-violet-400">{progressPercent}%</span>
+                      <span className="text-gray-500">
+                        {annotatedCount} / {dataItems.length}
+                      </span>
+                    </div>
+                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-violet-600 to-indigo-600 rounded-full transition-all duration-1000 ease-out"
+                        style={{ width: `${progressPercent}%` }}
+                      />
+                    </div>
+                  </div>
+                </Descriptions.Item>
+                <Descriptions.Item label="Status">
+                  <Tag color="processing" className="bg-blue-500/10 border-blue-500/20 text-blue-400 font-bold uppercase tracking-wider text-[10px] rounded px-2 py-0.5">
+                    {task.reviewStatus || task.status || 'PENDING'}
+                  </Tag>
+                </Descriptions.Item>
+                <Descriptions.Item label="Created At">
+                  <span className="text-gray-400 text-xs font-mono">
+                    {task.createdAt ? new Date(task.createdAt).toLocaleDateString() : 'N/A'}
+                  </span>
+                </Descriptions.Item>
+              </Descriptions>
+            </div>
+          </Card>
+        </div>
 
-        <div className="mt-6">
+        <div className="lg:col-span-12 mt-6">
           <div className="flex items-center gap-3 mb-6 px-2">
             <div className="w-8 h-8 rounded-xl bg-violet-500/10 flex items-center justify-center">
               <DatabaseOutlined className="text-violet-400 text-sm" />
@@ -260,15 +431,20 @@ export default function ReviewerTaskDetailPage() {
             </Tag>
           </div>
 
-          <Card className="bg-[#16161a]/40 border-white/5 rounded-2xl shadow-2xl overflow-hidden">
+          <Card className="bg-[#16161a]/40 border-white/5 backdrop-blur-xl rounded-2xl shadow-2xl overflow-hidden">
             <Table
               dataSource={dataItems}
               columns={columns}
               loading={itemsLoading}
               rowKey={(record) => String(record.taskItemId || record.dataItemId || '')}
-              pagination={{ pageSize: 10 }}
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: false,
+                className: 'custom-pagination !mt-8 !mb-4 !px-6'
+              }}
               className="manager-task-table"
             />
+            {itemsError && <div className="p-8 text-red-400 text-center">{String(itemsError)}</div>}
           </Card>
         </div>
       </div>
@@ -291,14 +467,39 @@ export default function ReviewerTaskDetailPage() {
           border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
           font-size: 11px;
           text-transform: uppercase;
+          letter-spacing: 0.1em;
           font-weight: 700;
+          padding: 16px 20px !important;
         }
         .manager-task-table .ant-table-tbody > tr > td {
           border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
           background: transparent !important;
+          padding: 16px 20px !important;
         }
         .manager-task-table .ant-table-tbody > tr:hover > td {
           background: rgba(255, 255, 255, 0.02) !important;
+        }
+        .custom-pagination.ant-pagination .ant-pagination-item {
+          background: rgba(255, 255, 255, 0.03);
+          border-color: rgba(255, 255, 255, 0.05);
+          border-radius: 8px;
+        }
+        .custom-pagination.ant-pagination .ant-pagination-item a {
+          color: #9ca3af;
+        }
+        .custom-pagination.ant-pagination .ant-pagination-item-active {
+          background: rgba(139, 92, 246, 0.1);
+          border-color: #8b5cf6;
+        }
+        .custom-pagination.ant-pagination .ant-pagination-item-active a {
+          color: #a78bfa;
+        }
+        .custom-pagination.ant-pagination .ant-pagination-prev button,
+        .custom-pagination.ant-pagination .ant-pagination-next button {
+          background: rgba(255, 255, 255, 0.03);
+          border-color: rgba(255, 255, 255, 0.05);
+          color: #9ca3af;
+          border-radius: 8px;
         }
       `}</style>
     </div>

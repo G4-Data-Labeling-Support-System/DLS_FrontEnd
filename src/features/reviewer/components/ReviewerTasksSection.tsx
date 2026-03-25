@@ -94,7 +94,7 @@ export default function ReviewerTasksSection({
     }, {})
   }, [paginatedTasks])
 
-  const availableStatuses = ['ALL', 'PENDING', 'IN_PROGRESS', 'APPROVED', 'REJECTED']
+  const availableStatuses = ['ALL', 'PENDING', 'IN_PROGRESS', 'IN_REVIEW', 'APPROVED', 'REJECTED']
 
   if (!mappedTasks || mappedTasks.length === 0) {
     return (

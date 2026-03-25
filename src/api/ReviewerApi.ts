@@ -2,6 +2,7 @@ import { mainClient } from './apiClients'
 import { ENDPOINTS } from './endpoints'
 import assignmentApi from './AssignmentApi'
 import taskApi from './TaskApi'
+import annotationApi from './annotation'
 
 export interface HistoryEvent {
   id: string
@@ -89,14 +90,14 @@ export const reviewerApi = {
       // 1. Get assignments for the project
       const assignRes = await assignmentApi.getAssignmentsByProjectId(projectId)
       const assignments = assignRes.data?.data || assignRes.data || []
-      
+
       // 2. For simplicity, get tasks of the first assignment
       if (assignments.length === 0) return []
       const assignmentId = assignments[0].assignmentId || assignments[0].id
-      
+
       const taskRes = await taskApi.getTasksByAssignmentId(assignmentId)
       const tasks = taskRes.data?.data || taskRes.data || []
-      
+
       return tasks.map((t: any) => ({
         id: t.taskId || t.id,
         filename: t.taskName || t.name || `Task ${t.taskId}`,
@@ -121,20 +122,48 @@ export const reviewerApi = {
       const items = itemsRes.data?.data || itemsRes.data || []
       const firstItem = items[0]?.dataItem || items[0]
 
-      // 3. Return normalized detail
+      // 3. Get annotation details for the first item
+      const dataItemId = firstItem?.id || firstItem?.itemId || firstItem?.dataItemId
+      let annotations: Annotation[] = []
+
+      if (dataItemId) {
+        try {
+          const annoRes = await annotationApi.getAnnotationByDataItemId(dataItemId)
+          const annoData = annoRes.data?.data || annoRes.data
+          if (annoData) {
+            // Handle both single object and array responses
+            const annotationList = Array.isArray(annoData) ? annoData : [annoData]
+            annotations = annotationList.map((ann: any) => ({
+              id: ann.annotationId || ann.id,
+              label: ann.labelName || ann.labelId || 'Unknown',
+              confidence: ann.annotationConfidence === 'HIGH' ? 0.9 : 0.5,
+              color: '#f5222d',
+              bbox: typeof ann.annotationData === 'string'
+                ? JSON.parse(ann.annotationData).bbox
+                : ann.annotationData?.bbox || { x: 0, y: 0, w: 100, h: 100 }
+            }))
+          }
+        } catch (e) {
+          console.warn(`Failed to fetch specific annotation for data item ${dataItemId}, falling back to task metadata`, e)
+          // Fallback to existing logic if direct fetch fails
+          annotations = (firstItem?.annotationResponseList || firstItem?.annotations || []).map((ann: any) => ({
+            id: ann.annotationId || ann.id,
+            label: ann.labelName || ann.labelId || 'Unknown',
+            confidence: ann.annotationConfidence === 'HIGH' ? 0.9 : 0.5,
+            color: '#f5222d',
+            bbox: typeof ann.annotationData === 'string' ? JSON.parse(ann.annotationData).bbox : ann.annotationData?.bbox || { x: 0, y: 0, w: 100, h: 100 }
+          }))
+        }
+      }
+
+      // 4. Return normalized detail
       return {
         id: taskId,
         filename: task.taskName || task.name || `Task ${taskId}`,
         status: (task.taskStatus || 'pending').toLowerCase() as any,
         imageUrl: firstItem?.url || '',
         lastModified: task.createdAt || '',
-        annotations: (firstItem?.annotationResponseList || firstItem?.annotations || []).map((ann: any) => ({
-           id: ann.annotationId || ann.id,
-           label: ann.labelName || ann.labelId || 'Unknown',
-           confidence: ann.annotationConfidence === 'HIGH' ? 0.9 : 0.5,
-           color: '#f5222d',
-           bbox: typeof ann.annotationData === 'string' ? JSON.parse(ann.annotationData).bbox : ann.annotationData?.bbox || { x: 0, y: 0, w: 100, h: 100 }
-        })),
+        annotations,
         history: []
       }
     } catch (error) {
@@ -159,7 +188,7 @@ export const reviewerApi = {
       // Để tương thích trước mắt nếu không có file, ta có can convert JSON or use as config data
       // Chú ý backend: Nếu swagger là multipart form data, ta sẽ làm 1 parser sang FormData
       const formData = new FormData()
-      
+
       formData.append('reviews', new Blob([JSON.stringify(payload.reviews)], { type: 'application/json' }))
 
       const response = await mainClient.put(ENDPOINTS.REVIEWS.UPDATE, formData, {
