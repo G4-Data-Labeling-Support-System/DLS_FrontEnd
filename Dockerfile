@@ -1,12 +1,22 @@
+#====== Builder Stage ======
 FROM node:20.12.2-alpine3.18 AS builder
+
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
+RUN npm install
 
-FROM nginx:alpine AS run
+COPY . .
+
+ARG MODE=dev
+RUN npm run build -- --mode=$MODE
+
+#====== Runner Stage ======
+FROM nginx:alpine AS runner
+
 COPY --from=builder /app/dist /usr/share/nginx/html
-COPY nginx.dev.conf /etc/nginx/nginx.conf
-EXPOSE 5173
+ARG MODE=dev
+COPY nginx.${MODE}.conf /etc/nginx/nginx.conf
+
+EXPOSE 80
+
 CMD ["nginx", "-g", "daemon off;"]

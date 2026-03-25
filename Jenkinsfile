@@ -32,7 +32,6 @@ node {
 
         // Env variables
         slackNotify = load "ci/slack.groovy"
-        def buildPipeline = load "ci/build.groovy"
         def sonarqubePipeline = load "ci/sonarqube.groovy"
         def trivyFilesystemScan = load "ci/trivy-filesystem-scan.groovy"
         def dockerPipeline = load "ci/docker.groovy"
@@ -45,34 +44,35 @@ node {
 
         // Call functions base on branch
         if (env.BRANCH_NAME == "main") {
-            // Step 1: Build project
-            buildPipeline.call(config)
-            // Step 2: Sonarqube Scan
-            sonarqubePipeline.call(config)
-            // Step 3: Trivy Filesystem Scan
+            // Step 1: Sonarqube Scan
+            // sonarqubePipeline.call(config)
+            // Step 2: Trivy Filesystem Scan
             trivyFilesystemScan.call()
-            // Step 4: Build -> Trivy Image Scan -> Test -> Push
+            // Step 3: Build -> Trivy Image Scan -> Test -> Push
             dockerPipeline.call(config)
             // Step 5: Deploy to Docker production server
             deployProd.call(config)
             // Step 6: Update Manifestfile
             // updateManifest.call(config)
         } else if (env.BRANCH_NAME == "development") {
-            // Step 1: Build project
-            buildPipeline.call(config)
-            // Step 2: Sonarqube Scan
-            sonarqubePipeline.call(config)
-            // Step 3: Trivy Filesystem Scan
+            // Step 1: Sonarqube Scan
+            // sonarqubePipeline.call(config)
+            // Step 2: Trivy Filesystem Scan
             trivyFilesystemScan.call()
-            // Step 4: Build -> Trivy Image Scan -> Test -> Push
+            // Step 3: Build -> Trivy Image Scan -> Test -> Push
             dockerPipeline.call(config)
-            // Step 5: Deploy to Docker production server
+            // Step 4: Deploy to Docker production server
             deployBeta.call(config)
             // Step 6: Update Manifestfile
             // updateManifest.call(config)
         } else {
-            buildPipeline.call(config)
+            // Step 1: Sonarqube Scan
+            // sonarqubePipeline.call(config)
+            // Step 2: Trivy Filesystem Scan
+            // trivyFilesystemScan.call()
+            // Step 3: Build -> Trivy Image Scan -> Test -> Push
             dockerPipeline.call(config)
+            // Step 4: Deploy to Docker production server
             deployDev.call(config)
         }
     }

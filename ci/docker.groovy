@@ -16,7 +16,18 @@ def call(config) {
 
     stage('Docker Build') {
         echo "Building Docker image: ${imageTagged}"
-        docker.build("${imageTagged}")
+        
+        def mode = "dev"
+
+        if (env.BRANCH_NAME == "main") {
+            mode = "prod"
+        }
+
+        sh """
+            docker build \
+            --build-arg MODE=${mode} \
+            -t ${imageTagged} .
+        """
     }
 
     stage('Trivy Docker Image Scan') {

@@ -1,13 +1,7 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { Card, Table, Descriptions, Tag, Typography, Spin, Button } from 'antd'
-import {
-  DatabaseOutlined,
-  ArrowLeftOutlined,
-  PlayCircleOutlined,
-  ArrowRightOutlined,
-  LoadingOutlined
-} from '@ant-design/icons'
+import { useParams, useNavigate } from 'react-router-dom'
+import { Spin, Button, Tag } from 'antd'
+import { ArrowLeftOutlined, LoadingOutlined, RocketOutlined, InfoCircleOutlined, DatabaseOutlined, CheckCircleOutlined } from '@ant-design/icons'
 import taskApi from '@/api/TaskApi'
 import assignmentApi from '@/api/AssignmentApi'
 import annotationApi from '@/api/annotation'
