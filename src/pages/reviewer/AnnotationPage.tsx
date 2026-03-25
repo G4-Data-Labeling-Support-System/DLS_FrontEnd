@@ -139,7 +139,9 @@ export default function ReviewerAnnotationPage() {
             color: '#f43f5e'
           }]
         }
-      } catch (err) { }
+      } catch (err) {
+        console.error('Failed to parse annotation:', err)
+      }
       return []
     }).flat()
   }, [])
@@ -198,7 +200,9 @@ export default function ReviewerAnnotationPage() {
               setLabels(normLabels)
               if (normLabels.length > 0) setCurrentLabel(normLabels[0])
             }
-          } catch (labelErr) { }
+          } catch (labelErr) {
+            console.error('Failed to load labels:', labelErr)
+          }
         }
 
         const enrichedItems = await Promise.all(
@@ -210,7 +214,9 @@ export default function ReviewerAnnotationPage() {
                 const annos = Array.isArray(annoData) ? annoData : [annoData]
                 return { ...item, annotationResponseList: annos, annotations: annos }
               }
-            } catch (err) { }
+            } catch (err) {
+              console.error('Failed to load annotation:', err)
+            }
             return item
           })
         )
@@ -223,6 +229,7 @@ export default function ReviewerAnnotationPage() {
         }
       } catch (err) {
         setError('Failed to load task data. Please try again.')
+        console.error('Failed to load task data:', err)
       } finally {
         setLoading(false)
       }
@@ -378,7 +385,8 @@ export default function ReviewerAnnotationPage() {
       await reviewerApi.submitReviewDecision(payload)
       setIsSubmitted(true)
     } catch (err) {
-      error ? message.error('Failed to submit reviews.') : null
+      message.error('Failed to submit reviews.')
+      console.error('Failed to submit reviews:', err)
     } finally {
       setLoading(false)
     }

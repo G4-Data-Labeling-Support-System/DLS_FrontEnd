@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { Spin, Button, Tag } from 'antd'
-import { ArrowLeftOutlined, LoadingOutlined, RocketOutlined, InfoCircleOutlined, DatabaseOutlined, CheckCircleOutlined } from '@ant-design/icons'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
+import { Spin, Button, Tag, Descriptions, Card, Table, Typography } from 'antd'
+import { ArrowLeftOutlined, LoadingOutlined, DatabaseOutlined, ArrowRightOutlined, RocketOutlined } from '@ant-design/icons'
 import taskApi from '@/api/TaskApi'
 import assignmentApi from '@/api/AssignmentApi'
 import annotationApi from '@/api/annotation'
@@ -43,6 +43,7 @@ export interface Task {
   projectId?: string
   datasetId?: string
   createdAt?: string
+  assignmentStatus?: string
   [key: string]: unknown
 }
 
@@ -114,7 +115,7 @@ export default function ReviewerTaskDetailPage() {
             const assignRes = await assignmentApi.getAssignmentById(resolvedAssignmentId)
             const assignData = assignRes.data?.data || assignRes.data
             assignmentName = assignData.assignmentName || assignData.name || assignData.title
-            
+
             // Add assignment status to the task object for UI logic
             currentTask.assignmentStatus = assignData.assignmentStatus || assignData.status
           } catch (e) {
@@ -187,7 +188,6 @@ export default function ReviewerTaskDetailPage() {
 
   const handleStartReview = () => {
     if (!taskId) return
-    // Navigate to workspace with specific state if needed
     navigate(`/reviewer/workspace/${task?.projectId || 'all'}`, {
       state: { taskId, assignmentId: task?.assignmentId }
     })
@@ -338,7 +338,7 @@ export default function ReviewerTaskDetailPage() {
 
   return (
     <div className="min-h-screen bg-[#0f0e17] p-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 max-w-7xl mx-auto">
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate(-1)}
@@ -354,19 +354,17 @@ export default function ReviewerTaskDetailPage() {
             <Text className="text-gray-500 font-mono text-xs select-all">ID: {task.taskId}</Text>
           </div>
         </div>
-        {task.assignmentStatus === 'REVIEWING' && (
-          <Button
-            type="primary"
-            icon={<PlayCircleOutlined />}
-            onClick={handleStartReview}
-            className="bg-violet-600 border-none hover:bg-violet-500 rounded-xl h-[38px] flex items-center shadow-[0_4px_12px_rgba(139,92,246,0.3)]"
-          >
-            <span className="text-sm font-medium">Start Reviewing</span>
-          </Button>
-        )}
+        <Button
+          type="primary"
+          icon={<RocketOutlined />}
+          onClick={handleStartReview}
+          className="bg-violet-600 border-none hover:bg-violet-500 rounded-xl h-[38px] flex items-center shadow-[0_4px_12px_rgba(139,92,246,0.3)]"
+        >
+          <span className="text-sm font-medium">Open Workspace</span>
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-2">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-7xl mx-auto">
         <div className="lg:col-span-12">
           <Card className="bg-[#16161a]/60 border-white/5 backdrop-blur-xl rounded-2xl shadow-xl overflow-hidden hover:border-white/10 transition-all duration-500">
             <div className="p-2">
