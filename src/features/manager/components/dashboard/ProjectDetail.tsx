@@ -132,7 +132,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
       </div>
 
       <div className="rounded-2xl grid lg:grid-cols-2 md:grid-cols-1 gap-6 mb-8 mt-2 items-stretch">
-        
+
         {/* DESIGN APPLIED FROM ANNOTATOR FOR PROJECT INFO */}
         <div className="glass-panel rounded-2xl p-7 relative overflow-hidden flex flex-col border border-white/5 bg-[#1A1625]/60 backdrop-blur-md shadow-xl">
           <div className="absolute -top-10 -right-10 w-56 h-56 rounded-full bg-violet-500/10 blur-[60px] pointer-events-none" />
@@ -246,7 +246,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
               {guidelines.length} total
             </Tag>
           </div>
-          
+
           <div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
             {guidelines.length === 0 ? (
               <div className="w-full h-full flex flex-col items-center justify-center opacity-60">
@@ -262,14 +262,14 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
                   >
                     <div className="flex justify-between items-start gap-2 border-b border-white/5 pb-3">
                       <div className="flex items-center gap-3 font-display text-white font-semibold">
-                         <span className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[11px] flex items-center justify-center font-bold font-sans">
-                           {index + 1}
-                         </span>
+                        <span className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[11px] flex items-center justify-center font-bold font-sans">
+                          {index + 1}
+                        </span>
                         <h4 className="truncate" title={(guideline.title as string) || 'Guideline'}>
                           {(guideline.title as string) || 'Guideline'}
                         </h4>
                       </div>
-                      
+
                       <Dropdown
                         menu={{
                           items: [
@@ -292,11 +292,11 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
                         />
                       </Dropdown>
                     </div>
-                    
+
                     <div className="text-gray-300 text-sm whitespace-pre-wrap leading-relaxed mt-1">
                       {(guideline.content as string) || 'No content provided.'}
                     </div>
-                    
+
                     <div className="mt-2 text-[10px] text-gray-500 tracking-wider uppercase font-medium mt-auto w-full text-right">
                       {formatDate(guideline.createdAt as string)}
                     </div>
@@ -306,7 +306,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
             )}
           </div>
         </div>
-        
+
       </div>
 
       <CreateProjectModal

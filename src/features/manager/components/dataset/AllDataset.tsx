@@ -225,11 +225,11 @@ const AllDataset: React.FC<AllDatasetProps> = ({
         initialData={
           editingDataset
             ? {
-                datasetId: editingDataset.datasetId!,
-                datasetName: editingDataset.datasetName || '',
-                description: editingDataset.description,
-                projectId: editingDataset.projectId
-              }
+              datasetId: editingDataset.datasetId!,
+              datasetName: editingDataset.datasetName || '',
+              description: editingDataset.description,
+              projectId: editingDataset.projectId
+            }
             : undefined
         }
         onCancel={() => {
