@@ -165,15 +165,28 @@ export default function AnnotationPage() {
       if (!taskId) return
       setLoading(true)
       try {
-        // 1. Fetch task items
-        const taskRes = await taskApi.getTaskById(taskId)
-        const items = taskRes.data?.data || taskRes.data || []
-        setDataItems(Array.isArray(items) ? items : [])
+        // 1. Fetch task items using the correct data items endpoint
+        const taskRes = await taskApi.getTaskDataItems(taskId)
+        const rawItems = taskRes.data?.data || taskRes.data || []
+        
+        // Flatten the wrapper format if necessary
+        // The backend returns: { dataItemId: string, taskDataItemStatus: string, dataItem: { ... } }
+        // We want: { itemId: string, fileName: string, url: string, ... }
+        const flattenedItems = Array.isArray(rawItems) 
+          ? rawItems.map((item: any) => ({
+              ...(item.dataItem || {}),
+              itemId: item.dataItemId || item.dataitemId || item.id,
+              taskDataItemStatus: item.taskDataItemStatus,
+              taskItemId: item.id || item.taskItemId
+            }))
+          : []
+          
+        setDataItems(flattenedItems)
 
         // Try to recover assignmentId from task if missing (e.g., on refresh)
         let effectiveAssignmentId = assignmentId
-        if (!effectiveAssignmentId && items.length > 0) {
-          effectiveAssignmentId = items[0].assignmentId
+        if (!effectiveAssignmentId && Array.isArray(rawItems) && rawItems.length > 0) {
+          effectiveAssignmentId = rawItems[0].assignmentId
         }
 
         // 2. Fetch labels if effectiveAssignmentId is available
@@ -210,10 +223,10 @@ export default function AnnotationPage() {
             setSessionAnnotations(parsed)
 
             const restoredIdx = savedIndex !== null ? parseInt(savedIndex) : startIdx
-            if (restoredIdx >= 0 && restoredIdx < items.length) {
+            if (restoredIdx >= 0 && restoredIdx < flattenedItems.length) {
               setCurrentIndex(restoredIdx)
               // We need to load from the RESTORED session, not the state yet
-              const restoredItem = items[restoredIdx]
+              const restoredItem = flattenedItems[restoredIdx]
               const restoredItemId =
                 (restoredItem as any).dataItemId ||
                 (restoredItem as any).dataitemId ||
@@ -235,7 +248,7 @@ export default function AnnotationPage() {
           }
         } else {
           // Normal first-time load
-          loadFromSession(items[currentIndex])
+          loadFromSession(flattenedItems[currentIndex])
         }
       } catch (err) {
         console.error('Failed to load annotation data:', err)
