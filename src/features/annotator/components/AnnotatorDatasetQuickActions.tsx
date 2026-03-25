@@ -35,7 +35,7 @@ export const AnnotatorDatasetQuickActions: React.FC = () => {
 
         <Button
           className="w-full h-12 flex items-center justify-between bg-[#231e31] border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 hover:bg-[#2d2640]"
-          onClick={() => navigate(PATH_ANNOTATOR.project)}
+          onClick={() => navigate(PATH_ANNOTATOR.projects)}
         >
           <div className="flex items-center">
             <FolderOpenOutlined className="mr-3 text-lg text-amber-400" />

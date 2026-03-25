@@ -44,9 +44,10 @@ export function Header() {
   ]
 
   const getAvatarUrl = (avatarPath: string | undefined | null) => {
-    if (!avatarPath) return 'https://cdn-icons-png.flaticon.com/512/9408/9408175.png'
-    if (avatarPath.startsWith('http')) return avatarPath
-    const cleanPath = avatarPath.startsWith('/') ? avatarPath.substring(1) : avatarPath
+    const finalPath = avatarPath || user?.coverImage
+    if (!finalPath) return 'https://cdn-icons-png.flaticon.com/512/9408/9408175.png'
+    if (finalPath.startsWith('http')) return finalPath
+    const cleanPath = finalPath.startsWith('/') ? finalPath.substring(1) : finalPath
     return `${API_BASE_URL}/${cleanPath}`
   }
 
@@ -80,7 +81,7 @@ export function Header() {
               <div className="relative group cursor-pointer p-[2px] rounded-full transition-transform active:scale-95 duration-200">
                 <div className="relative z-[2] w-10 h-10 rounded-full overflow-hidden flex items-center justify-center">
                   <img
-                    src={getAvatarUrl(user?.coverImage || user?.avatar)}
+                    src={getAvatarUrl(user?.avatar || user?.coverImage)}
                     alt="Avatar"
                     className="w-full h-full object-cover border border-gray-600 rounded-full"
                   />

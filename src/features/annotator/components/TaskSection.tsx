@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
 import TaskCard from './TaskCard'
-import taskApi from '@/api/TaskApi'
 
 /** Groups tasks by their batchLabel */
 export interface Task {
@@ -31,43 +30,36 @@ export default function TasksSection({
   assignmentId
 }: TasksSectionProps) {
   const [tasks, setTasks] = useState<Task[]>(initialTasks)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 6
 
   useEffect(() => {
-    const fetchTasks = async () => {
-      if (!assignmentId) return
+    // Sync tasks when parent passes new tasks (such as from Annotated Dashboard API)
+    const mappedTasks: Task[] = initialTasks.map((t: any, idx: number) => {
+      let status = String(t.task_status || t.taskStatus || t.status || 'PENDING').toUpperCase()
+      if (status === 'NOT_STARTED') status = 'PENDING'
 
-      try {
-        setLoading(true)
-        setError(null)
-        const response = await taskApi.getTasksByAssignmentId(assignmentId)
-        const rawData = response.data?.data || response.data || []
+      const completedItems = Number(
+        t.completedItems ?? t.completed_items ?? t.completedCount ?? t.completed_count ?? 0
+      )
+      const totalItems = Number(
+        t.totalItems ?? t.total_items ?? t.itemsCount ?? t.totalCount ?? 0
+      )
 
-        if (Array.isArray(rawData)) {
-          const mappedTasks: Task[] = (rawData as Record<string, unknown>[]).map((t) => ({
-            ...t,
-            id: String(t.taskId || t.id || ''),
-            name: String(t.taskName || t.name || ''),
-            batchLabel: String(t.batchLabel || t.taskType || 'Unbatched'),
-            taskStatus: String(t.task_status || t.taskStatus || t.status || 'PENDING')
-          }))
-          setTasks(mappedTasks)
-        }
-      } catch (err) {
-        console.error('Failed to fetch tasks:', err)
-        setError('Failed to load tasks from server.')
-      } finally {
-        setLoading(false)
+      return {
+        ...t,
+        id: String(t.taskId || t.id || t.dataItemId || t.dataitemId || `task-${idx}`),
+        name: String(t.taskName || t.name || t.filename || `Task ${idx + 1}`),
+        batchLabel: String(t.batchLabel || t.taskType || 'Unbatched'),
+        taskStatus: status,
+        completedItems,
+        totalItems
       }
-    }
-
-    fetchTasks()
-  }, [assignmentId])
+    })
+    setTasks(mappedTasks)
+  }, [initialTasks])
 
   // 1. Filter tasks based on search and status
   const filteredTasks = useMemo(() => {
@@ -116,31 +108,19 @@ export default function TasksSection({
     }, {})
   }, [paginatedTasks])
 
+  if (!tasks || tasks.length === 0) {
+    return (
+      <div className="w-full py-10 text-center glass-panel rounded-2xl border border-gray-500/10">
+        <span className="material-symbols-outlined text-gray-500 text-4xl mb-4">folder_open</span>
+        <h3 className="text-xl font-bold text-gray-400 font-space mb-2">No Tasks Found</h3>
+        <p className="text-sm text-gray-500 max-w-md mx-auto">
+          There are currently no tasks available for this assignment.
+        </p>
+      </div>
+    )
+  }
+
   const availableStatuses = ['ALL', 'PENDING', 'IN_PROGRESS', 'COMPLETED']
-
-  if (loading && tasks.length === 0) {
-    return (
-      <div className="w-full h-64 flex flex-col justify-center items-center gap-4">
-        <div className="w-10 h-10 border-4 border-violet-500/20 border-t-violet-500 rounded-full animate-spin"></div>
-        <span className="text-gray-400 text-sm font-mono animate-pulse">Fetching tasks...</span>
-      </div>
-    )
-  }
-
-  if (error && tasks.length === 0) {
-    return (
-      <div className="w-full py-10 text-center glass-panel rounded-2xl border border-red-500/10">
-        <span className="material-symbols-outlined text-red-400 text-4xl mb-4">error</span>
-        <p className="text-red-400 text-sm">{error}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="mt-4 text-violet-400 text-xs font-bold hover:underline"
-        >
-          Try Reloading
-        </button>
-      </div>
-    )
-  }
 
   return (
     <div className="w-full flex flex-col h-full">
@@ -158,7 +138,6 @@ export default function TasksSection({
               <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">
                 {filteredTasks.length} of {tasks.length} tasks matched
               </span>
-              {loading && <div className="w-2 h-2 rounded-full bg-violet-500 animate-pulse"></div>}
             </div>
           </div>
         </div>
@@ -175,11 +154,10 @@ export default function TasksSection({
                 }}
                 className={`
                                     px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap
-                                    ${
-                                      statusFilter === status
-                                        ? 'bg-violet-600 text-white shadow-lg shadow-violet-900/20'
-                                        : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
-                                    }
+                                    ${statusFilter === status
+                    ? 'bg-violet-600 text-white shadow-lg shadow-violet-900/20'
+                    : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
+                  }
                                 `}
               >
                 {status.replace('_', ' ')}
@@ -242,9 +220,9 @@ export default function TasksSection({
 
               {/* Grid space */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {batchTasks.map((task) => (
+                {batchTasks.map((task, idx) => (
                   <TaskCard
-                    key={`${batchLabel}-${task.id}`}
+                    key={`${batchLabel}-${task.id}-${idx}`}
                     task={task}
                     assignmentId={assignmentId}
                   />

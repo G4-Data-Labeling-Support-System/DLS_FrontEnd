@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Form, Input, Select, DatePicker, Button, Avatar, App } from 'antd'
+import { SearchOutlined } from '@ant-design/icons'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
 import { userApi } from '@/api/userApi'
 import datasetApi from '@/api/DatasetApi'
@@ -134,18 +135,30 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
           })
         )
 
-        // Fetch datasets by project (only when we have a project ID)
+        // Fetch datasets and assignments by project
         const currentPid = initialData?.projectId || effectiveProjectId
         if (currentPid) {
-          const datasetRes = await datasetApi.getDatasetsByProjectId(currentPid)
+          const [datasetRes, asmRes] = await Promise.all([
+            datasetApi.getDatasetsByProjectId(currentPid).catch(() => ({ data: { data: [] } })),
+            assignmentApi.getAssignmentsByProjectId(currentPid).catch(() => ({ data: { data: [] } }))
+          ])
+
+          const asmData = asmRes.data?.data || asmRes.data
+          const asmArray = Array.isArray(asmData) ? asmData : []
+          const assignedDatasetIds = asmArray
+            .map((a: Record<string, unknown>) => String(a.datasetId || (a.dataset as Record<string, unknown>)?.id || (a.dataset as Record<string, unknown>)?.datasetId || ''))
+            .filter(Boolean)
+
           const datasetsData = datasetRes.data?.data || datasetRes.data
           const dsArray = Array.isArray(datasetsData) ? datasetsData : []
+          
           setDatasets(
             dsArray.filter((d: Record<string, unknown>) => {
               const status = String(
                 d.datasetStatus || d.status || d.dataset_status || ''
               ).toUpperCase()
-              return status === 'ACTIVE'
+              const dsId = String(d.datasetId || d.id || '')
+              return status === 'ACTIVE' && !assignedDatasetIds.includes(dsId)
             })
           )
         } else {
@@ -159,7 +172,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
       }
     }
     fetchData()
-  }, [open, effectiveProjectId, message, initialData])
+  }, [open, effectiveProjectId, message, initialData, isEditMode])
 
   // Set form fields when modal opens or initialData changes
   useEffect(() => {
@@ -213,7 +226,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
       // Check if project is inactive
       if (resolvedProjectId) {
         const selectedProject = projects.find(
-          (p) => String(p.projectId) === String(resolvedProjectId)
+          (p: NormalizedProject) => String(p.projectId) === String(resolvedProjectId)
         )
         if (
           selectedProject &&
@@ -228,7 +241,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
       // Check if dataset is inactive (ensure only active datasets can be selected)
       if (values.datasetId) {
         const selectedDataset = datasets.find(
-          (d) => String(d.datasetId || d.id) === String(values.datasetId)
+          (d: Record<string, unknown>) => String(d.datasetId || d.id) === String(values.datasetId)
         )
         if (selectedDataset) {
           const dsStatus = String(
@@ -265,6 +278,16 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
           completedItems: initialData.completedItems
         }
         await assignmentApi.updateAssignment(initialData.assignmentId, updatePayload)
+
+        // If datasetId changed, also call the specific change-dataset API
+        if (values.datasetId && values.datasetId !== initialData.datasetId) {
+          try {
+            await assignmentApi.changeAssignmentDataset(initialData.assignmentId, values.datasetId)
+          } catch (e) {
+            console.warn('Dataset change specific API failed, but main update succeeded:', e)
+          }
+        }
+
         message.success('Assignment updated successfully!')
       } else {
         const createPayload = {
@@ -328,13 +351,34 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
     form.setFieldsValue({ datasetId: undefined })
     // Fetch datasets for the newly selected project
     try {
-      const datasetRes = await datasetApi.getDatasetsByProjectId(value)
+      const [datasetRes, assignmentRes] = await Promise.all([
+        datasetApi.getDatasetsByProjectId(value),
+        assignmentApi.getAssignmentsByProjectId(value)
+      ])
+      
+      const assignmentsData = assignmentRes.data?.data || assignmentRes.data || []
+      const assignmentsArray = Array.isArray(assignmentsData) ? assignmentsData : []
+      
+      const usedDatasetIds = new Set(
+        assignmentsArray
+          .filter((a: Record<string, unknown>) => {
+            const status = String(a.assignmentStatus || a.status || '').toUpperCase()
+            if (status === 'INACTIVE' || status === 'CANCELLED' || status === 'ARCHIVED') return false
+            if (isEditMode && initialData && (String(a.assignmentId || a.id) === String(initialData.assignmentId || initialData.id))) {
+              return false
+            }
+            return true
+          })
+          .map((a: Record<string, unknown>) => String(a.datasetId || a.dataset_id || ''))
+      )
+
       const datasetsData = datasetRes.data?.data || datasetRes.data
       const dsArray = Array.isArray(datasetsData) ? datasetsData : []
       setDatasets(
         dsArray.filter((d: Record<string, unknown>) => {
           const status = String(d.datasetStatus || d.status || d.dataset_status || '').toUpperCase()
-          return status === 'ACTIVE'
+          const dsId = String(d.datasetId || d.id || '')
+          return status === 'ACTIVE' && !usedDatasetIds.has(dsId)
         })
       )
     } catch (error) {
@@ -483,6 +527,8 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
               showSearch
               optionFilterProp="children"
               disabled={!effectiveProjectId}
+              suffixIcon={<SearchOutlined className="text-white/30" />}
+              className="dataset-select-premium"
             >
               {datasets.map((d: Record<string, unknown>) => (
                 <Select.Option
@@ -525,6 +571,44 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
           </div>
         </Form>
       </div>
+
+      <style>{`
+        .dataset-select-premium .ant-select-selector {
+          background: rgba(255, 255, 255, 0.03) !important;
+          border-color: rgba(255, 255, 255, 0.1) !important;
+          border-radius: 12px !important;
+          height: 42px !important;
+          display: flex !important;
+          align-items: center !important;
+        }
+        .dataset-select-premium .ant-select-selection-placeholder {
+          color: rgba(255, 255, 255, 0.3) !important;
+        }
+        .dataset-select-premium .ant-select-selection-item {
+          color: white !important;
+        }
+        .ant-select-dropdown {
+          background: #1a1a1e !important;
+          border: 1px solid rgba(255, 255, 255, 0.08) !important;
+          border-radius: 12px !important;
+          padding: 4px !important;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+        }
+        .ant-select-item {
+          color: rgba(255, 255, 255, 0.7) !important;
+          border-radius: 8px !important;
+          margin: 2px 0 !important;
+          transition: all 0.2s !important;
+        }
+        .ant-select-item-option-selected {
+          background: rgba(139, 92, 246, 0.2) !important;
+          color: white !important;
+        }
+        .ant-select-item-option-active {
+          background: rgba(255, 255, 255, 0.05) !important;
+          color: white !important;
+        }
+      `}</style>
     </GlassModal>
   )
 }

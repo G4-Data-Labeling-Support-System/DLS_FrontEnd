@@ -60,6 +60,7 @@ export const handleUnauthorized = (error?: AxiosError) => {
 
   localStorage.removeItem('accessToken')
   localStorage.removeItem('refreshToken')
+  localStorage.removeItem('user')
 
   // Đồng bộ với Zustand Store
   useAuthStore.getState().logout()

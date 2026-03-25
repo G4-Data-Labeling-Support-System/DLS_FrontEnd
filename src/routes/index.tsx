@@ -7,7 +7,7 @@ import { GuestGuard, RoleGuard } from './guards'
 import { Header } from '@/components/common/Header'
 import { LazyPage } from '@/components/common/LazyPage'
 import { Layout } from 'antd'
-import ReviewerDashboardPage from '@/pages/reviewer/ReviewerDashboardPage'
+// import ReviewerDashboardPage from '@/pages/reviewer/ReviewerDashboardPage'
 
 // Lazy load pages for code splitting
 const ProfilePage = lazy(() => import('@/pages/common/ProfilePage'))
@@ -16,7 +16,7 @@ const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
 const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage'))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 const ManagerDashboardPage = lazy(() => import('@/pages/manager/ManagerDashboardPage'))
-const DatasetManagementPage = lazy(() => import('@/pages/manager/DatasetManagementPage'))
+const ManageProjectThingsPage = lazy(() => import('@/pages/manager/ManageProjectThingsPage'))
 const DatasetDetailPage = lazy(() => import('@/pages/manager/DatasetDetailPage'))
 
 // Admin pages
@@ -28,7 +28,11 @@ const SystemSettings = lazy(() => import('@/pages/admin/SystemSettingsPage'))
 
 // Annotator pages
 const AnnotatorLayout = lazy(() => import('@/components/layout/AnnotatorLayout'))
-const AnnotatorDashboardPage = lazy(() => import('@/pages/annotator/AnnotatorDashboardPage'))
+const AnnotatorAllProjectsPage = lazy(() => import('@/pages/annotator/AnnotatorAllProjectsPage'))
+const AnnotatorProjectDetailPage = lazy(() => import('@/pages/annotator/AnnotatorProjectDetailPage'))
+const AnnotatorProjectAssignmentsPage = lazy(() => import('@/pages/annotator/AnnotatorProjectAssignmentsPage'))
+const AnnotatorProjectDatasetsPage = lazy(() => import('@/pages/annotator/AnnotatorProjectDatasetsPage'))
+const AnnotatorAssignmentDetailPage = lazy(() => import('@/pages/annotator/AnnotatorAssignmentDetailPage'))
 const AnnotatorDatasetDetailPage = lazy(
   () => import('@/pages/annotator/AnnotatorDatasetDetailPage')
 )
@@ -37,6 +41,14 @@ const AnnotationPage = lazy(() => import('@/pages/annotator/AnnotationPage'))
 
 // Reviewer pages
 const ReviewerLayout = lazy(() => import('@/components/layout/ReviewerLayout'))
+const ReviewerAllProjectsPage = lazy(() => import('@/pages/reviewer/ReviewerAllProjectsPage'))
+const ReviewerProjectDetailPage = lazy(() => import('@/pages/reviewer/ReviewerProjectDetailPage'))
+const ReviewerProjectAssignmentsPage = lazy(
+  () => import('@/pages/reviewer/ReviewerProjectAssignmentsPage')
+)
+const ReviewerAssignmentDetailPage = lazy(
+  () => import('@/pages/reviewer/ReviewerAssignmentDetailPage')
+)
 const ReviewerWorkspacePage = lazy(() => import('@/pages/reviewer/ReviewerWorkspacePage'))
 const ReviewerTaskDetailPage = lazy(() => import('@/pages/reviewer/TaskDetailPage'))
 const ReviewerAnnotationPage = lazy(() => import('@/pages/reviewer/AnnotationPage'))
@@ -138,10 +150,10 @@ export const router = createBrowserRouter([
         )
       },
       {
-        path: PATH_MANAGER.datasetManagement,
+        path: PATH_MANAGER.manageProjectThings,
         element: (
           <LazyPage>
-            <DatasetManagementPage />
+            <ManageProjectThingsPage />
           </LazyPage>
         )
       },
@@ -169,37 +181,45 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Navigate to={PATH_ANNOTATOR.project} replace />
+        element: <Navigate to={PATH_ANNOTATOR.projects} replace />
       },
       {
-        path: PATH_ANNOTATOR.project,
+        path: 'projects',
         element: (
           <LazyPage>
-            <AnnotatorDashboardPage />
+            <AnnotatorAllProjectsPage />
           </LazyPage>
         )
       },
       {
-        path: `${PATH_ANNOTATOR.project}/:assignmentId`,
+        path: 'projects/:projectId',
         element: (
           <LazyPage>
-            <AnnotatorDashboardPage />
+            <AnnotatorProjectDetailPage />
           </LazyPage>
         )
       },
       {
-        path: PATH_ANNOTATOR.assignment,
+        path: 'projects/:projectId/assignments',
         element: (
           <LazyPage>
-            <AnnotatorDashboardPage />
+            <AnnotatorProjectAssignmentsPage />
           </LazyPage>
         )
       },
       {
-        path: `${PATH_ANNOTATOR.assignment}/:assignmentId`,
+        path: 'projects/:projectId/datasets',
         element: (
           <LazyPage>
-            <AnnotatorDashboardPage />
+            <AnnotatorProjectDatasetsPage />
+          </LazyPage>
+        )
+      },
+      {
+        path: 'projects/:projectId/assignments/:assignmentId',
+        element: (
+          <LazyPage>
+            <AnnotatorAssignmentDetailPage />
           </LazyPage>
         )
       },
@@ -243,45 +263,37 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Navigate to="/reviewer/review" replace />
+        element: <Navigate to="/reviewer/projects" replace />
       },
       {
-        path: 'review',
+        path: 'projects',
         element: (
           <LazyPage>
-            <ReviewerDashboardPage />
+            <ReviewerAllProjectsPage />
           </LazyPage>
         )
       },
       {
-        path: 'project',
+        path: 'projects/:projectId',
         element: (
           <LazyPage>
-            <ReviewerDashboardPage />
+            <ReviewerProjectDetailPage />
           </LazyPage>
         )
       },
       {
-        path: 'project/:assignmentId',
+        path: 'projects/:projectId/assignments',
         element: (
           <LazyPage>
-            <ReviewerDashboardPage />
+            <ReviewerProjectAssignmentsPage />
           </LazyPage>
         )
       },
       {
-        path: 'assignment',
+        path: 'projects/:projectId/assignments/:assignmentId',
         element: (
           <LazyPage>
-            <ReviewerDashboardPage />
-          </LazyPage>
-        )
-      },
-      {
-        path: 'assignment/:assignmentId',
-        element: (
-          <LazyPage>
-            <ReviewerDashboardPage />
+            <ReviewerAssignmentDetailPage />
           </LazyPage>
         )
       },

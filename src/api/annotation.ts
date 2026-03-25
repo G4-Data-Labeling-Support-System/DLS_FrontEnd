@@ -30,6 +30,24 @@ const annotationApi = {
       console.error('Failed to fetch annotation by id', error)
       throw error
     }
+  },
+  getAnnotationByDataItemId(dataItemId: string) {
+    try {
+      const url = ENDPOINTS.ANNOTATIONS.BY_DATAITEM(dataItemId)
+      return axiosClient.get(url)
+    } catch (error) {
+      console.error('Failed to fetch annotation by dataItemId', error)
+      throw error
+    }
+  },
+  submitSingleAnnotation(payload: any) {
+    try {
+      const url = ENDPOINTS.ANNOTATIONS.SUBMIT_SINGLE
+      return axiosClient.put(url, payload)
+    } catch (error) {
+      console.error('Failed to submit single annotation', error)
+      throw error
+    }
   }
 }
 

@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react'
-import { Typography, Spin, Empty, App, Input, Space } from 'antd'
+import React, { useState } from 'react'
+import { Typography, Spin, Empty, Input, Space } from 'antd'
 import { SearchOutlined } from '@ant-design/icons'
-import labelApiClient, { type GetLabelsParams } from '@/api/LabelApi'
 import { LabelCard } from '@/features/manager/components/dashboard/LabelCard'
+import { useLabelsByDataset } from '@/features/manager/hooks/useLabels'
 
 const { Title } = Typography
 
@@ -11,49 +11,9 @@ interface AnnotatorLabelListProps {
 }
 
 export const AnnotatorLabelList: React.FC<AnnotatorLabelListProps> = ({ datasetId }) => {
-  const { message } = App.useApp()
-  const [labels, setLabels] = useState<GetLabelsParams[]>([])
-  const [loading, setLoading] = useState<boolean>(true)
+  const { data: labels = [], isLoading: loading } = useLabelsByDataset(datasetId)
   const [searchText, setSearchText] = useState<string>('')
 
-  useEffect(() => {
-    const fetchLabels = async () => {
-      try {
-        setLoading(true)
-        const response = await labelApiClient.getLabels()
-        const data = response.data?.data || response.data?.content || response.data || []
-
-        if (Array.isArray(data)) {
-          const mappedLabels: GetLabelsParams[] = (data as Record<string, unknown>[]).map((l) => ({
-            labelId: String(l.labelId || l.id),
-            labelName: String(l.labelName || l.name),
-            color: String(l.color),
-            description: String(l.description || ''),
-            createdAt: String(l.createdAt || '')
-          }))
-          setLabels(mappedLabels)
-        }
-      } catch (error: unknown) {
-        console.error('Failed to load labels.', error)
-        // Only show error if it's not a 403 (avoid double logout msg)
-        if (
-          error &&
-          typeof error === 'object' &&
-          'response' in error &&
-          (error as { response: { status: number } }).response.status !== 403
-        ) {
-          message.error('Failed to load labels.')
-        }
-        // If 403, we just show empty or a notice
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    if (datasetId) {
-      fetchLabels()
-    }
-  }, [datasetId, message])
 
   const filteredLabels = labels.filter(
     (label) => !searchText || label.labelName?.toLowerCase().includes(searchText.toLowerCase())

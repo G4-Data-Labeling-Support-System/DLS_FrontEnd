@@ -27,7 +27,8 @@ export const ENDPOINTS = {
     CREATE: '/projects',
     DELETE: (id: string) => `/projects/${id}/remove`,
     STATUS: (id: string) => `/projects/${id}/status`,
-    MEMBERS: (id: string) => `/projects/${id}/members`
+    MEMBERS: (id: string) => `/projects/${id}/members`,
+    BY_DATASET: (datasetId: string) => `/projects/datasets/${datasetId}`
   },
 
   DATASETS: {
@@ -53,12 +54,16 @@ export const ENDPOINTS = {
     DELETE: (id: string) => `/assignments/remove/${id}`,
     CREATE_BY_PROJECT: (projectId: string) => `/assignments/projects/${projectId}`,
     LABELS: (assignmentId: string) => `/assignments/${assignmentId}/labels`,
-    DATASET: (assignmentId: string) => `/assignments/${assignmentId}/dataset`
+    DATASET: (assignmentId: string) => `/assignments/${assignmentId}/dataset`,
+    CHANGE_DATASET: (assignmentId: string) =>
+      `/assignments/change-dataset/assignment/${assignmentId}`
   },
 
   ANNOTATIONS: {
     LIST: '/annotations',
-    DETAIL: (id: string) => `/annotations/${id}`
+    DETAIL: (id: string) => `/annotations/${id}`,
+    BY_DATAITEM: (dataItemId: string) => `/annotations/dataitem/${dataItemId}`,
+    SUBMIT_SINGLE: '/annotations/submit'
   },
 
   GUIDELINES: {
@@ -78,11 +83,9 @@ export const ENDPOINTS = {
     BY_DATASET: (datasetId: string) => `/datasets/${datasetId}/labels`
   },
 
-  REVIEWER: {
-    STATS: '/reviewer/stats',
-    PROJECT_ITEMS: (projectId: string) => `/reviewer/projects/${projectId}/items`,
-    ITEM_DETAIL: (itemId: string) => `/reviewer/items/${itemId}`,
-    REVIEW_DECISION: (itemId: string) => `/reviewer/items/${itemId}/review`
+  REVIEWS: {
+    UPDATE: '/reviews/update',
+    BY_ANNOTATION: (annotationId: string) => `/reviews/annotation/${annotationId}`
   },
 
   DATAITEMS: {

@@ -165,7 +165,15 @@ export default function AnnotatorDatasetCard({
               {paginatedDatasets.map((dataset) => (
                 <div
                   key={dataset.datasetId}
-                  className={`flex flex-col rounded-xl border ${themeClasses.borders.violet10} bg-white/5 hover:bg-white/10 transition-all duration-300 group ${expandedDatasetId === dataset.datasetId ? 'ring-1 ring-blue-500/30 bg-white/[0.07]' : ''}`}
+                  onClick={() => {
+                    const targetProjectId = projectId || dataset.project?.projectId || 'unknown'
+                    navigate(
+                      PATH_ANNOTATOR.datasetDetail
+                        .replace(':projectId', targetProjectId)
+                        .replace(':datasetId', dataset.datasetId)
+                    )
+                  }}
+                  className={`flex flex-col rounded-xl border ${themeClasses.borders.violet10} bg-white/5 hover:bg-white/10 transition-all duration-300 group cursor-pointer ${expandedDatasetId === dataset.datasetId ? 'ring-1 ring-blue-500/30 bg-white/[0.07]' : ''}`}
                 >
                   <div className="p-4">
                     <div className="flex justify-between items-start mb-2">
@@ -180,21 +188,10 @@ export default function AnnotatorDatasetCard({
                     </p>
 
                     <div className="flex justify-end mb-3">
-                      <button
-                        onClick={() => {
-                          const targetProjectId =
-                            projectId || dataset.project?.projectId || 'unknown'
-                          navigate(
-                            PATH_ANNOTATOR.datasetDetail
-                              .replace(':projectId', targetProjectId)
-                              .replace(':datasetId', dataset.datasetId)
-                          )
-                        }}
-                        className="px-3 py-1 bg-violet-600 hover:bg-violet-700 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 shadow-lg shadow-violet-500/20"
-                      >
+                      <div className="px-3 py-1 bg-violet-600 group-hover:bg-violet-700 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 shadow-lg shadow-violet-500/20">
                         <span>View Detail</span>
                         <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
-                      </button>
+                      </div>
                     </div>
 
                     <div className="flex items-center justify-between mt-auto pt-3 border-t border-white/5">
@@ -208,7 +205,10 @@ export default function AnnotatorDatasetCard({
                           </span>
                         </div>
                         <button
-                          onClick={() => toggleExpand(dataset.datasetId)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            toggleExpand(dataset.datasetId)
+                          }}
                           className={`flex items-center gap-1 text-[11px] font-bold transition-colors ${expandedDatasetId === dataset.datasetId ? 'text-blue-400' : 'text-gray-500 hover:text-blue-400'}`}
                         >
                           <span className="material-symbols-outlined text-[16px]">

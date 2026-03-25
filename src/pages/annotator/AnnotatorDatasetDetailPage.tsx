@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import datasetApi from '@/api/DatasetApi'
 import { labelApi } from '@/api/LabelApi'
 import { themeClasses } from '@/styles'
-import { PATH_ANNOTATOR } from '@/routes/paths'
+import { Pagination } from 'antd'
 
 interface Dataset {
   datasetId: string
@@ -37,14 +37,20 @@ interface Label {
 }
 
 export default function AnnotatorDatasetDetailPage() {
-  const { projectId, datasetId } = useParams<{ projectId: string; datasetId: string }>()
+  const { projectId, datasetId: paramDatasetId } = useParams<{ projectId: string; datasetId: string }>()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // Support both param and search param
+  const datasetId = paramDatasetId || searchParams.get('datasetId')
 
   const [dataset, setDataset] = useState<Dataset | null>(null)
   const [items, setItems] = useState<DatasetItem[]>([])
   const [labels, setLabels] = useState<Label[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 5
 
   useEffect(() => {
     const fetchDatasetData = async () => {
@@ -93,14 +99,29 @@ export default function AnnotatorDatasetDetailPage() {
     fetchDatasetData()
   }, [datasetId, projectId])
 
+  // Pagination calculations
+  const paginatedItems = items.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A'
     return new Date(dateString).toLocaleDateString('vi-VN')
   }
 
+  const handleBack = () => {
+    if (searchParams.get('datasetId')) {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev)
+        next.delete('datasetId')
+        return next
+      })
+    } else {
+      navigate(`/annotator/projects/${projectId}/datasets`)
+    }
+  }
+
   if (loading) {
     return (
-      <div className="p-6">
+      <div>
         <div className="animate-pulse flex items-center gap-4 mb-8">
           <div className="w-10 h-10 bg-white/10 rounded-xl" />
           <div className="h-8 bg-white/10 rounded w-1/4" />
@@ -112,14 +133,14 @@ export default function AnnotatorDatasetDetailPage() {
 
   if (error || !dataset) {
     return (
-      <div className="p-6">
+      <div>
         <div className="glass-panel border border-red-500/20 bg-red-500/5 rounded-2xl p-6 text-center">
           <p className="text-red-400">{error || 'Dataset not found'}</p>
           <button
-            onClick={() => navigate(PATH_ANNOTATOR.project)}
+            onClick={handleBack}
             className="mt-4 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white text-sm transition-colors"
           >
-            Back to Dashboard
+            Back to Datasets
           </button>
         </div>
       </div>
@@ -127,20 +148,13 @@ export default function AnnotatorDatasetDetailPage() {
   }
 
   return (
-    <div className="p-6 max-w-[1600px] mx-auto relative overflow-hidden min-h-[calc(100vh-80px)]">
+    <div className="relative overflow-hidden min-h-[600px]">
       {/* Background Glow */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-violet-600/10 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none" />
 
-      {/* Header & Breadcrumb */}
+      {/* Header & Breadcrumb removed as requested */}
       <div className="mb-8 relative z-10">
-        <button
-          onClick={() => navigate(PATH_ANNOTATOR.project)}
-          className="mb-4 px-3 py-1.5 flex items-center gap-2 text-sm text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors w-fit border border-white/10"
-        >
-          <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-          Back to Dashboard
-        </button>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
@@ -155,86 +169,100 @@ export default function AnnotatorDatasetDetailPage() {
         </div>
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
-        <div className="flex flex-col gap-6">
-          {/* Info Panel */}
-          <div
-            className={`glass-panel border ${themeClasses.borders.violet10} rounded-2xl p-6 h-fit shadow-xl`}
-          >
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+      {/* Main Content Layout */}
+      <div className="flex flex-col gap-6 relative z-10">
+
+        {/* Top Row: Main Info (2 columns) */}
+        <div className={`glass-panel border ${themeClasses.borders.violet10} rounded-2xl overflow-hidden shadow-xl flex flex-col md:flex-row items-stretch`}>
+          {/* Left: Information */}
+          <div className="flex-1 p-7 border-b md:border-b-0 md:border-r border-white/10 relative">
+            <div className="absolute -top-10 -left-10 w-40 h-40 rounded-full bg-violet-500/5 blur-[50px] pointer-events-none" />
+            <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px] text-violet-400">info</span>
-              Information
+              Dataset Information
             </h3>
-            <div className="space-y-4">
-              <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-                <label className="text-xs text-gray-500 font-mono uppercase tracking-wider block mb-1">
-                  Project
-                </label>
-                <p className="text-sm text-gray-200 font-medium">
-                  {dataset.project?.projectName || 'No Project Assigned'}
-                </p>
+            <div className="space-y-5">
+              <div className="flex justify-between items-center py-2 border-b border-white/5">
+                <label className="text-xs text-gray-500 font-mono uppercase tracking-wider">Dataset ID</label>
+                <span className="text-xs font-mono text-violet-300 bg-violet-500/10 px-2.5 py-1 rounded border border-violet-500/20">
+                  {dataset.datasetId}
+                </span>
               </div>
-              <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-                <label className="text-xs text-gray-500 font-mono uppercase tracking-wider block mb-1">
-                  Description
-                </label>
-                <p className="text-sm text-gray-300 leading-relaxed">
-                  {dataset.description || 'No description provided.'}
-                </p>
+              <div className="flex justify-between items-center py-2 border-b border-white/5">
+                <label className="text-xs text-gray-500 font-mono uppercase tracking-wider">Total Items</label>
+                <span className="text-sm text-gray-200 font-bold">{(dataset.totalItems || items.length).toLocaleString()}</span>
               </div>
-              <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                <div className="flex-1 bg-black/20 p-3 rounded-lg border border-white/5">
-                  <label className="text-[10px] text-gray-500 font-mono uppercase tracking-wider block mb-1">
-                    Total Items
-                  </label>
-                  <p className="text-lg text-white font-bold">
-                    {dataset.totalItems || items.length}
-                  </p>
-                </div>
-                <div className="flex-1 bg-black/20 p-3 rounded-lg border border-white/5">
-                  <label className="text-[10px] text-gray-500 font-mono uppercase tracking-wider block mb-1">
-                    Created At
-                  </label>
-                  <p className="text-sm text-gray-300 font-medium mt-1">
-                    {formatDate(dataset.createdAt)}
-                  </p>
+              <div className="flex justify-between items-center py-2 border-b border-white/5">
+                <label className="text-xs text-gray-500 font-mono uppercase tracking-wider">Created At</label>
+                <span className="text-sm text-gray-300">{formatDate(dataset.createdAt)}</span>
+              </div>
+              <div className="flex justify-between items-center py-2">
+                <label className="text-xs text-gray-500 font-mono uppercase tracking-wider">Status</label>
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold text-emerald-400 uppercase tracking-widest">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Active
                 </div>
               </div>
             </div>
           </div>
 
+          {/* Right: Description */}
+          <div className="flex-1 p-7 flex flex-col relative overflow-hidden">
+            <div className="absolute -bottom-10 -right-10 w-40 h-40 rounded-full bg-fuchsia-500/5 blur-[50px] pointer-events-none" />
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px] text-fuchsia-400">description</span>
+              Description
+            </h3>
+            <div className="flex-1 bg-black/20 p-5 rounded-2xl border border-white/5 min-h-[120px]">
+              <p className="text-sm text-gray-300 leading-relaxed italic">
+                {dataset.description || 'No description provided for this dataset.'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Middle Row: Project & Labels (2 columns) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+          {/* Associated Project */}
+          <div className={`glass-panel border ${themeClasses.borders.violet10} rounded-2xl p-6 shadow-xl`}>
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px] text-blue-400">folder_special</span>
+              Associated Project
+            </h3>
+            <div
+              className="bg-black/20 p-5 rounded-xl border border-white/10 hover:border-blue-500/50 hover:bg-black/30 transition-all cursor-pointer group"
+              onClick={() => navigate(`/annotator/projects/${projectId}`)}
+            >
+              <h4 className="text-white font-bold group-hover:text-blue-400 transition-colors">
+                {dataset.project?.projectName || 'No Project Assigned'}
+              </h4>
+              <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                <span className="material-symbols-outlined text-[12px]">visibility</span>
+                Click to view project details
+              </p>
+            </div>
+          </div>
+
           {/* Labels Section */}
-          <div
-            className={`glass-panel border ${themeClasses.borders.violet10} rounded-2xl p-6 shadow-xl h-fit`}
-          >
+          <div className={`glass-panel border ${themeClasses.borders.violet10} rounded-2xl p-6 shadow-xl`}>
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px] text-emerald-400">label</span>
               Dataset Labels
             </h3>
-            <div className="space-y-3">
+            <div className="flex flex-wrap gap-2 max-h-[140px] overflow-y-auto pr-2 custom-scrollbar">
               {labels.length === 0 ? (
-                <p className="text-gray-500 text-sm italic py-2">
-                  No labels defined for this dataset.
-                </p>
+                <p className="text-gray-500 text-sm italic py-2">No labels defined.</p>
               ) : (
                 labels.map((label) => (
                   <div
                     key={label.labelId}
-                    className="flex items-center gap-3 bg-black/20 p-3 rounded-lg border border-white/5 group hover:border-white/10 transition-colors"
+                    className="flex items-center gap-2.5 bg-black/20 px-3 py-2 rounded-lg border border-white/5 hover:border-white/10 transition-colors"
                   >
                     <div
-                      className="w-3 h-3 rounded-full shadow-sm"
+                      className="w-2.5 h-2.5 rounded-full shadow-sm"
                       style={{ backgroundColor: label.color || '#6366f1' }}
                     />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-200 font-medium truncate">
-                        {label.labelName}
-                      </p>
-                      {label.description && (
-                        <p className="text-[10px] text-gray-500 truncate">{label.description}</p>
-                      )}
-                    </div>
+                    <span className="text-xs text-gray-200 font-medium">{label.labelName}</span>
                   </div>
                 ))
               )}
@@ -242,69 +270,120 @@ export default function AnnotatorDatasetDetailPage() {
           </div>
         </div>
 
-        {/* Items GridPanel */}
+        {/* Bottom Row: Data Items Grid (Full Width) */}
         <div
-          className={`glass-panel border ${themeClasses.borders.violet10} rounded-2xl p-6 md:col-span-2 flex flex-col shadow-xl min-h-[500px]`}
+          className={`glass-panel border ${themeClasses.borders.violet10} rounded-2xl p-7 flex flex-col shadow-xl min-h-[500px]`}
         >
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px] text-blue-400">grid_view</span>
+          <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/5">
+            <h3 className="text-xl font-bold text-white flex items-center gap-3">
+              <span className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                <span className="material-symbols-outlined text-[20px] text-blue-400">grid_view</span>
+              </span>
               Data Items
             </h3>
-            <span className="text-xs font-mono bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20 text-blue-400 font-medium">
+            <span className="text-xs font-mono bg-blue-500/10 px-4 py-1.5 rounded-full border border-blue-500/20 text-blue-400 font-medium tracking-tight">
               {items.length} items loaded
             </span>
           </div>
 
           {items.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center py-16 text-center border-2 border-dashed border-white/5 rounded-xl bg-black/20">
-              <span className="material-symbols-outlined text-gray-500 text-5xl mb-4 opacity-30">
+            <div className="flex-1 flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-white/5 rounded-2xl bg-black/10">
+              <span className="material-symbols-outlined text-gray-600 text-6xl mb-4 opacity-10">
                 image_not_supported
               </span>
-              <p className="text-gray-400 text-sm">No data items found in this dataset.</p>
-              <p className="text-gray-500 text-xs mt-2">Upload images via the manager interface.</p>
+              <p className="text-gray-400 text-base font-medium">No data items found</p>
+              <p className="text-gray-600 text-xs mt-2">Images will appear here once uploaded by the manager.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 overflow-y-auto max-h-[600px] pr-2 custom-scrollbar">
-              {items.map((item) => (
-                <div
-                  key={item.itemId || item.id}
-                  className="relative group rounded-xl overflow-hidden border border-white/10 bg-black/40 aspect-square flex items-center justify-center cursor-pointer hover:border-blue-500/50 transition-all shadow-lg"
-                >
-                  <div className="absolute inset-0 flex items-center justify-center bg-blue-500/5 group-hover:bg-blue-500/10 transition-colors">
-                    <span className="material-symbols-outlined text-gray-600 text-4xl opacity-20">
-                      image
-                    </span>
-                  </div>
-                  <img
-                    src={
-                      item.previewUrl ||
-                      item.url ||
-                      (item.fileName
-                        ? `https://picsum.photos/seed/${item.itemId}/300/300`
-                        : 'https://picsum.photos/seed/placeholder/300/300')
-                    }
-                    alt={item.fileName || item.name || item.filename}
-                    className="w-full h-full object-cover opacity-70 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end">
-                    <span className="text-xs text-white line-clamp-2 font-medium leading-snug">
-                      {item.fileName || item.name || item.filename}
-                    </span>
-                  </div>
-                  {item.labeled && (
-                    <div className="absolute top-2 right-2 flex items-center gap-1 bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-md">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      Labeled
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5 overflow-y-auto max-h-[800px] pr-2 custom-scrollbar p-1 flex-1">
+                {paginatedItems.map((item) => (
+                  <div
+                    key={item.itemId || item.id}
+                    className="relative group rounded-xl overflow-hidden border border-white/10 bg-black/40 aspect-square flex items-center justify-center cursor-pointer hover:border-blue-500/50 transition-all shadow-lg hover:shadow-blue-500/5"
+                  >
+                    <div className="absolute inset-0 flex items-center justify-center bg-blue-500/5 group-hover:bg-blue-500/10 transition-colors">
+                      <span className="material-symbols-outlined text-gray-700 text-4xl opacity-10">
+                        image
+                      </span>
                     </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                    <img
+                      src={
+                        item.previewUrl ||
+                        item.url ||
+                        (item.fileName
+                          ? `https://picsum.photos/seed/${item.itemId}/300/300`
+                          : 'https://picsum.photos/seed/placeholder/300/300')
+                      }
+                      alt={item.fileName || item.name || item.filename}
+                      className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
+                      loading="lazy"
+                    />
+
+                    {/* Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end">
+                      <span className="text-[11px] text-white line-clamp-2 font-medium leading-snug font-mono">
+                        {item.fileName || item.name || item.filename}
+                      </span>
+                    </div>
+
+                    {/* Badges */}
+                    {item.labeled && (
+                      <div className="absolute top-2 right-2 flex items-center gap-1.5 bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-md backdrop-blur-md shadow-lg shadow-black/20">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        Labeled
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Pagination Controls */}
+              <div className="mt-8 pt-6 border-t border-white/5 flex justify-end">
+                <Pagination
+                  current={currentPage}
+                  pageSize={itemsPerPage}
+                  total={items.length}
+                  onChange={(page) => setCurrentPage(page)}
+                  showSizeChanger={false}
+                  className="custom-pagination"
+                />
+              </div>
+            </>
           )}
         </div>
       </div>
+      <style>{`
+        .custom-pagination .ant-pagination-item {
+          background: rgba(255, 255, 255, 0.05);
+          border-color: rgba(255, 255, 255, 0.1);
+          border-radius: 8px;
+        }
+        .custom-pagination .ant-pagination-item a {
+          color: #9ca3af;
+        }
+        .custom-pagination .ant-pagination-item-active {
+          background: rgba(59, 130, 246, 0.2) !important;
+          border-color: rgba(59, 130, 246, 0.5) !important;
+        }
+        .custom-pagination .ant-pagination-item-active a {
+          color: #60a5fa !important;
+        }
+        .custom-pagination .ant-pagination-prev .ant-pagination-item-link,
+        .custom-pagination .ant-pagination-next .ant-pagination-item-link {
+          background: rgba(255, 255, 255, 0.05) !important;
+          color: #9ca3af !important;
+          border-color: rgba(255, 255, 255, 0.1) !important;
+          border-radius: 8px;
+        }
+        .custom-pagination .ant-pagination-disabled .ant-pagination-item-link {
+          opacity: 0.3;
+        }
+        .custom-pagination .ant-pagination-jump-prev .ant-pagination-item-container .ant-pagination-item-ellipsis,
+        .custom-pagination .ant-pagination-jump-next .ant-pagination-item-container .ant-pagination-item-ellipsis {
+          color: #4b5563;
+        }
+      `}</style>
     </div>
   )
 }

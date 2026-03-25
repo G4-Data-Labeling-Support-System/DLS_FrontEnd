@@ -74,21 +74,39 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
 
         if (isEdit && initialData?.datasetId) {
           setFetchingDetails(true)
+          
+          let resolvedPId = ''
+          let resolvedPName = 'Unknown Project'
+          let resolvedStatus = 'ACTIVE'
+
+          try {
+            const projRes = await projectApi.getProjectByDatasetId(initialData.datasetId)
+            const projectByDataset = projRes.data?.data || projRes.data
+            if (projectByDataset) {
+              resolvedPId = String(projectByDataset.projectId || projectByDataset.id || '')
+              resolvedPName = String(projectByDataset.projectName || projectByDataset.name || 'Current Project')
+              resolvedStatus = String(projectByDataset.projectStatus || projectByDataset.status || 'ACTIVE')
+            }
+          } catch (error) {
+            console.error('Failed to fetch project by dataset ID:', error)
+          }
+
           const res = await datasetApi.getDatasetById(initialData.datasetId)
           const data = res.data?.data || res.data
           if (data) {
-            const pId = String(data.projectId)
+            // Fallback to data.projectId or data.project if the new API failed
+            if (!resolvedPId && data.projectId) {
+               resolvedPId = String(data.projectId)
+               const projectInfo = data.project || {}
+               if (projectInfo.projectName) resolvedPName = String(projectInfo.projectName)
+               if (projectInfo.projectStatus) resolvedStatus = String(projectInfo.projectStatus)
+            }
+
             form.setFieldsValue({
               datasetName: data.datasetName,
               description: data.description,
-              projectId: pId
+              projectId: resolvedPId
             })
-
-            // Resolve current project info
-            const projectInfo = data.project || {}
-            const resolvedPId = String(projectInfo.projectId)
-            const resolvedPName = String(projectInfo.projectName)
-            const resolvedStatus = String(projectInfo.projectStatus)
 
             // If the current project is NOT in the active projects list, add it
             if (resolvedPId && !activeProjects.find((p) => String(p.projectId) === resolvedPId)) {
@@ -228,16 +246,7 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
         return
       }
 
-      // 1. Process deletions if editing
-      if (isEdit && deletedItemIds.length > 0) {
-        await Promise.all(
-          deletedItemIds.map((id) =>
-            datasetApi
-              .deleteItem(id)
-              .catch((err) => console.error(`Delete item ${id} failed:`, err))
-          )
-        )
-      }
+      // 1. Process deletions handled by update API now
 
       // 2. Process new files (compression)
       let filesToUpload = fileList
@@ -280,7 +289,8 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
       const payload = {
         ...values,
         projectId: String(values.projectId || initialData?.projectId || ''), // Ensure correct projectId string
-        files: filesToUpload.length > 0 ? filesToUpload : undefined
+        files: filesToUpload.length > 0 ? filesToUpload : undefined,
+        deleteDataItemId: isEdit && deletedItemIds.length > 0 ? deletedItemIds : undefined
       }
       const res = isEdit
         ? await datasetApi.updateDataset(initialData!.datasetId, payload, progressHandler)

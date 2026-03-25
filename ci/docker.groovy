@@ -16,7 +16,41 @@ def call(config) {
 
     stage('Docker Build') {
         echo "Building Docker image: ${imageTagged}"
-        docker.build("${imageTagged}")
+        
+        def mode = "dev"
+
+        if (env.BRANCH_NAME == "main") {
+            mode = "prod"
+        }
+
+        sh """
+            docker build \
+            --build-arg MODE=${mode} \
+            -t ${imageTagged} .
+        """
+    }
+
+    stage('Trivy Docker Image Scan') {
+            script {
+                def securityLevel = env.BRANCH_NAME == 'main' ? 'HIGH,CRITICAL' : 'CRITICAL'
+
+                sh """
+                    trivy image --no-progress \
+                    --format json \
+                    --severity ${securityLevel} \
+                    --output trivyimage.json \
+                    ${imageTagged} || true
+
+                    trivy image --no-progress \
+                    --format table \
+                    --severity ${securityLevel} \
+                    --output trivyimage.txt \
+                    ${imageTagged}
+
+                    cat trivyimage.txt
+                """
+            }
+            archiveArtifacts artifacts: 'trivyimage.txt,trivyimage.json', allowEmptyArchive: true
     }
 
     stage('Docker Test') {
@@ -27,13 +61,13 @@ def call(config) {
                 docker run -d --name ${containerName} \
                 -p ${config.testPort}:${config.testPort} ${imageTagged}
 
-                echo "Waiting for Spring Boot health check..."
+                echo "Waiting for Nginx to be healthy..."
 
-                ATTEMPTS=40
-                SLEEP=3
+                ATTEMPTS=5
+                SLEEP=2
 
                 for i in \$(seq 1 \$ATTEMPTS); do
-                    if curl -fs http://localhost:${config.testPort}/actuator/health > /dev/null; then
+                    if curl -fs http://localhost:${config.testPort}/ > /dev/null; then
                         echo "App is UP"
                         break
                     fi
@@ -42,7 +76,7 @@ def call(config) {
                     sleep \$SLEEP
                 done
 
-                curl -f http://localhost:${config.testPort}/actuator/health
+                curl -f http://localhost:${config.testPort}/
 
                 docker stop ${containerName}
                 docker rm ${containerName}

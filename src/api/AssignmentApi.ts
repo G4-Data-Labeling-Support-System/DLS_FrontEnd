@@ -3,9 +3,11 @@ import { ENDPOINTS } from './endpoints'
 
 interface GetAssignmentsParams {
   assignmentId?: string
+  id?: string
   projectId?: string
   datasetId?: string
   assignmentName?: string
+  name?: string
   assignedTo?: string
   assignedBy?: string
   reviewerId?: string
@@ -93,7 +95,7 @@ const assignmentApi = {
   deleteAssignment(id: string) {
     try {
       const url = ENDPOINTS.ASSIGNMENTS.DELETE(id)
-      return axiosClient.patch(url)
+      return axiosClient.delete(url)
     } catch (error) {
       console.error('Failed to delete assignment', error)
       throw error
@@ -132,6 +134,15 @@ const assignmentApi = {
       return axiosClient.get(url)
     } catch (error) {
       console.error('Failed to fetch dataset for assignment', error)
+      throw error
+    }
+  },
+  changeAssignmentDataset(assignmentId: string, datasetId: string) {
+    try {
+      const url = ENDPOINTS.ASSIGNMENTS.CHANGE_DATASET(assignmentId)
+      return axiosClient.put(url, { datasetId })
+    } catch (error) {
+      console.error('Failed to change assignment dataset', error)
       throw error
     }
   }

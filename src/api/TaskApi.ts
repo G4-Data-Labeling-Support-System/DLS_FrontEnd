@@ -38,8 +38,11 @@ const taskApi = {
     try {
       const url = ENDPOINTS.TASKS.BY_ASSIGNMENT(assignmentId)
       return axiosClient.get(url)
-    } catch (error) {
-      console.error(`Failed to fetch tasks for assignmentId: ${assignmentId}`, error)
+    } catch (error: any) {
+      console.error(`Failed to fetch tasks for assignmentId: ${assignmentId}`)
+      if (error.response) {
+        console.error('❌ BE Error Detail:', error.response.data)
+      }
       throw error
     }
   },
@@ -48,8 +51,11 @@ const taskApi = {
     try {
       const url = '/annotations/submit'
       return axiosClient.post(url, payload)
-    } catch (error) {
-      console.error(`Failed to submit annotations for taskId: ${payload.taskId}`, error)
+    } catch (error: any) {
+      console.error(`Failed to submit annotations for taskId: ${payload.taskId}`)
+      if (error.response) {
+        console.error('❌ BE Error Detail:', error.response.data)
+      }
       throw error
     }
   }

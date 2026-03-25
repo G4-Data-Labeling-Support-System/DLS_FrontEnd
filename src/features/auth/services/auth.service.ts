@@ -57,6 +57,7 @@ export class AuthService {
         // Merge JWT info with API Profile (API profile is more detailed)
         const finalUser = { ...(jwtUser as User), ...user }
         useAuthStore.getState().setUser(finalUser as User)
+        localStorage.setItem('user', JSON.stringify(finalUser))
         // console.log('Final User from API:', finalUser);
         return finalUser
       } catch (profileErr) {
@@ -68,9 +69,14 @@ export class AuthService {
       }
 
       return { userRole: 'USER' } // Last resort
-    } catch (err) {
-      console.error('Login/Profile Flow Error:', err)
-      return null
+    } catch (err: unknown) {
+      const errorDetail =
+        (err as { response?: { data?: unknown } }).response?.data ||
+        (err as { message?: string }).message ||
+        err
+      console.error('🚨 LOGIN FAILED:', errorDetail)
+      // Ném lỗi ra ngoài kèm message chi tiết từ BE nếu có
+      throw err
     }
   }
 }
