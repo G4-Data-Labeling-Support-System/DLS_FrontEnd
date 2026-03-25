@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { App, Spin, Button, Result, message } from 'antd'
+import { Spin, message, Button, Result } from 'antd'
 import type { AxiosError } from 'axios'
-import { reviewerApi, type ReviewerItem, type ReviewerItemDetail } from '@/api/ReviewerApi'
+import { reviewerApi, type ReviewerItem, type ReviewerItemDetail, type Annotation } from '@/api/ReviewerApi'
 import assignmentApi from '@/api/AssignmentApi'
-import taskApi from '@/api/TaskApi'
+import taskApi, { type Task } from '@/api/TaskApi'
 
 // ⚡ Cache for item details - prevents refetching
 const detailCache = new Map<string, ReviewerItemDetail>()
@@ -21,6 +21,7 @@ const ReviewerWorkspacePage: React.FC = () => {
   const [loadingDetail, setLoadingDetail] = useState(false)
   const [prefetchedIds, setPrefetchedIds] = useState<Set<string>>(new Set())
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // Zoom and Pan States
   const [zoom, setZoom] = useState(1)
@@ -79,7 +80,9 @@ const ReviewerWorkspacePage: React.FC = () => {
         const data = await reviewerApi.getItemDetail(nextId)
         detailCache.set(nextId, data)
         setPrefetchedIds((prev) => new Set(prev).add(nextId))
-      } catch (error) { }
+      } catch (err) {
+        console.error('Failed to prefetch item:', err)
+      }
     },
     [getNextItemId, prefetchedIds]
   )
@@ -88,6 +91,7 @@ const ReviewerWorkspacePage: React.FC = () => {
     if (!projectId) return
     const fetchItems = async () => {
       setLoadingItems(true)
+      setError(null)
       try {
         const assignRes = await assignmentApi.getAssignmentsByProjectId(projectId)
         const assignments = assignRes.data?.data || assignRes.data || []
@@ -97,18 +101,20 @@ const ReviewerWorkspacePage: React.FC = () => {
         }
         const assignmentId = assignments[0].assignmentId || assignments[0].id
         const taskRes = await taskApi.getTasksByAssignmentId(assignmentId)
-        const tasks = taskRes.data?.data || taskRes.data || []
-        const mappedItems: ReviewerItem[] = tasks.map((t: any) => ({
-          id: t.taskId || t.id,
+        const tasks: Task[] = taskRes.data?.data || taskRes.data || []
+        const mappedItems: ReviewerItem[] = tasks.map((t: Task) => ({
+          id: t.taskId || t.id || '',
           filename: t.taskName || t.name || `Task ${t.taskId}`,
-          status: (t.taskStatus || 'pending').toLowerCase() as any,
+          status: (t.taskStatus || 'pending').toLowerCase(),
           imageUrl: '',
           lastModified: t.createdAt || ''
         }))
         setItems(mappedItems)
         if (mappedItems.length > 0) setSelectedId(mappedItems[0].id)
-      } catch (error) {
+      } catch (err) {
         message.error('Failed to load project tasks')
+        console.error('Failed to load project tasks:', err)
+        setError('Failed to load project tasks')
       } finally {
         setLoadingItems(false)
       }
@@ -131,8 +137,8 @@ const ReviewerWorkspacePage: React.FC = () => {
         detailCache.set(selectedId, data)
         setItemDetail(data)
         prefetchNextItem(selectedId)
-      } catch (error) {
-        const axiosError = error as AxiosError
+      } catch (err) {
+        const axiosError = err as AxiosError
         if (axiosError.name !== 'AbortError') message.error('Failed to load task details')
       } finally {
         setLoadingDetail(false)
@@ -148,10 +154,9 @@ const ReviewerWorkspacePage: React.FC = () => {
     try {
       const currentRev = reviewMap[selectedId] || { reason: '' }
       const reviews = itemDetail.annotations
-        .filter((ann: any) => ann.id || ann.annotationId)
-        .map((ann: any) => ({
-          annotationId: ann.id || ann.annotationId,
-          reviewStatus: (status === 'approved' ? 'APPROVED' : 'REJECTED') as any,
+        .map((ann: Annotation) => ({
+          annotationId: ann.annotationId,
+          reviewStatus: (status === 'approved' ? 'APPROVED' : 'REJECTED') as 'APPROVED' | 'REJECTED',
           comment: currentRev.reason || ''
         }))
       if (reviews.length === 0) {
@@ -166,8 +171,9 @@ const ReviewerWorkspacePage: React.FC = () => {
       const nextId = getNextItemId(selectedId)
       if (nextId) setSelectedId(nextId)
       else message.info('You have reached the end of the project tasks.')
-    } catch (error) {
+    } catch (err) {
       message.error('Failed to submit review')
+      console.error('Failed to submit review:', err)
     } finally {
       setIsSubmitting(false)
     }
@@ -228,9 +234,9 @@ const ReviewerWorkspacePage: React.FC = () => {
               const isSelected = selectedId === item.id
               const rev = reviewMap[item.id]
               let statusColor = 'bg-gray-800'
-              if (item.status === 'completed' || rev?.status === 'approved') statusColor = 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
+              if (item.status === 'completed' || item.status === 'approved' || rev?.status === 'approved') statusColor = 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
               else if (item.status === 'rejected' || rev?.status === 'rejected') statusColor = 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]'
-              else if (item.status === 'in_progress') statusColor = 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]'
+              else if (item.status === 'in_progress' || item.status === 'submitted') statusColor = 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]'
 
               return (
                 <div key={item.id} onClick={() => setSelectedId(item.id)} className={`group relative flex items-center gap-4 cursor-pointer p-3 rounded-xl transition-all border ${isSelected ? 'bg-violet-600/10 border-violet-500/30' : 'bg-white/2 border-transparent hover:bg-white/5'}`}>
@@ -266,7 +272,7 @@ const ReviewerWorkspacePage: React.FC = () => {
                 <div className="flex gap-4">
                   <div className="flex flex-col items-end">
                     <span className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Annotator</span>
-                    <span className="text-[11px] font-bold text-violet-300">{itemDetail.annotator || 'System'}</span>
+                    <span className="text-[11px] font-bold text-violet-300">{itemDetail.annotator?.name || 'System'}</span>
                   </div>
                   <div className="px-3 py-1 bg-violet-500/10 rounded-lg border border-violet-500/20 text-[10px] font-bold text-violet-400 uppercase tracking-widest self-center">
                     {itemDetail.annotations?.length || 0} Annotations
@@ -280,15 +286,15 @@ const ReviewerWorkspacePage: React.FC = () => {
                     style={{ transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`, transformOrigin: 'center' }}>
                     <img src={itemDetail.imageUrl} alt="main" className="max-w-full max-h-full object-contain pointer-events-none select-none" />
                     <svg className={`absolute inset-0 w-full h-full cursor-grab`} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
-                      {itemDetail.annotations?.map((ann: any, i: number) => {
+                      {itemDetail.annotations?.map((ann: Annotation, i: number) => {
                         const data = typeof ann.annotationData === 'string' ? JSON.parse(ann.annotationData) : ann.annotationData
                         if (!data || !data.shapes) return null
-                        return data.shapes.map((s: any, j: number) => (
+                        return (data.shapes as { type: string; x: number; y: number; width: number; height: number; color?: string; points?: [number, number][] }[]).map((s, j: number) => (
                           <g key={`${i}-${j}`}>
                             {s.type === 'bounding_box' ? (
                               <rect x={s.x} y={s.y} width={s.width} height={s.height} fill={`${s.color || '#8b5cf6'}33`} stroke={s.color || '#8b5cf6'} strokeWidth={2 / zoom} />
                             ) : s.type === 'polygon' && s.points ? (
-                              <polyline points={s.points.map((p: any) => p.join(',')).join(' ')} fill={`${s.color || '#8b5cf6'}33`} stroke={s.color || '#8b5cf6'} strokeWidth={2 / zoom} />
+                              <polyline points={s.points.map((p) => p.join(',')).join(' ')} fill={`${s.color || '#8b5cf6'}33`} stroke={s.color || '#8b5cf6'} strokeWidth={2 / zoom} />
                             ) : null}
                           </g>
                         ))
@@ -334,6 +340,7 @@ const ReviewerWorkspacePage: React.FC = () => {
           )}
         </div>
 
+        {/* Resizer */}
         <div className="w-1 shrink-0 cursor-col-resize hover:bg-violet-500/40 z-30" onMouseDown={e => { draggingRef.current = 'right'; dragStartXRef.current = e.clientX; dragStartWidthRef.current = rightWidth; e.preventDefault() }} />
 
         {/* Right Action Panel */}
@@ -357,7 +364,7 @@ const ReviewerWorkspacePage: React.FC = () => {
                 <span className="text-[10px] uppercase tracking-widest">Approve</span>
               </button>
               <button onClick={() => handleReviewDecision('rejected')} disabled={isSubmitting || !itemDetail}
-                className={`h-24 rounded-2xl flex flex-col items-center justify-center gap-2 border-[2px] transition-all font-bold group ${currentReview.status === 'rejected' ? 'bg-rose-500/10 text-rose-400 border-rose-500' : 'bg-white/5 text-gray-600 border-transparent hover:bg-white/10 hover:text-gray-300'} disabled:opacity-30`}>
+                className={`h-24 rounded-2xl flex flex-col items-center justify-center gap-2 border-[2px] transition-all font-bold group ${currentReview.status === 'rejected' ? 'bg-rose-500/10 text-rose-400 border-rose-500' : 'bg-white/5 text-gray-500 border-transparent hover:bg-white/10 hover:text-gray-300'} disabled:opacity-30`}>
                 <span className="material-symbols-outlined text-[24px]">cancel</span>
                 <span className="text-[10px] uppercase tracking-widest">Reject</span>
               </button>
@@ -383,7 +390,7 @@ const ReviewerWorkspacePage: React.FC = () => {
             </div>
 
             <div className="space-y-4 max-h-40 overflow-y-auto custom-scrollbar-thin pr-4">
-              {itemDetail?.history?.map((h: any, i: number) => (
+              {itemDetail?.history?.map((h: { id: string; message?: string; timestamp?: string }, i: number) => (
                 <div key={i} className="relative pl-4 border-l border-white/10">
                   <p className="text-[11px] text-gray-400 leading-relaxed font-medium">{h.message || 'Updated annotation'}</p>
                   <span className="text-[9px] text-gray-600 font-mono italic">{h.timestamp || 'Just now'}</span>
