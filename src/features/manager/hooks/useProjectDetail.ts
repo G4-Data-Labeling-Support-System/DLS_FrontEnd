@@ -54,12 +54,24 @@ const mapAssignment = (a: Record<string, unknown>): GetAssignmentsParams => ({
   assignmentName: String(a.assignmentName || a.name || ''),
   status: String(a.assignmentStatus || a.status || ''),
   description: String(a.descriptionAssignment || a.description || ''),
-  projectId: String(a.projectId || a.project_id || ''),
-  datasetId: String(a.datasetId || a.dataset_id || ''),
+  projectId: String(
+    a.projectId ||
+      a.project_id ||
+      (a.project as Record<string, unknown>)?.id ||
+      (a.project as Record<string, unknown>)?.projectId ||
+      ''
+  ),
+  datasetId: String(
+    a.datasetId ||
+      a.dataset_id ||
+      (a.dataset as Record<string, unknown>)?.id ||
+      (a.dataset as Record<string, unknown>)?.datasetId ||
+      ''
+  ),
   createdAt: String(a.createdAt || a.created_at || a.createdDate || ''),
   updatedAt: String(a.updatedAt || ''),
   assignedTo: String(a.assignedTo || a.user_id || a.annotatorId || ''),
-  reviewedBy: String(a.reviewedBy || a.reviewerId || ''),
+  reviewedBy: String(a.reviewedBy || a.reviewerId || (a.reviewer as Record<string, unknown>)?.id || ''),
   dueDate: String(a.dueDate || a.due_date || ''),
   assignedBy: String(a.assignedBy || a.creatorId || '')
 })
