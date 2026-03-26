@@ -17,7 +17,7 @@ export default function Hero() {
               <h1 className="font-inter text-white text-6xl font-normal mb-10 max-w-3xl mx-auto">
                 Redefining AI precision, <br></br>
                 <span className="bg-gradient-to-r from-violet-300 via-violet-500 to-cyan-200 bg-clip-text text-transparent">
-                  with data labeling sytem
+                  with data labeling system
                 </span>
               </h1>
               <p

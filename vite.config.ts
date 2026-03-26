@@ -25,8 +25,8 @@ export default defineConfig(({ mode }) => {
     server: {
       proxy: {
       '/api': {
-        target: env.VITE_API_TARGET, // Server backend base URL
-        // target: 'http://localhost:8081',
+        // target: env.VITE_API_TARGET, // Server backend base URL
+        target: 'http://localhost:8081',
         changeOrigin: true,
         secure: false,
         timeout: 600000,      // 10 phút
