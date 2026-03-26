@@ -75,6 +75,7 @@ export default function AnnotationPage() {
 
   // New: Redo Stack
   const [redoStack, setRedoStack] = useState<Shape[]>([])
+  const [naturalSize, setNaturalSize] = useState<{ width: number; height: number } | null>(null)
 
   // Resizable sidebars
   const [leftWidth, setLeftWidth] = useState(260)
@@ -82,6 +83,8 @@ export default function AnnotationPage() {
   const draggingRef = useRef<'left' | 'right' | null>(null)
   const dragStartXRef = useRef(0)
   const dragStartWidthRef = useRef(0)
+  const viewerRef = useRef<HTMLDivElement>(null)
+  const lastClickTimeRef = useRef<number>(0)
 
   useEffect(() => {
     const onMouseMove = (e: MouseEvent) => {
@@ -422,14 +425,35 @@ export default function AnnotationPage() {
 
   const handleWheel = (e: React.WheelEvent) => {
     const delta = e.deltaY > 0 ? -0.1 : 0.1
-    setZoom((prev) => Math.min(Math.max(prev + delta, 0.5), 10))
+    setZoom((prev) => Math.min(Math.max(prev + delta, 1), 10))
   }
 
   const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.2, 10))
-  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.2, 0.5))
+  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.2, 1))
   const handleZoomReset = () => {
     setZoom(1)
     setOffset({ x: 0, y: 0 })
+  }
+
+  // Add clamping logic to ensure image stays in view box whenever zoom changes
+  useEffect(() => {
+    if (viewerRef.current) {
+      const viewerWidth = viewerRef.current.clientWidth
+      const viewerHeight = viewerRef.current.clientHeight
+
+      const maxX = Math.max(0, (zoom - 1) * (viewerWidth / 2))
+      const maxY = Math.max(0, (zoom - 1) * (viewerHeight / 2))
+
+      setOffset(prev => ({
+        x: Math.min(Math.max(prev.x, -maxX), maxX),
+        y: Math.min(Math.max(prev.y, -maxY), maxY)
+      }))
+    }
+  }, [zoom])
+ 
+  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const { naturalWidth, naturalHeight } = e.currentTarget
+    setNaturalSize({ width: naturalWidth, height: naturalHeight })
   }
 
   const handleMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
@@ -445,10 +469,18 @@ export default function AnnotationPage() {
     }
 
     const rect = e.currentTarget.getBoundingClientRect()
-    const x = (e.clientX - rect.left) / zoom
-    const y = (e.clientY - rect.top) / zoom
+    // Calculate coordinates relative to natural image size
+    const x = naturalSize ? ((e.clientX - rect.left) / rect.width) * naturalSize.width : (e.clientX - rect.left) / zoom
+    const y = naturalSize ? ((e.clientY - rect.top) / rect.height) * naturalSize.height : (e.clientY - rect.top) / zoom
 
     if (tool === 'polygon') {
+      const now = Date.now()
+      const isDoubleClick = (now - lastClickTimeRef.current) < 350
+      lastClickTimeRef.current = now
+      if (isDoubleClick) {
+        // Let finishPolygon handle it; skip adding a point
+        return
+      }
       if (!isDrawing) {
         setIsDrawing(true)
         setCurrentShape({
@@ -484,9 +516,26 @@ export default function AnnotationPage() {
 
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     if (isPanning) {
+      let nextX = e.clientX - panStart.x
+      let nextY = e.clientY - panStart.y
+
+      if (viewerRef.current) {
+        const viewerWidth = viewerRef.current.clientWidth
+        const viewerHeight = viewerRef.current.clientHeight
+
+        // Constraint: Keep zoomed content reachable
+        // When zoom=1, maxX=0 (centered)
+        // When zoom>1, we can pan up to half the "overflow" size
+        const maxX = Math.max(0, (zoom - 1) * (viewerWidth / 2))
+        const maxY = Math.max(0, (zoom - 1) * (viewerHeight / 2))
+
+        nextX = Math.min(Math.max(nextX, -maxX), maxX)
+        nextY = Math.min(Math.max(nextY, -maxY), maxY)
+      }
+
       setOffset({
-        x: e.clientX - panStart.x,
-        y: e.clientY - panStart.y
+        x: nextX,
+        y: nextY
       })
       return
     }
@@ -494,8 +543,8 @@ export default function AnnotationPage() {
     if (!isDrawing || !currentShape) return
 
     const rect = e.currentTarget.getBoundingClientRect()
-    const x = (e.clientX - rect.left) / zoom
-    const y = (e.clientY - rect.top) / zoom
+    const x = naturalSize ? ((e.clientX - rect.left) / rect.width) * naturalSize.width : (e.clientX - rect.left) / zoom
+    const y = naturalSize ? ((e.clientY - rect.top) / rect.height) * naturalSize.height : (e.clientY - rect.top) / zoom
 
     if (
       tool === 'box' &&
@@ -535,6 +584,7 @@ export default function AnnotationPage() {
       setRedoStack([])
       setCurrentShape(null)
       setIsDirty(true)
+      setCurrentLabel(null) // Deactivate label after drawing
     }
   }
 
@@ -551,6 +601,7 @@ export default function AnnotationPage() {
       }
       setCurrentShape(null)
       setIsDrawing(false)
+      setCurrentLabel(null) // Deactivate label after polygon finish
     }
   }
 
@@ -764,12 +815,12 @@ export default function AnnotationPage() {
                   {/* Status — w-10 to match header */}
                   <div className="w-10 shrink-0 flex justify-center">
                     <div className={`w-2.5 h-2.5 rounded-full ${displayStatus === 'APPROVED'
-                        ? 'bg-violet-500 shadow-[0_0_8px_rgba(139,92,246,0.6)]'
-                        : (displayStatus === 'SUBMITTED')
-                          ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
-                          : (displayStatus === 'REJECTED' || displayStatus === 'NEEDS_EDITING')
-                            ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]'
-                            : 'bg-gray-500/50'
+                      ? 'bg-violet-500 shadow-[0_0_8px_rgba(139,92,246,0.6)]'
+                      : (displayStatus === 'SUBMITTED')
+                        ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
+                        : (displayStatus === 'REJECTED' || displayStatus === 'NEEDS_EDITING')
+                          ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]'
+                          : 'bg-gray-500/50'
                       }`} />
                   </div>
 
@@ -782,8 +833,8 @@ export default function AnnotationPage() {
                     />
                     {/* Shape count badge */}
                     <div className={`absolute -bottom-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center text-[10px] font-bold border ${shapeCount > 0
-                        ? 'bg-violet-600 border-violet-400/50 text-white'
-                        : 'bg-black/70 border-white/10 text-gray-500'
+                      ? 'bg-violet-600 border-violet-400/50 text-white'
+                      : 'bg-black/70 border-white/10 text-gray-500'
                       }`}>
                       {shapeCount}
                     </div>
@@ -815,7 +866,7 @@ export default function AnnotationPage() {
         >
           <div className="absolute inset-y-0 left-0 w-[3px] group-hover:bg-violet-500/40 transition-colors" />
         </div>
-        <div className="flex-[2] flex flex-col relative overflow-hidden bg-[#111116] pt-12 pb-6 px-5 border-l-[2px] border-white/5 mx-2 my-2">
+        <div className="flex-[2] flex flex-col relative overflow-hidden bg-[#111116] pt-12 pb-6 px-5 border-l-[2px] border-white/5 mx-2 my-2 min-h-0">
 
           <div className="text-left mb-3">
             <h2 className={`text-2xl font-medium tracking-wide transition-colors ${currentLabel ? 'text-gray-200' : 'text-gray-500'}`}>
@@ -824,30 +875,41 @@ export default function AnnotationPage() {
           </div>
 
           {/* Image Container */}
-          <div className="flex-1 relative flex">
+          <div className="flex-1 relative flex min-h-0">
 
             {/* The Viewer */}
             <div
-              className="relative shadow-2xl transition-transform duration-200 ease-out will-change-transform bg-[#1e293b]/50 overflow-hidden flex items-center justify-center w-full h-full mx-auto border-[1px] border-gray-600/80 shadow-[0_0_30px_rgba(96,165,250,0.15)]"
+              ref={viewerRef}
+              className="relative transition-transform duration-200 ease-out will-change-transform overflow-hidden flex items-center justify-left w-full h-full mx-auto"
               onWheel={handleWheel}
             >
               <div
                 className="relative transition-transform duration-200 ease-out will-change-transform flex items-center justify-center h-full w-full"
                 style={{ transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`, transformOrigin: 'center' }}
               >
-                <img 
-                  src={currentItem.url || (currentItem as any).dataItem?.url || (currentItem as any).dataitem?.url || (currentItem as any).previewUrl} 
-                  alt={currentItem.fileName || (currentItem as any).dataItem?.fileName || (currentItem as any).dataitem?.fileName || (currentItem as any).filename} 
-                  className="max-w-full max-h-full object-contain pointer-events-none select-none" 
-                />
-
-                <svg
-                  className={`absolute inset-0 w-full h-full ${tool === 'pan' ? 'cursor-grab' : 'cursor-crosshair'}`}
-                  onMouseDown={handleMouseDown}
-                  onMouseMove={handleMouseMove}
-                  onMouseUp={handleMouseUp}
-                  onDoubleClick={finishPolygon}
+                <div 
+                  className="relative flex items-center justify-center"
+                  style={{ 
+                    aspectRatio: naturalSize ? `${naturalSize.width} / ${naturalSize.height}` : 'auto',
+                    maxWidth: '100%',
+                    maxHeight: '100%'
+                  }}
                 >
+                  <img
+                    src={currentItem.url || (currentItem as any).dataItem?.url || (currentItem as any).dataitem?.url || (currentItem as any).previewUrl}
+                    alt={currentItem.fileName || (currentItem as any).dataItem?.fileName || (currentItem as any).dataitem?.fileName || (currentItem as any).filename}
+                    onLoad={handleImageLoad}
+                    className="max-w-full max-h-full object-contain pointer-events-none select-none"
+                  />
+
+                  <svg
+                    viewBox={naturalSize ? `0 0 ${naturalSize.width} ${naturalSize.height}` : undefined}
+                    className={`absolute inset-0 w-full h-full ${tool === 'pan' ? 'cursor-grab' : 'cursor-crosshair'}`}
+                    onMouseDown={handleMouseDown}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUp}
+                    onDoubleClick={finishPolygon}
+                  >
                   {shapes.map((shape, i) => (
                     <g key={`shape-${i}-${shape.label}`}>
                       {shape.type === 'bounding_box' ? (
@@ -858,14 +920,14 @@ export default function AnnotationPage() {
                           height={shape.height}
                           fill={`${shape.color}33`}
                           stroke={shape.color}
-                          strokeWidth={3 / zoom}
+                          strokeWidth={naturalSize ? (naturalSize.width / 400) : (3 / zoom)}
                         />
                       ) : (
-                        <polyline
+                        <polygon
                           points={shape.points?.map((p: [number, number]) => p.join(',')).join(' ')}
                           fill={`${shape.color}33`}
                           stroke={shape.color}
-                          strokeWidth={3 / zoom}
+                          strokeWidth={naturalSize ? (naturalSize.width / 400) : (3 / zoom)}
                         />
                       )}
                     </g>
@@ -883,24 +945,24 @@ export default function AnnotationPage() {
                           strokeWidth={3 / zoom}
                         />
                       ) : (
-                        <polyline
+                        <polygon
                           points={currentShape.points
                             ?.map((p: [number, number]) => p.join(','))
                             .join(' ')}
                           fill={`${currentShape.color}66`}
                           stroke={currentShape.color}
-                          strokeWidth={3 / zoom}
+                          strokeWidth={naturalSize ? (naturalSize.width / 400) : (3 / zoom)}
                         />
                       )}
                     </g>
                   )}
-                </svg>
+                  </svg>
+                </div>
               </div>
             </div>
 
             {/* Floating Tools on the right */}
-            <div className="absolute top-1/2 -translate-y-1/2 flex flex-col gap-2 bg-[#1e1b29] px-1.5 py-3 rounded-xl shadow-2xl border border-violet-500/20 z-20" style={{ right: '20px' }}>
-              {/* <span className="text-[9px] font-bold uppercase tracking-widest text-violet-400/60 text-center mb-2">Tools</span> */}
+            <div className="absolute top-1/2 -translate-y-1/2 flex flex-col gap-2 bg-[#1e1b29] px-1.5 py-3 rounded-xl shadow-2xl border border-violet-500/20 z-20" style={{ right: '0px' }}>
               <ToolbarButton icon="pan_tool" active={tool === 'pan'} onClick={() => setTool('pan')} />
               <ToolbarButton icon="zoom_in" onClick={handleZoomIn} />
               <ToolbarButton icon="zoom_out" onClick={handleZoomOut} />
@@ -931,8 +993,8 @@ export default function AnnotationPage() {
               onClick={handleSubmitTask}
               disabled={!isDirty || selectedLabels.length === 0 || !confidence}
               className={`shrink-0 px-6 py-2 rounded-lg text-sm font-bold transition-all shadow-lg ${isDirty && selectedLabels.length > 0 && confidence
-                  ? 'bg-violet-600 hover:bg-violet-500 text-white shadow-violet-900/20 cursor-pointer'
-                  : 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'
+                ? 'bg-violet-600 hover:bg-violet-500 text-white shadow-violet-900/20 cursor-pointer'
+                : 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'
                 }`}
             >
               Submit
@@ -986,9 +1048,10 @@ export default function AnnotationPage() {
                   onClick={() => toggleLabel(label)}
                   className={`px-4 py-1.5 rounded-lg border text-xs font-bold transition-all`}
                   style={{
-                    borderColor: selectedLabels.includes(label.labelId) ? label.color : 'transparent',
-                    backgroundColor: selectedLabels.includes(label.labelId) ? `${label.color}22` : 'rgba(255,255,255,0.05)',
-                    color: selectedLabels.includes(label.labelId) ? '#fff' : '#6b7280'
+                    borderColor: currentLabel?.labelId === label.labelId ? label.color : 'transparent',
+                    backgroundColor: currentLabel?.labelId === label.labelId ? `${label.color}33` : 'rgba(255,255,255,0.05)',
+                    color: currentLabel?.labelId === label.labelId ? '#fff' : '#6b7280',
+                    boxShadow: currentLabel?.labelId === label.labelId ? `0 0 8px ${label.color}66` : 'none'
                   }}
                 >
                   {label.labelName}
@@ -1009,8 +1072,8 @@ export default function AnnotationPage() {
                   key={level}
                   onClick={() => setConfidence(level)}
                   className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${confidence === level
-                      ? 'bg-orange-500/20 text-orange-400 border border-orange-500/50'
-                      : 'text-gray-500 hover:text-gray-300 hover:bg-white/5 border border-transparent'
+                    ? 'bg-orange-500/20 text-orange-400 border border-orange-500/50'
+                    : 'text-gray-500 hover:text-gray-300 hover:bg-white/5 border border-transparent'
                     }`}
                 >
                   {level}
@@ -1026,6 +1089,7 @@ export default function AnnotationPage() {
             </div>
             <textarea
               value={comment}
+              placeholder='Add your comment here'
               onChange={(e) => setComment(e.target.value)}
               className="w-full h-24 bg-white/5 rounded-xl border border-white/10 p-4 text-sm text-gray-300 focus:outline-none focus:border-violet-500/50 transition-colors resize-none"
             />

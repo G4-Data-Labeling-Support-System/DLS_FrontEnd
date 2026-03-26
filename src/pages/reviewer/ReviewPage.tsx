@@ -650,6 +650,8 @@ export default function AnnotationPage() {
   const draggingRef = useRef<'left' | 'right' | null>(null)
   const dragStartXRef = useRef(0)
   const dragStartWidthRef = useRef(0)
+  const viewerRef = useRef<HTMLDivElement>(null)
+  const [naturalSize, setNaturalSize] = useState<{ width: number; height: number } | null>(null)
 
   const handlePaste = useCallback((e: React.ClipboardEvent) => {
     const items = e.clipboardData.items
@@ -963,15 +965,31 @@ export default function AnnotationPage() {
 
   const handleWheel = (e: React.WheelEvent) => {
     const delta = e.deltaY > 0 ? -0.1 : 0.1
-    setZoom((prev) => Math.min(Math.max(prev + delta, 0.5), 10))
+    setZoom((prev) => Math.min(Math.max(prev + delta, 1), 10))
   }
 
   const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.2, 10))
-  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.2, 0.5))
+  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.2, 1))
   const handleZoomReset = () => {
     setZoom(1)
     setOffset({ x: 0, y: 0 })
   }
+
+  // Add clamping logic to ensure image stays in view box whenever zoom changes
+  useEffect(() => {
+    if (viewerRef.current) {
+      const viewerWidth = viewerRef.current.clientWidth
+      const viewerHeight = viewerRef.current.clientHeight
+
+      const maxX = Math.max(0, (zoom - 1) * (viewerWidth / 2))
+      const maxY = Math.max(0, (zoom - 1) * (viewerHeight / 2))
+
+      setOffset(prev => ({
+        x: Math.min(Math.max(prev.x, -maxX), maxX),
+        y: Math.min(Math.max(prev.y, -maxY), maxY)
+      }))
+    }
+  }, [zoom])
 
   const handleMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
     setIsPanning(true)
@@ -980,15 +998,34 @@ export default function AnnotationPage() {
 
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     if (isPanning) {
+      let nextX = e.clientX - panStart.x
+      let nextY = e.clientY - panStart.y
+
+      if (viewerRef.current) {
+        const viewerWidth = viewerRef.current.clientWidth
+        const viewerHeight = viewerRef.current.clientHeight
+
+        const maxX = Math.max(0, (zoom - 1) * (viewerWidth / 2))
+        const maxY = Math.max(0, (zoom - 1) * (viewerHeight / 2))
+
+        nextX = Math.min(Math.max(nextX, -maxX), maxX)
+        nextY = Math.min(Math.max(nextY, -maxY), maxY)
+      }
+
       setOffset({
-        x: e.clientX - panStart.x,
-        y: e.clientY - panStart.y
+        x: nextX,
+        y: nextY
       })
     }
   }
 
   const handleMouseUp = () => {
     setIsPanning(false)
+  }
+
+  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const { naturalWidth, naturalHeight } = e.currentTarget
+    setNaturalSize({ width: naturalWidth, height: naturalHeight })
   }
 
 
@@ -1011,7 +1048,7 @@ export default function AnnotationPage() {
 
     try {
       setLoading(true)
-      
+
       const evidence = await Promise.all(
         reviewImages.map(async img => {
           return new Promise<string>((resolve) => {
@@ -1039,10 +1076,10 @@ export default function AnnotationPage() {
         const existingIndex = prev.findIndex((a) => a.dataitemId === currentItemId)
         const updated = [...prev]
         if (existingIndex >= 0) {
-          updated[existingIndex] = { 
-            ...updated[existingIndex], 
+          updated[existingIndex] = {
+            ...updated[existingIndex],
             annotationStatus: status.toLowerCase() as any,
-            isRemote: true 
+            isRemote: true
           } as any
         }
         return updated
@@ -1134,12 +1171,12 @@ export default function AnnotationPage() {
                   {/* Status — w-10 to match header */}
                   <div className="w-10 shrink-0 flex justify-center">
                     <div className={`w-2.5 h-2.5 rounded-full ${displayStatus === 'APPROVED'
-                        ? 'bg-violet-500 shadow-[0_0_8px_rgba(139,92,246,0.6)]'
-                        : (displayStatus === 'SUBMITTED')
-                          ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
-                          : (displayStatus === 'REJECTED' || displayStatus === 'NEEDS_EDITING')
-                            ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]'
-                            : 'bg-gray-500/50'
+                      ? 'bg-violet-500 shadow-[0_0_8px_rgba(139,92,246,0.6)]'
+                      : (displayStatus === 'SUBMITTED')
+                        ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
+                        : (displayStatus === 'REJECTED' || displayStatus === 'NEEDS_EDITING')
+                          ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]'
+                          : 'bg-gray-500/50'
                       }`} />
                   </div>
 
@@ -1152,8 +1189,8 @@ export default function AnnotationPage() {
                     />
                     {/* Shape count badge */}
                     <div className={`absolute -bottom-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center text-[10px] font-bold border ${shapeCount > 0
-                        ? 'bg-violet-600 border-violet-400/50 text-white'
-                        : 'bg-black/70 border-white/10 text-gray-500'
+                      ? 'bg-violet-600 border-violet-400/50 text-white'
+                      : 'bg-black/70 border-white/10 text-gray-500'
                       }`}>
                       {shapeCount}
                     </div>
@@ -1185,33 +1222,44 @@ export default function AnnotationPage() {
         >
           <div className="absolute inset-y-0 left-0 w-[3px] group-hover:bg-violet-500/40 transition-colors" />
         </div>
-        <div className="flex-[2] flex flex-col relative overflow-hidden bg-[#111116] pt-12 pb-6 px-5 border-l-[2px] border-white/5 mx-2 my-2">
+        <div className="flex-[2] flex flex-col relative overflow-hidden bg-[#111116] pt-12 pb-6 px-5 border-l-[2px] border-white/5 mx-2 my-2 min-h-0">
 
 
           {/* Image Container */}
-          <div className="flex-1 relative flex">
+          <div className="flex-1 relative flex min-h-0">
 
             {/* The Viewer */}
             <div
-              className="relative shadow-2xl transition-transform duration-200 ease-out will-change-transform bg-[#1e293b]/50 overflow-hidden flex items-center justify-center w-full h-full mx-auto border-[1px] border-gray-600/80 shadow-[0_0_30px_rgba(96,165,250,0.15)]"
+              ref={viewerRef}
+              className="relative shadow-2xl transition-transform duration-200 ease-out will-change-transform bg-[#1e293b]/50 overflow-hidden flex items-center justify-center w-full h-[600px] mx-auto border-[1px] border-gray-600/80 shadow-[0_0_30px_rgba(96,165,250,0.15)]"
               onWheel={handleWheel}
             >
               <div
                 className="relative transition-transform duration-200 ease-out will-change-transform flex items-center justify-center h-full w-full"
                 style={{ transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`, transformOrigin: 'center' }}
               >
-                <img 
-                  src={currentItem.url || (currentItem as any).dataItem?.url || (currentItem as any).dataitem?.url || (currentItem as any).previewUrl} 
-                  alt={currentItem.fileName || (currentItem as any).dataItem?.fileName || (currentItem as any).dataitem?.fileName || (currentItem as any).filename} 
-                  className="max-w-full max-h-full object-contain pointer-events-none select-none" 
-                />
-
-                <svg
-                  className="absolute inset-0 w-full h-full cursor-grab"
-                  onMouseDown={handleMouseDown}
-                  onMouseMove={handleMouseMove}
-                  onMouseUp={handleMouseUp}
+                <div 
+                  className="relative flex items-center justify-center"
+                  style={{ 
+                    aspectRatio: naturalSize ? `${naturalSize.width} / ${naturalSize.height}` : 'auto',
+                    maxWidth: '100%',
+                    maxHeight: '100%'
+                  }}
                 >
+                  <img
+                    src={currentItem.url || (currentItem as any).dataItem?.url || (currentItem as any).dataitem?.url || (currentItem as any).previewUrl}
+                    alt={currentItem.fileName || (currentItem as any).dataItem?.fileName || (currentItem as any).dataitem?.fileName || (currentItem as any).filename}
+                    onLoad={handleImageLoad}
+                    className="max-w-full max-h-full object-contain pointer-events-none select-none"
+                  />
+
+                  <svg
+                    viewBox={naturalSize ? `0 0 ${naturalSize.width} ${naturalSize.height}` : undefined}
+                    className="absolute inset-0 w-full h-full cursor-grab"
+                    onMouseDown={handleMouseDown}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUp}
+                  >
                   {/* Read-only Shapes */}
                   {shapes.map((shape, i) => (
                     <g key={`shape-${i}-${shape.label}`}>
@@ -1223,25 +1271,26 @@ export default function AnnotationPage() {
                           height={shape.height}
                           fill={`${shape.color}33`}
                           stroke={shape.color}
-                          strokeWidth={3 / zoom}
+                          strokeWidth={naturalSize ? (naturalSize.width / 400) : (3 / zoom)}
                         />
                       ) : (
                         <polyline
                           points={shape.points?.map((p: [number, number]) => p.join(',')).join(' ')}
                           fill={`${shape.color}33`}
                           stroke={shape.color}
-                          strokeWidth={3 / zoom}
+                          strokeWidth={naturalSize ? (naturalSize.width / 400) : (3 / zoom)}
                         />
                       )}
                     </g>
                   ))}
                 </svg>
+                </div>
               </div>
             </div>
 
             {/* Floating Tools on the right */}
             <div className="absolute top-1/2 -translate-y-1/2 flex flex-col gap-2 bg-[#1e1b29] px-1.5 py-3 rounded-xl shadow-2xl border border-violet-500/20 z-20" style={{ right: '20px' }}>
-              <ToolbarButton icon="pan_tool" active={true} onClick={() => {}} />
+              <ToolbarButton icon="pan_tool" active={true} onClick={() => { }} />
               <ToolbarButton icon="zoom_in" onClick={handleZoomIn} />
               <ToolbarButton icon="zoom_out" onClick={handleZoomOut} />
               <ToolbarButton icon="restart_alt" onClick={handleZoomReset} />
@@ -1299,7 +1348,7 @@ export default function AnnotationPage() {
               <span className="material-symbols-outlined text-[18px] text-violet-400">rate_review</span>
               <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Review Feedback</span>
             </div>
-            
+
             <div className="relative group">
               <textarea
                 value={reviewComment}
@@ -1321,7 +1370,7 @@ export default function AnnotationPage() {
                   {reviewImages.map((img) => (
                     <div key={img.id} className="relative aspect-video group bg-black/40 rounded-lg overflow-hidden border border-white/5 hover:border-violet-500/30 transition-all">
                       <img src={img.url} className="w-full h-full object-cover" alt="Review evidence" />
-                      <button 
+                      <button
                         onClick={() => removeReviewImage(img.id)}
                         className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-rose-500"
                       >
@@ -1345,10 +1394,9 @@ export default function AnnotationPage() {
             <div className="flex flex-col gap-3 p-4 bg-black/20 rounded-xl border border-white/5">
               <div className="flex justify-between text-xs">
                 <span className="text-gray-500">Confidence</span>
-                <span className={`font-bold ${
-                  confidence === 'HIGH' ? 'text-emerald-400' : 
-                  confidence === 'MEDIUM' ? 'text-amber-400' : 'text-rose-400'
-                }`}>{confidence || 'N/A'}</span>
+                <span className={`font-bold ${confidence === 'HIGH' ? 'text-emerald-400' :
+                    confidence === 'MEDIUM' ? 'text-amber-400' : 'text-rose-400'
+                  }`}>{confidence || 'N/A'}</span>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-xs text-gray-500">Annotator Comment</span>
