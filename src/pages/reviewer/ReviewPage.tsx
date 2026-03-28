@@ -1222,8 +1222,7 @@ export default function AnnotationPage() {
         >
           <div className="absolute inset-y-0 left-0 w-[3px] group-hover:bg-violet-500/40 transition-colors" />
         </div>
-        <div className="flex-[2] flex flex-col relative overflow-hidden bg-[#111116] pt-12 pb-6 px-5 border-l-[2px] border-white/5 mx-2 my-2 min-h-0">
-
+        <div className="flex-[2] flex flex-col relative overflow-hidden bg-[#111116] pt-12 pb-6 px-5 mx-2 my-2 min-h-0">
 
           {/* Image Container */}
           <div className="flex-1 relative flex min-h-0">
@@ -1231,11 +1230,11 @@ export default function AnnotationPage() {
             {/* The Viewer */}
             <div
               ref={viewerRef}
-              className="relative shadow-2xl transition-transform duration-200 ease-out will-change-transform bg-[#1e293b]/50 overflow-hidden flex items-center justify-center w-full h-[600px] mx-auto border-[1px] border-gray-600/80 shadow-[0_0_30px_rgba(96,165,250,0.15)]"
+              className="relative transition-transform duration-200 ease-out will-change-transform overflow-hidden flex items-center justify-left w-full h-full mx-auto"
               onWheel={handleWheel}
             >
               <div
-                className="relative transition-transform duration-200 ease-out will-change-transform flex items-center justify-center h-full w-full"
+                className="relative transition-transform duration-200 ease-out will-change-transform flex items-center h-full w-full"
                 style={{ transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`, transformOrigin: 'center' }}
               >
                 <div 

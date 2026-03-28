@@ -866,7 +866,7 @@ export default function AnnotationPage() {
         >
           <div className="absolute inset-y-0 left-0 w-[3px] group-hover:bg-violet-500/40 transition-colors" />
         </div>
-        <div className="flex-[2] flex flex-col relative overflow-hidden bg-[#111116] pt-12 pb-6 px-5 border-l-[2px] border-white/5 mx-2 my-2 min-h-0">
+        <div className="flex-[2] flex flex-col relative overflow-hidden bg-[#111116] pt-12 pb-6 px-5 mx-2 my-2 min-h-0">
 
           <div className="text-left mb-3">
             <h2 className={`text-2xl font-medium tracking-wide transition-colors ${currentLabel ? 'text-gray-200' : 'text-gray-500'}`}>
@@ -884,7 +884,7 @@ export default function AnnotationPage() {
               onWheel={handleWheel}
             >
               <div
-                className="relative transition-transform duration-200 ease-out will-change-transform flex items-center justify-center h-full w-full"
+                className="relative transition-transform duration-200 ease-out will-change-transform flex items-center h-full w-full"
                 style={{ transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`, transformOrigin: 'center' }}
               >
                 <div 
