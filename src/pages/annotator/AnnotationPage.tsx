@@ -584,7 +584,6 @@ export default function AnnotationPage() {
       setRedoStack([])
       setCurrentShape(null)
       setIsDirty(true)
-      setCurrentLabel(null) // Deactivate label after drawing
     }
   }
 
@@ -601,7 +600,6 @@ export default function AnnotationPage() {
       }
       setCurrentShape(null)
       setIsDrawing(false)
-      setCurrentLabel(null) // Deactivate label after polygon finish
     }
   }
 
