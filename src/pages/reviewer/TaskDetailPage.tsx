@@ -398,7 +398,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({
               dataSource={dataItems}
               columns={columns}
               loading={itemsLoading}
-              rowKey={(record) => String(record.taskItemId || record.dataItemId || '')}
+              rowKey={(record: any, index) => String(record.taskItemId || record.dataItemId || record.id || `item-${index}`)}
               pagination={{
                 pageSize: 10,
                 showSizeChanger: false,

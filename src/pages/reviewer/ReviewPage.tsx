@@ -61,6 +61,9 @@ export default function AnnotationPage() {
   const [isPanning, setIsPanning] = useState(false)
   const [panStart, setPanStart] = useState({ x: 0, y: 0 })
   const [shapes, setShapes] = useState<Shape[]>([])
+  
+  // Review history for the currently selected annotation
+  const [annotationReviews, setAnnotationReviews] = useState<any[]>([])
 
   // Resizable sidebars
   const [leftWidth, setLeftWidth] = useState(260)
@@ -383,6 +386,29 @@ export default function AnnotationPage() {
     }
   }, [currentItemId])
 
+  // Fetch review history when the active annotation changes
+  useEffect(() => {
+    if (!currentItemId) {
+      setAnnotationReviews([])
+      return
+    }
+    const annotation = sessionAnnotations.find(a => a.dataitemId === currentItemId)
+    const annotationId = (annotation as any)?.annotationId || (annotation as any)?.id
+
+    if (annotationId) {
+      reviewerApi.getReviewsByAnnotationId(annotationId)
+        .then(res => {
+          setAnnotationReviews(res.data || [])
+        })
+        .catch(err => {
+          console.warn('Failed to fetch past reviews:', err)
+          setAnnotationReviews([])
+        })
+    } else {
+      setAnnotationReviews([])
+    }
+  }, [currentItemId, sessionAnnotations])
+
   const handleWheel = (e: React.WheelEvent) => {
     const delta = e.deltaY > 0 ? -0.1 : 0.1
     setZoom((prev) => Math.min(Math.max(prev + delta, 1), 10))
@@ -470,13 +496,14 @@ export default function AnnotationPage() {
       setLoading(true)
 
       const formData = new FormData()
-      formData.append('taskId', taskId)
-      formData.append('annotationId', annotationId)
+      formData.append('taskId', taskId.replace(/[{}]/g, '').toLowerCase())
+      formData.append('annotationId', annotationId.replace(/[{}]/g, '').toLowerCase())
       formData.append('comment', reviewComment || '')
       formData.append('reviewStatus', status)
 
-      reviewImages.forEach(img => {
-        formData.append('envidence', img.file)
+      reviewImages.forEach((img, index) => {
+        const safeName = img.file.name ? img.file.name.replace(/[{}]/g, '_') : `evidence_${index}.png`
+        formData.append('envidence', img.file, safeName)
       })
 
       await reviewerApi.submitReviewDecision(formData)
@@ -496,7 +523,6 @@ export default function AnnotationPage() {
 
       message.success(`Annotation ${status.toLowerCase()} successfully!`)
     } catch (err) {
-      console.error(err)
       message.error(`Failed to ${status.toLowerCase()} annotation.`)
     } finally {
       setLoading(false)
@@ -814,6 +840,54 @@ export default function AnnotationPage() {
               </div>
             </div>
           </div>
+
+          <div className="h-px bg-white/5 my-2" />
+
+          {/* Past Review History Section */}
+          {annotationReviews.length > 0 && (
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px] text-emerald-400">history</span>
+                <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Past Reviews</span>
+              </div>
+              <div className="flex flex-col gap-4">
+                {annotationReviews.map((review, i) => (
+                  <div key={review.reviewId || i} className="flex flex-col gap-2 p-3 bg-white/5 rounded-xl border border-white/10 relative overflow-hidden">
+                    <div className={`absolute top-0 left-0 w-1 h-full ${review.reviewStatus === 'REJECTED' ? 'bg-rose-500' : 'bg-violet-500'}`} />
+                    <div className="flex justify-between items-center text-[10px] pl-2">
+                      <span className={`uppercase font-bold tracking-wider ${review.reviewStatus === 'REJECTED' ? 'text-rose-400' : 'text-violet-400'}`}>{review.reviewStatus}</span>
+                      <span className="text-gray-500">{new Date(review.reviewedAt).toLocaleDateString()}</span>
+                    </div>
+                    {review.comment && (
+                      <div className="text-xs text-gray-300 bg-black/40 p-2 rounded-lg border border-white/5 pl-3">
+                        {review.comment}
+                      </div>
+                    )}
+                    {Array.isArray(review.evidences) && review.evidences.length > 0 && (
+                      <div className="mt-2 pl-2">
+                        <span className="text-[10px] uppercase text-gray-500 font-bold mb-1 block tracking-wider">Attached Evidence ({review.evidences.length})</span>
+                        <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                          {review.evidences.map((ev: any, idx: number) => {
+                            const imgUrl = typeof ev === 'string' ? ev : (ev?.url || ev?.evidenceUrl || ev?.imageUrl || ev?.fileUrl || '')
+                            return (
+                              <div key={idx} className="shrink-0 w-20 h-14 bg-black/60 rounded overflow-hidden border border-white/10 group relative">
+                                <img src={imgUrl} alt="Evidence" className="w-full h-full object-cover" />
+                                {imgUrl && (
+                                  <a href={imgUrl} target="_blank" rel="noreferrer" className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                                    <span className="material-symbols-outlined text-[14px]">open_in_new</span>
+                                  </a>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="flex flex-col gap-3 flex-1">
             <div className="flex items-center gap-2">

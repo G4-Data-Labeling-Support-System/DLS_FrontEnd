@@ -106,7 +106,6 @@ export const reviewerApi = {
         lastModified: t.createdAt || ''
       }))
     } catch (error) {
-      console.error('Failed to fetch project items', error)
       throw error
     }
   },
@@ -170,7 +169,6 @@ export const reviewerApi = {
       const response = await mainClient.get(ENDPOINTS.REVIEWS.BY_ANNOTATION(annotationId))
       return response.data
     } catch (error) {
-      console.error('Failed to fetch reviews', error)
       throw error
     }
   },

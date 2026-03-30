@@ -151,19 +151,26 @@ const ReviewerWorkspacePage: React.FC = () => {
   const handleReviewDecision = async (status: 'approved' | 'rejected') => {
     if (!selectedId || !itemDetail?.annotations) return
     setIsSubmitting(true)
+    const currentRev = reviewMap[selectedId] || { reason: '' }
+    const reviews = itemDetail.annotations
+      .map((ann: Annotation) => ({
+        annotationId: ann.annotationId,
+        reviewStatus: (status === 'approved' ? 'APPROVED' : 'REJECTED') as 'APPROVED' | 'REJECTED',
+        comment: currentRev.reason || ''
+      }))
+    if (reviews.length === 0) {
+      message.warning('No annotations to review')
+      setIsSubmitting(false); return
+    }
     try {
-      const currentRev = reviewMap[selectedId] || { reason: '' }
-      const reviews = itemDetail.annotations
-        .map((ann: Annotation) => ({
-          annotationId: ann.annotationId,
-          reviewStatus: (status === 'approved' ? 'APPROVED' : 'REJECTED') as 'APPROVED' | 'REJECTED',
-          comment: currentRev.reason || ''
-        }))
-      if (reviews.length === 0) {
-        message.warning('No annotations to review')
-        setIsSubmitting(false); return
-      }
-      await reviewerApi.submitReviewDecision({ reviews })
+      const formData = new FormData()
+      const sanitizedReviews = reviews.map((r: any) => ({
+        ...r,
+        annotationId: String(r.annotationId).replace(/{/g, '_').replace(/}/g, '_')
+      }))
+      formData.append('reviews', JSON.stringify({ reviews: sanitizedReviews }))
+
+      await reviewerApi.submitReviewDecision(formData)
       message.success(`Item ${status} successfully`)
 
       // Update local state and move to next item
