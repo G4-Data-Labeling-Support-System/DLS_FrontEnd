@@ -18,7 +18,6 @@ const annotationApi = {
       const url = ENDPOINTS.ANNOTATIONS.LIST
       return axiosClient.get(url, { params })
     } catch (error) {
-      console.error('Failed to fetch annotations', error)
       throw error
     }
   },

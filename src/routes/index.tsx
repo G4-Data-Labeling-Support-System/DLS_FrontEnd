@@ -54,7 +54,7 @@ const ReviewerAssignmentDetailPage = lazy(
 )
 const ReviewerWorkspacePage = lazy(() => import('@/pages/reviewer/ReviewerWorkspacePage'))
 const ReviewerTaskDetailPage = lazy(() => import('@/pages/reviewer/TaskDetailPage'))
-const ReviewerAnnotationPage = lazy(() => import('@/pages/reviewer/AnnotationPage'))
+const ReviewerAnnotationPage = lazy(() => import('@/pages/reviewer/ReviewPage'))
 
 export const router = createBrowserRouter([
   {
