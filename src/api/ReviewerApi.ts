@@ -175,10 +175,8 @@ export const reviewerApi = {
     }
   },
 
-  submitReviewDecision: async (payload: ReviewUpdateRequest) => {
+  submitReviewDecision: async (formData: FormData) => {
     try {
-      const formData = new FormData()
-      formData.append('reviews', new Blob([JSON.stringify(payload.reviews)], { type: 'application/json' }))
       const response = await mainClient.put(ENDPOINTS.REVIEWS.UPDATE, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })

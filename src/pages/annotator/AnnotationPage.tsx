@@ -878,11 +878,11 @@ export default function AnnotationPage() {
             {/* The Viewer */}
             <div
               ref={viewerRef}
-              className="relative transition-transform duration-200 ease-out will-change-transform overflow-hidden flex items-center justify-left w-full h-full mx-auto"
+              className="relative transition-transform duration-200 ease-out will-change-transform overflow-hidden flex items-center justify-center w-full h-full mx-auto"
               onWheel={handleWheel}
             >
               <div
-                className="relative transition-transform duration-200 ease-out will-change-transform flex items-center h-full w-full"
+                className="relative transition-transform duration-200 ease-out will-change-transform flex items-center justify-center h-full w-full"
                 style={{ transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`, transformOrigin: 'center' }}
               >
                 <div 

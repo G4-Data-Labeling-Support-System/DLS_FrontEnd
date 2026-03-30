@@ -261,6 +261,7 @@ export default function AnnotationPage() {
           }
             ; (newAnno as any).reviewerComment = rvComment
             ; (newAnno as any).isRemote = true
+            ; (newAnno as any).annotationId = remoteAnno.annotationId
 
           setSessionAnnotations((prev) => {
             const existingIndex = prev.findIndex((a) => a.dataitemId === itemId)
@@ -275,7 +276,7 @@ export default function AnnotationPage() {
               // Decision: If server is REJECTED or APPROVED, we should definitely show that. 
               // Also if server changed desde local, we update status/comments/shapes from server
               // (This solves the conflict where local storage still thinks it's SUBMITTED)
-              if (serverStatus !== localStatus || !(existing as any).isRemote) {
+              if (serverStatus !== localStatus || !(existing as any).isRemote || !(existing as any).annotationId) {
                 const updated = [...prev]
                 updated[existingIndex] = {
                   ...newAnno,
@@ -334,6 +335,7 @@ export default function AnnotationPage() {
           }
             ; (newAnno as any).reviewerComment = rvComment
             ; (newAnno as any).isRemote = true // Mark as fetched from remote
+            ; (newAnno as any).annotationId = remoteAnno.annotationId
 
           setSessionAnnotations((prev) => {
             const existingIndex = prev.findIndex((a) => a.dataitemId === currentItemId)
@@ -344,7 +346,7 @@ export default function AnnotationPage() {
               const localStatus = (existing.annotationStatus || 'DRAFT').toUpperCase()
 
               // If server changed (REJECTED/APPROVED), always update the status/cache
-              if (serverStatus !== localStatus || !(existing as any).isRemote) {
+              if (serverStatus !== localStatus || !(existing as any).isRemote || !(existing as any).annotationId) {
                 const updated = [...prev]
                 updated[existingIndex] = {
                   ...newAnno,
@@ -372,7 +374,7 @@ export default function AnnotationPage() {
 
     // Only fetch if we don't already have it as remote
     const existing = sessionAnnotations.find(a => a.dataitemId === currentItemId)
-    if (!existing || !(existing as any).isRemote) {
+    if (!existing || !(existing as any).isRemote || !(existing as any).annotationId) {
       fetchRemote()
     }
 
@@ -467,28 +469,17 @@ export default function AnnotationPage() {
     try {
       setLoading(true)
 
-      const evidence = await Promise.all(
-        reviewImages.map(async img => {
-          return new Promise<string>((resolve) => {
-            const reader = new FileReader()
-            reader.onloadend = () => resolve(reader.result as string)
-            reader.readAsDataURL(img.file)
-          })
-        })
-      )
+      const formData = new FormData()
+      formData.append('taskId', taskId)
+      formData.append('annotationId', annotationId)
+      formData.append('comment', reviewComment || '')
+      formData.append('reviewStatus', status)
 
-      const payload = {
-        reviews: [
-          {
-            annotationId,
-            comment: reviewComment,
-            reviewStatus: status,
-            envidence: evidence
-          }
-        ]
-      }
+      reviewImages.forEach(img => {
+        formData.append('envidence', img.file)
+      })
 
-      await reviewerApi.submitReviewDecision(payload)
+      await reviewerApi.submitReviewDecision(formData)
 
       setSessionAnnotations((prev) => {
         const existingIndex = prev.findIndex((a) => a.dataitemId === currentItemId)
@@ -648,11 +639,11 @@ export default function AnnotationPage() {
             {/* The Viewer */}
             <div
               ref={viewerRef}
-              className="relative transition-transform duration-200 ease-out will-change-transform overflow-hidden flex items-center justify-left w-full h-full mx-auto"
+              className="relative transition-transform duration-200 ease-out will-change-transform overflow-hidden flex items-center justify-center w-full h-full mx-auto"
               onWheel={handleWheel}
             >
               <div
-                className="relative transition-transform duration-200 ease-out will-change-transform flex items-center h-full w-full"
+                className="relative transition-transform duration-200 ease-out will-change-transform flex items-center justify-center h-full w-full"
                 style={{ transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`, transformOrigin: 'center' }}
               >
                 <div 
