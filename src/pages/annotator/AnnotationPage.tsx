@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { Spin, message } from 'antd'
+import { Spin, message, Image } from 'antd'
 import assignmentApi from '@/api/AssignmentApi'
 import taskApi from '@/api/TaskApi'
 import annotationApi from '@/api/annotation'
+import { reviewerApi } from '@/api/ReviewerApi'
 import type { AnnotationSubmitItem } from '@/shared/types/api.types'
 
 interface Shape {
@@ -57,7 +58,7 @@ export default function AnnotationPage() {
   const [currentIndex, setCurrentIndex] = useState(startIdx)
   const [selectedLabels, setSelectedLabels] = useState<string[]>([])
   const [currentLabel, setCurrentLabel] = useState<Label | null>(null)
-  const [comment, setComment] = useState('This is a preliminary scan observation.')
+  const [comment, setComment] = useState('')
   const [confidence, setConfidence] = useState<'LOW' | 'MEDIUM' | 'HIGH' | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -76,6 +77,9 @@ export default function AnnotationPage() {
   // New: Redo Stack
   const [redoStack, setRedoStack] = useState<Shape[]>([])
   const [naturalSize, setNaturalSize] = useState<{ width: number; height: number } | null>(null)
+  
+  // Review history for the currently selected annotation
+  const [annotationReviews, setAnnotationReviews] = useState<any[]>([])
 
   // Resizable sidebars
   const [leftWidth, setLeftWidth] = useState(260)
@@ -158,7 +162,7 @@ export default function AnnotationPage() {
         setConfidence((existing.annotationConfidence as 'LOW' | 'MEDIUM' | 'HIGH') || null)
       } else {
         setShapes([])
-        setComment('This is a preliminary scan observation.')
+        setComment('')
         setConfidence(null)
         if (labels.length > 0) {
           setSelectedLabels([labels[0].labelId])
@@ -299,7 +303,9 @@ export default function AnnotationPage() {
             dataitemId: itemId,
             labelIds: remoteAnno.labels || remoteAnno.labelIds || []
           }
+            ; (newAnno as any).annotationId = remoteAnno.annotationId
             ; (newAnno as any).reviewerComment = rvComment
+            ; (newAnno as any).reviews = remoteAnno.reviews || []
             ; (newAnno as any).isRemote = true
 
           setSessionAnnotations((prev) => {
@@ -372,8 +378,12 @@ export default function AnnotationPage() {
             dataitemId: currentItemId,
             labelIds: remoteAnno.labels || remoteAnno.labelIds || []
           }
+            ; (newAnno as any).annotationId = remoteAnno.annotationId
             ; (newAnno as any).reviewerComment = rvComment
+            ; (newAnno as any).reviews = remoteAnno.reviews || []
             ; (newAnno as any).isRemote = true // Mark as fetched from remote
+
+          setAnnotationReviews(remoteAnno.reviews || [])
 
           setSessionAnnotations((prev) => {
             const existingIndex = prev.findIndex((a) => a.dataitemId === currentItemId)
@@ -422,6 +432,36 @@ export default function AnnotationPage() {
       isMounted = false
     }
   }, [currentItemId])
+
+  // Fetch review history when the active annotation changes
+  useEffect(() => {
+    if (!currentItemId) {
+      setAnnotationReviews([])
+      return
+    }
+    const annotation = sessionAnnotations.find(a => a.dataitemId === currentItemId)
+    
+    // If we already have the reviews from the main annotation fetch, use them!
+    if (annotation && (annotation as any).reviews && (annotation as any).reviews.length > 0) {
+      setAnnotationReviews((annotation as any).reviews)
+      return
+    }
+
+    const annotationId = (annotation as any)?.annotationId || (annotation as any)?.id
+
+    if (annotationId) {
+      reviewerApi.getReviewsByAnnotationId(annotationId)
+        .then(res => {
+          // Double check if data is an array (per Swagger screen it is under .data)
+          const reviews = res.data?.data || res.data || []
+          setAnnotationReviews(Array.isArray(reviews) ? reviews : [])
+        })
+        .catch(err => {
+          console.warn('Failed to fetch past reviews fallback:', err)
+          // Keep whatever we had if it was already set by fetchRemote
+        })
+    }
+  }, [currentItemId, sessionAnnotations])
 
   const handleWheel = (e: React.WheelEvent) => {
     const delta = e.deltaY > 0 ? -0.1 : 0.1
@@ -584,7 +624,6 @@ export default function AnnotationPage() {
       setRedoStack([])
       setCurrentShape(null)
       setIsDirty(true)
-      setCurrentLabel(null) // Deactivate label after drawing
     }
   }
 
@@ -601,7 +640,6 @@ export default function AnnotationPage() {
       }
       setCurrentShape(null)
       setIsDrawing(false)
-      setCurrentLabel(null) // Deactivate label after polygon finish
     }
   }
 
@@ -712,7 +750,7 @@ export default function AnnotationPage() {
         labelIds: currentAnnotation.labelIds
       }
 
-      console.log('🚀 SUBMITTING SINGLE ANNOTATION TO BE:', payload)
+
 
       await annotationApi.submitSingleAnnotation(payload)
 
@@ -866,7 +904,7 @@ export default function AnnotationPage() {
         >
           <div className="absolute inset-y-0 left-0 w-[3px] group-hover:bg-violet-500/40 transition-colors" />
         </div>
-        <div className="flex-[2] flex flex-col relative overflow-hidden bg-[#111116] pt-12 pb-6 px-5 border-l-[2px] border-white/5 mx-2 my-2 min-h-0">
+        <div className="flex-[2] flex flex-col relative overflow-hidden bg-[#111116] pt-12 pb-6 px-5 mx-2 my-2 min-h-0">
 
           <div className="text-left mb-3">
             <h2 className={`text-2xl font-medium tracking-wide transition-colors ${currentLabel ? 'text-gray-200' : 'text-gray-500'}`}>
@@ -880,7 +918,7 @@ export default function AnnotationPage() {
             {/* The Viewer */}
             <div
               ref={viewerRef}
-              className="relative transition-transform duration-200 ease-out will-change-transform overflow-hidden flex items-center justify-left w-full h-full mx-auto"
+              className="relative transition-transform duration-200 ease-out will-change-transform overflow-hidden flex items-center justify-center w-full h-full mx-auto"
               onWheel={handleWheel}
             >
               <div
@@ -1019,18 +1057,57 @@ export default function AnnotationPage() {
         {/* Right Column: Comment, Labels, Confidence & Geometry */}
         <div style={{ width: rightWidth, minWidth: 200 }} className="border-l border-white/5 px-6 py-6 flex flex-col gap-6 overflow-y-auto custom-scrollbar bg-[#16161a] shrink-0">
 
-          {/* Review Feedback (Only if Rejected) */}
+          {/* Review Feedback Section */}
           {(currentAnnotation?.annotationStatus?.toUpperCase() === 'REJECTED' || currentAnnotation?.annotationStatus?.toUpperCase() === 'NEEDS_EDITING') && (
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-[16px] text-rose-400">rate_review</span>
                 <span className="text-xs font-bold uppercase tracking-widest text-rose-400">Review Feedback</span>
               </div>
-              <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl text-sm text-rose-200/90 italic cursor-not-allowed select-none">
-                {(currentAnnotation as any)?.reviewerComment ||
-                  (currentAnnotation as any)?.review?.comment ||
-                  (currentItem as any)?.reviewerComment ||
-                  'Please update this annotation based on the project guidelines. Reviewer rejected this submission.'}
+              <div className="flex flex-col gap-4 p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl">
+                {annotationReviews.length > 0 ? (
+                  annotationReviews.map((review, i) => (
+                    <div key={review.reviewId || i} className={`flex flex-col gap-2 ${i > 0 ? 'pt-4 border-t border-rose-500/20' : ''}`}>
+                      <div className="flex justify-between items-center text-[10px]">
+                        <span className="text-rose-400/80 uppercase tracking-widest font-bold">Feedback {new Date(review.reviewedAt).toLocaleDateString()}</span>
+                      </div>
+                      <div className="text-sm text-rose-200/90 italic cursor-not-allowed select-none">
+                        {review.comment || 'No comment provided.'}
+                      </div>
+
+                      {Array.isArray(review.evidences) && review.evidences.length > 0 && (
+                        <div className="flex flex-col gap-2 mt-2">
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-rose-400/80">Attached Evidence ({review.evidences.length})</span>
+                          <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                            {review.evidences.map((ev: any, idx: number) => {
+                              const imgUrl = typeof ev === 'string' ? ev : (ev?.url || ev?.evidenceUrl || ev?.imageUrl || ev?.fileUrl || '')
+                              if (!imgUrl) return null
+                              return (
+                                <div key={idx} className="shrink-0 w-24 h-16 rounded overflow-hidden border border-rose-500/30 flex items-center justify-center bg-black/40">
+                                  <Image
+                                    src={imgUrl}
+                                    alt="Evidence"
+                                    className="object-cover"
+                                    width="100%"
+                                    height="100%"
+                                    preview={{ src: imgUrl }}
+                                  />
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-sm text-rose-200/90 italic cursor-not-allowed select-none">
+                    {(currentAnnotation as any)?.reviewerComment ||
+                      (currentAnnotation as any)?.review?.comment ||
+                      (currentItem as any)?.reviewerComment ||
+                      'Please update this annotation based on the project guidelines. Reviewer rejected this submission.'}
+                  </div>
+                )}
               </div>
             </div>
           )}

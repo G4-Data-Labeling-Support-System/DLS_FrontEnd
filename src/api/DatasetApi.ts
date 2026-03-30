@@ -76,7 +76,6 @@ const datasetApi = {
       const url = ENDPOINTS.DATAITEMS.BY_DATASET(datasetId)
       return axiosClient.get(url)
     } catch (error) {
-      console.error('Failed to fetch dataset items', error)
       throw error
     }
   },
@@ -85,7 +84,6 @@ const datasetApi = {
       const url = ENDPOINTS.DATA_ITEMS.DETAIL(id)
       return axiosClient.get(url)
     } catch (error) {
-      console.error('Failed to fetch data item by id', error)
       throw error
     }
   },
@@ -116,7 +114,7 @@ const datasetApi = {
       if (data.deleteDataItemId && data.deleteDataItemId.length > 0) request.deleteDataItemId = data.deleteDataItemId
 
       const requestData = JSON.stringify(request)
-      console.log('Update Dataset Request (Stringified):', requestData)
+
 
       formData.append('request', requestData)
 
