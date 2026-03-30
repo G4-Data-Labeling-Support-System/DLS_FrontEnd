@@ -44,35 +44,21 @@ node {
 
         // Call functions base on branch
         if (env.BRANCH_NAME == "main") {
-            // Step 1: Sonarqube Scan
             // sonarqubePipeline.call(config)
-            // Step 2: Trivy Filesystem Scan
             trivyFilesystemScan.call()
-            // Step 3: Build -> Trivy Image Scan -> Test -> Push
             dockerPipeline.call(config)
-            // Step 5: Deploy to Docker production server
             deployProd.call(config)
-            // Step 6: Update Manifestfile
             // updateManifest.call(config)
         } else if (env.BRANCH_NAME == "development") {
-            // Step 1: Sonarqube Scan
             // sonarqubePipeline.call(config)
-            // Step 2: Trivy Filesystem Scan
             trivyFilesystemScan.call()
-            // Step 3: Build -> Trivy Image Scan -> Test -> Push
             dockerPipeline.call(config)
-            // Step 4: Deploy to Docker production server
             deployBeta.call(config)
-            // Step 6: Update Manifestfile
             // updateManifest.call(config)
         } else {
-            // Step 1: Sonarqube Scan
             // sonarqubePipeline.call(config)
-            // Step 2: Trivy Filesystem Scan
             // trivyFilesystemScan.call()
-            // Step 3: Build -> Trivy Image Scan -> Test -> Push
             dockerPipeline.call(config)
-            // Step 4: Deploy to Docker production server
             deployDev.call(config)
         }
     }
@@ -86,6 +72,11 @@ node {
         } else {
             echo "Slack notify not loaded"
         }
+
+        sh"""
+            docker image prune -f
+            docker rmi \$(docker images -q 'fleeforezz/data-labeling-fe') --force || true
+        """
 
         // Clean up workspace after run the pipeline
         stage('Cleanup') {
