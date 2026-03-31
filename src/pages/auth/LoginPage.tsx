@@ -1,6 +1,6 @@
 import { useAuth } from '@/features/auth/hooks'
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { themeClasses } from '@/styles'
 import { Button } from '@/shared/components/ui/Button'
 import { MailOutlined, LockOutlined } from '@ant-design/icons'
@@ -148,7 +148,7 @@ export default function LoginPage() {
                   placeholder="••••••••"
                 />
               </Form.Item>
-
+              {/* 
               <div className="flex justify-end pt-1">
                 <Link
                   to="/forgot-password"
@@ -156,7 +156,7 @@ export default function LoginPage() {
                 >
                   Forgot Password?
                 </Link>
-              </div>
+              </div> */}
 
               <Button
                 type="submit"
