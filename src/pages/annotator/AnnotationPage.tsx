@@ -687,6 +687,11 @@ export default function AnnotationPage() {
     setIsDirty(true)
   }
 
+  const handleRemoveShape = (index: number) => {
+    setShapes(prev => prev.filter((_, i) => i !== index))
+    setIsDirty(true)
+  }
+
   const createAnnotationPayload = (
     itemId: string,
     status: AnnotationSubmitItem['annotationStatus'] = 'DRAFT'
@@ -975,28 +980,53 @@ export default function AnnotationPage() {
                     onMouseUp={handleMouseUp}
                     onDoubleClick={finishPolygon}
                   >
-                    {shapes.map((shape, i) => (
-                      <g key={`shape-${i}-${shape.label}`}>
-                        {shape.type === 'bounding_box' ? (
-                          <rect
-                            x={shape.x}
-                            y={shape.y}
-                            width={shape.width}
-                            height={shape.height}
-                            fill={`${shape.color}33`}
-                            stroke={shape.color}
-                            strokeWidth={naturalSize ? (naturalSize.width / 400) : (3 / zoom)}
-                          />
-                        ) : (
-                          <polygon
-                            points={shape.points?.map((p: [number, number]) => p.join(',')).join(' ')}
-                            fill={`${shape.color}33`}
-                            stroke={shape.color}
-                            strokeWidth={naturalSize ? (naturalSize.width / 400) : (3 / zoom)}
-                          />
-                        )}
-                      </g>
-                    ))}
+                    {shapes.map((shape, i) => {
+                      const cornerRadius = naturalSize ? naturalSize.width / 150 : (8 / zoom)
+                      const cx = shape.type === 'bounding_box' ? (shape.x! + shape.width!) : shape.points![0][0]
+                      const cy = shape.type === 'bounding_box' ? shape.y! : shape.points![0][1]
+                      
+                      return (
+                        <g key={`shape-${i}-${shape.label}`}>
+                          {shape.type === 'bounding_box' ? (
+                            <rect
+                              x={shape.x}
+                              y={shape.y}
+                              width={shape.width}
+                              height={shape.height}
+                              fill={`${shape.color}33`}
+                              stroke={shape.color}
+                              strokeWidth={naturalSize ? (naturalSize.width / 400) : (3 / zoom)}
+                            />
+                          ) : (
+                            <polygon
+                              points={shape.points?.map((p: [number, number]) => p.join(',')).join(' ')}
+                              fill={`${shape.color}33`}
+                              stroke={shape.color}
+                              strokeWidth={naturalSize ? (naturalSize.width / 400) : (3 / zoom)}
+                            />
+                          )}
+                          <g 
+                            className="cursor-pointer" 
+                            onClick={(e) => { e.stopPropagation(); handleRemoveShape(i); }}
+                            onMouseDown={(e) => e.stopPropagation()}
+                          >
+                            <circle cx={cx} cy={cy} r={cornerRadius} fill="#ef4444" />
+                            <text 
+                              x={cx} 
+                              y={cy} 
+                              fill="white" 
+                              fontSize={cornerRadius * 1.2} 
+                              fontWeight="bold" 
+                              textAnchor="middle" 
+                              dominantBaseline="central"
+                              className="pointer-events-none select-none"
+                            >
+                              ✕
+                            </text>
+                          </g>
+                        </g>
+                      )
+                    })}
                     {currentShape && (
                       <g>
                         {currentShape.type === 'bounding_box' ? (
