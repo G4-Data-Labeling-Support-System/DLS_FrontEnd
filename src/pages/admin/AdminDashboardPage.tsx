@@ -108,9 +108,9 @@ export default function AdminDashboard() {
                   <p className={`font-body text-sm font-medium ${themeClasses.text.secondary} mb-1`}>
                     Total Datasets
                   </p>
-                  <p className="text-3xl font-bold tracking-tight text-white">
+                  <div className="text-3xl font-bold tracking-tight text-white">
                     {isLoadingDatasets ? <Spin size="small" /> : totalDatasets}
-                  </p>
+                  </div>
                 </div>
                 <div className={`h-10 w-10 rounded-lg bg-fuchsia-500/10 flex items-center justify-center ${themeClasses.text.fuchsia}`}>
                   <DatabaseOutlined className="text-xl" />
@@ -126,9 +126,9 @@ export default function AdminDashboard() {
                     Total Tasks / Items
                   </p>
                   <div className="flex items-baseline gap-2">
-                    <p className="text-3xl font-bold tracking-tight text-white">
+                    <div className="text-3xl font-bold tracking-tight text-white">
                       {isLoadingAssignments ? <Spin size="small" /> : totalTasks}
-                    </p>
+                    </div>
                     <span className={`text-lg ${themeClasses.text.tertiary} font-medium`}>
                       / {isLoadingDatasets ? '-' : totalDataItems}
                     </span>
@@ -147,9 +147,9 @@ export default function AdminDashboard() {
                   <p className={`font-body text-sm font-medium ${themeClasses.text.secondary} mb-1`}>
                     Tasks Pending
                   </p>
-                  <p className="text-3xl font-bold tracking-tight text-amber-400">
+                  <div className="text-3xl font-bold tracking-tight text-amber-400">
                     {isLoadingAssignments ? <Spin size="small" /> : tasksPending}
-                  </p>
+                  </div>
                 </div>
                 <div className="h-10 w-10 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400">
                   <ClockCircleOutlined className="text-xl" />
@@ -164,9 +164,9 @@ export default function AdminDashboard() {
                   <p className={`font-body text-sm font-medium ${themeClasses.text.secondary} mb-1`}>
                     Tasks Completed
                   </p>
-                  <p className="text-3xl font-bold tracking-tight text-emerald-400">
+                  <div className="text-3xl font-bold tracking-tight text-emerald-400">
                     {isLoadingAssignments ? <Spin size="small" /> : tasksCompleted}
-                  </p>
+                  </div>
                 </div>
                 <div className="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
                   <CheckCircleOutlined className="text-xl" />
@@ -181,9 +181,9 @@ export default function AdminDashboard() {
                   <p className={`font-body text-sm font-medium ${themeClasses.text.secondary} mb-1`}>
                     Active Labelers
                   </p>
-                  <p className="text-3xl font-bold tracking-tight text-white">
+                  <div className="text-3xl font-bold tracking-tight text-white">
                     {isLoadingUsers ? <Spin size="small" /> : activeLabelers}
-                  </p>
+                  </div>
                 </div>
                 <div className={`h-10 w-10 rounded-lg ${themeClasses.backgrounds.violetAlpha10} flex items-center justify-center ${themeClasses.text.violet}`}>
                   <TeamOutlined className="text-xl" />
@@ -198,9 +198,9 @@ export default function AdminDashboard() {
                   <p className={`font-body text-sm font-medium ${themeClasses.text.secondary} mb-1`}>
                     Needs Review
                   </p>
-                  <p className="text-3xl font-bold tracking-tight text-rose-400">
+                  <div className="text-3xl font-bold tracking-tight text-rose-400">
                     {isLoadingAssignments ? <Spin size="small" /> : tasksNeedingReview}
-                  </p>
+                  </div>
                 </div>
                 <div className="h-10 w-10 rounded-lg bg-rose-500/10 flex items-center justify-center text-rose-400">
                   <FileSearchOutlined className="text-xl" />
