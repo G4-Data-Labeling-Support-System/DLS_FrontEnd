@@ -11,7 +11,7 @@ import type { AxiosError } from 'axios'
 
 export default function LoginPage() {
   const navigate = useNavigate()
-  const { login, isLoading, error } = useAuth()
+  const { login, isLoading } = useAuth()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const onFinish = async (values: Record<string, string>) => {
@@ -41,10 +41,21 @@ export default function LoginPage() {
         setErrorMessage('Invalid username or password. Please try again.')
       }
     } catch (err) {
-      const axiosError = err as AxiosError<{ message?: string }>
-      // Extract detailed message from backend if available
-      const detailMsg = axiosError.response?.data?.message || axiosError.message
-      setErrorMessage(detailMsg || 'An unexpected error occurred')
+      const axiosError = err as AxiosError<{ message?: string; code?: number }>
+      const status = axiosError.response?.status
+      const serverMsg = axiosError.response?.data?.message
+
+      // Tùy chỉnh Error Message theo Status Code ở đây:
+      if (status === 400 || status === 401 || status === 403) {
+        setErrorMessage('Invalid username or password. Please check and try again.')
+      } else if (status === 404) {
+        setErrorMessage('User not found.')
+      } else if (status === 500) {
+        setErrorMessage('Internal Server Error. Please contact support.')
+      } else {
+        // Fallback: Lấy nội dung từ Backend hoặc hiển thị lỗi mặc định
+        setErrorMessage(serverMsg || axiosError.message || 'An unexpected error occurred')
+      }
     }
   }
 
@@ -86,9 +97,9 @@ export default function LoginPage() {
               <h1 className="font-space text-3xl font-bold tracking-tight text-white">Login</h1>
             </div>
 
-            {(error || errorMessage) && (
+            {errorMessage && (
               <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
-                {error || errorMessage}
+                {errorMessage}
               </div>
             )}
 

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Form, Input, Select } from 'antd'
 import {
   UserOutlined,
@@ -20,6 +21,7 @@ interface AddUserModalProps {
 export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModalProps) {
   const [form] = Form.useForm()
   const createUserMutation = useCreateUser()
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const handleSubmit = async (values: {
     username: string
@@ -28,6 +30,8 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModa
     role: string
     specialization: string
   }) => {
+    setErrorMessage(null)
+    
     // [Logic: Chuẩn bị dữ liệu] Kết hợp dữ liệu form với giá trị mặc định
     // [Logic: Xử lý Role] Ánh xạ 'role' (frontend) sang 'userRole' (backend) và viết hoa chữ cái đầu
     const roleMapping: Record<string, string> = {
@@ -59,8 +63,8 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModa
 
         // Hiển thị thông báo lỗi cho người dùng (ưu tiên message từ backend)
         const messageStr =
-          errorData?.message || JSON.stringify(errorData) || 'Failed to create user'
-        alert(`Error: ${messageStr}`)
+          errorData?.message || (typeof errorData === 'string' ? errorData : 'Failed to create user')
+        setErrorMessage(messageStr)
       }
     })
   }
@@ -75,6 +79,12 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModa
 
       {/* Form Content */}
       <div className="px-8 py-8">
+        {errorMessage && (
+          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+            {errorMessage}
+          </div>
+        )}
+
         <Form
           form={form}
           layout="vertical"
