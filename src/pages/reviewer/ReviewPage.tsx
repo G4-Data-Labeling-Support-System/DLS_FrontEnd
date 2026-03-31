@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { Spin, message } from 'antd'
 import taskApi from '@/api/TaskApi'
 import annotationApi from '@/api/annotation'
+import assignmentApi from '@/api/AssignmentApi'
 import { reviewerApi } from '@/api/ReviewerApi'
 import type { AnnotationSubmitItem } from '@/shared/types/api.types'
 
@@ -18,6 +19,13 @@ interface Shape {
   label: string
   color: string
   isPreview?: boolean
+}
+
+interface Label {
+  labelId: string
+  labelName: string
+  color: string
+  description?: string
 }
 
 
@@ -47,6 +55,7 @@ export default function AnnotationPage() {
   const assignmentId = state?.assignmentId
 
   const [dataItems, setDataItems] = useState<DataItem[]>([])
+  const [labels, setLabels] = useState<Label[]>([])
   const [currentIndex, setCurrentIndex] = useState(startIdx)
   const [comment, setComment] = useState('')
   const [reviewComment, setReviewComment] = useState('')
@@ -73,6 +82,8 @@ export default function AnnotationPage() {
   const dragStartWidthRef = useRef(0)
   const viewerRef = useRef<HTMLDivElement>(null)
   const [naturalSize, setNaturalSize] = useState<{ width: number; height: number } | null>(null)
+  // Ref to track item change for reviews re-fetch (prevents flicker on local state updates)
+  const lastReviewItemIdRef = useRef<string>('')
 
   const handlePaste = useCallback((e: React.ClipboardEvent) => {
     const items = e.clipboardData.items
@@ -148,13 +159,18 @@ export default function AnnotationPage() {
       setOffset({ x: 0, y: 0 })
 
       if (existing) {
-        setShapes((existing.annotationData.shapes as Shape[]) || (existing.annotationData.raw as Shape[]) || [])
+        const annoData = existing.annotationData as any
+        const shapesData = (annoData.shapes as Shape[]) || (annoData.raw as Shape[]) || []
+        setShapes(shapesData)
         setComment(existing.comment || '')
         setConfidence((existing.annotationConfidence as 'LOW' | 'MEDIUM' | 'HIGH') || null)
+        // Clear reviews immediately when switching, they will be re-fetched by the useEffect
+        setAnnotationReviews([])
       } else {
         setShapes([])
         setComment('')
         setConfidence(null)
+        setAnnotationReviews([])
       }
     },
     [sessionAnnotations]
@@ -174,6 +190,26 @@ export default function AnnotationPage() {
         let effectiveAssignmentId = assignmentId
         if (!effectiveAssignmentId && items.length > 0) {
           effectiveAssignmentId = items[0].assignmentId
+        }
+
+        // 2. Fetch labels if effectiveAssignmentId is available
+        if (effectiveAssignmentId) {
+          try {
+            const labelsRes = await assignmentApi.getLabelsByAssignmentId(effectiveAssignmentId)
+            const labelsData = labelsRes.data?.data || labelsRes.data || []
+            if (Array.isArray(labelsData)) {
+              // Normalize internal label structure to match UI expectations
+              const normLabels = labelsData.map((l: any) => ({
+                ...l,
+                labelId: l.labelId || l.id,
+                labelName: l.labelName || l.name,
+                color: l.color || '#8b5cf6'
+              }))
+              setLabels(normLabels)
+            }
+          } catch (labelErr) {
+            console.error('Failed to fetch labels for review:', labelErr)
+          }
         }
 
         // 2. Restore from localStorage if available
@@ -200,7 +236,9 @@ export default function AnnotationPage() {
                 (a: AnnotationSubmitItem) => a.dataitemId === restoredItemId
               )
               if (existing) {
-                setShapes((existing.annotationData.shapes as Shape[]) || (existing.annotationData.raw as Shape[]) || [])
+                const data = existing.annotationData as any
+                const parsedShapes = (data?.shapes || data?.raw || []) as Shape[]
+                setShapes(parsedShapes)
                 setComment(existing.comment || '')
                 setConfidence((existing.annotationConfidence as 'LOW' | 'MEDIUM' | 'HIGH') || null)
               }
@@ -244,23 +282,15 @@ export default function AnnotationPage() {
         const remoteAnno = res.data?.data || res.data
         if (remoteAnno && remoteAnno.annotationId) {
           const rvComment = remoteAnno.reviews?.[0]?.comment || ''
-          let annoData = { shapes: [], raw: [] }
-          if (remoteAnno.annotationData) {
-            try {
-              annoData = typeof remoteAnno.annotationData === 'string'
-                ? JSON.parse(remoteAnno.annotationData)
-                : remoteAnno.annotationData
-            } catch (e) { }
-          }
-
           const newAnno: AnnotationSubmitItem = {
+            taskId: taskId || '',
             annotationConfidence: remoteAnno.annotationConfidence || remoteAnno.annotation_confidence || null,
-            annotationData: annoData,
+            annotationData: remoteAnno.annotationData || { shapes: [], raw: [] },
             annotationStatus: (remoteAnno.annotationStatus || remoteAnno.annotation_status || 'DRAFT'),
             annotationType: (remoteAnno.annotationType || remoteAnno.annotation_type || 'CLASSIFICATION'),
             comment: remoteAnno.comment || '',
             dataitemId: itemId,
-            labelIds: remoteAnno.labels || remoteAnno.labelIds || []
+            labelIds: (remoteAnno.labels || remoteAnno.labelIds || []).map((l: any) => typeof l === 'object' ? (l.labelId || l.id) : l)
           }
             ; (newAnno as any).reviewerComment = rvComment
             ; (newAnno as any).isRemote = true
@@ -270,20 +300,13 @@ export default function AnnotationPage() {
             const existingIndex = prev.findIndex((a) => a.dataitemId === itemId)
             if (existingIndex >= 0) {
               const existing = prev[existingIndex]
-
-              // Always update if server status is more "definitive" (e.g. APPROVED/REJECTED) vs local SUBMITTED / DRAFT
-              // Or if local status is 'DRAFT' but server has real data
               const serverStatus = newAnno.annotationStatus.toUpperCase()
               const localStatus = (existing.annotationStatus || 'DRAFT').toUpperCase()
 
-              // Decision: If server is REJECTED or APPROVED, we should definitely show that. 
-              // Also if server changed desde local, we update status/comments/shapes from server
-              // (This solves the conflict where local storage still thinks it's SUBMITTED)
               if (serverStatus !== localStatus || !(existing as any).isRemote || !(existing as any).annotationId) {
                 const updated = [...prev]
                 updated[existingIndex] = {
                   ...newAnno,
-                  // If server is REJECTED, we load its exact shapes/labels from server too
                   annotationData: (serverStatus === 'REJECTED' || serverStatus === 'APPROVED')
                     ? newAnno.annotationData
                     : existing.annotationData
@@ -295,6 +318,11 @@ export default function AnnotationPage() {
               return [...prev, newAnno]
             }
           })
+
+          // If this is the current item, sync reviews too
+          if (itemId === currentItemId && remoteAnno.reviews) {
+            setAnnotationReviews(remoteAnno.reviews || [])
+          }
         }
       } catch (err) {
         // Ignore errors (e.g. 404 Not Found if no annotation exists yet)
@@ -311,30 +339,21 @@ export default function AnnotationPage() {
     const fetchRemote = async () => {
       try {
         const res = await annotationApi.getAnnotationByDataItemId(currentItemId)
-        if (!isMounted) return
+          if (!isMounted) return
 
-        const remoteAnno = res.data?.data || res.data
-        if (remoteAnno && remoteAnno.annotationId) {
-          const rvComment = remoteAnno.reviews?.[0]?.comment || ''
-          let annoData = { shapes: [], raw: [] }
-          if (remoteAnno.annotationData) {
-            try {
-              annoData = typeof remoteAnno.annotationData === 'string'
-                ? JSON.parse(remoteAnno.annotationData)
-                : remoteAnno.annotationData
-            } catch (e) {
-              console.warn('Failed to parse annotationData', e)
-            }
-          }
+          const remoteAnno = res.data?.data || res.data
+          if (remoteAnno && remoteAnno.annotationId) {
+            const rvComment = remoteAnno.reviews?.[0]?.comment || ''
 
           const newAnno: AnnotationSubmitItem = {
+            taskId: taskId || '',
             annotationConfidence: remoteAnno.annotationConfidence || remoteAnno.annotation_confidence || null,
-            annotationData: annoData,
+            annotationData: remoteAnno.annotationData || { shapes: [], raw: [] },
             annotationStatus: (remoteAnno.annotationStatus || remoteAnno.annotation_status || 'DRAFT'),
             annotationType: (remoteAnno.annotationType || remoteAnno.annotation_type || 'CLASSIFICATION'),
             comment: remoteAnno.comment || '',
             dataitemId: currentItemId,
-            labelIds: remoteAnno.labels || remoteAnno.labelIds || []
+            labelIds: (remoteAnno.labels || remoteAnno.labelIds || []).map((l: any) => typeof l === 'object' ? (l.labelId || l.id) : l)
           }
             ; (newAnno as any).reviewerComment = rvComment
             ; (newAnno as any).isRemote = true // Mark as fetched from remote
@@ -365,10 +384,13 @@ export default function AnnotationPage() {
             }
           })
 
-          const shapesData = (annoData.shapes as Shape[]) || (annoData.raw as Shape[]) || []
+          setAnnotationReviews(remoteAnno.reviews || [])
+          const data = (newAnno.annotationData as any)
+          const shapesData = (data?.shapes as Shape[]) || (data?.raw as Shape[]) || []
           setShapes(shapesData)
           setComment(remoteAnno.comment || '')
           setConfidence((remoteAnno.annotationConfidence as any) || null)
+          setAnnotationReviews(remoteAnno.reviews || [])
         }
       } catch (err) {
         console.warn('No remote annotation found or error fetching', err)
@@ -388,26 +410,38 @@ export default function AnnotationPage() {
 
   // Fetch review history when the active annotation changes
   useEffect(() => {
-    if (!currentItemId) {
+    // Only clear and re-fetch if we actually switched items
+    if (currentItemId !== lastReviewItemIdRef.current) {
       setAnnotationReviews([])
+      lastReviewItemIdRef.current = currentItemId
+    }
+
+    if (!currentItemId) {
       return
     }
     const annotation = sessionAnnotations.find(a => a.dataitemId === currentItemId)
+    
+    // If we already have reviews in the annotation object (from background sync), use them
+    if (annotation && (annotation as any).reviews && (annotation as any).reviews.length > 0) {
+      setAnnotationReviews((annotation as any).reviews)
+      return
+    }
+
     const annotationId = (annotation as any)?.annotationId || (annotation as any)?.id
 
     if (annotationId) {
+      // If reviews already exist in state for THIS item, don't re-fetch on every session update
+      if (annotationReviews.length > 0) return
+
       reviewerApi.getReviewsByAnnotationId(annotationId)
         .then(res => {
           setAnnotationReviews(res.data || [])
         })
         .catch(err => {
           console.warn('Failed to fetch past reviews:', err)
-          setAnnotationReviews([])
         })
-    } else {
-      setAnnotationReviews([])
     }
-  }, [currentItemId, sessionAnnotations])
+  }, [currentItemId, sessionAnnotations, annotationReviews.length])
 
   const handleWheel = (e: React.WheelEvent) => {
     const delta = e.deltaY > 0 ? -0.1 : 0.1
@@ -514,12 +548,24 @@ export default function AnnotationPage() {
         if (existingIndex >= 0) {
           updated[existingIndex] = {
             ...updated[existingIndex],
-            annotationStatus: status.toLowerCase() as any,
+            annotationStatus: status as any,
             isRemote: true
           } as any
         }
         return updated
       })
+
+      // Refresh reviews history immediately
+      if (annotationId) {
+        reviewerApi.getReviewsByAnnotationId(annotationId)
+          .then(res => setAnnotationReviews(res.data || []))
+          .catch(e => console.warn('Failed to refresh reviews', e))
+      }
+
+      // Clear inputs
+      setReviewComment('')
+      reviewImages.forEach(img => URL.revokeObjectURL(img.url))
+      setReviewImages([])
 
       message.success(`Annotation ${status.toLowerCase()} successfully!`)
     } catch (err) {
@@ -591,7 +637,8 @@ export default function AnnotationPage() {
                 (item as any).dataItem?.itemId ||
                 (item as any).id
               const annotation = sessionAnnotations.find(a => a.dataitemId === currentId)
-              const shapeCount = ((annotation?.annotationData?.shapes as Shape[]) || []).length
+              const data = annotation?.annotationData as any
+              const shapeCount = (data?.raw?.length || data?.shapes?.length || 0)
               const labelCount = annotation?.labelIds?.length || 0
 
               const displayStatus = annotation?.annotationStatus?.toUpperCase()
@@ -819,6 +866,38 @@ export default function AnnotationPage() {
 
           <div className="h-px bg-white/5 my-2" />
 
+          {/* Labels (Read-Only) */}
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[16px] text-violet-400">label</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Labels</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {labels.length > 0 ? labels.map(label => {
+                const isUsed = shapes.some(s => s.label === label.labelName)
+                return (
+                  <div
+                    key={label.labelId}
+                    className="px-4 py-1.5 rounded-lg border text-xs font-bold transition-all cursor-default select-none"
+                    style={{
+                      borderColor: isUsed ? label.color : `${label.color}40`,
+                      backgroundColor: isUsed ? label.color : `${label.color}1A`,
+                      color: isUsed ? '#fff' : label.color,
+                      boxShadow: isUsed ? `0 0 12px ${label.color}80` : 'none',
+                      opacity: isUsed ? 1 : 0.6
+                    }}
+                  >
+                    {label.labelName}
+                  </div>
+                )
+              }) : (
+                <span className="text-xs text-gray-600 italic">No labels available</span>
+              )}
+            </div>
+          </div>
+
+          <div className="h-px bg-white/5 my-2" />
+
           {/* Annotator Metadata for context */}
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-2">
@@ -901,7 +980,7 @@ export default function AnnotationPage() {
                 <pre className="text-[10px] font-mono text-blue-400/80 whitespace-pre-wrap leading-relaxed">
                   {JSON.stringify(
                     {
-                      shapes: shapes.map((s) => ({ type: s.type, label: s.label })),
+                      raw: shapes
                     },
                     null,
                     2

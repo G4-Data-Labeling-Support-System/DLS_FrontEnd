@@ -13,12 +13,15 @@ import { GlassModal } from '@/shared/components/ui/GlassModal'
 import { EditOutlined, MoreOutlined } from '@ant-design/icons'
 import guidelineApi from '@/api/GuidelineApi'
 import { CreateProjectModal } from './CreateProjectModal'
+import assignmentApi from '@/api/AssignmentApi'
 import {
   useProjectById,
   useGuidelinesByProject,
   useProjectMembers,
-  useInvalidateProjectDetail
+  useInvalidateProjectDetail,
+  useAssignmentsByProject
 } from '@/features/manager/hooks/useProjectDetail'
+import { DownloadOutlined } from '@ant-design/icons'
 
 interface ProjectDetailProps {
   projectId: string
@@ -38,10 +41,12 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
   const { data: guidelines = [], isLoading: guidelinesLoading } = useGuidelinesByProject(projectId)
   const { data: members = [], isLoading: membersLoading } = useProjectMembers(projectId)
   const invalidateProjectDetail = useInvalidateProjectDetail()
+  const { data: projectAssignments = [], isLoading: assignmentsLoading } = useAssignmentsByProject(projectId)
 
-  const loading = projectLoading || guidelinesLoading || membersLoading
+  const loading = projectLoading || guidelinesLoading || membersLoading || assignmentsLoading
 
   const [isEditProjectModalVisible, setIsEditProjectModalVisible] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
   const [guidelineForm] = Form.useForm()
 
   const [editingGuideline, setEditingGuideline] = useState<Record<string, unknown> | null>(null)
@@ -96,6 +101,40 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
     }
   }
 
+  const handleExport = async (format: string) => {
+    if (projectAssignments.length === 0) {
+      message.warning('No assignments found to export.')
+      return
+    }
+
+    const assignmentId = projectAssignments[0].assignmentId
+    if (!assignmentId) return
+
+    try {
+      setIsExporting(true)
+      const res = await assignmentApi.exportAssignment(assignmentId, format)
+      
+      // Create a blob URL and trigger download
+      const blob = new Blob([res.data], { type: res.headers?.['content-type'] || 'application/octet-stream' })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      const extension = format.toLowerCase() === 'json' ? 'json' : 'zip'
+      link.setAttribute('download', `${project?.projectName || 'export'}_${format}_${Date.now()}.${extension}`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+      
+      message.success(`Project exported in ${format} format successfully!`)
+    } catch (error) {
+      console.error('Export failed', error)
+      message.error('Failed to export project. Please try again.')
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A'
     return new Date(dateString).toLocaleString('vi-VN')
@@ -119,7 +158,28 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
 
   return (
     <div className="w-full animate-fade-in">
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-end mb-4 gap-3">
+        {projectAssignments.length > 0 && (
+          <Dropdown
+            menu={{
+              items: [
+                { key: 'YOLO', label: 'YOLO Format', onClick: () => handleExport('YOLO') },
+                { key: 'COCO', label: 'COCO Format', onClick: () => handleExport('COCO') },
+                { key: 'JSON', label: 'JSON Format', onClick: () => handleExport('JSON') },
+              ]
+            }}
+            trigger={['click']}
+            disabled={isExporting}
+          >
+            <Button
+              className="bg-transparent border border-violet-500/30 text-violet-400 hover:text-white hover:border-violet-500 rounded-lg font-medium"
+              icon={<DownloadOutlined />}
+              loading={isExporting}
+            >
+              Export Labels
+            </Button>
+          </Dropdown>
+        )}
         <Button
           type="primary"
           icon={<EditOutlined />}

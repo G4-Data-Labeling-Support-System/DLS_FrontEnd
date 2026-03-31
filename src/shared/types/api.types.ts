@@ -174,6 +174,7 @@ export interface ApiResponse<T> {
 }
 
 export interface AnnotationSubmitItem {
+  taskId: string
   annotationConfidence: 'LOW' | 'MEDIUM' | 'HIGH' | string
   annotationData: Record<string, unknown>
   annotationStatus: 'SUBMITTED' | 'APPROVED' | 'REJECTED' | 'INACTIVE' | string

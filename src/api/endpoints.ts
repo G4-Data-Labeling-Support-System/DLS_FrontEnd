@@ -57,7 +57,8 @@ export const ENDPOINTS = {
     LABELS: (assignmentId: string) => `/assignments/${assignmentId}/labels`,
     DATASET: (assignmentId: string) => `/assignments/${assignmentId}/dataset`,
     CHANGE_DATASET: (assignmentId: string) =>
-      `/assignments/change-dataset/assignment/${assignmentId}`
+      `/assignments/change-dataset/assignment/${assignmentId}`,
+    EXPORT: (id: string) => `/assignments/${id}/export`
   },
 
   ANNOTATIONS: {
