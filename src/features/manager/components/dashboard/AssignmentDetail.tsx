@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { App, Spin, Button } from 'antd'
-import { EditOutlined } from '@ant-design/icons'
+import { App, Spin, Button, Dropdown } from 'antd'
+import { EditOutlined, DownloadOutlined } from '@ant-design/icons'
 import assignmentApi, { type GetAssignmentsParams } from '@/api/AssignmentApi'
 import taskApi from '@/api/TaskApi'
 import projectApi from '@/api/ProjectApi'
@@ -56,6 +56,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
     user?.userRole?.toLowerCase().includes('admin')
 
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const [isExporting, setIsExporting] = useState(false)
   const handleRefresh = () => setRefreshTrigger((prev) => prev + 1)
   const [searchParams, setSearchParams] = useSearchParams()
 
@@ -245,6 +246,32 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
     return new Date(dateString).toLocaleString('vi-VN')
   }
 
+  const handleExport = async (format: string) => {
+    if (!assignment?.assignmentId) return
+
+    try {
+      setIsExporting(true)
+      const res = await assignmentApi.exportAssignment(assignment.assignmentId, format.toLowerCase())
+      
+      const blob = new Blob([res.data], { type: res.headers?.['content-type'] || 'application/zip' })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `${assignment.assignmentName || 'export'}_${format}_${Date.now()}.zip`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+      
+      message.success(`Assignment exported in ${format} format successfully!`)
+    } catch (error) {
+      console.error('Export failed', error)
+      message.error('Failed to export assignment. Please try again.')
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="w-full h-64 flex justify-center items-center">
@@ -327,16 +354,37 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
             <h1 className="text-3xl font-bold text-white tracking-tight">{assignment.assignmentName}</h1>
             <p className="text-sm text-gray-400 mt-1 font-mono">{assignment.assignmentId}</p>
           </div>
-          {onEdit && (
-            <Button
-              type="primary"
-              icon={<EditOutlined />}
-              className="bg-violet-600 hover:bg-violet-500 border-none shadow-[0_0_20px_rgba(139,92,246,0.3)] h-10 px-6 rounded-xl transition-all"
-              onClick={() => onEdit(assignment)}
+          <div className="flex items-center gap-3">
+            <Dropdown
+              menu={{
+                items: [
+                  { key: 'YOLO', label: 'YOLO Format', onClick: () => handleExport('YOLO') },
+                  { key: 'COCO', label: 'COCO Format', onClick: () => handleExport('COCO') },
+                  { key: 'JSON', label: 'JSON Format', onClick: () => handleExport('JSON') },
+                ]
+              }}
+              trigger={['click']}
+              disabled={isExporting}
             >
-              Edit Assignment
-            </Button>
-          )}
+              <Button
+                className="bg-transparent border border-violet-500/30 text-violet-400 hover:text-white hover:border-violet-500 rounded-xl font-medium shadow-[0_0_20px_rgba(139,92,246,0.1)] h-10 px-6 transition-all"
+                icon={<DownloadOutlined />}
+                loading={isExporting}
+              >
+                Export
+              </Button>
+            </Dropdown>
+            {onEdit && (
+              <Button
+                type="primary"
+                icon={<EditOutlined />}
+                className="bg-violet-600 hover:bg-violet-500 border-none shadow-[0_0_20px_rgba(139,92,246,0.3)] h-10 px-6 rounded-xl transition-all"
+                onClick={() => onEdit(assignment)}
+              >
+                Edit Assignment
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
