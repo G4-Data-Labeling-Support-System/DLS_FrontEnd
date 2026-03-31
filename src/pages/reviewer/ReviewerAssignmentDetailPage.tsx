@@ -5,7 +5,7 @@ import { ArrowLeftOutlined, LoadingOutlined } from '@ant-design/icons'
 
 import assignmentApi from '@/api/AssignmentApi'
 import taskApi from '@/api/TaskApi'
-import datasetApi from '@/api/DatasetApi'
+import ReviewerDatasetDetailPage from '@/pages/reviewer/ReviewerDatasetDetailPage'
 import ReviewerTasksSection, { type Task } from '@/features/reviewer/components/ReviewerTasksSection'
 
 interface Assignment {
@@ -33,6 +33,7 @@ export default function ReviewerAssignmentDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [datasetName, setDatasetName] = useState<string>('')
+  const [datasetIdState, setDatasetIdState] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchAssignmentData = async () => {
@@ -96,18 +97,22 @@ export default function ReviewerAssignmentDetailPage() {
   }, [assignmentId])
 
   useEffect(() => {
-    const fetchDatasetName = async () => {
-      if (assignment?.datasetId) {
+    const fetchDatasetInfo = async () => {
+      if (assignment?.id) {
         try {
-          const res = await datasetApi.getDatasetById(assignment.datasetId)
-          setDatasetName(res.data?.data?.name || res.data?.name || '')
+          const res = await assignmentApi.getDatasetByAssignmentId(assignment.id)
+          const ds = res.data?.data || res.data
+          if (ds) {
+            setDatasetName(ds.datasetName || ds.name || '')
+            setDatasetIdState(ds.datasetId || ds.id || null)
+          }
         } catch (e) {
-          console.warn('Failed to fetch dataset name', e)
+          console.warn('Failed to fetch dataset info by assignment id', e)
         }
       }
     }
-    fetchDatasetName()
-  }, [assignment?.datasetId])
+    fetchDatasetInfo()
+  }, [assignment?.id])
 
   const handleBack = () => {
     if (searchParams.get('assignmentId')) {
@@ -148,6 +153,11 @@ export default function ReviewerAssignmentDetailPage() {
         </div>
       </div>
     )
+  }
+
+  const viewDatasetId = searchParams.get('datasetId')
+  if (viewDatasetId) {
+    return <ReviewerDatasetDetailPage />
   }
 
   const progress = assignment.totalTasks > 0 ? Math.round((assignment.completedTasks / assignment.totalTasks) * 100) : 0
@@ -242,13 +252,27 @@ export default function ReviewerAssignmentDetailPage() {
               Assigned Dataset
             </h3>
             {datasetName ? (
-              <div className="bg-white/5 p-5 rounded-xl border border-white/10">
-                <h4 className="text-white font-bold">{datasetName}</h4>
-                <p className="text-xs text-gray-500 mt-2">Source dataset for review</p>
+              <div
+                className="bg-white/5 p-5 rounded-xl border border-white/10 hover:border-fuchsia-500/50 hover:bg-white/10 transition-all cursor-pointer group"
+                onClick={() => {
+                  setSearchParams(prev => {
+                    const next = new URLSearchParams(prev)
+                    next.set('datasetId', datasetIdState || assignment.datasetId || '')
+                    return next
+                  })
+                }}
+              >
+                <h4 className="text-white font-bold group-hover:text-fuchsia-400 transition-colors">
+                  {datasetName}
+                </h4>
+                <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[12px]">visibility</span>
+                  Click to view dataset details
+                </p>
               </div>
             ) : (
                 <div className="bg-white/5 p-5 rounded-xl border border-white/5 text-center italic text-gray-500">
-                    {assignment.datasetId || 'No assigned dataset'}
+                    {datasetIdState || assignment.datasetId || 'No assigned dataset'}
                 </div>
             )}
           </div>
