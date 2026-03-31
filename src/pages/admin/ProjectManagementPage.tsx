@@ -53,7 +53,13 @@ export default function ProjectManagement() {
                 message.success(`Project ${project.projectName} has been removed.`)
               },
               onError: (error) => {
-                message.error(`Failed to remove project: ${error.message || 'Unknown error'}`)
+                const err = error as { message?: string, response?: { data?: { errorCode?: string; message?: string; error?: string } } }
+                const errorData = err.response?.data
+                if (errorData?.errorCode === 'PROJECT_CANNOT_DELETE_WHEN_ASSIGNMENT_ACTIVE') {
+                  message.error(errorData.message || 'Project cannot delete when assignment has active')
+                } else {
+                  message.error(`Failed to remove project: ${errorData?.message || errorData?.error || err.message || 'Unknown error'}`)
+                }
               }
             })
           }

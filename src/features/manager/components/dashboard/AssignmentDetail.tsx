@@ -265,8 +265,29 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
       
       message.success(`Assignment exported in ${format} format successfully!`)
     } catch (error) {
-      console.error('Export failed', error)
-      message.error('Failed to export assignment. Please try again.')
+      const err = error as any
+      console.error('Export failed', err)
+      let errorMessage = 'Failed to export assignment. Please try again.'
+      
+      if (err.response?.data instanceof Blob && err.response.data.type === 'application/json') {
+        try {
+          const text = await err.response.data.text()
+          const errorData = JSON.parse(text)
+          if (errorData.code === 'ASSIGNMENT_NOT_COMPLETE_TO_EXPORT' || errorData.errorCode === 'ASSIGNMENT_NOT_COMPLETE_TO_EXPORT') {
+            errorMessage = 'Assignment is not complete to export'
+          } else if (errorData.code === 'ANNOTATION_MIXED_TYPE_NOT_SUPPORTED' || errorData.errorCode === 'ANNOTATION_MIXED_TYPE_NOT_SUPPORTED') {
+            errorMessage = 'Cannot export to yolo because annotation has also bounding box and polygon'
+          } else if (errorData.message) {
+            errorMessage = errorData.message
+          }
+        } catch (e) {
+          console.error('Failed to parse error blob', e)
+        }
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message
+      }
+      
+      message.error(errorMessage)
     } finally {
       setIsExporting(false)
     }
