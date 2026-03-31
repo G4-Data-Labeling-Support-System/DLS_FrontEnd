@@ -582,25 +582,23 @@ export default function TaskDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0e17] p-8">
-      <TaskDetail
-        task={
-          task
-            ? {
-              ...task,
-              taskId: String(task.taskId || task.id),
-              taskName: String(task.taskName || task.name || 'Untitled Task')
-            }
-            : null
-        }
-        loading={loading}
-        onItemClick={handleItemClick}
-        onBack={() => navigate(-1)}
-        onStartLabeling={handleStartLabeling}
-        onRefresh={() => {
-          window.location.reload()
-        }}
-      />
-    </div>
+    <TaskDetail
+      task={
+        task
+          ? {
+            ...task,
+            taskId: String(task.taskId || task.id),
+            taskName: String(task.taskName || task.name || 'Untitled Task')
+          }
+          : null
+      }
+      loading={loading}
+      onItemClick={handleItemClick}
+      onBack={() => navigate(-1)}
+      onStartLabeling={handleStartLabeling}
+      onRefresh={() => {
+        window.location.reload()
+      }}
+    />
   )
 }

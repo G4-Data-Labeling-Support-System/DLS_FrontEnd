@@ -178,7 +178,6 @@ export default function ReviewerAssignmentDetailPage() {
               </span>
             </div>
             <h1 className="text-3xl font-bold text-white tracking-tight">{assignment.name}</h1>
-            <p className="text-sm text-gray-400 mt-1 font-mono">{assignment.id}</p>
           </div>
         </div>
       </div>
@@ -232,7 +231,7 @@ export default function ReviewerAssignmentDetailPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-           <div className="glass-panel border border-white/5 bg-[#1A1625]/60 rounded-2xl p-6 shadow-xl">
+          <div className="glass-panel border border-white/5 bg-[#1A1625]/60 rounded-2xl p-6 shadow-xl">
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px] text-blue-400">folder_special</span>
               Associated Project
@@ -247,7 +246,7 @@ export default function ReviewerAssignmentDetailPage() {
           </div>
 
           <div className="glass-panel border border-white/5 bg-[#1A1625]/60 rounded-2xl p-6 shadow-xl">
-             <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px] text-fuchsia-400">database</span>
               Assigned Dataset
             </h3>
@@ -271,9 +270,9 @@ export default function ReviewerAssignmentDetailPage() {
                 </p>
               </div>
             ) : (
-                <div className="bg-white/5 p-5 rounded-xl border border-white/5 text-center italic text-gray-500">
-                    {datasetIdState || assignment.datasetId || 'No assigned dataset'}
-                </div>
+              <div className="bg-white/5 p-5 rounded-xl border border-white/5 text-center italic text-gray-500">
+                {datasetIdState || assignment.datasetId || 'No assigned dataset'}
+              </div>
             )}
           </div>
         </div>
