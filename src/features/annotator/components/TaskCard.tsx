@@ -1,8 +1,11 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import getTaskStatusStyle, {
   getAnnotationStatusLabel,
   getAnnotationStatusStyle
 } from './StatusStyle'
+import { useTaskDetail } from '@/features/annotator/hooks/useTaskDetail'
+import annotationApi from '@/api/annotation'
 
 interface Task {
   id: string
@@ -23,8 +26,62 @@ export default function TaskCard({ task, assignmentId }: { task: Task; assignmen
   const taskStatus = task.taskStatus || task.status || task.reviewStatus || 'NOT_STARTED'
   const taskName = task.name || task.filename || 'Untitled Task'
 
-  const completed = task.completedItems ?? 0
-  const total = task.totalItems ?? 0
+  const { data: dataItems = [] } = useTaskDetail(task.id)
+  const [sessionAnnotations, setSessionAnnotations] = useState<any[]>([])
+  const [remoteStatuses, setRemoteStatuses] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    if (task.id) {
+      const saved = localStorage.getItem(`annotation_session_${task.id}`)
+      if (saved) {
+        try {
+          setSessionAnnotations(JSON.parse(saved))
+        } catch (e) {}
+      }
+    }
+  }, [task.id])
+
+  useEffect(() => {
+    if (dataItems.length === 0) return
+    dataItems.forEach(async (item: any) => {
+      const id = item.dataItemId || item.dataitemId || item.itemId || item.dataItem?.itemId || item.id
+      if (!id) return
+      try {
+        const res = await annotationApi.getAnnotationByDataItemId(id)
+        const remoteAnno = res.data?.data || res.data
+        if (remoteAnno && (remoteAnno.annotationStatus || remoteAnno.annotation_status || remoteAnno.status)) {
+          const status = (remoteAnno.annotationStatus || remoteAnno.annotation_status || remoteAnno.status).toUpperCase()
+          setRemoteStatuses(prev => ({ ...prev, [id]: status }))
+        }
+      } catch (err) {}
+    })
+  }, [dataItems])
+
+  const getAnnotatedCount = () => {
+    if (!dataItems.length) return task.completedItems ?? 0
+    const annotatedIds = new Set<string>()
+
+    dataItems.forEach((item: any) => {
+      if (item.taskDataItemStatus === 'COMPLETED') annotatedIds.add(item.dataItemId)
+    })
+
+    Object.entries(remoteStatuses).forEach(([id, status]) => {
+      if (status === 'SUBMITTED' || status === 'APPROVED' || status === 'COMPLETED') {
+        annotatedIds.add(id)
+      }
+    })
+
+    sessionAnnotations.forEach((anno) => {
+      if (anno.annotationStatus === 'SUBMITTED' || anno.annotationStatus === 'APPROVED') {
+        annotatedIds.add(anno.dataitemId)
+      }
+    })
+
+    return annotatedIds.size
+  }
+
+  const completed = getAnnotatedCount()
+  const total = dataItems.length > 0 ? dataItems.length : (task.totalItems ?? 0)
   const progress = total > 0 ? Math.round((completed / total) * 100) : 0
 
   const statusStyle = getTaskStatusStyle(taskStatus)
