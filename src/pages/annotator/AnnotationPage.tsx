@@ -299,10 +299,20 @@ export default function AnnotationPage() {
         const remoteAnno = res.data?.data || res.data
         if (remoteAnno && remoteAnno.annotationId) {
           const rvComment = remoteAnno.reviews?.[0]?.comment || ''
+
+          let parsedData = { shapes: [], raw: [] }
+          if (remoteAnno.annotationData) {
+            try {
+              parsedData = typeof remoteAnno.annotationData === 'string'
+                ? JSON.parse(remoteAnno.annotationData)
+                : remoteAnno.annotationData
+            } catch (e) {}
+          }
+
           const newAnno: AnnotationSubmitItem = {
             taskId: taskId || '',
             annotationConfidence: remoteAnno.annotationConfidence || remoteAnno.annotation_confidence || null,
-            annotationData: remoteAnno.annotationData || { shapes: [], raw: [] },
+            annotationData: parsedData,
             annotationStatus: (remoteAnno.annotationStatus || remoteAnno.annotation_status || 'DRAFT'),
             annotationType: (remoteAnno.annotationType || remoteAnno.annotation_type || 'CLASSIFICATION'),
             comment: remoteAnno.comment || '',
@@ -364,10 +374,20 @@ export default function AnnotationPage() {
         const remoteAnno = res.data?.data || res.data
         if (remoteAnno && remoteAnno.annotationId) {
           const rvComment = remoteAnno.reviews?.[0]?.comment || ''
+
+          let parsedData = { shapes: [], raw: [] }
+          if (remoteAnno.annotationData) {
+            try {
+              parsedData = typeof remoteAnno.annotationData === 'string'
+                ? JSON.parse(remoteAnno.annotationData)
+                : remoteAnno.annotationData
+            } catch (e) {}
+          }
+
           const newAnno: AnnotationSubmitItem = {
             taskId: taskId || '',
             annotationConfidence: remoteAnno.annotationConfidence || remoteAnno.annotation_confidence || null,
-            annotationData: remoteAnno.annotationData || { shapes: [], raw: [] },
+            annotationData: parsedData,
             annotationStatus: (remoteAnno.annotationStatus || remoteAnno.annotation_status || 'DRAFT'),
             annotationType: (remoteAnno.annotationType || remoteAnno.annotation_type || 'CLASSIFICATION'),
             comment: remoteAnno.comment || '',

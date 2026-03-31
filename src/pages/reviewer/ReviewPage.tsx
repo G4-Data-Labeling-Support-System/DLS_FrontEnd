@@ -159,8 +159,11 @@ export default function AnnotationPage() {
       setOffset({ x: 0, y: 0 })
 
       if (existing) {
-        const annoData = existing.annotationData as any
-        const shapesData = (annoData.shapes as Shape[]) || (annoData.raw as Shape[]) || []
+        let annoData = existing.annotationData as any
+        try {
+          if (typeof annoData === 'string') annoData = JSON.parse(annoData)
+        } catch (e) {}
+        const shapesData = (annoData?.shapes as Shape[]) || (annoData?.raw as Shape[]) || []
         setShapes(shapesData)
         setComment(existing.comment || '')
         setConfidence((existing.annotationConfidence as 'LOW' | 'MEDIUM' | 'HIGH') || null)
@@ -236,7 +239,10 @@ export default function AnnotationPage() {
                 (a: AnnotationSubmitItem) => a.dataitemId === restoredItemId
               )
               if (existing) {
-                const data = existing.annotationData as any
+                let data = existing.annotationData as any
+                try {
+                  if (typeof data === 'string') data = JSON.parse(data)
+                } catch (e) {}
                 const parsedShapes = (data?.shapes || data?.raw || []) as Shape[]
                 setShapes(parsedShapes)
                 setComment(existing.comment || '')
@@ -282,10 +288,20 @@ export default function AnnotationPage() {
         const remoteAnno = res.data?.data || res.data
         if (remoteAnno && remoteAnno.annotationId) {
           const rvComment = remoteAnno.reviews?.[0]?.comment || ''
+
+          let parsedData = { shapes: [], raw: [] }
+          if (remoteAnno.annotationData) {
+            try {
+              parsedData = typeof remoteAnno.annotationData === 'string'
+                ? JSON.parse(remoteAnno.annotationData)
+                : remoteAnno.annotationData
+            } catch (e) {}
+          }
+
           const newAnno: AnnotationSubmitItem = {
             taskId: taskId || '',
             annotationConfidence: remoteAnno.annotationConfidence || remoteAnno.annotation_confidence || null,
-            annotationData: remoteAnno.annotationData || { shapes: [], raw: [] },
+            annotationData: parsedData,
             annotationStatus: (remoteAnno.annotationStatus || remoteAnno.annotation_status || 'DRAFT'),
             annotationType: (remoteAnno.annotationType || remoteAnno.annotation_type || 'CLASSIFICATION'),
             comment: remoteAnno.comment || '',
@@ -345,10 +361,19 @@ export default function AnnotationPage() {
           if (remoteAnno && remoteAnno.annotationId) {
             const rvComment = remoteAnno.reviews?.[0]?.comment || ''
 
+          let parsedData = { shapes: [], raw: [] }
+          if (remoteAnno.annotationData) {
+            try {
+              parsedData = typeof remoteAnno.annotationData === 'string'
+                ? JSON.parse(remoteAnno.annotationData)
+                : remoteAnno.annotationData
+            } catch (e) {}
+          }
+
           const newAnno: AnnotationSubmitItem = {
             taskId: taskId || '',
             annotationConfidence: remoteAnno.annotationConfidence || remoteAnno.annotation_confidence || null,
-            annotationData: remoteAnno.annotationData || { shapes: [], raw: [] },
+            annotationData: parsedData,
             annotationStatus: (remoteAnno.annotationStatus || remoteAnno.annotation_status || 'DRAFT'),
             annotationType: (remoteAnno.annotationType || remoteAnno.annotation_type || 'CLASSIFICATION'),
             comment: remoteAnno.comment || '',
