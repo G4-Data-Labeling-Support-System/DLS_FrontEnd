@@ -5,8 +5,8 @@ import { ArrowLeftOutlined, LoadingOutlined } from '@ant-design/icons'
 
 import assignmentApi from '@/api/AssignmentApi'
 import taskApi from '@/api/TaskApi'
-import datasetApi from '@/api/DatasetApi'
 import { TasksSection } from '@/features/annotator'
+import AnnotatorDatasetDetailPage from '@/pages/annotator/AnnotatorDatasetDetailPage'
 
 interface AssignmentTask {
   id: string
@@ -30,6 +30,7 @@ interface Assignment {
   completedTasks: number
   totalTasks: number
   tasks: AssignmentTask[]
+  updatedAt?: string
 }
 
 export default function AnnotatorAssignmentDetailPage() {
@@ -108,23 +109,28 @@ export default function AnnotatorAssignmentDetailPage() {
   }, [assignmentId])
 
   const [datasetName, setDatasetName] = useState<string>('')
+  const [datasetIdState, setDatasetIdState] = useState<string | null>(null)
 
   useEffect(() => {
-    const fetchDatasetName = async () => {
-      if (assignment?.datasetId) {
+    const fetchDatasetInfo = async () => {
+      if (assignment?.id) {
         try {
-          const res = await datasetApi.getDatasetById(assignment.datasetId)
-          setDatasetName(res.data?.data?.name || res.data?.name || '')
+          const res = await assignmentApi.getDatasetByAssignmentId(assignment.id)
+          const ds = res.data?.data || res.data
+          if (ds) {
+            setDatasetName(ds.datasetName || ds.name || '')
+            setDatasetIdState(ds.datasetId || ds.id || null)
+          }
         } catch (e) {
-          console.warn('Failed to fetch dataset name', e)
+          console.warn('Failed to fetch dataset info by assignment id', e)
         }
       }
     }
-    fetchDatasetName()
-  }, [assignment?.datasetId])
+    fetchDatasetInfo()
+  }, [assignment?.id])
 
   const deadlineStr =
-    assignment?.dueDate || assignment?.deadline || (assignment as any)?.updatedAt || new Date().toISOString()
+    assignment?.dueDate || assignment?.deadline || assignment?.updatedAt || new Date().toISOString()
 
   const daysLeft = useMemo(() => {
     const diff = new Date(deadlineStr).getTime() - Date.now()
@@ -171,6 +177,11 @@ export default function AnnotatorAssignmentDetailPage() {
         </div>
       </div>
     )
+  }
+
+  const viewDatasetId = searchParams.get('datasetId')
+  if (viewDatasetId) {
+    return <AnnotatorDatasetDetailPage />
   }
 
   const progress = assignment.totalTasks > 0 ? Math.round((assignment.completedTasks / assignment.totalTasks) * 100) : 0
@@ -306,7 +317,13 @@ export default function AnnotatorAssignmentDetailPage() {
             {datasetName ? (
               <div
                 className="bg-white/5 p-5 rounded-xl border border-white/10 hover:border-fuchsia-500/50 hover:bg-white/10 transition-all cursor-pointer group"
-                onClick={() => navigate(`/annotator/datasets/${(assignment as any).datasetId}`)}
+                onClick={() => {
+                  setSearchParams(prev => {
+                    const next = new URLSearchParams(prev)
+                    next.set('datasetId', datasetIdState || assignment.datasetId || '')
+                    return next
+                  })
+                }}
               >
                 <h4 className="text-white font-bold group-hover:text-fuchsia-400 transition-colors">
                   {datasetName}
@@ -318,7 +335,7 @@ export default function AnnotatorAssignmentDetailPage() {
               </div>
             ) : (
               <div className="bg-white/5 p-5 rounded-xl border border-white/5 text-center italic text-gray-500">
-                {assignment.datasetId || 'No assigned dataset'}
+                {datasetIdState || assignment.datasetId || 'No assigned dataset'}
               </div>
             )}
           </div>

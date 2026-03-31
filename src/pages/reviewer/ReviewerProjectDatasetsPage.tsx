@@ -140,7 +140,7 @@ export default function ReviewerProjectDatasetsPage() {
               <DatasetCard
                 key={ds.datasetId}
                 {...ds}
-                onClick={() => {}} // Reviewers might not have a dataset detail view yet, or can use same as annotator
+                onClick={() => navigate(`/reviewer/projects/${projectId}/datasets/${ds.datasetId}`)}
               />
             ))}
           </div>
