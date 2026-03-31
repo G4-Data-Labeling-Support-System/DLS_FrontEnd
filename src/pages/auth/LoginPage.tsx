@@ -47,9 +47,11 @@ export default function LoginPage() {
 
       // Tùy chỉnh Error Message theo Status Code ở đây:
       if (status === 400 || status === 401 || status === 403) {
-        setErrorMessage('Invalid password. Please check and try again.')
+        setErrorMessage('Invalid username or password. Please check and try again.')
       } else if (status === 404) {
         setErrorMessage('User not found.')
+      } else if (status === 500) {
+        setErrorMessage('Internal Server Error. Please contact support.')
       } else {
         // Fallback: Lấy nội dung từ Backend hoặc hiển thị lỗi mặc định
         setErrorMessage(serverMsg || axiosError.message || 'An unexpected error occurred')
