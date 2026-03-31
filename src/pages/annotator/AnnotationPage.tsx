@@ -62,7 +62,7 @@ export default function AnnotationPage() {
   const [confidence, setConfidence] = useState<'LOW' | 'MEDIUM' | 'HIGH' | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [isDirty, setIsDirty] = useState(false)
+  const [, setIsDirty] = useState(false)
 
   // Zoom and Tool States
   const [zoom, setZoom] = useState(1)

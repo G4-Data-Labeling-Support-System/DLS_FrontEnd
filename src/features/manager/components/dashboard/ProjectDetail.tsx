@@ -112,15 +112,14 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
 
     try {
       setIsExporting(true)
-      const res = await assignmentApi.exportAssignment(assignmentId, format)
+      const res = await assignmentApi.exportAssignment(assignmentId, format.toLowerCase())
       
       // Create a blob URL and trigger download
-      const blob = new Blob([res.data], { type: res.headers?.['content-type'] || 'application/octet-stream' })
+      const blob = new Blob([res.data], { type: res.headers?.['content-type'] || 'application/zip' })
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
-      const extension = format.toLowerCase() === 'json' ? 'json' : 'zip'
-      link.setAttribute('download', `${project?.projectName || 'export'}_${format}_${Date.now()}.${extension}`)
+      link.setAttribute('download', `${project?.projectName || 'export'}_${format}_${Date.now()}.zip`)
       document.body.appendChild(link)
       link.click()
       link.remove()
