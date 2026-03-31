@@ -62,7 +62,7 @@ export default function AnnotationPage() {
   const [confidence, setConfidence] = useState<'LOW' | 'MEDIUM' | 'HIGH' | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [isDirty, setIsDirty] = useState(false)
+  const [, setIsDirty] = useState(false)
 
   // Zoom and Tool States
   const [zoom, setZoom] = useState(1)
@@ -77,7 +77,7 @@ export default function AnnotationPage() {
   // New: Redo Stack
   const [redoStack, setRedoStack] = useState<Shape[]>([])
   const [naturalSize, setNaturalSize] = useState<{ width: number; height: number } | null>(null)
-  
+
   // Review history for the currently selected annotation
   const [annotationReviews, setAnnotationReviews] = useState<any[]>([])
 
@@ -89,6 +89,7 @@ export default function AnnotationPage() {
   const dragStartWidthRef = useRef(0)
   const viewerRef = useRef<HTMLDivElement>(null)
   const lastClickTimeRef = useRef<number>(0)
+  const lastReviewItemIdRef = useRef<string>('')
 
   useEffect(() => {
     const onMouseMove = (e: MouseEvent) => {
@@ -154,11 +155,21 @@ export default function AnnotationPage() {
       // Reset Redo Stack on page change
       setRedoStack([])
       setIsDirty(false)
+      setAnnotationReviews([])
 
       if (existing) {
-        setShapes((existing.annotationData.shapes as Shape[]) || (existing.annotationData.raw as Shape[]) || [])
+        let parsedData = { shapes: [], raw: [] }
+        try {
+          parsedData = typeof existing.annotationData === 'string'
+            ? JSON.parse(existing.annotationData)
+            : (existing.annotationData as any)
+        } catch (e) { }
+
+        const shapesData = (parsedData.shapes as Shape[]) || (parsedData.raw as Shape[]) || []
+        setShapes(shapesData)
         setComment(existing.comment || '')
-        setSelectedLabels(existing.labelIds || [])
+        const sanitizedLabels = (existing.labelIds || []).map((l: any) => typeof l === 'object' ? (l.labelId || l.id) : l) as string[]
+        setSelectedLabels(sanitizedLabels)
         setConfidence((existing.annotationConfidence as 'LOW' | 'MEDIUM' | 'HIGH') || null)
       } else {
         setShapes([])
@@ -238,9 +249,12 @@ export default function AnnotationPage() {
                 (a: AnnotationSubmitItem) => a.dataitemId === restoredItemId
               )
               if (existing) {
-                setShapes((existing.annotationData.shapes as Shape[]) || (existing.annotationData.raw as Shape[]) || [])
+                const data = existing.annotationData as any
+                const parsedShapes = (data?.shapes || data?.raw || []) as Shape[]
+                setShapes(parsedShapes)
                 setComment(existing.comment || '')
-                setSelectedLabels(existing.labelIds || [])
+                const sanitizedLabels = (existing.labelIds || []).map((l: any) => typeof l === 'object' ? (l.labelId || l.id) : l) as string[]
+                setSelectedLabels(sanitizedLabels)
                 setConfidence((existing.annotationConfidence as 'LOW' | 'MEDIUM' | 'HIGH') || null)
               }
             }
@@ -285,23 +299,25 @@ export default function AnnotationPage() {
         const remoteAnno = res.data?.data || res.data
         if (remoteAnno && remoteAnno.annotationId) {
           const rvComment = remoteAnno.reviews?.[0]?.comment || ''
-          let annoData = { shapes: [], raw: [] }
+
+          let parsedData = { shapes: [], raw: [] }
           if (remoteAnno.annotationData) {
             try {
-              annoData = typeof remoteAnno.annotationData === 'string'
+              parsedData = typeof remoteAnno.annotationData === 'string'
                 ? JSON.parse(remoteAnno.annotationData)
                 : remoteAnno.annotationData
-            } catch (e) { }
+            } catch (e) {}
           }
 
           const newAnno: AnnotationSubmitItem = {
+            taskId: taskId || '',
             annotationConfidence: remoteAnno.annotationConfidence || remoteAnno.annotation_confidence || null,
-            annotationData: annoData,
+            annotationData: parsedData,
             annotationStatus: (remoteAnno.annotationStatus || remoteAnno.annotation_status || 'DRAFT'),
             annotationType: (remoteAnno.annotationType || remoteAnno.annotation_type || 'CLASSIFICATION'),
             comment: remoteAnno.comment || '',
             dataitemId: itemId,
-            labelIds: remoteAnno.labels || remoteAnno.labelIds || []
+            labelIds: (remoteAnno.labels || remoteAnno.labelIds || []).map((l: any) => typeof l === 'object' ? (l.labelId || l.id) : l)
           }
             ; (newAnno as any).annotationId = remoteAnno.annotationId
             ; (newAnno as any).reviewerComment = rvComment
@@ -358,32 +374,33 @@ export default function AnnotationPage() {
         const remoteAnno = res.data?.data || res.data
         if (remoteAnno && remoteAnno.annotationId) {
           const rvComment = remoteAnno.reviews?.[0]?.comment || ''
-          let annoData = { shapes: [], raw: [] }
+
+          let parsedData = { shapes: [], raw: [] }
           if (remoteAnno.annotationData) {
             try {
-              annoData = typeof remoteAnno.annotationData === 'string'
+              parsedData = typeof remoteAnno.annotationData === 'string'
                 ? JSON.parse(remoteAnno.annotationData)
                 : remoteAnno.annotationData
-            } catch (e) {
-              console.warn('Failed to parse annotationData', e)
-            }
+            } catch (e) {}
           }
 
           const newAnno: AnnotationSubmitItem = {
+            taskId: taskId || '',
             annotationConfidence: remoteAnno.annotationConfidence || remoteAnno.annotation_confidence || null,
-            annotationData: annoData,
+            annotationData: parsedData,
             annotationStatus: (remoteAnno.annotationStatus || remoteAnno.annotation_status || 'DRAFT'),
             annotationType: (remoteAnno.annotationType || remoteAnno.annotation_type || 'CLASSIFICATION'),
             comment: remoteAnno.comment || '',
             dataitemId: currentItemId,
-            labelIds: remoteAnno.labels || remoteAnno.labelIds || []
+            labelIds: (remoteAnno.labels || remoteAnno.labelIds || []).map((l: any) => typeof l === 'object' ? (l.labelId || l.id) : l)
           }
-            ; (newAnno as any).annotationId = remoteAnno.annotationId
             ; (newAnno as any).reviewerComment = rvComment
             ; (newAnno as any).reviews = remoteAnno.reviews || []
             ; (newAnno as any).isRemote = true // Mark as fetched from remote
 
           setAnnotationReviews(remoteAnno.reviews || [])
+          const normalizedShapes = ((newAnno.annotationData as any).shapes as Shape[]) || ((newAnno.annotationData as any).raw as Shape[]) || []
+          setShapes(normalizedShapes)
 
           setSessionAnnotations((prev) => {
             const existingIndex = prev.findIndex((a) => a.dataitemId === currentItemId)
@@ -411,11 +428,10 @@ export default function AnnotationPage() {
           })
 
           // Sync the UI directly
-          const shapesData = (annoData.shapes as Shape[]) || (annoData.raw as Shape[]) || []
-          setShapes(shapesData)
+          setShapes(normalizedShapes)
           setComment(remoteAnno.comment || '')
           setConfidence((remoteAnno.annotationConfidence as any) || null)
-          setSelectedLabels(remoteAnno.labels || [])
+          setSelectedLabels((remoteAnno.labels || remoteAnno.labelIds || []).map((l: any) => typeof l === 'object' ? (l.labelId || l.id) : l))
         }
       } catch (err) {
         console.warn('No remote annotation found or error fetching', err)
@@ -435,12 +451,17 @@ export default function AnnotationPage() {
 
   // Fetch review history when the active annotation changes
   useEffect(() => {
-    if (!currentItemId) {
+    // Only clear and re-fetch if we actually switched items
+    if (currentItemId !== lastReviewItemIdRef.current) {
       setAnnotationReviews([])
+      lastReviewItemIdRef.current = currentItemId
+    }
+
+    if (!currentItemId) {
       return
     }
     const annotation = sessionAnnotations.find(a => a.dataitemId === currentItemId)
-    
+
     // If we already have the reviews from the main annotation fetch, use them!
     if (annotation && (annotation as any).reviews && (annotation as any).reviews.length > 0) {
       setAnnotationReviews((annotation as any).reviews)
@@ -450,6 +471,9 @@ export default function AnnotationPage() {
     const annotationId = (annotation as any)?.annotationId || (annotation as any)?.id
 
     if (annotationId) {
+      // If we already have reviews in state for this specific item, don't re-fetch on every session update
+      if (annotationReviews.length > 0) return
+
       reviewerApi.getReviewsByAnnotationId(annotationId)
         .then(res => {
           // Double check if data is an array (per Swagger screen it is under .data)
@@ -458,10 +482,9 @@ export default function AnnotationPage() {
         })
         .catch(err => {
           console.warn('Failed to fetch past reviews fallback:', err)
-          // Keep whatever we had if it was already set by fetchRemote
         })
     }
-  }, [currentItemId, sessionAnnotations])
+  }, [currentItemId, sessionAnnotations, annotationReviews.length])
 
   const handleWheel = (e: React.WheelEvent) => {
     const delta = e.deltaY > 0 ? -0.1 : 0.1
@@ -490,7 +513,7 @@ export default function AnnotationPage() {
       }))
     }
   }, [zoom])
- 
+
   const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const { naturalWidth, naturalHeight } = e.currentTarget
     setNaturalSize({ width: naturalWidth, height: naturalHeight })
@@ -664,16 +687,25 @@ export default function AnnotationPage() {
     setIsDirty(true)
   }
 
+  const handleRemoveShape = (index: number) => {
+    setShapes(prev => prev.filter((_, i) => i !== index))
+    setIsDirty(true)
+  }
+
   const createAnnotationPayload = (
     itemId: string,
     status: AnnotationSubmitItem['annotationStatus'] = 'DRAFT'
   ): AnnotationSubmitItem => {
+    // Combine manual selected labels with labels derived from shapes
+    const shapeLabelIds = shapes.map(s => labels.find(l => l.labelName === s.label)?.labelId).filter(Boolean) as string[]
+    const combinedLabelIds = Array.from(new Set([...selectedLabels, ...shapeLabelIds]))
+      .map(l => typeof l === 'object' ? ((l as any).labelId || (l as any).id) : l) as string[]
+
     return {
+      taskId: taskId || '',
       annotationConfidence: confidence || 'LOW',
       annotationData: {
-        shapes: shapes,
-        comment: comment,
-        labels: selectedLabels
+        raw: shapes,
       },
       annotationStatus: status,
       annotationType: shapes.some((s) => s.type === 'bounding_box')
@@ -681,9 +713,9 @@ export default function AnnotationPage() {
         : shapes.some((s) => s.type === 'polygon')
           ? 'POLYGON'
           : 'CLASSIFICATION',
-      comment: comment,
+      comment: comment || 'NO',
       dataitemId: itemId,
-      labelIds: selectedLabels
+      labelIds: combinedLabelIds
     }
   }
 
@@ -739,8 +771,9 @@ export default function AnnotationPage() {
       setLoading(true)
       const currentAnnotation = createAnnotationPayload(currentItemId, 'SUBMITTED')
 
+      // Ensure the payload matches the exact requested fields
       const payload = {
-        taskId,
+        taskId: currentAnnotation.taskId,
         annotationConfidence: currentAnnotation.annotationConfidence,
         annotationData: currentAnnotation.annotationData,
         annotationStatus: currentAnnotation.annotationStatus,
@@ -749,8 +782,6 @@ export default function AnnotationPage() {
         dataitemId: currentAnnotation.dataitemId,
         labelIds: currentAnnotation.labelIds
       }
-
-
 
       await annotationApi.submitSingleAnnotation(payload)
 
@@ -838,7 +869,8 @@ export default function AnnotationPage() {
                 (item as any).dataItem?.itemId ||
                 (item as any).id
               const annotation = sessionAnnotations.find(a => a.dataitemId === currentId)
-              const shapeCount = ((annotation?.annotationData?.shapes as Shape[]) || []).length
+              const data = (annotation?.annotationData as any)
+              const shapeCount = (data?.raw?.length || data?.shapes?.length || 0)
               const labelCount = annotation?.labelIds?.length || 0
 
               const displayStatus = annotation?.annotationStatus?.toUpperCase()
@@ -925,9 +957,9 @@ export default function AnnotationPage() {
                 className="relative transition-transform duration-200 ease-out will-change-transform flex items-center justify-center h-full w-full"
                 style={{ transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`, transformOrigin: 'center' }}
               >
-                <div 
+                <div
                   className="relative flex items-center justify-center"
-                  style={{ 
+                  style={{
                     aspectRatio: naturalSize ? `${naturalSize.width} / ${naturalSize.height}` : 'auto',
                     maxWidth: '100%',
                     maxHeight: '100%'
@@ -948,52 +980,77 @@ export default function AnnotationPage() {
                     onMouseUp={handleMouseUp}
                     onDoubleClick={finishPolygon}
                   >
-                  {shapes.map((shape, i) => (
-                    <g key={`shape-${i}-${shape.label}`}>
-                      {shape.type === 'bounding_box' ? (
-                        <rect
-                          x={shape.x}
-                          y={shape.y}
-                          width={shape.width}
-                          height={shape.height}
-                          fill={`${shape.color}33`}
-                          stroke={shape.color}
-                          strokeWidth={naturalSize ? (naturalSize.width / 400) : (3 / zoom)}
-                        />
-                      ) : (
-                        <polygon
-                          points={shape.points?.map((p: [number, number]) => p.join(',')).join(' ')}
-                          fill={`${shape.color}33`}
-                          stroke={shape.color}
-                          strokeWidth={naturalSize ? (naturalSize.width / 400) : (3 / zoom)}
-                        />
-                      )}
-                    </g>
-                  ))}
-                  {currentShape && (
-                    <g>
-                      {currentShape.type === 'bounding_box' ? (
-                        <rect
-                          x={currentShape.x}
-                          y={currentShape.y}
-                          width={currentShape.width}
-                          height={currentShape.height}
-                          fill={`${currentShape.color}66`}
-                          stroke={currentShape.color}
-                          strokeWidth={3 / zoom}
-                        />
-                      ) : (
-                        <polygon
-                          points={currentShape.points
-                            ?.map((p: [number, number]) => p.join(','))
-                            .join(' ')}
-                          fill={`${currentShape.color}66`}
-                          stroke={currentShape.color}
-                          strokeWidth={naturalSize ? (naturalSize.width / 400) : (3 / zoom)}
-                        />
-                      )}
-                    </g>
-                  )}
+                    {shapes.map((shape, i) => {
+                      const cornerRadius = naturalSize ? naturalSize.width / 150 : (8 / zoom)
+                      const cx = shape.type === 'bounding_box' ? (shape.x! + shape.width!) : shape.points![0][0]
+                      const cy = shape.type === 'bounding_box' ? shape.y! : shape.points![0][1]
+                      
+                      return (
+                        <g key={`shape-${i}-${shape.label}`}>
+                          {shape.type === 'bounding_box' ? (
+                            <rect
+                              x={shape.x}
+                              y={shape.y}
+                              width={shape.width}
+                              height={shape.height}
+                              fill={`${shape.color}33`}
+                              stroke={shape.color}
+                              strokeWidth={naturalSize ? (naturalSize.width / 400) : (3 / zoom)}
+                            />
+                          ) : (
+                            <polygon
+                              points={shape.points?.map((p: [number, number]) => p.join(',')).join(' ')}
+                              fill={`${shape.color}33`}
+                              stroke={shape.color}
+                              strokeWidth={naturalSize ? (naturalSize.width / 400) : (3 / zoom)}
+                            />
+                          )}
+                          <g 
+                            className="cursor-pointer" 
+                            onClick={(e) => { e.stopPropagation(); handleRemoveShape(i); }}
+                            onMouseDown={(e) => e.stopPropagation()}
+                          >
+                            <circle cx={cx} cy={cy} r={cornerRadius} fill="#ef4444" />
+                            <text 
+                              x={cx} 
+                              y={cy} 
+                              fill="white" 
+                              fontSize={cornerRadius * 1.2} 
+                              fontWeight="bold" 
+                              textAnchor="middle" 
+                              dominantBaseline="central"
+                              className="pointer-events-none select-none"
+                            >
+                              ✕
+                            </text>
+                          </g>
+                        </g>
+                      )
+                    })}
+                    {currentShape && (
+                      <g>
+                        {currentShape.type === 'bounding_box' ? (
+                          <rect
+                            x={currentShape.x}
+                            y={currentShape.y}
+                            width={currentShape.width}
+                            height={currentShape.height}
+                            fill={`${currentShape.color}66`}
+                            stroke={currentShape.color}
+                            strokeWidth={3 / zoom}
+                          />
+                        ) : (
+                          <polygon
+                            points={currentShape.points
+                              ?.map((p: [number, number]) => p.join(','))
+                              .join(' ')}
+                            fill={`${currentShape.color}66`}
+                            stroke={currentShape.color}
+                            strokeWidth={naturalSize ? (naturalSize.width / 400) : (3 / zoom)}
+                          />
+                        )}
+                      </g>
+                    )}
                   </svg>
                 </div>
               </div>
@@ -1029,8 +1086,8 @@ export default function AnnotationPage() {
             {/* Submit on Right */}
             <button
               onClick={handleSubmitTask}
-              disabled={!isDirty || selectedLabels.length === 0 || !confidence}
-              className={`shrink-0 px-6 py-2 rounded-lg text-sm font-bold transition-all shadow-lg ${isDirty && selectedLabels.length > 0 && confidence
+              disabled={!confidence || (shapes.length === 0 && selectedLabels.length === 0)}
+              className={`shrink-0 px-6 py-2 rounded-lg text-sm font-bold transition-all shadow-lg ${confidence && (shapes.length > 0 || selectedLabels.length > 0)
                 ? 'bg-violet-600 hover:bg-violet-500 text-white shadow-violet-900/20 cursor-pointer'
                 : 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'
                 }`}
@@ -1125,10 +1182,10 @@ export default function AnnotationPage() {
                   onClick={() => toggleLabel(label)}
                   className={`px-4 py-1.5 rounded-lg border text-xs font-bold transition-all`}
                   style={{
-                    borderColor: currentLabel?.labelId === label.labelId ? label.color : 'transparent',
-                    backgroundColor: currentLabel?.labelId === label.labelId ? `${label.color}33` : 'rgba(255,255,255,0.05)',
-                    color: currentLabel?.labelId === label.labelId ? '#fff' : '#6b7280',
-                    boxShadow: currentLabel?.labelId === label.labelId ? `0 0 8px ${label.color}66` : 'none'
+                    borderColor: currentLabel?.labelId === label.labelId ? label.color : `${label.color}40`,
+                    backgroundColor: currentLabel?.labelId === label.labelId ? label.color : `${label.color}1A`,
+                    color: currentLabel?.labelId === label.labelId ? '#fff' : label.color,
+                    boxShadow: currentLabel?.labelId === label.labelId ? `0 0 12px ${label.color}80` : 'none'
                   }}
                 >
                   {label.labelName}
@@ -1184,7 +1241,6 @@ export default function AnnotationPage() {
                 <pre className="text-[10px] font-mono text-blue-300 whitespace-pre-wrap leading-relaxed">
                   {JSON.stringify(
                     {
-                      session: shapes.map((s) => ({ type: s.type, label: s.label })),
                       raw: shapes
                     },
                     null,

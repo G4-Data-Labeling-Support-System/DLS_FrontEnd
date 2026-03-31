@@ -142,6 +142,15 @@ const assignmentApi = {
       console.error('Failed to change assignment dataset', error)
       throw error
     }
+  },
+  exportAssignment(assignmentId: string, format: string) {
+    try {
+      const url = ENDPOINTS.ASSIGNMENTS.EXPORT(assignmentId)
+      return axiosClient.post(url, { exportFormat: format }, { responseType: 'blob' })
+    } catch (error) {
+      console.error('Failed to export assignment', error)
+      throw error
+    }
   }
 }
 
