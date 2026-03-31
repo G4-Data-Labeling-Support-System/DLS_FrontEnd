@@ -69,8 +69,8 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
             '0%': '#c084fc',
             '100%': '#e879f9'
           }}
-          trailColor="rgba(255,255,255,0.05)"
-          strokeWidth={4}
+          railColor="rgba(255,255,255,0.05)"
+          size={{ height: 4 }}
         />
         <div className="flex justify-between items-center text-[10px] text-gray-500 font-mono pt-1">
           <span>{completedTasks} REVIEWED</span>

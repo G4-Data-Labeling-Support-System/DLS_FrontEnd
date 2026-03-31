@@ -110,7 +110,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({
       const id = getCanonicalId(item)
       if (!id) return
 
-      console.log(`Fetching annotation for canonical ID: ${id}`);
+
       try {
         const res = await annotationApi.getAnnotationByDataItemId(id)
         const remoteAnno = res.data?.data || res.data
@@ -400,7 +400,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({
               dataSource={dataItems}
               columns={columns}
               loading={itemsLoading}
-              rowKey={(record) => String(record.taskItemId || record.dataItemId || '')}
+              rowKey={(record: any, index) => String(record.taskItemId || record.dataItemId || record.id || `item-${index}`)}
               pagination={{
                 pageSize: 10,
                 showSizeChanger: false,

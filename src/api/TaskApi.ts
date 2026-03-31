@@ -1,8 +1,34 @@
 import axiosClient from '@/lib/axios'
+import type { AxiosError } from 'axios'
 import { ENDPOINTS } from './endpoints'
+import type { AnnotationSubmitItem } from '@/shared/types/api.types'
+
+export interface Task {
+  taskId: string
+  id?: string
+  taskName: string
+  name?: string
+  taskStatus: string
+  status?: string
+  createdAt: string
+  datasetId?: string
+  assignmentId?: string
+  projectId?: string
+  [key: string]: unknown
+}
 
 export interface TaskDataItem {
   id: string
+  itemId?: string
+  dataItemId?: string
+  dataitemId?: string
+  dataItem?: {
+    id: string
+    url: string
+    fileName: string
+    fileFormat: string
+    dataType: string
+  }
   filename: string
   fileFormat: string
   dataType: string
@@ -10,8 +36,6 @@ export interface TaskDataItem {
   previewUrl: string
   url?: string
 }
-
-import type { AnnotationSubmitItem } from '@/shared/types/api.types'
 
 const taskApi = {
   getTaskDataItems(taskId: string) {
@@ -38,10 +62,11 @@ const taskApi = {
     try {
       const url = ENDPOINTS.TASKS.BY_ASSIGNMENT(assignmentId)
       return axiosClient.get(url)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(`Failed to fetch tasks for assignmentId: ${assignmentId}`)
-      if (error.response) {
-        console.error('❌ BE Error Detail:', error.response.data)
+      const axiosError = error as AxiosError
+      if (axiosError.response) {
+        console.error('❌ BE Error Detail:', axiosError.response.data)
       }
       throw error
     }
@@ -51,10 +76,11 @@ const taskApi = {
     try {
       const url = '/annotations/submit'
       return axiosClient.post(url, payload)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(`Failed to submit annotations for taskId: ${payload.taskId}`)
-      if (error.response) {
-        console.error('❌ BE Error Detail:', error.response.data)
+      const axiosError = error as AxiosError
+      if (axiosError.response) {
+        console.error('❌ BE Error Detail:', axiosError.response.data)
       }
       throw error
     }

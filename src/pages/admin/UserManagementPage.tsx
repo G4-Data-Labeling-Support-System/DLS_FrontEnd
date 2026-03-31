@@ -57,7 +57,7 @@ export default function UserManagement() {
   const users = Array.isArray(rawUsers)
     ? (rawUsers as User[])
     : (rawUsers as unknown as { data: User[] })?.data || []
-  // console.log("Users API Response:", rawUsers, "Parsed Users:", users);
+
 
   // Lọc users theo status và search term (Client-side)
   const displayedUsers = users.filter((u: User) => {

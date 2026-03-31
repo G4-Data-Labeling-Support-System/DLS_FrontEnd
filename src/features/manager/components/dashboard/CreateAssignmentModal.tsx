@@ -146,21 +146,54 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
           const asmData = asmRes.data?.data || asmRes.data
           const asmArray = Array.isArray(asmData) ? asmData : []
           const assignedDatasetIds = asmArray
-            .map((a: Record<string, unknown>) => String(a.datasetId || (a.dataset as Record<string, unknown>)?.id || (a.dataset as Record<string, unknown>)?.datasetId || ''))
+            .filter((a: Record<string, unknown>) => {
+              const status = String(a.assignmentStatus || a.status || '').toUpperCase()
+              if (status === 'INACTIVE' || status === 'CANCELLED' || status === 'ARCHIVED') return false
+              if (
+                isEditMode &&
+                initialData &&
+                String(a.assignmentId || a.id) === String(initialData.assignmentId || initialData.id)
+              ) {
+                return false
+              }
+              return true
+            })
+            .map(
+              (a: Record<string, unknown>) =>
+                String(
+                  a.datasetId ||
+                    (a.dataset as Record<string, unknown>)?.id ||
+                    (a.dataset as Record<string, unknown>)?.datasetId ||
+                    ''
+                )
+            )
             .filter(Boolean)
 
           const datasetsData = datasetRes.data?.data || datasetRes.data
           const dsArray = Array.isArray(datasetsData) ? datasetsData : []
-          
-          setDatasets(
-            dsArray.filter((d: Record<string, unknown>) => {
-              const status = String(
-                d.datasetStatus || d.status || d.dataset_status || ''
-              ).toUpperCase()
-              const dsId = String(d.datasetId || d.id || '')
-              return status === 'ACTIVE' && !assignedDatasetIds.includes(dsId)
-            })
-          )
+
+          const filteredDatasets = dsArray.filter((d: Record<string, unknown>) => {
+            const status = String(d.datasetStatus || d.status || d.dataset_status || '').toUpperCase()
+            const dsId = String(d.datasetId || d.id || '')
+            return status === 'ACTIVE' && !assignedDatasetIds.includes(dsId)
+          })
+
+          // Ensure current dataset is in the list if in edit mode
+          if (isEditMode && initialData?.datasetId) {
+            const hasCurrent = filteredDatasets.some(
+              (d: Record<string, unknown>) => String(d.datasetId || d.id) === String(initialData.datasetId)
+            )
+            if (!hasCurrent) {
+              const currentDataset = dsArray.find(
+                (d: Record<string, unknown>) => String(d.datasetId || d.id) === String(initialData.datasetId)
+              )
+              if (currentDataset) {
+                filteredDatasets.push(currentDataset)
+              }
+            }
+          }
+
+          setDatasets(filteredDatasets)
         } else {
           setDatasets([])
         }
@@ -192,14 +225,16 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
           setSelectedProjectId(initialData.projectId)
         }
       } else {
-        form.resetFields()
-        if (currentUser) {
-          const managerId =
-            (currentUser as unknown as Record<string, unknown>).userId || currentUser.id
-          form.setFieldsValue({
-            assignedBy: managerId,
-            assignmentStatus: 'ASSIGNED'
-          })
+        if (!isEditMode) {
+          form.resetFields()
+          if (currentUser) {
+            const managerId =
+              (currentUser as unknown as Record<string, unknown>).userId || currentUser.id
+            form.setFieldsValue({
+              assignedBy: managerId,
+              assignmentStatus: 'ASSIGNED'
+            })
+          }
         }
         if (projectId) {
           setSelectedProjectId(projectId)
@@ -420,7 +455,28 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
               : 'Set up a new assignment for this project.'}
           </p>
         </div>
-        <Form form={form} layout="vertical">
+        <Form
+          form={form}
+          layout="vertical"
+          initialValues={
+            isEditMode && initialData
+              ? {
+                  assignmentName: initialData.assignmentName,
+                  assignedTo: initialData.assignedTo,
+                  reviewerId: initialData.reviewedBy || initialData.reviewerId,
+                  description: initialData.description || initialData.descriptionAssignment,
+                  dueDate: initialData.dueDate ? dayjs(initialData.dueDate) : undefined,
+                  datasetId: initialData.datasetId,
+                  projectId: initialData.projectId,
+                  assignedBy: initialData.assignedBy
+                }
+              : {
+                  assignedBy:
+                    (currentUser as unknown as Record<string, unknown>)?.userId || currentUser?.id,
+                  assignmentStatus: 'ASSIGNED'
+                }
+          }
+        >
           {!hasExternalProjectId && !isEditMode && (
             <Form.Item
               label="Project"
@@ -529,16 +585,11 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
               disabled={!effectiveProjectId}
               suffixIcon={<SearchOutlined className="text-white/30" />}
               className="dataset-select-premium"
-            >
-              {datasets.map((d: Record<string, unknown>) => (
-                <Select.Option
-                  key={(d.datasetId as string) || (d.id as string)}
-                  value={(d.datasetId as string) || (d.id as string)}
-                >
-                  {(d.datasetName as string) || (d.name as string)}
-                </Select.Option>
-              ))}
-            </Select>
+              options={datasets.map((d: Record<string, unknown>) => ({
+                label: (d.datasetName as string) || (d.name as string),
+                value: (d.datasetId as string) || (d.id as string)
+              }))}
+            />
           </Form.Item>
 
           <Form.Item

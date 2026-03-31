@@ -37,7 +37,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       hoverable
       className="glass-panel border-white/5 hover:border-violet-500/50 transition-all duration-300 group"
       onClick={onClick}
-      bodyStyle={{ padding: '24px' }}
+      styles={{ body: { padding: '24px' } }}
     >
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">

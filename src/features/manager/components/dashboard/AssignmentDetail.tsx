@@ -9,6 +9,7 @@ import { ProjectDetail } from './ProjectDetail'
 import { DatasetDetail } from '../dataset/DatasetDetail'
 import { TaskDetail } from '@/pages/annotator/TaskDetailPage'
 import { ChangeDatasetModal } from '../dataset/ChangeDatasetModal'
+import { useInvalidateAssignments } from '@/features/manager/hooks/useProjectDetail'
 import { useAuthStore } from '@/store'
 import { useSearchParams } from 'react-router-dom'
 import { themeClasses } from '@/styles'
@@ -45,6 +46,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
   const [tasks, setTasks] = useState<Task[]>([])
   const [tasksLoading, setTasksLoading] = useState<boolean>(false)
   const [isChangeDatasetModalOpen, setIsChangeDatasetModalOpen] = useState(false)
+  const invalidateAssignments = useInvalidateAssignments()
   const { user } = useAuthStore()
 
   const isManager =
@@ -533,6 +535,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
         onCancel={() => setIsChangeDatasetModalOpen(false)}
         onSuccess={() => {
           setIsChangeDatasetModalOpen(false)
+          invalidateAssignments(assignment.projectId)
           handleRefresh()
         }}
       />
