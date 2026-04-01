@@ -7,7 +7,7 @@ def call(config) {
 
         sshagent(['production-srv']) {
             sh"""
-                ssh -o StrictHostKeyChecking=no -l ${config.prodServer} \
+                ssh -o StrictHostKeyChecking=no ${config.prodServer} \
                 'echo "Deploying to version ${version}"
 
                 sudo docker pull ${imageTagged} && 
