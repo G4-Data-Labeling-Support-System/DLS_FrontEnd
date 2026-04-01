@@ -1,7 +1,8 @@
 import { mainClient } from './apiClients'
 import { ENDPOINTS } from './endpoints'
 import assignmentApi from './AssignmentApi'
-import taskApi from './TaskApi'
+import taskApi, { type Task, type TaskDataItem } from './TaskApi'
+import annotationApi from './annotation'
 
 export interface HistoryEvent {
   id: string
@@ -12,6 +13,7 @@ export interface HistoryEvent {
   type?: 'success' | 'error' | 'info' | string
   details?: string
   comment?: string
+  message?: string
 }
 
 export interface ReviewerStats {
@@ -28,17 +30,23 @@ export interface ReviewerStats {
 }
 
 export interface Annotation {
-  id: string
-  label: string
-  confidence: number
-  color: string
-  bbox: { x: number; y: number; w: number; h: number }
+  annotationId: string
+  taskId: string
+  dataItemId: string
+  userId: string
+  confidence: 'Low' | 'Medium' | 'High'
+  comment: string
+  annotationType: 'classification' | 'bounding_box' | 'polygon' | 'segmentation'
+  annotationData: string | unknown
+  annotationStatus: 'submitted' | 'approved' | 'rejected' | 'inactive'
+  createdAt: string
+  updatedAt: string
 }
 
 export interface ReviewerItem {
   id: string
   filename: string
-  status: 'approved' | 'rejected' | 'pending'
+  status: string
   imageUrl: string
   lastModified: string
 }
@@ -59,7 +67,7 @@ export interface ReviewerItemDetail extends ReviewerItem {
 export interface ReviewItemRequest {
   annotationId: string
   comment?: string
-  reviewStatus: 'IN_PROGRESS' | 'APPROVED' | 'REJECTED' | 'INACTIVE'
+  reviewStatus: 'APPROVED' | 'REJECTED' | 'IN_PROGRESS' | 'INACTIVE'
   envidence?: string[] // or File[]
 }
 
@@ -69,7 +77,6 @@ export interface ReviewUpdateRequest {
 
 export const reviewerApi = {
   getDashboardStats: async (): Promise<ReviewerStats> => {
-    // Mocking for now since there's no official endpoint
     return {
       totalSubmissions: 0,
       totalSubmissionsTrend: 0,
@@ -83,62 +90,76 @@ export const reviewerApi = {
     }
   },
 
-  // New: Get assignments for a project, then tasks (Real API flow)
   getProjectItems: async (projectId: string): Promise<ReviewerItem[]> => {
     try {
-      // 1. Get assignments for the project
       const assignRes = await assignmentApi.getAssignmentsByProjectId(projectId)
       const assignments = assignRes.data?.data || assignRes.data || []
-      
-      // 2. For simplicity, get tasks of the first assignment
       if (assignments.length === 0) return []
       const assignmentId = assignments[0].assignmentId || assignments[0].id
-      
       const taskRes = await taskApi.getTasksByAssignmentId(assignmentId)
-      const tasks = taskRes.data?.data || taskRes.data || []
-      
-      return tasks.map((t: any) => ({
-        id: t.taskId || t.id,
+      const tasks: Task[] = taskRes.data?.data || taskRes.data || []
+      return tasks.map((t: Task) => ({
+        id: t.taskId || t.id || '',
         filename: t.taskName || t.name || `Task ${t.taskId}`,
-        status: (t.taskStatus || 'pending').toLowerCase() as any,
-        imageUrl: '', // Will be loaded in detail
+        status: (t.taskStatus || 'pending').toLowerCase(),
+        imageUrl: '',
         lastModified: t.createdAt || ''
       }))
     } catch (error) {
-      console.error('Failed to fetch project items via assignment/task flow', error)
       throw error
     }
   },
 
   getItemDetail: async (taskId: string): Promise<ReviewerItemDetail> => {
     try {
-      // 1. Get task details
       const taskRes = await taskApi.getTaskById(taskId)
-      const task = taskRes.data?.data || taskRes.data
-
-      // 2. Get data items of the task to get the Image URL
+      const task: Task = taskRes.data?.data || taskRes.data
       const itemsRes = await taskApi.getTaskDataItems(taskId)
-      const items = itemsRes.data?.data || itemsRes.data || []
-      const firstItem = items[0]?.dataItem || items[0]
+      const items: TaskDataItem[] = itemsRes.data?.data || itemsRes.data || []
+      const firstItem = items[0]
+      if (!firstItem) throw new Error('No data items found for task')
 
-      // 3. Return normalized detail
+      const dataItemId = firstItem.dataItemId || firstItem.dataitemId || firstItem.id || firstItem.dataItem?.id
+      let annotations: Annotation[] = []
+
+      if (dataItemId) {
+        try {
+          const annoRes = await annotationApi.getAnnotationByDataItemId(dataItemId)
+          const annoData = annoRes.data?.data || annoRes.data
+          if (annoData) {
+            annotations = (Array.isArray(annoData) ? annoData : [annoData]).map((ann: unknown) => {
+              const a = ann as Record<string, unknown>
+              return {
+                annotationId: (a.annotationId as string) || (a.id as string) || '',
+                taskId: (a.taskId as string) || '',
+                dataItemId: (a.dataItemId as string) || '',
+                userId: (a.userId as string) || '',
+                confidence: (a.confidence as 'Low' | 'Medium' | 'High') || 'Medium',
+                comment: (a.comment as string) || '',
+                annotationType: (a.annotationType as 'classification' | 'bounding_box' | 'polygon' | 'segmentation') || 'bounding_box',
+                annotationData: a.annotationData,
+                annotationStatus: (a.annotationStatus as 'submitted' | 'approved' | 'rejected' | 'inactive') || 'submitted',
+                createdAt: (a.createdAt as string) || '',
+                updatedAt: (a.updatedAt as string) || ''
+              }
+            })
+          }
+        } catch (e) {
+          console.warn(`Failed to fetch specific annotation for data item ${dataItemId}`, e)
+        }
+      }
+
       return {
         id: taskId,
         filename: task.taskName || task.name || `Task ${taskId}`,
-        status: (task.taskStatus || 'pending').toLowerCase() as any,
+        status: (task.taskStatus || 'pending').toLowerCase(),
         imageUrl: firstItem?.url || '',
         lastModified: task.createdAt || '',
-        annotations: (firstItem?.annotationResponseList || firstItem?.annotations || []).map((ann: any) => ({
-           id: ann.annotationId || ann.id,
-           label: ann.labelName || ann.labelId || 'Unknown',
-           confidence: ann.annotationConfidence === 'HIGH' ? 0.9 : 0.5,
-           color: '#f5222d',
-           bbox: typeof ann.annotationData === 'string' ? JSON.parse(ann.annotationData).bbox : ann.annotationData?.bbox || { x: 0, y: 0, w: 100, h: 100 }
-        })),
+        annotations,
         history: []
       }
     } catch (error) {
-      console.error('Failed to fetch item details via task flow', error)
+      console.error('Failed to fetch item details', error)
       throw error
     }
   },
@@ -148,20 +169,12 @@ export const reviewerApi = {
       const response = await mainClient.get(ENDPOINTS.REVIEWS.BY_ANNOTATION(annotationId))
       return response.data
     } catch (error) {
-      console.error('Failed to fetch reviews for annotation', error)
       throw error
     }
   },
 
-  submitReviewDecision: async (payload: ReviewUpdateRequest) => {
+  submitReviewDecision: async (formData: FormData) => {
     try {
-      // Dựa theo api-docs.json thì PUT /api/v1/reviews/update là dạng multipart/form-data
-      // Để tương thích trước mắt nếu không có file, ta có can convert JSON or use as config data
-      // Chú ý backend: Nếu swagger là multipart form data, ta sẽ làm 1 parser sang FormData
-      const formData = new FormData()
-      
-      formData.append('reviews', new Blob([JSON.stringify(payload.reviews)], { type: 'application/json' }))
-
       const response = await mainClient.put(ENDPOINTS.REVIEWS.UPDATE, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })

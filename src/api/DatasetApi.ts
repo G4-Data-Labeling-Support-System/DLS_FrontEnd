@@ -76,7 +76,6 @@ const datasetApi = {
       const url = ENDPOINTS.DATAITEMS.BY_DATASET(datasetId)
       return axiosClient.get(url)
     } catch (error) {
-      console.error('Failed to fetch dataset items', error)
       throw error
     }
   },
@@ -85,28 +84,39 @@ const datasetApi = {
       const url = ENDPOINTS.DATA_ITEMS.DETAIL(id)
       return axiosClient.get(url)
     } catch (error) {
-      console.error('Failed to fetch data item by id', error)
       throw error
     }
   },
   async updateDataset(
     id: string,
-    data: { projectId?: string; datasetName?: string; description?: string; files?: File[]; deleteDataItemId?: string[] },
+    data: {
+      projectId?: string
+      datasetName?: string
+      description?: string
+      files?: File[]
+      deleteDataItemId?: string[]
+    },
     onUploadProgress?: (progressEvent: AxiosProgressEvent) => void
   ) {
     try {
       const url = ENDPOINTS.DATASETS.UPDATE(id)
       const formData = new FormData()
 
-      if (data.projectId !== undefined) formData.append('projectId', data.projectId)
-      if (data.datasetName !== undefined) formData.append('datasetName', data.datasetName)
-      if (data.description !== undefined) formData.append('description', data.description)
+      const request: {
+        projectId?: string
+        datasetName?: string
+        description?: string
+        deleteDataItemId?: string[]
+      } = {}
+      if (data.projectId) request.projectId = data.projectId
+      if (data.datasetName) request.datasetName = data.datasetName
+      if (data.description !== undefined && data.description !== null) request.description = data.description
+      if (data.deleteDataItemId && data.deleteDataItemId.length > 0) request.deleteDataItemId = data.deleteDataItemId
 
-      if (data.deleteDataItemId && data.deleteDataItemId.length > 0) {
-        data.deleteDataItemId.forEach((itemId) => {
-          formData.append('deleteDataItemId', itemId)
-        })
-      }
+      const requestData = JSON.stringify(request)
+
+
+      formData.append('request', requestData)
 
       if (data.files) {
         data.files.forEach((file) => {

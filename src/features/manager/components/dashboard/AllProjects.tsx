@@ -86,7 +86,13 @@ export const AllProjects: React.FC<AllProjectsProps> = ({
       fetchProjects()
     } catch (error) {
       console.error('Deactivate project error:', error)
-      messageApi.error('An error occurred while deactivating the project.')
+      const err = error as { response?: { data?: { errorCode?: string; message?: string; error?: string } } }
+      const errorData = err.response?.data
+      if (errorData?.errorCode === 'PROJECT_CANNOT_DELETE_WHEN_ASSIGNMENT_ACTIVE') {
+        messageApi.error(errorData.message || 'Project cannot delete when assignment has active')
+      } else {
+        messageApi.error(errorData?.message || errorData?.error || 'An error occurred while deactivating the project.')
+      }
     } finally {
       setDeleting(false)
     }

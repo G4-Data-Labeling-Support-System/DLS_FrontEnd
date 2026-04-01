@@ -40,7 +40,7 @@ interface Label {
   description?: string
 }
 
-export default function AnnotatorDatasetDetailPage() {
+export default function ReviewerDatasetDetailPage() {
   const { projectId, datasetId: paramDatasetId } = useParams<{ projectId: string; datasetId: string }>()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -175,7 +175,7 @@ export default function AnnotatorDatasetDetailPage() {
         return next
       })
     } else {
-      navigate(`/annotator/projects/${projectId}/datasets`)
+      navigate(`/reviewer/projects/${projectId}/datasets`)
     }
   }
 
@@ -290,7 +290,7 @@ export default function AnnotatorDatasetDetailPage() {
             </h3>
             <div
               className="bg-black/20 p-5 rounded-xl border border-white/10 hover:border-blue-500/50 hover:bg-black/30 transition-all cursor-pointer group"
-              onClick={() => navigate(`/annotator/projects/${projectId}`)}
+              onClick={() => navigate(`/reviewer/projects/${projectId}`)}
             >
               <h4 className="text-white font-bold group-hover:text-blue-400 transition-colors">
                 {dataset.project?.projectName || 'No Project Assigned'}

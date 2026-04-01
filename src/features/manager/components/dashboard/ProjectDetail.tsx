@@ -10,14 +10,16 @@ import {
   Dropdown
 } from 'antd'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
-import { EditOutlined, MoreOutlined } from '@ant-design/icons'
+import { EditOutlined, MoreOutlined, DownloadOutlined } from '@ant-design/icons'
 import guidelineApi from '@/api/GuidelineApi'
 import { CreateProjectModal } from './CreateProjectModal'
+import assignmentApi from '@/api/AssignmentApi'
 import {
   useProjectById,
   useGuidelinesByProject,
   useProjectMembers,
-  useInvalidateProjectDetail
+  useInvalidateProjectDetail,
+  useAssignmentsByProject
 } from '@/features/manager/hooks/useProjectDetail'
 
 interface ProjectDetailProps {
@@ -38,10 +40,12 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
   const { data: guidelines = [], isLoading: guidelinesLoading } = useGuidelinesByProject(projectId)
   const { data: members = [], isLoading: membersLoading } = useProjectMembers(projectId)
   const invalidateProjectDetail = useInvalidateProjectDetail()
+  const { data: projectAssignments = [], isLoading: assignmentsLoading } = useAssignmentsByProject(projectId)
 
-  const loading = projectLoading || guidelinesLoading || membersLoading
+  const loading = projectLoading || guidelinesLoading || membersLoading || assignmentsLoading
 
   const [isEditProjectModalVisible, setIsEditProjectModalVisible] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
   const [guidelineForm] = Form.useForm()
 
   const [editingGuideline, setEditingGuideline] = useState<Record<string, unknown> | null>(null)
@@ -96,6 +100,60 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
     }
   }
 
+  const handleExport = async (format: string) => {
+    if (projectAssignments.length === 0) {
+      message.warning('No assignments found to export.')
+      return
+    }
+
+    const assignmentId = projectAssignments[0].assignmentId
+    if (!assignmentId) return
+
+    try {
+      setIsExporting(true)
+      const res = await assignmentApi.exportAssignment(assignmentId, format.toLowerCase())
+      
+      // Create a blob URL and trigger download
+      const blob = new Blob([res.data], { type: res.headers?.['content-type'] || 'application/zip' })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `${project?.projectName || 'export'}_${format}_${Date.now()}.zip`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+      
+      message.success(`Project exported in ${format} format successfully!`)
+    } catch (error) {
+      const err = error as any
+      console.error('Export failed', err)
+      let errorMessage = 'Failed to export project. Please try again.'
+      
+      if (err.response?.data instanceof Blob && err.response.data.type === 'application/json') {
+        try {
+          const text = await err.response.data.text()
+          const errorData = JSON.parse(text)
+          if (errorData.code === 'ASSIGNMENT_NOT_COMPLETE_TO_EXPORT' || errorData.errorCode === 'ASSIGNMENT_NOT_COMPLETE_TO_EXPORT') {
+            errorMessage = 'Assignment is not complete to export'
+          } else if (errorData.code === 'ANNOTATION_MIXED_TYPE_NOT_SUPPORTED' || errorData.errorCode === 'ANNOTATION_MIXED_TYPE_NOT_SUPPORTED') {
+            errorMessage = 'Cannot export to yolo because annotation has also bounding box and polygon'
+          } else if (errorData.message) {
+            errorMessage = errorData.message
+          }
+        } catch (e) {
+          console.error('Failed to parse error blob', e)
+        }
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message
+      }
+      
+      message.error(errorMessage)
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A'
     return new Date(dateString).toLocaleString('vi-VN')
@@ -119,7 +177,28 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
 
   return (
     <div className="w-full animate-fade-in">
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-end mb-4 gap-3">
+        {projectAssignments.length > 0 && (
+          <Dropdown
+            menu={{
+              items: [
+                { key: 'YOLO', label: 'YOLO Format', onClick: () => handleExport('YOLO') },
+                { key: 'COCO', label: 'COCO Format', onClick: () => handleExport('COCO') },
+                { key: 'JSON', label: 'JSON Format', onClick: () => handleExport('JSON') },
+              ]
+            }}
+            trigger={['click']}
+            disabled={isExporting}
+          >
+            <Button
+              className="bg-transparent border border-violet-500/30 text-violet-400 hover:text-white hover:border-violet-500 rounded-lg font-medium"
+              icon={<DownloadOutlined />}
+              loading={isExporting}
+            >
+              Export Labels
+            </Button>
+          </Dropdown>
+        )}
         <Button
           type="primary"
           icon={<EditOutlined />}

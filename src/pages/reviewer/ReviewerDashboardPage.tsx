@@ -70,77 +70,7 @@ const ReviewerTabs: React.FC<{
   )
 }
 
-// ============ MOCK DATA ============
-const MOCK_DATA = {
-  assignment: {
-    id: 'REV-ASGN-001',
-    name: 'Review - Medical Imaging Batch A',
-    status: 'IN_PROGRESS',
-    description:
-      'Please review and approve/reject the following annotated medical images based on the provided guidelines.',
-    projectId: 'PROJ-MOCK-012',
-    completedTasks: 8,
-    totalTasks: 30,
-    tasks: [
-      {
-        id: '1',
-        name: 'X-RAY_001.jpg',
-        taskStatus: 'COMPLETED',
-        annotationStatus: 'approved',
-        batchLabel: 'Batch 1',
-        timeTaken: '1m 05s'
-      },
-      {
-        id: '2',
-        name: 'X-RAY_002.jpg',
-        taskStatus: 'COMPLETED',
-        annotationStatus: 'rejected',
-        batchLabel: 'Batch 1',
-        timeTaken: '0m 55s'
-      },
-      {
-        id: '3',
-        name: 'X-RAY_003.jpg',
-        taskStatus: 'IN_PROGRESS',
-        annotationStatus: 'needs_editing',
-        batchLabel: 'Batch 1',
-        timeTaken: '0m 20s'
-      },
-      {
-        id: '4',
-        name: 'MRI_SCAN_A1.png',
-        taskStatus: 'PENDING',
-        annotationStatus: 'not_submitted',
-        batchLabel: 'Batch 2',
-        timeTaken: '--'
-      },
-      {
-        id: '5',
-        name: 'MRI_SCAN_A2.png',
-        taskStatus: 'PENDING',
-        annotationStatus: 'not_submitted',
-        batchLabel: 'Batch 2',
-        timeTaken: '--'
-      }
-    ]
-  },
-  project: {
-    id: 'PROJ-MOCK-012',
-    name: 'Medical Imaging Diagnosis AI',
-    status: 'ACTIVE',
-    description:
-      'A large-scale project to label X-ray and MRI scans for training a diagnostic AI model.'
-  },
-  guideline: {
-    id: 'GUIDE-001',
-    content: `### Review Guidelines
-1. **Accuracy**: Verify annotations match the image content precisely.
-2. **Completeness**: Ensure all objects/regions of interest are labeled.
-3. **Consistency**: Check that labels use the standard coordinate system.
-4. **Quality**: Reject blurry or low-quality images that cannot be reliably annotated.`,
-    status: 'ACTIVE'
-  }
-}
+// Stats card and other components remain same...
 
 const StatsCard: React.FC<{
   title: string
@@ -192,9 +122,9 @@ export default function ReviewerDashboardPage() {
     navigate(`/reviewer/${tab}`)
   }
 
-  const [assignment, setAssignment] = useState<Assignment>(MOCK_DATA.assignment)
-  const [projectDetail, setProjectDetail] = useState<ProjectDetail>(MOCK_DATA.project)
-  const [guideline, setGuideline] = useState<Guideline | null>(MOCK_DATA.guideline)
+  const [assignment, setAssignment] = useState<Assignment | null>(null)
+  const [projectDetail, setProjectDetail] = useState<ProjectDetail | null>(null)
+  const [guideline, setGuideline] = useState<Guideline | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { user } = useAuthStore()
@@ -231,12 +161,9 @@ export default function ReviewerDashboardPage() {
                 description: rawAssign.descriptionAssignment || rawAssign.description,
                 projectId:
                   rawAssign.projectId || rawAssign.project?.projectId || rawAssign.project?.id,
-                tasks:
-                  rawAssign.tasks && rawAssign.tasks.length > 0
-                    ? rawAssign.tasks
-                    : MOCK_DATA.assignment.tasks,
-                completedTasks: rawAssign.completedTasks ?? MOCK_DATA.assignment.completedTasks,
-                totalTasks: rawAssign.totalTasks || MOCK_DATA.assignment.totalTasks
+                tasks: rawAssign.tasks || [],
+                completedTasks: rawAssign.completedTasks || 0,
+                totalTasks: rawAssign.totalTasks || 0
               }
               setAssignment(normAssign)
 
@@ -269,17 +196,12 @@ export default function ReviewerDashboardPage() {
           }
 
           if (!hasFetchedProject) {
-            setAssignment(MOCK_DATA.assignment)
-            setProjectDetail(MOCK_DATA.project)
-            setGuideline(MOCK_DATA.guideline as Guideline)
+            setError('No project assignment found for this reviewer.')
           }
         }
       } catch (err: unknown) {
-        console.error('API Error, falling back to mock data:', err)
-        setError(null)
-        setAssignment(MOCK_DATA.assignment)
-        setProjectDetail(MOCK_DATA.project)
-        setGuideline(MOCK_DATA.guideline as Guideline)
+        console.error('API Error:', err)
+        setError('Failed to sync with server. Please refresh.')
       } finally {
         setLoading(false)
       }

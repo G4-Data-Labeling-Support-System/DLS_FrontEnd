@@ -228,7 +228,7 @@ const ManagerDashboardPage: React.FC = () => {
                   } else {
                     setSearchParams({ tab: 'assignments' })
                   }
-                  invalidateAssignments()
+                  invalidateAssignments(selectedProjectId || undefined)
                 }}
               />
             </div>

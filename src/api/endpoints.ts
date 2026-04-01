@@ -51,12 +51,14 @@ export const ENDPOINTS = {
     UPDATE: (id: string) => `/assignments/${id}`,
     BY_PROJECT: (projectId: string) => `assignments/projects/${projectId}`,
     BY_ANNOTATOR: (annotatorId: string) => `/assignments/annotators/${annotatorId}`,
+    BY_REVIEWER: (reviewerId: string) => `/assignments/reviewers/${reviewerId}`,
     DELETE: (id: string) => `/assignments/remove/${id}`,
     CREATE_BY_PROJECT: (projectId: string) => `/assignments/projects/${projectId}`,
     LABELS: (assignmentId: string) => `/assignments/${assignmentId}/labels`,
     DATASET: (assignmentId: string) => `/assignments/${assignmentId}/dataset`,
     CHANGE_DATASET: (assignmentId: string) =>
-      `/assignments/change-dataset/assignment/${assignmentId}`
+      `/assignments/change-dataset/assignment/${assignmentId}`,
+    EXPORT: (id: string) => `/assignments/${id}/export`
   },
 
   ANNOTATIONS: {
@@ -97,5 +99,8 @@ export const ENDPOINTS = {
     BY_ASSIGNMENT: (assignmentId: string) => `/tasks/assignments/${assignmentId}`,
     DETAIL: (taskId: string) => `/tasks/${taskId}`,
     DATA_ITEMS: (taskId: string) => `/tasks/${taskId}/taskDataitems`
+  },
+  LOGS: {
+    LIST: '/logs'
   }
 } as const

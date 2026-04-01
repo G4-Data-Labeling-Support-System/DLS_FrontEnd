@@ -1,8 +1,6 @@
 import { Card, Button, Typography } from 'antd'
 import {
   PlusCircleFilled,
-  DownloadOutlined,
-  RightOutlined
 } from '@ant-design/icons'
 
 const { Title } = Typography
@@ -30,14 +28,6 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ onCreateProject }) =
         >
           <PlusCircleFilled className="text-lg mr-2" />
           CREATE PROJECT
-        </Button>
-
-        <Button className="w-full h-12 flex items-center justify-between bg-[#231e31] border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 hover:bg-[#2d2640]">
-          <div className="flex items-center">
-            <DownloadOutlined className="mr-3 text-lg text-violet-400" />
-            <span>Export Data</span>
-          </div>
-          <RightOutlined className="text-xs" />
         </Button>
       </div>
     </Card>

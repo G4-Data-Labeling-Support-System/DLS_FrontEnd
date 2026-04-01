@@ -110,7 +110,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({
       const id = getCanonicalId(item)
       if (!id) return
 
-      console.log(`Fetching annotation for canonical ID: ${id}`);
+
       try {
         const res = await annotationApi.getAnnotationByDataItemId(id)
         const remoteAnno = res.data?.data || res.data
@@ -400,7 +400,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({
               dataSource={dataItems}
               columns={columns}
               loading={itemsLoading}
-              rowKey={(record) => String(record.taskItemId || record.dataItemId || '')}
+              rowKey={(record: any, index) => String(record.taskItemId || record.dataItemId || record.id || `item-${index}`)}
               pagination={{
                 pageSize: 10,
                 showSizeChanger: false,
@@ -582,25 +582,23 @@ export default function TaskDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0e17] p-8">
-      <TaskDetail
-        task={
-          task
-            ? {
-              ...task,
-              taskId: String(task.taskId || task.id),
-              taskName: String(task.taskName || task.name || 'Untitled Task')
-            }
-            : null
-        }
-        loading={loading}
-        onItemClick={handleItemClick}
-        onBack={() => navigate(-1)}
-        onStartLabeling={handleStartLabeling}
-        onRefresh={() => {
-          window.location.reload()
-        }}
-      />
-    </div>
+    <TaskDetail
+      task={
+        task
+          ? {
+            ...task,
+            taskId: String(task.taskId || task.id),
+            taskName: String(task.taskName || task.name || 'Untitled Task')
+          }
+          : null
+      }
+      loading={loading}
+      onItemClick={handleItemClick}
+      onBack={() => navigate(-1)}
+      onStartLabeling={handleStartLabeling}
+      onRefresh={() => {
+        window.location.reload()
+      }}
+    />
   )
 }

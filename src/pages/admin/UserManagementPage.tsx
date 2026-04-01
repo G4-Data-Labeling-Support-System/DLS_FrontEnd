@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import AddUserModal from '../../features/admin/components/AddUserModal'
 import EditUserModal from '../../features/admin/components/EditUserModal'
 import AddUserSuccessModal from '../../features/admin/components/AddUserSuccessModal'
+import DeactivateUserModal from '../../features/admin/components/DeactivateUserModal'
 import { themeClasses } from '@/styles'
 import type { User } from '@/shared/types/api.types'
 import { Button } from '@/shared/components/ui/Button'
@@ -26,6 +27,9 @@ export default function UserManagement() {
   const [editModal, setEditModal] = useState<{ isOpen: boolean; data?: User }>({ isOpen: false })
   const [successModal, setSuccessModal] = useState<{ isOpen: boolean; data?: User }>({
     isOpen: false
+  })
+  const [deactivateModal, setDeactivateModal] = useState<{ isOpen: boolean; data?: User }>({ 
+    isOpen: false 
   })
   const [searchTerm, setSearchTerm] = useState('')
   const { data: rawUsers, isLoading } = useUsers()
@@ -57,7 +61,7 @@ export default function UserManagement() {
   const users = Array.isArray(rawUsers)
     ? (rawUsers as User[])
     : (rawUsers as unknown as { data: User[] })?.data || []
-  // console.log("Users API Response:", rawUsers, "Parsed Users:", users);
+
 
   // Lọc users theo status và search term (Client-side)
   const displayedUsers = users.filter((u: User) => {
@@ -111,19 +115,7 @@ export default function UserManagement() {
         icon: <CloseCircleOutlined style={{ color: '#ef4444' }} />,
         danger: true,
         onClick: () => {
-          const userId = user.userId || user.id
-          if (
-            window.confirm(`Are you sure you want to deactivate ${user.username || user.fullName}?`)
-          ) {
-            deactivateUserMutation.mutate(userId, {
-              onSuccess: () => {
-                message.success(`User ${user.username || user.fullName} has been deactivated.`)
-              },
-              onError: (error) => {
-                message.error(`Failed to deactivate user: ${error.message || 'Unknown error'}`)
-              }
-            })
-          }
+          setDeactivateModal({ isOpen: true, data: user })
         }
       })
     }
@@ -141,9 +133,6 @@ export default function UserManagement() {
           >
             User Management
           </h2>
-          <p className={`font-body text-sm ${themeClasses.text.secondary}`}>
-            Manage users, permissions, and monitor backend performance.
-          </p>
         </div>
         <Button
           onClick={() => setIsAddUserModalOpen(true)}
@@ -357,15 +346,14 @@ export default function UserManagement() {
                       <td className="px-6 py-4">
                         <span
                           className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold
-                                                ${
-                                                  roleLower === 'annotator'
-                                                    ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
-                                                    : roleLower === 'reviewer'
-                                                      ? 'border-amber-500/20 bg-amber-500/10 text-amber-400'
-                                                      : roleLower === 'manager'
-                                                        ? 'border-purple-500/20 bg-purple-500/10 text-purple-400'
-                                                        : 'border-red-500/20 bg-red-500/10 text-red-400'
-                                                }`}
+                                                ${roleLower === 'annotator'
+                              ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
+                              : roleLower === 'reviewer'
+                                ? 'border-amber-500/20 bg-amber-500/10 text-amber-400'
+                                : roleLower === 'manager'
+                                  ? 'border-purple-500/20 bg-purple-500/10 text-purple-400'
+                                  : 'border-red-500/20 bg-red-500/10 text-red-400'
+                            }`}
                         >
                           {displayRole}
                         </span>
@@ -388,11 +376,10 @@ export default function UserManagement() {
                           return (
                             <span
                               className={`inline-flex items-center justify-center min-w-[28px] h-7 px-2 rounded-full text-xs font-bold
-                              ${
-                                count > 0
+                              ${count > 0
                                   ? 'bg-violet-500/10 text-violet-400 border border-violet-500/20'
                                   : 'bg-white/5 text-gray-500 border border-white/10'
-                              }`}
+                                }`}
                             >
                               {count}
                             </span>
@@ -442,10 +429,10 @@ export default function UserManagement() {
         userData={
           successModal.data
             ? {
-                name: successModal.data.fullName,
-                email: successModal.data.email,
-                role: successModal.data.role
-              }
+              name: successModal.data.fullName,
+              email: successModal.data.email,
+              role: successModal.data.role
+            }
             : undefined
         }
       />
@@ -456,6 +443,28 @@ export default function UserManagement() {
         userData={editModal.data}
         onSuccess={() => {
           setEditModal({ isOpen: false })
+        }}
+      />
+
+      {/* Deactivate User Modal */}
+      <DeactivateUserModal
+        isOpen={deactivateModal.isOpen}
+        user={deactivateModal.data}
+        isLoading={deactivateUserMutation.isPending}
+        onClose={() => setDeactivateModal({ isOpen: false })}
+        onConfirm={() => {
+          if (deactivateModal.data) {
+            const userId = deactivateModal.data.userId || deactivateModal.data.id
+            deactivateUserMutation.mutate(userId, {
+              onSuccess: () => {
+                message.success(`User ${deactivateModal.data?.username || deactivateModal.data?.fullName} has been deactivated.`)
+                setDeactivateModal({ isOpen: false })
+              },
+              onError: (error) => {
+                message.error(`Failed to deactivate user: ${error.message || 'Unknown error'}`)
+              }
+            })
+          }
         }}
       />
     </div>
