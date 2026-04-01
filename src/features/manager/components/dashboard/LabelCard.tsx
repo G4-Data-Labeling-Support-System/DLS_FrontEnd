@@ -14,7 +14,6 @@ interface LabelCardProps extends GetLabelsParams {
 export const LabelCard: React.FC<LabelCardProps> = ({
   labelName,
   labelStatus,
-  description,
   createdAt,
   updatedAt,
   color,
@@ -95,9 +94,6 @@ export const LabelCard: React.FC<LabelCardProps> = ({
           </Dropdown>
         </div>
       </div>
-
-      {description && <p className="text-gray-400 text-xs line-clamp-2 mb-4">{description}</p>}
-
       <div className="grid grid-cols-2 gap-2 bg-[#231e31] p-3 rounded-lg mt-auto">
         <div>
           <div className="text-[10px] text-gray-500 uppercase tracking-wider">Created At</div>

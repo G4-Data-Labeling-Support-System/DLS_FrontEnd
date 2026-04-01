@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { App, Spin, Button } from 'antd'
-import { EditOutlined } from '@ant-design/icons'
+import { App, Spin, Button, Dropdown } from 'antd'
+import { EditOutlined, DownloadOutlined } from '@ant-design/icons'
 import assignmentApi, { type GetAssignmentsParams } from '@/api/AssignmentApi'
 import taskApi from '@/api/TaskApi'
 import projectApi from '@/api/ProjectApi'
@@ -56,6 +56,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
     user?.userRole?.toLowerCase().includes('admin')
 
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const [isExporting, setIsExporting] = useState(false)
   const handleRefresh = () => setRefreshTrigger((prev) => prev + 1)
   const [searchParams, setSearchParams] = useSearchParams()
 
@@ -245,6 +246,53 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
     return new Date(dateString).toLocaleString('vi-VN')
   }
 
+  const handleExport = async (format: string) => {
+    if (!assignment?.assignmentId) return
+
+    try {
+      setIsExporting(true)
+      const res = await assignmentApi.exportAssignment(assignment.assignmentId, format.toLowerCase())
+      
+      const blob = new Blob([res.data], { type: res.headers?.['content-type'] || 'application/zip' })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `${assignment.assignmentName || 'export'}_${format}_${Date.now()}.zip`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+      
+      message.success(`Assignment exported in ${format} format successfully!`)
+    } catch (error) {
+      const err = error as any
+      console.error('Export failed', err)
+      let errorMessage = 'Failed to export assignment. Please try again.'
+      
+      if (err.response?.data instanceof Blob && err.response.data.type === 'application/json') {
+        try {
+          const text = await err.response.data.text()
+          const errorData = JSON.parse(text)
+          if (errorData.code === 'ASSIGNMENT_NOT_COMPLETE_TO_EXPORT' || errorData.errorCode === 'ASSIGNMENT_NOT_COMPLETE_TO_EXPORT') {
+            errorMessage = 'Assignment is not complete to export'
+          } else if (errorData.code === 'ANNOTATION_MIXED_TYPE_NOT_SUPPORTED' || errorData.errorCode === 'ANNOTATION_MIXED_TYPE_NOT_SUPPORTED') {
+            errorMessage = 'Cannot export to yolo because annotation has also bounding box and polygon'
+          } else if (errorData.message) {
+            errorMessage = errorData.message
+          }
+        } catch (e) {
+          console.error('Failed to parse error blob', e)
+        }
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message
+      }
+      
+      message.error(errorMessage)
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="w-full h-64 flex justify-center items-center">
@@ -325,18 +373,38 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
               </span>
             </div>
             <h1 className="text-3xl font-bold text-white tracking-tight">{assignment.assignmentName}</h1>
-            <p className="text-sm text-gray-400 mt-1 font-mono">{assignment.assignmentId}</p>
           </div>
-          {onEdit && (
-            <Button
-              type="primary"
-              icon={<EditOutlined />}
-              className="bg-violet-600 hover:bg-violet-500 border-none shadow-[0_0_20px_rgba(139,92,246,0.3)] h-10 px-6 rounded-xl transition-all"
-              onClick={() => onEdit(assignment)}
+          <div className="flex items-center gap-3">
+            <Dropdown
+              menu={{
+                items: [
+                  { key: 'YOLO', label: 'YOLO Format', onClick: () => handleExport('YOLO') },
+                  { key: 'COCO', label: 'COCO Format', onClick: () => handleExport('COCO') },
+                  { key: 'JSON', label: 'JSON Format', onClick: () => handleExport('JSON') },
+                ]
+              }}
+              trigger={['click']}
+              disabled={isExporting}
             >
-              Edit Assignment
-            </Button>
-          )}
+              <Button
+                className="bg-transparent border border-violet-500/30 text-violet-400 hover:text-white hover:border-violet-500 rounded-xl font-medium shadow-[0_0_20px_rgba(139,92,246,0.1)] h-10 px-6 transition-all"
+                icon={<DownloadOutlined />}
+                loading={isExporting}
+              >
+                Export
+              </Button>
+            </Dropdown>
+            {onEdit && (
+              <Button
+                type="primary"
+                icon={<EditOutlined />}
+                className="bg-violet-600 hover:bg-violet-500 border-none shadow-[0_0_20px_rgba(139,92,246,0.3)] h-10 px-6 rounded-xl transition-all"
+                onClick={() => onEdit(assignment)}
+              >
+                Edit Assignment
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 

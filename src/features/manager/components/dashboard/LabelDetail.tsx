@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { App, Spin, Typography, Card, Descriptions, Tag } from 'antd'
+import { App, Spin, Typography, Card, Descriptions } from 'antd'
 import { DatabaseOutlined } from '@ant-design/icons'
 import labelApiClient from '@/api/LabelApi'
 import datasetApi from '@/api/DatasetApi'
@@ -102,21 +102,6 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
     return new Date(dateString).toLocaleString('vi-VN')
   }
 
-  const getStatusColor = (status?: string) => {
-    switch (status?.toUpperCase()) {
-      case 'ACTIVE':
-        return 'processing'
-      case 'COMPLETED':
-        return 'success'
-      case 'INACTIVE':
-        return 'error'
-      case 'DRAFT':
-        return 'default'
-      default:
-        return 'default'
-    }
-  }
-
   if (loading) {
     return (
       <div className="w-full h-64 flex justify-center items-center">
@@ -150,14 +135,6 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
             <Title level={3} className="!text-white !m-0 !font-display">
               {label.labelName || 'Unnamed Label'}
             </Title>
-            <div className="mt-2">
-              <Tag
-                color={getStatusColor(label.labelStatus)}
-                className="m-0 font-medium text-sm px-3 py-1"
-              >
-                {label.labelStatus || 'UNKNOWN'}
-              </Tag>
-            </div>
           </div>
         </div>
       </div>
