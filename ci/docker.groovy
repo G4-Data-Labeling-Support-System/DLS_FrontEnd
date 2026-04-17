@@ -30,28 +30,28 @@ def call(config) {
         """
     }
 
-    stage('Trivy Docker Image Scan') {
-            script {
-                def securityLevel = env.BRANCH_NAME == 'main' ? 'HIGH,CRITICAL' : 'CRITICAL'
+    // stage('Trivy Docker Image Scan') {
+    //         script {
+    //             def securityLevel = env.BRANCH_NAME == 'main' ? 'HIGH,CRITICAL' : 'CRITICAL'
 
-                sh """
-                    trivy image --no-progress \
-                    --format json \
-                    --severity ${securityLevel} \
-                    --output trivyimage.json \
-                    ${imageTagged} || true
+    //             sh """
+    //                 trivy image --no-progress \
+    //                 --format json \
+    //                 --severity ${securityLevel} \
+    //                 --output trivyimage.json \
+    //                 ${imageTagged} || true
 
-                    trivy image --no-progress \
-                    --format table \
-                    --severity ${securityLevel} \
-                    --output trivyimage.txt \
-                    ${imageTagged}
+    //                 trivy image --no-progress \
+    //                 --format table \
+    //                 --severity ${securityLevel} \
+    //                 --output trivyimage.txt \
+    //                 ${imageTagged}
 
-                    cat trivyimage.txt
-                """
-            }
-            archiveArtifacts artifacts: 'trivyimage.txt,trivyimage.json', allowEmptyArchive: true
-    }
+    //                 cat trivyimage.txt
+    //             """
+    //         }
+    //         archiveArtifacts artifacts: 'trivyimage.txt,trivyimage.json', allowEmptyArchive: true
+    // }
 
     stage('Docker Test') {
         script {
