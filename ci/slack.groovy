@@ -3,7 +3,6 @@ def call(buildStatus) {
     def trivySummary = getTrivySummary()
 
     slackSend(
-        tokenCredentialId: 'slack-token',
         channel: '#jenkins-ci',
         attachments: [
             [
