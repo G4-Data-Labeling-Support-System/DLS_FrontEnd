@@ -7,65 +7,65 @@
 export const themeClasses = {
   // Background Classes
   backgrounds: {
-    deepDark: 'bg-[#0f0e17]',
-    dark: 'bg-[#151118]',
-    card: 'bg-[#1e1b29]',
-    blackAlpha: 'bg-black/40',
-    whiteAlpha5: 'bg-white/5',
-    violetAlpha5: 'bg-violet-500/5',
-    violetAlpha10: 'bg-violet-500/10',
-    violetAlpha20: 'bg-violet-500/20'
+    deepDark: 'bg-[#f1f1f1]',
+    dark: 'bg-[#ffffff]',
+    card: 'bg-white',
+    blackAlpha: 'bg-black/5',
+    whiteAlpha5: 'bg-black/5',
+    violetAlpha5: 'bg-gray-100',
+    violetAlpha10: 'bg-gray-200',
+    violetAlpha20: 'bg-gray-300'
   },
 
   // Gradients
   gradients: {
     radialViolet:
-      'bg-[radial-gradient(circle_at_center,_rgba(139,92,246,0.15)_0%,_rgba(15,14,23,1)_70%)]'
+      'bg-[radial-gradient(circle_at_center,_rgba(0,0,0,0.05)_0%,_rgba(241,241,241,1)_70%)]'
   },
 
   // Text Classes
   text: {
-    primary: 'text-white',
-    secondary: 'text-gray-400',
-    tertiary: 'text-gray-500',
-    muted: 'text-gray-600',
-    violet: 'text-violet-400',
-    fuchsia: 'text-fuchsia-400',
-    gradient: 'bg-clip-text text-transparent bg-gradient-to-r from-[#8b5cf6] to-[#d946ef]'
+    primary: 'text-[#111111]',
+    secondary: 'text-[#555555]',
+    tertiary: 'text-[#777777]',
+    muted: 'text-[#888888]',
+    violet: 'text-[#111111]',
+    fuchsia: 'text-[#333333]',
+    gradient: 'text-[#111111]'
   },
 
   // Border Classes
   borders: {
-    violet10: 'border-violet-500/10',
-    violet20: 'border-violet-500/20',
-    violet30: 'border-violet-500/30',
-    violet40: 'border-violet-500/40',
-    white5: 'border-white/5',
-    white10: 'border-white/10'
+    violet10: 'border-gray-200',
+    violet20: 'border-gray-300',
+    violet30: 'border-gray-400',
+    violet40: 'border-gray-500',
+    white5: 'border-gray-100',
+    white10: 'border-gray-200'
   },
 
   // Button Classes
   buttons: {
     primary:
-      'px-4 py-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-lg text-white font-medium shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:shadow-[0_0_30px_rgba(139,92,246,0.5)] transition-all duration-300',
+      'px-4 py-2 bg-[#111111] rounded-lg text-white font-medium shadow-md hover:bg-gray-800 transition-all duration-300',
     secondary:
-      'px-4 py-2 bg-white/5 border border-violet-500/20 rounded-lg text-gray-300 hover:text-white hover:bg-violet-500/10 hover:border-violet-500/40 transition-all duration-300',
+      'px-4 py-2 bg-white border border-gray-300 rounded-lg text-[#111111] hover:text-black hover:bg-gray-50 hover:border-gray-400 transition-all duration-300',
     ghost:
-      'px-4 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all duration-300'
+      'px-4 py-2 text-[#555555] hover:text-[#111111] hover:bg-gray-100 rounded-lg transition-all duration-300'
   },
 
   // Card Classes
   cards: {
-    glass: 'glass-card rounded-xl p-6',
-    glassPanel: 'glass-panel rounded-xl p-8',
-    admin: 'bg-[#1e1b29] border border-white/5 rounded-xl p-6'
+    glass: 'bg-white/80 backdrop-blur-md rounded-xl p-6 border border-gray-200 shadow-sm',
+    glassPanel: 'bg-white/90 backdrop-blur-md rounded-xl p-8 border border-gray-200 shadow-sm',
+    admin: 'bg-white border border-gray-200 rounded-xl p-6 shadow-sm'
   },
 
   // Input Classes
   inputs: {
     glass:
-      'glass-input rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:ring-0 focus:outline-none',
-    neon: 'w-full h-14 bg-white/5 border border-white/10 rounded-lg px-4 text-white placeholder:text-white/20 focus:outline-none focus:ring-0 neon-border-focus transition-all duration-300'
+      'bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-[#111111] placeholder-gray-400 focus:border-[#111111] focus:ring-0 focus:outline-none',
+    neon: 'w-full h-14 bg-white border border-gray-300 rounded-lg px-4 text-[#111111] placeholder:text-gray-400 focus:outline-none focus:border-[#111111] transition-all duration-300'
   },
 
   // Layout Classes
@@ -78,9 +78,9 @@ export const themeClasses = {
 
   // Effect Classes
   effects: {
-    gridMesh: 'grid-mesh opacity-20',
-    hologramGlow: 'shadow-[0_0_30px_rgba(139,92,246,0.4)]',
-    glowViolet: 'drop-shadow-[0_0_10px_rgba(139,92,246,0.8)]'
+    gridMesh: 'opacity-5',
+    hologramGlow: 'shadow-lg',
+    glowViolet: 'shadow-md'
   }
 } as const
 
@@ -89,25 +89,25 @@ export const commonPatterns = {
   // Logo
   logo: {
     container: 'flex items-center gap-3',
-    icon: 'material-symbols-outlined text-4xl text-violet-500 drop-shadow-[0_0_10px_rgba(139,92,246,0.8)]',
-    text: 'font-space font-bold text-2xl tracking-tighter',
-    version: 'text-xs font-mono text-violet-400 align-top opacity-70 ml-1'
+    icon: 'material-symbols-outlined text-4xl text-[#111111]',
+    text: 'font-sans font-bold text-2xl tracking-tighter text-[#111111]',
+    version: 'text-xs font-mono text-[#555555] align-top opacity-70 ml-1'
   },
 
   // Navigation
   nav: {
     item: 'flex items-center gap-3 px-4 py-3 rounded-lg transition-all',
-    itemActive: 'bg-violet-500/20 text-violet-400 border border-violet-500/30',
-    itemInactive: 'text-gray-400 hover:bg-white/5 hover:text-white'
+    itemActive: 'bg-gray-100 text-[#111111] border border-gray-200 font-medium',
+    itemInactive: 'text-[#555555] hover:bg-gray-50 hover:text-[#111111]'
   },
 
   // Modal
   modal: {
-    overlay: 'fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4',
-    container: 'glass-panel w-full max-w-[560px] rounded-xl overflow-hidden flex flex-col relative',
+    overlay: 'fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4',
+    container: 'bg-white w-full max-w-[560px] rounded-xl overflow-hidden flex flex-col relative shadow-2xl',
     header: 'px-8 pt-10 pb-6',
-    title: 'text-white text-3xl font-bold tracking-tight',
-    subtitle: 'text-white/50 text-sm mt-2'
+    title: 'text-[#111111] text-3xl font-bold tracking-tight',
+    subtitle: 'text-[#555555] text-sm mt-2'
   }
 } as const
 

@@ -67,7 +67,7 @@ export const AllAnnotations: React.FC<AllAnnotationsProps> = ({ onAnnotationSele
   return (
     <div className="w-full">
       <div className="flex justify-between items-center mb-6">
-        <Title level={4} className="!text-white !m-0 !font-display">
+        <Title level={4} className="!text-[#111] !m-0 !font-display">
           All Annotations
         </Title>
         <Space>
@@ -85,10 +85,10 @@ export const AllAnnotations: React.FC<AllAnnotationsProps> = ({ onAnnotationSele
           />
           <Input
             placeholder="Search annotations..."
-            prefix={<SearchOutlined className="text-gray-400" />}
+            prefix={<SearchOutlined className="text-gray-500" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            className="bg-[#1A1625] border-gray-700 text-white hover:border-violet-500 focus:border-violet-500 w-64"
+            className="bg-[#1A1625] border-gray-700 text-[#111] hover:border-violet-500 focus:border-violet-500 w-64"
           />
         </Space>
       </div>
@@ -120,3 +120,4 @@ export const AllAnnotations: React.FC<AllAnnotationsProps> = ({ onAnnotationSele
     </div>
   )
 }
+

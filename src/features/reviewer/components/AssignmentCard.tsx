@@ -43,7 +43,7 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
         <div className="flex-1 pr-2">
           <Title
             level={5}
-            className="!text-white !m-0 !text-sm leading-tight line-clamp-1"
+            className="!text-[#111] !m-0 !text-sm leading-tight line-clamp-1"
             title={name}
           >
             {name || 'Unnamed Assignment'}
@@ -60,7 +60,7 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
       </div>
 
       {description && (
-        <p className="text-gray-400 text-xs line-clamp-2 mb-4 mt-2 min-h-[32px]">
+        <p className="text-gray-500 text-xs line-clamp-2 mb-4 mt-2 min-h-[32px]">
           {description}
         </p>
       )}
@@ -90,3 +90,4 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
     </Card>
   )
 }
+

@@ -165,7 +165,7 @@ const ManagerDashboardPage: React.FC = () => {
           <div className="flex items-center gap-4">
             <button
               onClick={() => handleProjectSelect(null)}
-              className="px-4 py-2 bg-[#231e31] hover:bg-violet-600/20 text-gray-300 hover:text-white rounded-lg border border-gray-800 hover:border-violet-500/50 transition-all font-medium text-sm flex items-center gap-2 cursor-pointer"
+              className="px-4 py-2 bg-[#231e31] hover:bg-violet-600/20 text-gray-600 hover:text-[#111] rounded-lg border border-gray-800 hover:border-violet-500/50 transition-all font-medium text-sm flex items-center gap-2 cursor-pointer"
             >
               <span className="material-symbols-outlined text-[18px]">arrow_back</span>
               Back to Projects
@@ -303,3 +303,4 @@ const ManagerDashboardPage: React.FC = () => {
 }
 
 export default ManagerDashboardPage
+

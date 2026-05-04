@@ -1,7 +1,7 @@
 export default function getTaskStatusStyle(status: string) {
   if (!status)
     return {
-      badge: 'border-gray-500/20 bg-gray-500/10 text-gray-400',
+      badge: 'border-gray-500/20 bg-gray-500/10 text-gray-500',
       dot: 'bg-gray-400',
       icon: 'radio_button_unchecked'
     }
@@ -28,7 +28,7 @@ export default function getTaskStatusStyle(status: string) {
     case 'not_started':
     default:
       return {
-        badge: 'border-gray-500/20 bg-gray-500/10 text-gray-400',
+        badge: 'border-gray-500/20 bg-gray-500/10 text-gray-500',
         dot: 'bg-gray-400',
         icon: 'radio_button_unchecked'
       }
@@ -61,6 +61,7 @@ export function getAnnotationStatusStyle(status: string) {
     case 'inactive':
       return 'text-red-400'
     default:
-      return 'text-gray-400'
+      return 'text-gray-500'
   }
 }
+

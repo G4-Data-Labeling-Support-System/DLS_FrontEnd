@@ -164,7 +164,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({
       key: 'preview',
       width: '10%',
       render: (_: string, record: TaskDataItemRecord) => (
-        <div className="w-10 h-10 rounded-lg border border-white/5 overflow-hidden bg-black/20 flex items-center justify-center transition-all hover:border-violet-500/30">
+        <div className="w-10 h-10 rounded-lg border border-gray-200 overflow-hidden bg-black/20 flex items-center justify-center transition-all hover:border-violet-500/30">
           {record.dataItem.url || record.dataItem.previewUrl ? (
             <img
               src={record.dataItem.url || record.dataItem.previewUrl}
@@ -183,7 +183,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({
       width: '20%',
       render: (_: unknown, record: TaskDataItemRecord) => (
         <Text
-          className="text-gray-200 font-medium truncate block max-w-[200px]"
+          className="text-gray-700 font-medium truncate block max-w-[200px]"
           title={record.dataItem.fileName}
         >
           {record.dataItem.fileName}
@@ -254,7 +254,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({
       key: 'uploadedAt',
       width: '18%',
       render: (_: unknown, record: TaskDataItemRecord) => (
-        <Text className="text-gray-400 text-sm">
+        <Text className="text-gray-500 text-sm">
           {record.dataItem.uploadedAt
             ? new Date(record.dataItem.uploadedAt).toLocaleDateString()
             : 'N/A'}
@@ -268,7 +268,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({
       render: (_: unknown, record: TaskDataItemRecord, index: number) => (
         <button
           onClick={() => onItemClick?.(record, index)}
-          className="p-1.5 rounded-lg hover:bg-white/5 text-gray-400 hover:text-violet-400 transition-all cursor-pointer flex items-center justify-center"
+          className="p-1.5 rounded-lg hover:bg-white/5 text-gray-500 hover:text-violet-400 transition-all cursor-pointer flex items-center justify-center"
         >
           <ArrowRightOutlined className="text-lg" />
         </button>
@@ -298,14 +298,14 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({
           {onBack && (
             <button
               onClick={onBack}
-              className="group flex items-center gap-2 text-gray-400 hover:text-white transition-all bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg border border-white/5 hover:border-white/10"
+              className="group flex items-center gap-2 text-gray-500 hover:text-[#111] transition-all bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg border border-gray-200 hover:border-gray-300"
             >
               <ArrowLeftOutlined className="text-xs group-hover:-translate-x-0.5 transition-transform" />
               <span className="text-xs font-bold uppercase tracking-wider">Back</span>
             </button>
           )}
           <div className="flex flex-col">
-            <Title level={4} className="!text-white !mb-0 tracking-tight font-bold">
+            <Title level={4} className="!text-[#111] !mb-0 tracking-tight font-bold">
               {task.taskName || 'Untitled Task'}
             </Title>
             <Text className="text-gray-500 font-mono text-xs select-all">ID: {task.taskId}</Text>
@@ -326,7 +326,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-2">
         {/* Left Column: Metrics and Info */}
         <div className="lg:col-span-12">
-          <Card className="bg-[#16161a]/60 border-white/5 backdrop-blur-xl rounded-2xl shadow-xl overflow-hidden hover:border-white/10 transition-all duration-500">
+          <Card className="bg-[#16161a]/60 border-gray-200 backdrop-blur-xl rounded-2xl shadow-xl overflow-hidden hover:border-gray-300 transition-all duration-500">
             <div className="p-2">
               <Descriptions
                 column={{ xxl: 4, xl: 3, lg: 2, md: 2, sm: 1, xs: 1 }}
@@ -336,7 +336,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({
                 <Descriptions.Item label="Assignment">
                   <div className="flex items-center gap-2">
                     <DatabaseOutlined className="text-violet-400" />
-                    <span className="text-gray-200 font-medium">
+                    <span className="text-gray-700 font-medium">
                       {task.assignmentName || 'N/A'}
                     </span>
                     {isManager && (
@@ -370,7 +370,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({
                   </div>
                 </Descriptions.Item>
                 <Descriptions.Item label="Created At">
-                  <span className="text-gray-400 text-xs font-mono">
+                  <span className="text-gray-500 text-xs font-mono">
                     {task.createdAt ? new Date(task.createdAt).toLocaleDateString() : 'N/A'}
                   </span>
                 </Descriptions.Item>
@@ -385,15 +385,15 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({
             <div className="w-8 h-8 rounded-xl bg-violet-500/10 flex items-center justify-center">
               <DatabaseOutlined className="text-violet-400 text-sm" />
             </div>
-            <Title level={5} className="!text-white !mb-0 tracking-tight font-bold">
+            <Title level={5} className="!text-[#111] !mb-0 tracking-tight font-bold">
               Task Data Items
             </Title>
-            <Tag className="bg-white/5 border-white/10 text-gray-400 rounded-lg font-mono">
+            <Tag className="bg-white/5 border-gray-300 text-gray-500 rounded-lg font-mono">
               {dataItems.length}
             </Tag>
           </div>
 
-          <Card className="bg-[#16161a]/40 border-white/5 backdrop-blur-xl rounded-2xl shadow-2xl overflow-hidden">
+          <Card className="bg-[#16161a]/40 border-gray-200 backdrop-blur-xl rounded-2xl shadow-2xl overflow-hidden">
             <Table
               dataSource={dataItems}
               columns={columns}
@@ -571,7 +571,7 @@ export default function TaskDetailPage() {
         <span className="text-red-400 font-medium">{error || 'Task not found.'}</span>
         <button
           onClick={() => navigate(-1)}
-          className="text-white text-sm font-bold px-6 py-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors"
+          className="text-[#111] text-sm font-bold px-6 py-2 bg-white/5 border border-gray-300 rounded-xl hover:bg-white/10 transition-colors"
         >
           Go Back
         </button>

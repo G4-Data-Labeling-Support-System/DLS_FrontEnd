@@ -4,7 +4,7 @@ export default function NotFoundPage() {
   const navigate = useNavigate()
 
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-screen ${themeClasses.backgrounds.deepDark} text-white overflow-hidden">
+    <div className="relative flex flex-col items-center justify-center min-h-screen ${themeClasses.backgrounds.deepDark} text-[#111] overflow-hidden">
       {/* Top Right Decoration */}
       <div className="absolute top-0 right-0">
         <div className="grid grid-cols-2">
@@ -31,9 +31,9 @@ export default function NotFoundPage() {
       </h1>
 
       {/* Message */}
-      <p className="text-3xl mt-4 text-gray-200">Uh oh, this page doesn’t exist.</p>
+      <p className="text-3xl mt-4 text-gray-700">Uh oh, this page doesn’t exist.</p>
 
-      <p className="text-sm text-gray-400 mt-6">Here's a few things you can try:</p>
+      <p className="text-sm text-gray-500 mt-6">Here's a few things you can try:</p>
 
       {/* Buttons */}
       <div className="flex gap-4 mt-6">
@@ -54,3 +54,4 @@ export default function NotFoundPage() {
     </div>
   )
 }
+

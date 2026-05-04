@@ -73,7 +73,7 @@ export const DatasetHealthGrid: React.FC<DatasetHealthGridProps> = ({ datasets, 
              <DatabaseOutlined className="text-violet-400" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-white tracking-tight">Dataset Health Overview</h3>
+            <h3 className="text-xl font-bold text-[#111] tracking-tight">Dataset Health Overview</h3>
             <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Real-time completion tracking</p>
           </div>
         </div>
@@ -82,7 +82,7 @@ export const DatasetHealthGrid: React.FC<DatasetHealthGridProps> = ({ datasets, 
           <Input
             placeholder="Filter datasets..."
             prefix={<SearchOutlined className="text-gray-500" />}
-            className="bg-white/5 border-white/10 text-white rounded-xl w-full sm:w-64"
+            className="bg-white/5 border-gray-300 text-[#111] rounded-xl w-full sm:w-64"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
           />
@@ -91,7 +91,7 @@ export const DatasetHealthGrid: React.FC<DatasetHealthGridProps> = ({ datasets, 
             className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all text-xs font-bold uppercase tracking-wider ${
               showStuckOnly 
                 ? 'bg-rose-500/20 border-rose-500/40 text-rose-400' 
-                : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
+                : 'bg-white/5 border-gray-300 text-gray-500 hover:text-[#111]'
             }`}
           >
             <WarningOutlined />
@@ -102,14 +102,14 @@ export const DatasetHealthGrid: React.FC<DatasetHealthGridProps> = ({ datasets, 
 
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {filteredData.length === 0 ? (
-          <div className="col-span-full py-20 text-center glass-panel rounded-2xl border border-white/5">
+          <div className="col-span-full py-20 text-center glass-panel rounded-2xl border border-gray-200">
             <Empty description={<span className="text-gray-500">No datasets found.</span>} />
           </div>
         ) : (
           filteredData.map(ds => (
             <Card 
               key={ds.key}
-              className={`${themeClasses.cards.glass} border-white/5 hover:border-violet-500/20 transition-all duration-300 relative overflow-hidden group`}
+              className={`${themeClasses.cards.glass} border-gray-200 hover:border-violet-500/20 transition-all duration-300 relative overflow-hidden group`}
               bodyStyle={{ padding: '1.5rem' }}
             >
               {ds.isStuck && (
@@ -128,12 +128,12 @@ export const DatasetHealthGrid: React.FC<DatasetHealthGridProps> = ({ datasets, 
                     <DatabaseOutlined className="text-violet-400 text-xs" />
                     <span className="text-[10px] font-mono text-violet-400 uppercase tracking-widest">Dataset</span>
                   </div>
-                  <h4 className="text-lg font-bold text-white truncate">{ds.datasetName}</h4>
+                  <h4 className="text-lg font-bold text-[#111] truncate">{ds.datasetName}</h4>
                 </div>
 
                 <div className="flex flex-col gap-1">
                   <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider mb-1">
-                    <span className="text-gray-400">Completion</span>
+                    <span className="text-gray-500">Completion</span>
                     <span className={ds.progress === 100 ? 'text-emerald-400' : 'text-fuchsia-400'}>
                       {ds.progress}%
                     </span>
@@ -153,20 +153,20 @@ export const DatasetHealthGrid: React.FC<DatasetHealthGridProps> = ({ datasets, 
                 <div className="grid grid-cols-2 gap-4 pt-2">
                   <div className="flex flex-col gap-1">
                     <span className="text-[10px] text-gray-500 uppercase tracking-widest font-medium">Total Items</span>
-                    <span className="text-sm text-gray-200 font-bold">{ds.totalItems || 0}</span>
+                    <span className="text-sm text-gray-700 font-bold">{ds.totalItems || 0}</span>
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-[10px] text-gray-500 uppercase tracking-widest font-medium">Labelers</span>
                     <div className="flex items-center gap-1.5">
-                      <TeamOutlined className="text-xs text-gray-400" />
-                      <span className="text-sm text-gray-200 font-bold">{ds.labelers}</span>
+                      <TeamOutlined className="text-xs text-gray-500" />
+                      <span className="text-sm text-gray-700 font-bold">{ds.labelers}</span>
                     </div>
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-[10px] text-gray-500 uppercase tracking-widest font-medium">Deadline</span>
                     <div className="flex items-center gap-1.5">
-                      <CalendarOutlined className="text-xs text-gray-400" />
-                      <span className="text-xs text-gray-300 font-medium">
+                      <CalendarOutlined className="text-xs text-gray-500" />
+                      <span className="text-xs text-gray-600 font-medium">
                         {ds.deadline ? ds.deadline.toLocaleDateString() : 'N/A'}
                       </span>
                     </div>
@@ -188,3 +188,4 @@ export const DatasetHealthGrid: React.FC<DatasetHealthGridProps> = ({ datasets, 
     </div>
   )
 }
+

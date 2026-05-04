@@ -47,12 +47,12 @@ export const StatsCard: React.FC<StatsCardProps> = ({
               className="w-10 h-10 rounded-full object-cover border border-gray-700"
             />
           ) : isUser && !avatar ? (
-            <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center border border-gray-700 text-gray-400">
+            <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center border border-gray-700 text-gray-500">
               <UserOutlined />
             </div>
           ) : null}
 
-          <Title level={isUser ? 4 : 2} className="!text-white !m-0 font-bold">
+          <Title level={isUser ? 4 : 2} className="!text-[#111] !m-0 font-bold">
             {value}
           </Title>
 
@@ -76,3 +76,4 @@ export const StatsCard: React.FC<StatsCardProps> = ({
     </Card>
   )
 }
+

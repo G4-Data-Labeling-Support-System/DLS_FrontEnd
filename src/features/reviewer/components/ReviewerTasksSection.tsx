@@ -98,7 +98,7 @@ export default function ReviewerTasksSection({
 
   if (!mappedTasks || mappedTasks.length === 0) {
     return (
-      <div className="w-full py-10 text-center glass-panel rounded-2xl border border-white/5">
+      <div className="w-full py-10 text-center glass-panel rounded-2xl border border-gray-200">
         <Empty description={<span className="text-gray-500">No tasks available for review.</span>} />
       </div>
     )
@@ -112,7 +112,7 @@ export default function ReviewerTasksSection({
              <FilterOutlined className="text-violet-400" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-white tracking-tight">Tasks for Review</h2>
+            <h2 className="text-xl font-bold text-[#111] tracking-tight">Tasks for Review</h2>
             <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">
               {filteredTasks.length} tasks matched
             </span>
@@ -120,7 +120,7 @@ export default function ReviewerTasksSection({
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-4">
-          <div className="flex p-1 bg-white/5 rounded-xl border border-white/5 overflow-x-auto no-scrollbar">
+          <div className="flex p-1 bg-white/5 rounded-xl border border-gray-200 overflow-x-auto no-scrollbar">
             {availableStatuses.map((status) => (
               <button
                 key={status}
@@ -130,8 +130,8 @@ export default function ReviewerTasksSection({
                 }}
                 className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
                   statusFilter === status
-                    ? 'bg-violet-600 text-white shadow-lg'
-                    : 'text-gray-500 hover:text-gray-300'
+                    ? 'bg-violet-600 text-[#111] shadow-lg'
+                    : 'text-gray-500 hover:text-gray-600'
                 }`}
               >
                 {status.replace('_', ' ')}
@@ -142,7 +142,7 @@ export default function ReviewerTasksSection({
           <Input
             placeholder="Search tasks..."
             prefix={<SearchOutlined className="text-gray-500" />}
-            className="bg-white/5 border-white/10 text-white rounded-xl w-full sm:w-64"
+            className="bg-white/5 border-gray-300 text-[#111] rounded-xl w-full sm:w-64"
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value)
@@ -153,8 +153,8 @@ export default function ReviewerTasksSection({
       </div>
 
       {filteredTasks.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center py-20 text-center glass-panel rounded-2xl border border-white/5">
-          <p className="text-gray-400">No tasks found matching your filters.</p>
+        <div className="flex-1 flex flex-col items-center justify-center py-20 text-center glass-panel rounded-2xl border border-gray-200">
+          <p className="text-gray-500">No tasks found matching your filters.</p>
           <Button type="link" onClick={() => { setSearchTerm(''); setStatusFilter('ALL'); }}>
             Clear Filters
           </Button>
@@ -185,13 +185,13 @@ export default function ReviewerTasksSection({
       )}
 
       {totalPages > 1 && (
-        <div className="mt-10 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="mt-10 pt-6 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-xs text-gray-500 font-medium">
-            Showing <span className="text-gray-300">{startIndex + 1}</span> -{' '}
-            <span className="text-gray-300">
+            Showing <span className="text-gray-600">{startIndex + 1}</span> -{' '}
+            <span className="text-gray-600">
               {Math.min(startIndex + itemsPerPage, filteredTasks.length)}
             </span>{' '}
-            of <span className="text-gray-300">{filteredTasks.length}</span> tasks
+            of <span className="text-gray-600">{filteredTasks.length}</span> tasks
           </div>
 
           <div className="flex items-center gap-2">
@@ -202,7 +202,7 @@ export default function ReviewerTasksSection({
             >
               Previous
             </Button>
-            <div className="px-4 py-1.5 bg-white/5 border border-white/5 rounded-xl text-sm text-violet-400 font-bold">
+            <div className="px-4 py-1.5 bg-white/5 border border-gray-200 rounded-xl text-sm text-violet-400 font-bold">
               {currentPage} / {totalPages}
             </div>
             <Button
@@ -218,3 +218,4 @@ export default function ReviewerTasksSection({
     </div>
   )
 }
+

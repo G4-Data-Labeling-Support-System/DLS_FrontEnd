@@ -58,7 +58,7 @@ const ReviewerTabs: React.FC<{
         <button
           key={tab}
           onClick={() => onTabChange(tab as ReviewerTabType)}
-          className={`text-lg font-medium transition-colors cursor-pointer relative pb-2 capitalize ${activeTab === tab ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
+          className={`text-lg font-medium transition-colors cursor-pointer relative pb-2 capitalize ${activeTab === tab ? 'text-[#111]' : 'text-gray-500 hover:text-gray-600'}`}
         >
           {tab}
           {activeTab === tab && (
@@ -80,7 +80,7 @@ const StatsCard: React.FC<{
   label: string
 }> = ({ title, value, icon, gradient, label }) => (
   <div
-    className={`glass-panel p-6 rounded-2xl border border-white/5 relative overflow-hidden group`}
+    className={`glass-panel p-6 rounded-2xl border border-gray-200 relative overflow-hidden group`}
   >
     <div
       className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}
@@ -90,8 +90,8 @@ const StatsCard: React.FC<{
         <span className="text-[10px] font-black tracking-widest uppercase text-gray-500">
           {title}
         </span>
-        <span className="text-3xl font-bold text-white tracking-tight">{value}</span>
-        <span className="text-[10px] text-gray-400 mt-2 flex items-center gap-1">
+        <span className="text-3xl font-bold text-[#111] tracking-tight">{value}</span>
+        <span className="text-[10px] text-gray-500 mt-2 flex items-center gap-1">
           <span className="w-1 h-1 rounded-full bg-emerald-500" /> {label}
         </span>
       </div>
@@ -227,17 +227,17 @@ export default function ReviewerDashboardPage() {
                    Reviewer Workspace
                  </span>
                </div>
-               <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+               <h1 className="text-2xl sm:text-3xl font-bold text-[#111] tracking-tight">
                  {assignment?.name || 'Review Dashboard'}
                </h1>
-               <p className="text-sm text-gray-400 mt-1 font-mono">
+               <p className="text-sm text-gray-500 mt-1 font-mono">
                  {assignment?.id || 'Review and curate annotations'}
                </p>
             </div>
 
              <div className="flex flex-wrap gap-2 shrink-0">
                <div
-                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold ${assignment ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' : 'border-gray-500/30 bg-gray-500/10 text-gray-400'}`}
+                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold ${assignment ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' : 'border-gray-500/30 bg-gray-500/10 text-gray-500'}`}
                >
                  <span className="material-symbols-outlined text-[14px]">flag</span>
                  {assignment?.status || 'UNKNOWN'}
@@ -282,7 +282,7 @@ export default function ReviewerDashboardPage() {
               </div>
 
               {!assignment && loading ? (
-                <div className="text-center text-gray-400 py-20 flex flex-col items-center gap-4">
+                <div className="text-center text-gray-500 py-20 flex flex-col items-center gap-4">
                   <div className="w-10 h-10 border-4 border-violet-500/20 border-t-violet-500 rounded-full animate-spin"></div>
                   <span className="font-mono text-sm animate-pulse">Scanning assignments...</span>
                 </div>
@@ -300,7 +300,7 @@ export default function ReviewerDashboardPage() {
 
           {activeTab === 'project' &&
             (!projectDetail && loading ? (
-              <div className="text-center text-gray-400 py-20">Loading project...</div>
+              <div className="text-center text-gray-500 py-20">Loading project...</div>
             ) : projectDetail ? (
               <>
                 {loading && (
@@ -312,21 +312,21 @@ export default function ReviewerDashboardPage() {
                 <div className="grid grid-cols-2 gap-6">
                   <AnnotatorProjectDetail project={projectDetail} />
                   {guideline && (
-                    <div className="glass-panel border border-white/5 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                    <div className="glass-panel border border-gray-200 rounded-2xl p-6 shadow-xl relative overflow-hidden">
                       <GuidelineSection guideline={guideline.content} />
                     </div>
                   )}
                 </div>
               </>
             ) : (
-              <div className="text-center text-gray-400 py-10 glass-panel rounded-2xl">
+              <div className="text-center text-gray-500 py-10 glass-panel rounded-2xl">
                 No project found.
               </div>
             ))}
 
           {activeTab === 'assignment' &&
             (!assignment && loading ? (
-              <div className="text-center text-gray-400 py-20">Loading assignment...</div>
+              <div className="text-center text-gray-500 py-20">Loading assignment...</div>
             ) : error || !assignment ? (
               <div className="text-center text-red-400 py-20">{error ?? 'Assignment not found'}</div>
             ) : (
@@ -342,3 +342,4 @@ export default function ReviewerDashboardPage() {
     </div>
   )
 }
+

@@ -85,7 +85,7 @@ export default function AnnotatorProjectDatasetsPage() {
       <Button
         type="text"
         icon={<ArrowLeftOutlined />}
-        className="text-gray-400 hover:text-white mb-6"
+        className="text-gray-500 hover:text-[#111] mb-6"
         onClick={() => navigate(`/annotator/projects/${projectId}`)}
       >
         Back to Projects
@@ -102,7 +102,7 @@ export default function AnnotatorProjectDatasetsPage() {
         <>
           {/* Header with Filters */}
           <div className="flex justify-between items-center mb-6 mt-0">
-            <Title level={4} className="!text-white !m-0 !font-display">
+            <Title level={4} className="!text-[#111] !m-0 !font-display">
               Project Datasets
             </Title>
             <Space>
@@ -118,10 +118,10 @@ export default function AnnotatorProjectDatasetsPage() {
               />
               <Input
                 placeholder="Search datasets..."
-                prefix={<SearchOutlined className="text-gray-400" />}
+                prefix={<SearchOutlined className="text-gray-500" />}
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
-                className="bg-[#1A1625] border-gray-700 text-white hover:border-violet-500 focus:border-violet-500 w-64"
+                className="bg-[#1A1625] border-gray-700 text-[#111] hover:border-violet-500 focus:border-violet-500 w-64"
               />
             </Space>
           </div>
@@ -134,7 +134,7 @@ export default function AnnotatorProjectDatasetsPage() {
                 <span className="mt-4 text-violet-400 font-mono">Loading Datasets...</span>
               </div>
             ) : error ? (
-              <div className="text-center text-gray-400 py-20 bg-[#1A1625]/40 rounded-xl border border-dashed border-gray-700">
+              <div className="text-center text-gray-500 py-20 bg-[#1A1625]/40 rounded-xl border border-dashed border-gray-700">
                 {error}
               </div>
             ) : filteredDatasets.length > 0 ? (
@@ -160,3 +160,4 @@ export default function AnnotatorProjectDatasetsPage() {
     </div>
   )
 }
+

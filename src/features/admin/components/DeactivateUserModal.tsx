@@ -32,11 +32,11 @@ export default function DeactivateUserModal({
           <ExclamationCircleOutlined className="text-[64px] text-rose-500 relative z-10 drop-shadow-[0_0_15px_rgba(244,63,94,0.4)]" />
         </div>
 
-        <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">
+        <h2 className="text-2xl font-bold text-[#111] mb-2 tracking-tight">
           Deactivate User?
         </h2>
 
-        <p className="text-gray-400 text-sm leading-relaxed mb-8 px-2">
+        <p className="text-gray-500 text-sm leading-relaxed mb-8 px-2">
           Are you sure you want to deactivate <strong className="text-rose-400">{user.fullName || user.username}</strong>?
 
         </p>
@@ -45,7 +45,7 @@ export default function DeactivateUserModal({
           <Button
             variant="secondary"
             onClick={onClose}
-            className="flex-1 h-11 border-white/10 text-gray-300 hover:text-white hover:bg-white/5"
+            className="flex-1 h-11 border-gray-300 text-gray-600 hover:text-[#111] hover:bg-white/5"
             disabled={isLoading}
           >
             Cancel
@@ -63,3 +63,4 @@ export default function DeactivateUserModal({
     </GlassModal>
   )
 }
+

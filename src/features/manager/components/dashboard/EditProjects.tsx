@@ -76,7 +76,7 @@ export const EditProject = () => {
     return (
       <div className="w-full h-[60vh] flex flex-col justify-center items-center">
         <Spin size="large" />
-        <div className="mt-4 text-gray-400">Đang tải thông tin dự án...</div>
+        <div className="mt-4 text-gray-500">Đang tải thông tin dự án...</div>
       </div>
     )
   }
@@ -85,14 +85,14 @@ export const EditProject = () => {
     <div className="w-full max-w-3xl mx-auto pb-10">
       {/* Header / Nút Back */}
       <Space
-        className="mb-6 cursor-pointer text-gray-400 hover:text-white transition-colors"
+        className="mb-6 cursor-pointer text-gray-500 hover:text-[#111] transition-colors"
         onClick={() => navigate(-1)}
       >
         <ArrowLeftOutlined />
         <span>Quay lại</span>
       </Space>
 
-      <Title level={3} className="!text-white !mb-6 !font-display">
+      <Title level={3} className="!text-[#111] !mb-6 !font-display">
         Chỉnh sửa Dự án
       </Title>
 
@@ -105,19 +105,19 @@ export const EditProject = () => {
           requiredMark={false} // Ẩn dấu sao đỏ mặc định của Antd để tự custom UI nếu muốn
         >
           <Form.Item
-            label={<span className="text-gray-300 font-medium">Tên dự án</span>}
+            label={<span className="text-gray-600 font-medium">Tên dự án</span>}
             name="projectName"
             rules={[{ required: true, message: 'Vui lòng nhập tên dự án!' }]}
           >
             <Input
               size="large"
               placeholder="Nhập tên dự án..."
-              className="bg-[#231e31] border-gray-700 text-white placeholder:text-gray-500 hover:border-violet-500 focus:border-violet-500 focus:shadow-none"
+              className="bg-[#231e31] border-gray-700 text-[#111] placeholder:text-gray-500 hover:border-violet-500 focus:border-violet-500 focus:shadow-none"
             />
           </Form.Item>
 
           <Form.Item
-            label={<span className="text-gray-300 font-medium">Trạng thái</span>}
+            label={<span className="text-gray-600 font-medium">Trạng thái</span>}
             name="projectStatus"
             rules={[{ required: true, message: 'Vui lòng chọn trạng thái!' }]}
           >
@@ -133,13 +133,13 @@ export const EditProject = () => {
           </Form.Item>
 
           <Form.Item
-            label={<span className="text-gray-300 font-medium">Mô tả</span>}
+            label={<span className="text-gray-600 font-medium">Mô tả</span>}
             name="description"
           >
             <TextArea
               rows={4}
               placeholder="Nhập mô tả chi tiết cho dự án..."
-              className="bg-[#231e31] border-gray-700 text-white placeholder:text-gray-500 hover:border-violet-500 focus:border-violet-500 focus:shadow-none"
+              className="bg-[#231e31] border-gray-700 text-[#111] placeholder:text-gray-500 hover:border-violet-500 focus:border-violet-500 focus:shadow-none"
             />
           </Form.Item>
 
@@ -147,7 +147,7 @@ export const EditProject = () => {
           <div className="flex justify-end gap-4 mt-8 pt-4 border-t border-gray-800">
             <Button
               size="large"
-              className="bg-transparent border-gray-600 text-gray-300 hover:text-white hover:border-gray-400"
+              className="bg-transparent border-gray-600 text-gray-600 hover:text-[#111] hover:border-gray-400"
               onClick={() => navigate(-1)}
             >
               Hủy bỏ
@@ -180,3 +180,4 @@ export const EditProject = () => {
     </div>
   )
 }
+

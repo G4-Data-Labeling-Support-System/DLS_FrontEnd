@@ -91,31 +91,31 @@ export default function TaskCard({ task, assignmentId }: { task: Task; assignmen
   return (
     <div
       onClick={() => navigate(`/annotator/task/${task.id}`, { state: { assignmentId } })}
-      className="relative group rounded-xl p-5 cursor-pointer overflow-hidden bg-[#1A1625]/60 backdrop-blur-md border border-white/5 hover:border-violet-500/50 hover:bg-[#1A1625]/80 hover:shadow-[0_0_20px_rgba(139,92,246,0.15)] transition-all duration-300 shadow-xl"
+      className="relative group rounded-xl p-5 cursor-pointer overflow-hidden bg-[#1A1625]/60 backdrop-blur-md border border-gray-200 hover:border-violet-500/50 hover:bg-[#1A1625]/80 hover:shadow-[0_0_20px_rgba(139,92,246,0.15)] transition-all duration-300 shadow-xl"
     >
       {/* Top row: status info */}
       <div className="mb-3">
-        <div className="flex items-center gap-1.5 text-[11px] text-gray-300 mb-0.5">
-          <span className="font-semibold text-gray-400">Task_Status:</span>
+        <div className="flex items-center gap-1.5 text-[11px] text-gray-600 mb-0.5">
+          <span className="font-semibold text-gray-500">Task_Status:</span>
           <span
-            className={`font-semibold ${statusStyle.badge.includes('emerald') ? 'text-emerald-400' : statusStyle.badge.includes('amber') ? 'text-amber-400' : statusStyle.badge.includes('violet') ? 'text-violet-400' : 'text-gray-400'}`}
+            className={`font-semibold ${statusStyle.badge.includes('emerald') ? 'text-emerald-400' : statusStyle.badge.includes('amber') ? 'text-amber-400' : statusStyle.badge.includes('violet') ? 'text-violet-400' : 'text-gray-500'}`}
           >
             {taskStatus}
           </span>
         </div>
-        <div className="flex items-center gap-1.5 text-[11px] text-gray-300">
-          <span className="font-semibold text-gray-400">Annotation_Status:</span>
+        <div className="flex items-center gap-1.5 text-[11px] text-gray-600">
+          <span className="font-semibold text-gray-500">Annotation_Status:</span>
           <span className={`font-semibold ${annotationStyle}`}>{annotationLabel}</span>
         </div>
       </div>
 
       {/* Divider */}
-      <div className="border-t border-white/10 mb-3" />
+      <div className="border-t border-gray-300 mb-3" />
 
       {/* Task name + action */}
       <div className="flex items-center justify-between mb-3">
-        <h4 className="text-base font-bold text-white">{taskName}</h4>
-        <button className="flex items-center gap-1 text-[10px] font-bold text-violet-300 hover:text-white transition-colors opacity-0 group-hover:opacity-100">
+        <h4 className="text-base font-bold text-[#111]">{taskName}</h4>
+        <button className="flex items-center gap-1 text-[10px] font-bold text-violet-300 hover:text-[#111] transition-colors opacity-0 group-hover:opacity-100">
           <span>Open</span>
           <span className="material-symbols-outlined text-[13px]">arrow_forward</span>
         </button>
@@ -129,7 +129,7 @@ export default function TaskCard({ task, assignmentId }: { task: Task; assignmen
             {completed}/{total} items
           </span>
         </div>
-        <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+        <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-gray-200">
           <div
             className="h-full bg-gradient-to-r from-violet-600 to-fuchsia-500 transition-all duration-500 rounded-full"
             style={{ width: `${progress}%` }}
@@ -142,3 +142,4 @@ export default function TaskCard({ task, assignmentId }: { task: Task; assignmen
     </div>
   )
 }
+

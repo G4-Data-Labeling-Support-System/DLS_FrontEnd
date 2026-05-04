@@ -12,7 +12,7 @@ export const ManageProjectThingsTabs: React.FC<ManageProjectThingsTabsProps> = (
     <div className="flex items-center gap-8 border-b border-gray-800 mb-6 pb-2">
       <button
         onClick={() => onTabChange('assignment')}
-        className={`text-lg font-medium transition-colors cursor-pointer relative pb-2 ${activeTab === 'assignment' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
+        className={`text-lg font-medium transition-colors cursor-pointer relative pb-2 ${activeTab === 'assignment' ? 'text-[#111]' : 'text-gray-500 hover:text-gray-600'}`}
       >
         Assignments
         {activeTab === 'assignment' && (
@@ -21,7 +21,7 @@ export const ManageProjectThingsTabs: React.FC<ManageProjectThingsTabsProps> = (
       </button>
       <button
         onClick={() => onTabChange('dataset')}
-        className={`text-lg font-medium transition-colors cursor-pointer relative pb-2 ${activeTab === 'dataset' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
+        className={`text-lg font-medium transition-colors cursor-pointer relative pb-2 ${activeTab === 'dataset' ? 'text-[#111]' : 'text-gray-500 hover:text-gray-600'}`}
       >
         Datasets
         {activeTab === 'dataset' && (
@@ -30,7 +30,7 @@ export const ManageProjectThingsTabs: React.FC<ManageProjectThingsTabsProps> = (
       </button>
       <button
         onClick={() => onTabChange('label')}
-        className={`text-lg font-medium transition-colors cursor-pointer relative pb-2 ${activeTab === 'label' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
+        className={`text-lg font-medium transition-colors cursor-pointer relative pb-2 ${activeTab === 'label' ? 'text-[#111]' : 'text-gray-500 hover:text-gray-600'}`}
       >
         Labels
         {activeTab === 'label' && (
@@ -40,3 +40,4 @@ export const ManageProjectThingsTabs: React.FC<ManageProjectThingsTabsProps> = (
     </div>
   )
 }
+

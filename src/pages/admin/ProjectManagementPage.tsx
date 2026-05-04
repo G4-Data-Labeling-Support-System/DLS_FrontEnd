@@ -94,7 +94,7 @@ export default function ProjectManagement() {
               <p className={`font-body text-sm font-medium ${themeClasses.text.secondary} mb-1`}>
                 Total Projects
               </p>
-              <p className="text-3xl font-bold tracking-tight text-white">
+              <p className="text-3xl font-bold tracking-tight text-[#111]">
                 {isLoading ? '-' : projects?.length || 0}
               </p>
             </div>
@@ -121,7 +121,7 @@ export default function ProjectManagement() {
               <p className={`font-body text-sm font-medium ${themeClasses.text.secondary} mb-1`}>
                 System Status
               </p>
-              <p className="text-3xl font-bold tracking-tight text-white">-</p>
+              <p className="text-3xl font-bold tracking-tight text-[#111]">-</p>
             </div>
             <div className="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
               <DesktopOutlined className="text-xl" />
@@ -149,7 +149,7 @@ export default function ProjectManagement() {
                 Storage
               </p>
               <div className="flex items-baseline gap-1">
-                <p className="text-3xl font-bold tracking-tight text-white">
+                <p className="text-3xl font-bold tracking-tight text-[#111]">
                   -<span className={`text-lg ${themeClasses.text.tertiary} font-medium`}>TB</span>
                 </p>
                 <span className={`text-xs ${themeClasses.text.tertiary}`}>/ -TB</span>
@@ -191,7 +191,7 @@ export default function ProjectManagement() {
           className={`border-b ${themeClasses.borders.white5} px-6 py-5 flex justify-between items-center ${themeClasses.backgrounds.card}`}
         >
           <div className="flex flex-col gap-1">
-            <h3 className="text-lg font-bold text-white">Project List</h3>
+            <h3 className="text-lg font-bold text-[#111]">Project List</h3>
             <p className={`text-sm ${themeClasses.text.secondary} font-body`}>
               All projects available in the system ({projects?.length || 0})
             </p>
@@ -260,7 +260,7 @@ export default function ProjectManagement() {
                             )}
                           </div>
                           <div className="flex flex-col">
-                            <span className="font-bold text-white text-[15px]">
+                            <span className="font-bold text-[#111] text-[15px]">
                               {project.projectName || `Project ${projectId}`}
                             </span>
                             <span className={`text-xs ${themeClasses.text.tertiary}`}>
@@ -270,7 +270,7 @@ export default function ProjectManagement() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="max-w-[200px] truncate text-gray-300">
+                        <div className="max-w-[200px] truncate text-gray-600">
                           {project.description || '-'}
                         </div>
                       </td>
@@ -286,7 +286,7 @@ export default function ProjectManagement() {
                           </span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-gray-300">{dateStr}</td>
+                      <td className="px-6 py-4 text-gray-600">{dateStr}</td>
                       <td className="px-6 py-4 text-right">
                         <Dropdown
                           menu={{ items: getActionItems(project) }}
@@ -297,7 +297,7 @@ export default function ProjectManagement() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className={`${themeClasses.text.tertiary} hover:text-white transition-colors`}
+                            className={`${themeClasses.text.tertiary} hover:text-[#111] transition-colors`}
                           >
                             <MoreOutlined className="text-lg" />
                           </Button>
@@ -314,3 +314,4 @@ export default function ProjectManagement() {
     </div>
   )
 }
+

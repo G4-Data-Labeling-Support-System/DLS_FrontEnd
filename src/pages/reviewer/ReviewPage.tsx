@@ -620,7 +620,7 @@ export default function AnnotationPage() {
         <span className="text-red-400 font-medium">{error || 'No data items found.'}</span>
         <button
           onClick={() => navigate(-1)}
-          className="mt-4 px-6 py-2 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-all font-bold"
+          className="mt-4 px-6 py-2 bg-white/5 border border-gray-300 rounded-lg text-[#111] hover:bg-white/10 transition-all font-bold"
         >
           Go Back
         </button>
@@ -629,14 +629,14 @@ export default function AnnotationPage() {
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col h-screen bg-[#111116] text-white overflow-hidden font-sans">
+    <div className="fixed inset-0 z-[100] flex flex-col h-screen bg-[#111116] text-[#111] overflow-hidden font-sans">
       {/* Optional minimal top bar for backing out */}
       <div className="absolute top-4 left-4 z-[200]">
         <button
           onClick={() => {
             navigate(-1)
           }}
-          className="px-4 py-2 bg-black/40 backdrop-blur border border-white/10 rounded-xl hover:bg-white/10 text-gray-400 flex items-center gap-2 transition text-sm font-medium shadow-xl absolute top-4 left-4 cursor-pointer"
+          className="px-4 py-2 bg-black/40 backdrop-blur border border-gray-300 rounded-xl hover:bg-white/10 text-gray-500 flex items-center gap-2 transition text-sm font-medium shadow-xl absolute top-4 left-4 cursor-pointer"
         >
           <span className="material-symbols-outlined text-[16px]">arrow_back</span>
           <span>Back</span>
@@ -646,8 +646,8 @@ export default function AnnotationPage() {
       <div className="flex flex-1 overflow-hidden h-full">
 
         {/* Left Column: Thumbnail List */}
-        <div style={{ width: leftWidth, minWidth: 160 }} className="border-r border-white/10 overflow-y-auto custom-scrollbar flex flex-col pt-16 mt-4 pb-4 shrink-0">
-          <div className="flex items-center px-2 py-2 border-b border-white/10 mx-4 mb-2 gap-3 text-[10px] font-bold uppercase tracking-widest text-gray-500">
+        <div style={{ width: leftWidth, minWidth: 160 }} className="border-r border-gray-300 overflow-y-auto custom-scrollbar flex flex-col pt-16 mt-4 pb-4 shrink-0">
+          <div className="flex items-center px-2 py-2 border-b border-gray-300 mx-4 mb-2 gap-3 text-[10px] font-bold uppercase tracking-widest text-gray-500">
             <span className="w-10 shrink-0 text-center">Status</span>
             <span className="w-16 shrink-0 text-center">Image</span>
             <span className="flex-1">Shapes</span>
@@ -692,12 +692,12 @@ export default function AnnotationPage() {
                     <img
                       src={item.url || (item as any).dataItem?.url || (item as any).dataitem?.url || (item as any).previewUrl}
                       alt={item.fileName || (item as any).dataItem?.fileName || (item as any).dataitem?.fileName || (item as any).filename}
-                      className={`w-16 h-12 object-cover rounded-md bg-black/50 border-[2px] ${isSelected ? 'border-violet-500 shadow-[0_0_12px_rgba(139,92,246,0.4)]' : 'border-white/10'}`}
+                      className={`w-16 h-12 object-cover rounded-md bg-black/50 border-[2px] ${isSelected ? 'border-violet-500 shadow-[0_0_12px_rgba(139,92,246,0.4)]' : 'border-gray-300'}`}
                     />
                     {/* Shape count badge */}
                     <div className={`absolute -bottom-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center text-[10px] font-bold border ${shapeCount > 0
-                      ? 'bg-violet-600 border-violet-400/50 text-white'
-                      : 'bg-black/70 border-white/10 text-gray-500'
+                      ? 'bg-violet-600 border-violet-400/50 text-[#111]'
+                      : 'bg-black/70 border-gray-300 text-gray-500'
                       }`}>
                       {shapeCount}
                     </div>
@@ -805,7 +805,7 @@ export default function AnnotationPage() {
 
 
           {/* Bottom Action Bar */}
-          <div className="mt-8 border-t border-white/10 pt-5 flex w-full items-center justify-between gap-4">
+          <div className="mt-8 border-t border-gray-300 pt-5 flex w-full items-center justify-between gap-4">
 
             {/* Left: task counter */}
             <span className="text-xs  font-mono text-gray-500">task {currentIndex + 1}/{totalItems}</span>
@@ -817,13 +817,13 @@ export default function AnnotationPage() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => handleReviewDecision('REJECTED')}
-                className="shrink-0 px-6 py-2 rounded-lg text-sm font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-900/20 transition-all cursor-pointer"
+                className="shrink-0 px-6 py-2 rounded-lg text-sm font-bold bg-rose-600 hover:bg-rose-500 text-[#111] shadow-lg shadow-rose-900/20 transition-all cursor-pointer"
               >
                 Reject
               </button>
               <button
                 onClick={() => handleReviewDecision('APPROVED')}
-                className="shrink-0 px-6 py-2 rounded-lg text-sm font-bold bg-violet-600 hover:bg-violet-500 text-white shadow-lg shadow-violet-900/20 transition-all cursor-pointer"
+                className="shrink-0 px-6 py-2 rounded-lg text-sm font-bold bg-violet-600 hover:bg-violet-500 text-[#111] shadow-lg shadow-violet-900/20 transition-all cursor-pointer"
               >
                 Approve
               </button>
@@ -846,13 +846,13 @@ export default function AnnotationPage() {
         </div>
 
         {/* Right Column: Comment, Labels, Confidence & Geometry */}
-        <div style={{ width: rightWidth, minWidth: 200 }} className="border-l border-white/5 px-6 py-6 flex flex-col gap-6 overflow-y-auto custom-scrollbar bg-[#16161a] shrink-0">
+        <div style={{ width: rightWidth, minWidth: 200 }} className="border-l border-gray-200 px-6 py-6 flex flex-col gap-6 overflow-y-auto custom-scrollbar bg-[#16161a] shrink-0">
 
           {/* Reviewer Feedback Section */}
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px] text-violet-400">rate_review</span>
-              <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Review Feedback</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Review Feedback</span>
             </div>
 
             <div className="relative group">
@@ -861,7 +861,7 @@ export default function AnnotationPage() {
                 onChange={(e) => setReviewComment(e.target.value)}
                 onPaste={handlePaste}
                 placeholder="Type your feedback here... Paste screenshots directly."
-                className="w-full h-40 bg-white/5 rounded-xl border border-white/10 p-4 text-sm text-gray-200 focus:outline-none focus:border-violet-500/50 transition-all resize-none shadow-inner"
+                className="w-full h-40 bg-white/5 rounded-xl border border-gray-300 p-4 text-sm text-gray-700 focus:outline-none focus:border-violet-500/50 transition-all resize-none shadow-inner"
               />
               <div className="absolute bottom-2 right-2 text-[10px] text-gray-500 group-focus-within:text-violet-400/60 transition-colors">
                 Markdown & Images supported
@@ -874,11 +874,11 @@ export default function AnnotationPage() {
                 <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Pasted Evidence ({reviewImages.length})</span>
                 <div className="grid grid-cols-2 gap-2">
                   {reviewImages.map((img) => (
-                    <div key={img.id} className="relative aspect-video group bg-black/40 rounded-lg overflow-hidden border border-white/5 hover:border-violet-500/30 transition-all">
+                    <div key={img.id} className="relative aspect-video group bg-black/40 rounded-lg overflow-hidden border border-gray-200 hover:border-violet-500/30 transition-all">
                       <img src={img.url} className="w-full h-full object-cover" alt="Review evidence" />
                       <button
                         onClick={() => removeReviewImage(img.id)}
-                        className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-rose-500"
+                        className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-[#111] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-rose-500"
                       >
                         <span className="material-symbols-outlined text-[14px]">close</span>
                       </button>
@@ -895,7 +895,7 @@ export default function AnnotationPage() {
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-[16px] text-violet-400">label</span>
-              <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Labels</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Labels</span>
             </div>
             <div className="flex flex-wrap gap-2">
               {labels.length > 0 ? labels.map(label => {
@@ -927,9 +927,9 @@ export default function AnnotationPage() {
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px] text-amber-400">info</span>
-              <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Annotator Info</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Annotator Info</span>
             </div>
-            <div className="flex flex-col gap-3 p-4 bg-black/20 rounded-xl border border-white/5">
+            <div className="flex flex-col gap-3 p-4 bg-black/20 rounded-xl border border-gray-200">
               <div className="flex justify-between text-xs">
                 <span className="text-gray-500">Confidence</span>
                 <span className={`font-bold ${confidence === 'HIGH' ? 'text-emerald-400' :
@@ -938,7 +938,7 @@ export default function AnnotationPage() {
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-xs text-gray-500">Annotator Comment</span>
-                <p className="text-xs text-gray-300 italic bg-white/5 p-2 rounded-lg border border-white/5">
+                <p className="text-xs text-gray-600 italic bg-white/5 p-2 rounded-lg border border-gray-200">
                   {comment || 'No comment provided.'}
                 </p>
               </div>
@@ -952,18 +952,18 @@ export default function AnnotationPage() {
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-[18px] text-emerald-400">history</span>
-                <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Past Reviews</span>
+                <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Past Reviews</span>
               </div>
               <div className="flex flex-col gap-4">
                 {annotationReviews.map((review, i) => (
-                  <div key={review.reviewId || i} className="flex flex-col gap-2 p-3 bg-white/5 rounded-xl border border-white/10 relative overflow-hidden">
+                  <div key={review.reviewId || i} className="flex flex-col gap-2 p-3 bg-white/5 rounded-xl border border-gray-300 relative overflow-hidden">
                     <div className={`absolute top-0 left-0 w-1 h-full ${review.reviewStatus === 'REJECTED' ? 'bg-rose-500' : 'bg-violet-500'}`} />
                     <div className="flex justify-between items-center text-[10px] pl-2">
                       <span className={`uppercase font-bold tracking-wider ${review.reviewStatus === 'REJECTED' ? 'text-rose-400' : 'text-violet-400'}`}>{review.reviewStatus}</span>
                       <span className="text-gray-500">{new Date(review.reviewedAt).toLocaleDateString()}</span>
                     </div>
                     {review.comment && (
-                      <div className="text-xs text-gray-300 bg-black/40 p-2 rounded-lg border border-white/5 pl-3">
+                      <div className="text-xs text-gray-600 bg-black/40 p-2 rounded-lg border border-gray-200 pl-3">
                         {review.comment}
                       </div>
                     )}
@@ -974,10 +974,10 @@ export default function AnnotationPage() {
                           {review.evidences.map((ev: any, idx: number) => {
                             const imgUrl = typeof ev === 'string' ? ev : (ev?.url || ev?.evidenceUrl || ev?.imageUrl || ev?.fileUrl || '')
                             return (
-                              <div key={idx} className="shrink-0 w-20 h-14 bg-black/60 rounded overflow-hidden border border-white/10 group relative">
+                              <div key={idx} className="shrink-0 w-20 h-14 bg-black/60 rounded overflow-hidden border border-gray-300 group relative">
                                 <img src={imgUrl} alt="Evidence" className="w-full h-full object-cover" />
                                 {imgUrl && (
-                                  <a href={imgUrl} target="_blank" rel="noreferrer" className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                                  <a href={imgUrl} target="_blank" rel="noreferrer" className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-[#111]">
                                     <span className="material-symbols-outlined text-[14px]">open_in_new</span>
                                   </a>
                                 )}
@@ -996,9 +996,9 @@ export default function AnnotationPage() {
           <div className="flex flex-col gap-3 flex-1">
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-[16px] text-blue-400">poly</span>
-              <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Geometry</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Geometry</span>
             </div>
-            <div className="flex-1 bg-black/40 rounded-xl border border-white/5 p-4 overflow-y-auto min-h-[200px] custom-scrollbar">
+            <div className="flex-1 bg-black/40 rounded-xl border border-gray-200 p-4 overflow-y-auto min-h-[200px] custom-scrollbar">
               {shapes.length === 0 ? (
                 <div className="h-full flex items-center justify-center text-gray-600 text-xs font-mono lowercase">no geometry data</div>
               ) : (
@@ -1036,7 +1036,7 @@ function ToolbarButton({
       onClick={onClick}
       className={`
           w-7 h-7 p-4 flex items-center justify-center transition-all cursor-pointer rounded-md
-          ${active ? 'bg-violet-600 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/10'}
+          ${active ? 'bg-violet-600 text-[#111] shadow-lg' : 'text-gray-500 hover:text-[#111] hover:bg-white/10'}
       `}
     >
       <span className="material-symbols-outlined text-[16px]">{icon}</span>

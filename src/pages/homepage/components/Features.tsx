@@ -15,7 +15,7 @@ export default function Features() {
             className={`${themeClasses.cards.glass} p-10 rounded-[2rem] flex flex-col items-start gap-6 group cursor-pointer`}
           >
             <div
-              className={`w-16 h-16 ${themeClasses.backgrounds.violetAlpha10} rounded-2xl flex items-center justify-center ${themeClasses.text.violet} border ${themeClasses.borders.violet20} group-hover:bg-violet-500 group-hover:text-white transition-all duration-500`}
+              className={`w-16 h-16 ${themeClasses.backgrounds.violetAlpha10} rounded-2xl flex items-center justify-center ${themeClasses.text.violet} border ${themeClasses.borders.violet20} group-hover:bg-violet-500 group-hover:text-[#111] transition-all duration-500`}
             >
               <DeploymentUnitOutlined className="text-3xl" />
             </div>
@@ -24,7 +24,7 @@ export default function Features() {
                 Automated AI Pipelines
               </h3>
               <p
-                className={`${themeClasses.text.secondary} font-light leading-relaxed group-hover:text-gray-300 transition-colors`}
+                className={`${themeClasses.text.secondary} font-light leading-relaxed group-hover:text-gray-600 transition-colors`}
               >
                 Seamless end-to-end integration. Let our proprietary algorithms pre-label data with
                 hyper-precision before human verification.
@@ -41,7 +41,7 @@ export default function Features() {
             className={`${themeClasses.cards.glass} p-10 rounded-[2rem] flex flex-col items-start gap-6 group cursor-pointer`}
           >
             <div
-              className={`w-16 h-16 bg-fuchsia-500/10 rounded-2xl flex items-center justify-center ${themeClasses.text.fuchsia} border border-fuchsia-500/20 group-hover:bg-fuchsia-500 group-hover:text-white transition-all duration-500`}
+              className={`w-16 h-16 bg-fuchsia-500/10 rounded-2xl flex items-center justify-center ${themeClasses.text.fuchsia} border border-fuchsia-500/20 group-hover:bg-fuchsia-500 group-hover:text-[#111] transition-all duration-500`}
             >
               <GlobalOutlined className="text-3xl" />
             </div>
@@ -50,7 +50,7 @@ export default function Features() {
                 Global Workforce Scale
               </h3>
               <p
-                className={`${themeClasses.text.secondary} font-light leading-relaxed group-hover:text-gray-300 transition-colors`}
+                className={`${themeClasses.text.secondary} font-light leading-relaxed group-hover:text-gray-600 transition-colors`}
               >
                 Distribute tasks across a decentralized network of over 50,000 certified annotators
                 worldwide, managed via smart consensus.
@@ -66,7 +66,7 @@ export default function Features() {
           <div
             className={`${themeClasses.cards.glass} p-10 rounded-[2rem] flex flex-col items-start gap-6 group cursor-pointer`}
           >
-            <div className="w-16 h-16 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-500 border border-blue-500/20 group-hover:bg-blue-500 group-hover:text-white transition-all duration-500">
+            <div className="w-16 h-16 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-500 border border-blue-500/20 group-hover:bg-blue-500 group-hover:text-[#111] transition-all duration-500">
               <SecurityScanOutlined className="text-3xl" />
             </div>
             <div>
@@ -74,7 +74,7 @@ export default function Features() {
                 Quantum-Level Quality
               </h3>
               <p
-                className={`${themeClasses.text.secondary} font-light leading-relaxed group-hover:text-gray-300 transition-colors`}
+                className={`${themeClasses.text.secondary} font-light leading-relaxed group-hover:text-gray-600 transition-colors`}
               >
                 Zero-error tolerance via triple-blind verification and real-time biometric identity
                 tracking for ultimate data security.
@@ -90,3 +90,4 @@ export default function Features() {
     </section>
   )
 }
+

@@ -207,15 +207,15 @@ const ReviewerWorkspacePage: React.FC = () => {
   const handleZoomReset = () => { setZoom(1); setOffset({ x: 0, y: 0 }) }
 
   if (error) {
-    return <div className="h-screen bg-[#111116] flex items-center justify-center text-white"><Result status="warning" title="Failed to load workspace" extra={<Button onClick={() => navigate(-1)}>Go Back</Button>} /></div>
+    return <div className="h-screen bg-[#111116] flex items-center justify-center text-[#111]"><Result status="warning" title="Failed to load workspace" extra={<Button onClick={() => navigate(-1)}>Go Back</Button>} /></div>
   }
 
   const currentReview = reviewMap[selectedId || ''] || { status: null, reason: '' }
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col h-screen bg-[#111116] text-white overflow-hidden font-sans">
+    <div className="fixed inset-0 z-[100] flex flex-col h-screen bg-[#111116] text-[#111] overflow-hidden font-sans">
       <div className="absolute top-4 left-4 z-[200]">
-        <button onClick={() => navigate(-1)} className="px-4 py-2 bg-black/40 backdrop-blur border border-white/10 rounded-xl hover:bg-white/10 text-gray-400 flex items-center gap-2 transition text-sm font-medium shadow-xl">
+        <button onClick={() => navigate(-1)} className="px-4 py-2 bg-black/40 backdrop-blur border border-gray-300 rounded-xl hover:bg-white/10 text-gray-500 flex items-center gap-2 transition text-sm font-medium shadow-xl">
           <span className="material-symbols-outlined text-[16px]">arrow_back</span>
           <span>Exit Workspace</span>
         </button>
@@ -223,7 +223,7 @@ const ReviewerWorkspacePage: React.FC = () => {
 
       <div className="flex flex-1 overflow-hidden h-full">
         {/* Left Sidebar: Tasks List */}
-        <div style={{ width: leftWidth, minWidth: 160 }} className="border-r border-white/10 overflow-y-auto custom-scrollbar flex flex-col pt-20 pb-4 shrink-0 bg-[#0d0d12]">
+        <div style={{ width: leftWidth, minWidth: 160 }} className="border-r border-gray-300 overflow-y-auto custom-scrollbar flex flex-col pt-20 pb-4 shrink-0 bg-[#0d0d12]">
           <div className="px-6 mb-6">
             <h1 className="text-xl font-bold tracking-tight text-gray-100">Project Workspace</h1>
             <p className="text-[10px] uppercase tracking-[0.2em] font-black text-violet-500/60 mt-1">Reviewing Tasks</p>
@@ -249,7 +249,7 @@ const ReviewerWorkspacePage: React.FC = () => {
                 <div key={item.id} onClick={() => setSelectedId(item.id)} className={`group relative flex items-center gap-4 cursor-pointer p-3 rounded-xl transition-all border ${isSelected ? 'bg-violet-600/10 border-violet-500/30' : 'bg-white/2 border-transparent hover:bg-white/5'}`}>
                   <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusColor}`} />
                   <div className="flex flex-col min-w-0">
-                    <span className="text-xs font-bold text-gray-300 truncate">{item.filename}</span>
+                    <span className="text-xs font-bold text-gray-600 truncate">{item.filename}</span>
                     <span className="text-[9px] font-mono text-gray-600 mt-1">{item.lastModified.split('T')[0]}</span>
                   </div>
                   {isSelected && <div className="absolute right-3 w-1.5 h-1.5 rounded-full bg-violet-400 animate-ping" />}
@@ -263,7 +263,7 @@ const ReviewerWorkspacePage: React.FC = () => {
         <div className="w-1 shrink-0 cursor-col-resize hover:bg-violet-500/40 z-30" onMouseDown={e => { draggingRef.current = 'left'; dragStartXRef.current = e.clientX; dragStartWidthRef.current = leftWidth; e.preventDefault() }} />
 
         {/* Middle Viewer */}
-        <div className="flex-[2] flex flex-col relative overflow-hidden bg-[#111116] pt-12 pb-6 px-5 border-l-[2px] border-white/5 mx-2 my-2">
+        <div className="flex-[2] flex flex-col relative overflow-hidden bg-[#111116] pt-12 pb-6 px-5 border-l-[2px] border-gray-200 mx-2 my-2">
           {loadingDetail ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-4">
               <Spin size="large" />
@@ -287,7 +287,7 @@ const ReviewerWorkspacePage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex-1 relative flex overflow-hidden rounded-2xl border border-white/5 shadow-2xl">
+              <div className="flex-1 relative flex overflow-hidden rounded-2xl border border-gray-200 shadow-2xl">
                 <div className="relative bg-[#0d0d12]/50 overflow-hidden flex items-center justify-center w-full h-full" onWheel={handleWheel}>
                   <div className="relative transition-transform duration-200 ease-out flex items-center justify-center h-full w-full"
                     style={{ transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`, transformOrigin: 'center' }}>
@@ -309,7 +309,7 @@ const ReviewerWorkspacePage: React.FC = () => {
                     </svg>
                   </div>
                 </div>
-                <div className="absolute top-1/2 -translate-y-1/2 right-4 flex flex-col gap-2 bg-[#1A1625]/80 backdrop-blur-md p-2 rounded-2xl border border-white/10 shadow-2xl z-20">
+                <div className="absolute top-1/2 -translate-y-1/2 right-4 flex flex-col gap-2 bg-[#1A1625]/80 backdrop-blur-md p-2 rounded-2xl border border-gray-300 shadow-2xl z-20">
                   <ToolbarButton icon="pan_tool" active={tool === 'pan'} onClick={() => setTool('pan')} />
                   <ToolbarButton icon="zoom_in" onClick={() => setZoom(prev => Math.min(prev + 0.2, 10))} />
                   <ToolbarButton icon="zoom_out" onClick={() => setZoom(prev => Math.max(prev - 0.2, 0.5))} />
@@ -317,11 +317,11 @@ const ReviewerWorkspacePage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="mt-8 border-t border-white/5 pt-6 flex items-center justify-between">
+              <div className="mt-8 border-t border-gray-200 pt-6 flex items-center justify-between">
                 <div className="flex gap-4 items-center">
                   <div className="flex flex-col">
                     <span className="text-[10px] font-black tracking-widest uppercase text-gray-600 mb-1">Queue Status</span>
-                    <span className="text-xs font-mono text-gray-400 font-bold">{items.findIndex(i => i.id === selectedId) + 1} / {items.length} Tasks</span>
+                    <span className="text-xs font-mono text-gray-500 font-bold">{items.findIndex(i => i.id === selectedId) + 1} / {items.length} Tasks</span>
                   </div>
                 </div>
 
@@ -329,11 +329,11 @@ const ReviewerWorkspacePage: React.FC = () => {
                   <button onClick={() => {
                     const idx = items.findIndex(i => i.id === selectedId)
                     if (idx > 0) setSelectedId(items[idx - 1].id)
-                  }} disabled={items.findIndex(i => i.id === selectedId) === 0} className="px-6 py-2.5 disabled:opacity-30 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-bold transition-all border border-white/5 shadow-lg">Previous</button>
+                  }} disabled={items.findIndex(i => i.id === selectedId) === 0} className="px-6 py-2.5 disabled:opacity-30 bg-white/5 hover:bg-white/10 text-[#111] rounded-xl text-xs font-bold transition-all border border-gray-200 shadow-lg">Previous</button>
                   <button onClick={() => {
                     const idx = items.findIndex(i => i.id === selectedId)
                     if (idx < items.length - 1) setSelectedId(items[idx + 1].id)
-                  }} disabled={items.findIndex(i => i.id === selectedId) === items.length - 1} className="px-6 py-2.5 disabled:opacity-30 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-bold transition-all border border-white/5 shadow-lg">Next</button>
+                  }} disabled={items.findIndex(i => i.id === selectedId) === items.length - 1} className="px-6 py-2.5 disabled:opacity-30 bg-white/5 hover:bg-white/10 text-[#111] rounded-xl text-xs font-bold transition-all border border-gray-200 shadow-lg">Next</button>
                   <div className="w-px h-10 bg-white/5 mx-2" />
                   <button onClick={() => navigate(`/reviewer/task/${selectedId}/annotate`)} className="px-6 py-2.5 bg-white/10 hover:bg-white/20 text-violet-400 rounded-xl text-xs font-black uppercase tracking-widest transition-all border border-violet-500/20">Open High-Def Editor</button>
                 </div>
@@ -351,8 +351,8 @@ const ReviewerWorkspacePage: React.FC = () => {
         <div className="w-1 shrink-0 cursor-col-resize hover:bg-violet-500/40 z-30" onMouseDown={e => { draggingRef.current = 'right'; dragStartXRef.current = e.clientX; dragStartWidthRef.current = rightWidth; e.preventDefault() }} />
 
         {/* Right Action Panel */}
-        <div style={{ width: rightWidth, minWidth: 200 }} className="border-l border-white/10 px-8 py-10 flex flex-col gap-8 overflow-y-auto custom-scrollbar bg-[#0d0d12] shrink-0">
-          <div className="flex items-center gap-3 mb-2 border-b border-white/5 pb-6">
+        <div style={{ width: rightWidth, minWidth: 200 }} className="border-l border-gray-300 px-8 py-10 flex flex-col gap-8 overflow-y-auto custom-scrollbar bg-[#0d0d12] shrink-0">
+          <div className="flex items-center gap-3 mb-2 border-b border-gray-200 pb-6">
             <div className="w-10 h-10 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center">
               <span className="material-symbols-outlined text-[20px] text-violet-400">gavel</span>
             </div>
@@ -366,12 +366,12 @@ const ReviewerWorkspacePage: React.FC = () => {
             <span className="text-[10px] font-black tracking-widest uppercase text-gray-600">Quick Actions</span>
             <div className="grid grid-cols-2 gap-3">
               <button onClick={() => handleReviewDecision('approved')} disabled={isSubmitting || !itemDetail}
-                className={`h-24 rounded-2xl flex flex-col items-center justify-center gap-2 border-[2px] transition-all font-bold group ${currentReview.status === 'approved' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500' : 'bg-white/5 text-gray-600 border-transparent hover:bg-white/10 hover:text-gray-300'} disabled:opacity-30`}>
+                className={`h-24 rounded-2xl flex flex-col items-center justify-center gap-2 border-[2px] transition-all font-bold group ${currentReview.status === 'approved' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500' : 'bg-white/5 text-gray-600 border-transparent hover:bg-white/10 hover:text-gray-600'} disabled:opacity-30`}>
                 <span className="material-symbols-outlined text-[24px]">verified</span>
                 <span className="text-[10px] uppercase tracking-widest">Approve</span>
               </button>
               <button onClick={() => handleReviewDecision('rejected')} disabled={isSubmitting || !itemDetail}
-                className={`h-24 rounded-2xl flex flex-col items-center justify-center gap-2 border-[2px] transition-all font-bold group ${currentReview.status === 'rejected' ? 'bg-rose-500/10 text-rose-400 border-rose-500' : 'bg-white/5 text-gray-500 border-transparent hover:bg-white/10 hover:text-gray-300'} disabled:opacity-30`}>
+                className={`h-24 rounded-2xl flex flex-col items-center justify-center gap-2 border-[2px] transition-all font-bold group ${currentReview.status === 'rejected' ? 'bg-rose-500/10 text-rose-400 border-rose-500' : 'bg-white/5 text-gray-500 border-transparent hover:bg-white/10 hover:text-gray-600'} disabled:opacity-30`}>
                 <span className="material-symbols-outlined text-[24px]">cancel</span>
                 <span className="text-[10px] uppercase tracking-widest">Reject</span>
               </button>
@@ -384,11 +384,11 @@ const ReviewerWorkspacePage: React.FC = () => {
               value={reviewMap[selectedId || '']?.reason || ''}
               onChange={(e) => setReviewMap(prev => ({ ...prev, [selectedId || '']: { ...prev[selectedId || ''], reason: e.target.value } }))}
               placeholder="Provide feedback for the annotator..."
-              className={`w-full h-48 rounded-2xl border p-5 text-sm text-gray-300 focus:outline-none transition-all resize-none shadow-inner ${currentReview.status === 'rejected' ? 'bg-rose-500/5 border-rose-500/20 focus:border-rose-500/50' : 'bg-[#111116] border-white/5 focus:border-violet-500/30'}`}
+              className={`w-full h-48 rounded-2xl border p-5 text-sm text-gray-600 focus:outline-none transition-all resize-none shadow-inner ${currentReview.status === 'rejected' ? 'bg-rose-500/5 border-rose-500/20 focus:border-rose-500/50' : 'bg-[#111116] border-gray-200 focus:border-violet-500/30'}`}
             />
           </div>
 
-          <div className="mt-auto glass-panel p-6 rounded-3xl border border-white/5 space-y-5 bg-white/2">
+          <div className="mt-auto glass-panel p-6 rounded-3xl border border-gray-200 space-y-5 bg-white/2">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-violet-600/20 flex items-center justify-center">
                 <span className="material-symbols-outlined text-[16px] text-violet-400">history</span>
@@ -398,8 +398,8 @@ const ReviewerWorkspacePage: React.FC = () => {
 
             <div className="space-y-4 max-h-40 overflow-y-auto custom-scrollbar-thin pr-4">
               {itemDetail?.history?.map((h: { id: string; message?: string; timestamp?: string }, i: number) => (
-                <div key={i} className="relative pl-4 border-l border-white/10">
-                  <p className="text-[11px] text-gray-400 leading-relaxed font-medium">{h.message || 'Updated annotation'}</p>
+                <div key={i} className="relative pl-4 border-l border-gray-300">
+                  <p className="text-[11px] text-gray-500 leading-relaxed font-medium">{h.message || 'Updated annotation'}</p>
                   <span className="text-[9px] text-gray-600 font-mono italic">{h.timestamp || 'Just now'}</span>
                 </div>
               )) || (
@@ -415,10 +415,11 @@ const ReviewerWorkspacePage: React.FC = () => {
 
 function ToolbarButton({ icon, active = false, onClick }: { icon: string; active?: boolean; onClick?: () => void }) {
   return (
-    <button onClick={onClick} className={`w-11 h-11 flex items-center justify-center transition-all cursor-pointer rounded-xl border-2 ${active ? 'bg-violet-600/20 text-violet-400 border-violet-500/50 shadow-lg shadow-violet-500/20' : 'bg-transparent text-gray-500 border-transparent hover:text-white hover:bg-white/5'}`}>
+    <button onClick={onClick} className={`w-11 h-11 flex items-center justify-center transition-all cursor-pointer rounded-xl border-2 ${active ? 'bg-violet-600/20 text-violet-400 border-violet-500/50 shadow-lg shadow-violet-500/20' : 'bg-transparent text-gray-500 border-transparent hover:text-[#111] hover:bg-white/5'}`}>
       <span className="material-symbols-outlined text-[20px]">{icon}</span>
     </button>
   )
 }
 
 export default ReviewerWorkspacePage
+

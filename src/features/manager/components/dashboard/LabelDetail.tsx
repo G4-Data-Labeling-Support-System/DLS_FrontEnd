@@ -112,7 +112,7 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
 
   if (!label) {
     return (
-      <div className="w-full text-center py-10 text-gray-400">Error loading label information.</div>
+      <div className="w-full text-center py-10 text-gray-500">Error loading label information.</div>
     )
   }
 
@@ -132,7 +132,7 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
             />
           )}
           <div>
-            <Title level={3} className="!text-white !m-0 !font-display">
+            <Title level={3} className="!text-[#111] !m-0 !font-display">
               {label.labelName || 'Unnamed Label'}
             </Title>
           </div>
@@ -146,7 +146,7 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
           <div className="flex-1 p-6 border-b lg:border-b-0 lg:border-r border-gray-800">
             <Descriptions
               title={
-                <span className="text-white text-lg font-display flex items-center gap-2">
+                <span className="text-[#111] text-lg font-display flex items-center gap-2">
                   <span className="material-symbols-outlined text-violet-400">info</span>
                   Label Information
                 </span>
@@ -190,13 +190,13 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
           {/* Right: Description */}
           <div className="flex-1 p-6 flex flex-col">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-white text-lg font-display flex items-center gap-2">
+              <span className="text-[#111] text-lg font-display flex items-center gap-2">
                 <span className="material-symbols-outlined text-green-400">description</span>
                 Description
               </span>
             </div>
-            <div className="flex-1 bg-[#231e31] p-4 rounded-xl border border-white/5">
-              <div className="text-gray-400 text-sm whitespace-pre-wrap">
+            <div className="flex-1 bg-[#231e31] p-4 rounded-xl border border-gray-200">
+              <div className="text-gray-500 text-sm whitespace-pre-wrap">
                 {label.description || (
                   <span className="text-gray-600 italic">No description provided.</span>
                 )}
@@ -209,20 +209,20 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
       <div className="grid grid-cols-1 mb-2 mt-2">
         <Card className="bg-[#1A1625] border-gray-800 rounded-xl h-full">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-white text-lg font-display flex items-center gap-2">
+            <span className="text-[#111] text-lg font-display flex items-center gap-2">
               <DatabaseOutlined className="text-fuchsia-400" />
               Associated Dataset
             </span>
           </div>
           {label.datasetId ? (
             <div
-              className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-fuchsia-500/30 transition-colors cursor-pointer"
+              className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-gray-200 hover:border-fuchsia-500/30 transition-colors cursor-pointer"
               onClick={() => setViewDatasetId(label.datasetId || null)}
             >
-              <h4 className="text-white font-bold text-sm truncate">
+              <h4 className="text-[#111] font-bold text-sm truncate">
                 {datasetName ? datasetName : `Dataset ID: ${label.datasetId}`}
               </h4>
-              <div className="text-gray-400 text-xs mt-1">Click to view dataset details</div>
+              <div className="text-gray-500 text-xs mt-1">Click to view dataset details</div>
             </div>
           ) : (
             <div className="text-gray-500 italic py-4 text-center">No associated dataset</div>
@@ -248,3 +248,4 @@ export const LabelDetail: React.FC<LabelDetailProps> = ({ labelId, onBack }) => 
     </div>
   )
 }
+

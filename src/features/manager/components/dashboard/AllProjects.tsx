@@ -117,7 +117,7 @@ export const AllProjects: React.FC<AllProjectsProps> = ({
   return (
     <div className="w-full">
       <div className="flex justify-between items-center mb-6">
-        <Title level={4} className="!text-white !m-0 !font-display">
+        <Title level={4} className="!text-[#111] !m-0 !font-display">
           All Projects
         </Title>
         <Space>
@@ -135,10 +135,10 @@ export const AllProjects: React.FC<AllProjectsProps> = ({
           />
           <Input
             placeholder="Search projects..."
-            prefix={<SearchOutlined className="text-gray-400" />}
+            prefix={<SearchOutlined className="text-gray-500" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            className="bg-[#1A1625] border-gray-700 text-white hover:border-violet-500 focus:border-violet-500 w-64"
+            className="bg-[#1A1625] border-gray-700 text-[#111] hover:border-violet-500 focus:border-violet-500 w-64"
           />
         </Space>
       </div>
@@ -189,9 +189,9 @@ export const AllProjects: React.FC<AllProjectsProps> = ({
           <div className="block group cursor-pointer" onClick={onCreate}>
             <div className="h-full min-h-[160px] border-2 border-dashed border-gray-700 rounded-xl flex flex-col items-center justify-center gap-4 bg-[#1A1625]/30 hover:bg-[#1A1625] hover:border-violet-500 transition-all">
               <div className="w-12 h-12 rounded-full bg-[#231e31] group-hover:bg-violet-600 flex items-center justify-center transition-colors">
-                <PlusOutlined className="text-gray-400 group-hover:text-white text-xl" />
+                <PlusOutlined className="text-gray-500 group-hover:text-[#111] text-xl" />
               </div>
-              <span className="text-gray-400 group-hover:text-white font-medium font-display">
+              <span className="text-gray-500 group-hover:text-[#111] font-medium font-display">
                 Start New Project
               </span>
             </div>
@@ -216,24 +216,24 @@ export const AllProjects: React.FC<AllProjectsProps> = ({
                 <ExclamationCircleOutlined className="text-red-500 text-2xl" />
               </div>
             </div>
-            <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
+            <h2 className="text-[#111] text-2xl font-bold tracking-tight mb-2 font-display">
               Deactivate Project
             </h2>
-            <p className="text-white/50 text-sm">
+            <p className="text-[#111]/50 text-sm">
               Are you sure you want to deactivate{' '}
-              <span className="text-white/80 font-medium">{deletingProjectName}</span>? This action
+              <span className="text-[#111]/80 font-medium">{deletingProjectName}</span>? This action
               cannot be undone.
             </p>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
             <Button
               onClick={() => {
                 setDeleteModalOpen(false)
                 setDeletingProjectId(null)
                 setDeletingProjectName('')
               }}
-              className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
+              className="border-gray-300 text-[#111]/70 hover:text-[#111] hover:border-white/30"
             >
               Cancel
             </Button>
@@ -252,3 +252,4 @@ export const AllProjects: React.FC<AllProjectsProps> = ({
     </div>
   )
 }
+

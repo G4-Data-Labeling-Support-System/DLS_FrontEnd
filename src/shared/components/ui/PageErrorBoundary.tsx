@@ -29,7 +29,7 @@ export class PageErrorBoundary extends Component<Props, State> {
       // You can render any custom fallback UI
       return (
         <div
-          className={`relative flex flex-col items-center justify-center min-h-screen ${themeClasses.backgrounds.deepDark} text-white overflow-hidden`}
+          className={`relative flex flex-col items-center justify-center min-h-screen ${themeClasses.backgrounds.deepDark} text-[#111] overflow-hidden`}
           role="alert"
         >
           {/* Top Right Decoration */}
@@ -58,9 +58,9 @@ export class PageErrorBoundary extends Component<Props, State> {
           </h1>
 
           {/* Message */}
-          <p className="text-3xl mt-4 text-gray-200">Something went wrong</p>
+          <p className="text-3xl mt-4 text-gray-700">Something went wrong</p>
 
-          <p className="text-sm text-gray-400 mt-6">Please try refreshing the page</p>
+          <p className="text-sm text-gray-500 mt-6">Please try refreshing the page</p>
         </div>
       )
     }
@@ -68,3 +68,4 @@ export class PageErrorBoundary extends Component<Props, State> {
     return this.props.children
   }
 }
+

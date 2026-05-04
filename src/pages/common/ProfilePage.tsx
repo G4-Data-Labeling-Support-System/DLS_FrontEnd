@@ -58,7 +58,7 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-2xl mx-auto py-10 pb-32">
-      <h1 className="text-3xl font-bold text-white mb-8">Edit Profile</h1>
+      <h1 className="text-3xl font-bold text-[#111] mb-8">Edit Profile</h1>
       <div
         className={`login-card p-8 rounded-2xl border ${themeClasses.borders.violet20} relative`}
       >
@@ -88,7 +88,7 @@ export default function ProfilePage() {
               size="large"
               className="glass-input opacity-70 cursor-not-allowed"
               prefix={
-                <MailOutlined className="text-white opacity-80 drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]" />
+                <MailOutlined className="text-[#111] opacity-80 drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]" />
               }
             />
           </Form.Item>
@@ -108,7 +108,7 @@ export default function ProfilePage() {
               size="large"
               className="glass-input"
               prefix={
-                <UserOutlined className="text-white opacity-80 drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]" />
+                <UserOutlined className="text-[#111] opacity-80 drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]" />
               }
             />
           </Form.Item>
@@ -127,7 +127,7 @@ export default function ProfilePage() {
               size="large"
               className="glass-input"
               prefix={
-                <PhoneOutlined className="text-white opacity-80 drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]" />
+                <PhoneOutlined className="text-[#111] opacity-80 drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]" />
               }
             />
           </Form.Item>
@@ -144,7 +144,7 @@ export default function ProfilePage() {
         <div
           className={`absolute inset-0 ${themeClasses.effects.gridMesh} opacity-10 pointer-events-none rounded-2xl`}
         ></div>
-        <h2 className="text-xl font-bold text-white mb-6 relative z-10 flex items-center gap-2">
+        <h2 className="text-xl font-bold text-[#111] mb-6 relative z-10 flex items-center gap-2">
           <span className="material-symbols-outlined text-fuchsia-400">lock</span>
           Security
         </h2>
@@ -163,7 +163,7 @@ export default function ProfilePage() {
               size="large"
               className="glass-input"
               prefix={
-                <LockOutlined className="text-white opacity-80 drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]" />
+                <LockOutlined className="text-[#111] opacity-80 drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]" />
               }
               placeholder="••••••••"
             />
@@ -183,7 +183,7 @@ export default function ProfilePage() {
               size="large"
               className="glass-input"
               prefix={
-                <LockOutlined className="text-white opacity-80 drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]" />
+                <LockOutlined className="text-[#111] opacity-80 drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]" />
               }
               placeholder="••••••••"
             />
@@ -201,3 +201,4 @@ export default function ProfilePage() {
     </div>
   )
 }
+

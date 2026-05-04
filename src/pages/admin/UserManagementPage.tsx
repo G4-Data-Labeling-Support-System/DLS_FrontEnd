@@ -156,7 +156,7 @@ export default function UserManagement() {
               <p className={`font-body text-sm font-medium ${themeClasses.text.secondary} mb-1`}>
                 Total Users
               </p>
-              <p className="text-3xl font-bold tracking-tight text-white">
+              <p className="text-3xl font-bold tracking-tight text-[#111]">
                 {isLoading ? '-' : users?.length || 0}
               </p>
             </div>
@@ -183,7 +183,7 @@ export default function UserManagement() {
               <p className={`font-body text-sm font-medium ${themeClasses.text.secondary} mb-1`}>
                 Active Users
               </p>
-              <p className="text-3xl font-bold tracking-tight text-white">
+              <p className="text-3xl font-bold tracking-tight text-[#111]">
                 {isLoading ? '-' : activeUsersCount}
               </p>
             </div>
@@ -218,13 +218,13 @@ export default function UserManagement() {
                 Inactive Users
               </p>
               <div className="flex items-baseline gap-1">
-                <p className="text-3xl font-bold tracking-tight text-white">
+                <p className="text-3xl font-bold tracking-tight text-[#111]">
                   {isLoading ? '-' : inactiveUsersCount}
                 </p>
               </div>
             </div>
             <div
-              className={`h-10 w-10 rounded-lg bg-gray-500/10 flex items-center justify-center text-gray-400`}
+              className={`h-10 w-10 rounded-lg bg-gray-500/10 flex items-center justify-center text-gray-500`}
             >
               <CloseCircleOutlined className="text-xl" />
             </div>
@@ -253,7 +253,7 @@ export default function UserManagement() {
           className={`border-b ${themeClasses.borders.white5} px-6 py-5 flex justify-between items-center ${themeClasses.backgrounds.card}`}
         >
           <div className="flex flex-col gap-1">
-            <h3 className="text-lg font-bold text-white">User Management</h3>
+            <h3 className="text-lg font-bold text-[#111]">User Management</h3>
             <p className={`text-sm ${themeClasses.text.secondary} font-body`}>
               List of users in the system ({users?.length || 0})
             </p>
@@ -261,11 +261,11 @@ export default function UserManagement() {
           <div className="flex gap-3">
             <Input
               placeholder="Search user by name, email, or ID..."
-              prefix={<SearchOutlined className="text-gray-400" />}
+              prefix={<SearchOutlined className="text-gray-500" />}
               allowClear
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="bg-white/5 border-white/10 text-white w-64 md:w-80 h-10 rounded-lg hover:border-violet-500/50 focus:border-violet-500 focus:bg-white/10"
+              className="bg-white/5 border-gray-300 text-[#111] w-64 md:w-80 h-10 rounded-lg hover:border-violet-500/50 focus:border-violet-500 focus:bg-white/10"
               style={{ color: 'white' }}
             />
           </div>
@@ -334,7 +334,7 @@ export default function UserManagement() {
                             )}
                           </div>
                           <div className="flex flex-col">
-                            <span className="font-bold text-white text-[15px]">
+                            <span className="font-bold text-[#111] text-[15px]">
                               {user.fullName || user.username}
                             </span>
                             <span className={`text-sm ${themeClasses.text.tertiary}`}>
@@ -364,7 +364,7 @@ export default function UserManagement() {
                             className={`h-2 w-2 rounded-full ${isUserActive ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.6)]' : 'bg-gray-500'}`}
                           ></span>
                           <span
-                            className={`${isUserActive ? 'text-emerald-500' : 'text-gray-400'} text-sm font-medium`}
+                            className={`${isUserActive ? 'text-emerald-500' : 'text-gray-500'} text-sm font-medium`}
                           >
                             {displayStatus}
                           </span>
@@ -378,7 +378,7 @@ export default function UserManagement() {
                               className={`inline-flex items-center justify-center min-w-[28px] h-7 px-2 rounded-full text-xs font-bold
                               ${count > 0
                                   ? 'bg-violet-500/10 text-violet-400 border border-violet-500/20'
-                                  : 'bg-white/5 text-gray-500 border border-white/10'
+                                  : 'bg-white/5 text-gray-500 border border-gray-300'
                                 }`}
                             >
                               {count}
@@ -396,7 +396,7 @@ export default function UserManagement() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className={`${themeClasses.text.tertiary} hover:text-white transition-colors`}
+                            className={`${themeClasses.text.tertiary} hover:text-[#111] transition-colors`}
                           >
                             <MoreOutlined className="text-lg" />
                           </Button>
@@ -470,3 +470,4 @@ export default function UserManagement() {
     </div>
   )
 }
+

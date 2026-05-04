@@ -112,7 +112,7 @@ export default function TasksSection({
     return (
       <div className="w-full py-10 text-center glass-panel rounded-2xl border border-gray-500/10">
         <span className="material-symbols-outlined text-gray-500 text-4xl mb-4">folder_open</span>
-        <h3 className="text-xl font-bold text-gray-400 font-space mb-2">No Tasks Found</h3>
+        <h3 className="text-xl font-bold text-gray-500 font-space mb-2">No Tasks Found</h3>
         <p className="text-sm text-gray-500 max-w-md mx-auto">
           There are currently no tasks available for this assignment.
         </p>
@@ -133,7 +133,7 @@ export default function TasksSection({
             </span>
           </div>
           <div>
-            <h2 className="text-xl font-bold text-white tracking-tight">Tasks</h2>
+            <h2 className="text-xl font-bold text-[#111] tracking-tight">Tasks</h2>
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">
                 {filteredTasks.length} of {tasks.length} tasks matched
@@ -144,7 +144,7 @@ export default function TasksSection({
 
         <div className="flex flex-col sm:flex-row items-center gap-4">
           {/* Status Filter */}
-          <div className="flex p-1 bg-white/5 rounded-xl border border-white/5 w-full sm:w-auto overflow-x-auto no-scrollbar">
+          <div className="flex p-1 bg-white/5 rounded-xl border border-gray-200 w-full sm:w-auto overflow-x-auto no-scrollbar">
             {availableStatuses.map((status) => (
               <button
                 key={status}
@@ -155,8 +155,8 @@ export default function TasksSection({
                 className={`
                                     px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap
                                     ${statusFilter === status
-                    ? 'bg-violet-600 text-white shadow-lg shadow-violet-900/20'
-                    : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
+                    ? 'bg-violet-600 text-[#111] shadow-lg shadow-violet-900/20'
+                    : 'text-gray-500 hover:text-gray-600 hover:bg-white/5'
                   }
                                 `}
               >
@@ -178,7 +178,7 @@ export default function TasksSection({
                 setSearchTerm(e.target.value)
                 setCurrentPage(1)
               }}
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pl-10 pr-4 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-fuchsia-500/50 focus:bg-white/10 transition-all"
+              className="w-full bg-white/5 border border-gray-300 rounded-xl py-2 pl-10 pr-4 text-sm text-[#111] placeholder:text-gray-600 focus:outline-none focus:border-fuchsia-500/50 focus:bg-white/10 transition-all"
             />
           </div>
         </div>
@@ -186,11 +186,11 @@ export default function TasksSection({
 
       {/* Tasks List (Grouped by batch but only for current page) */}
       {filteredTasks.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center py-20 text-center glass-panel rounded-2xl border border-white/5">
+        <div className="flex-1 flex flex-col items-center justify-center py-20 text-center glass-panel rounded-2xl border border-gray-200">
           <span className="material-symbols-outlined text-gray-600 text-5xl mb-4 opacity-20">
             manage_search
           </span>
-          <p className="text-gray-400 text-base font-medium">No tasks found</p>
+          <p className="text-gray-500 text-base font-medium">No tasks found</p>
           <p className="text-gray-600 text-sm mt-1">Try adjusting your filters or search term</p>
           <button
             onClick={() => {
@@ -235,25 +235,25 @@ export default function TasksSection({
 
       {/* Pagination controls */}
       {totalPages > 1 && (
-        <div className="mt-10 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="mt-10 pt-6 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-xs text-gray-500 font-medium">
-            Showing <span className="text-gray-300">{startIndex + 1}</span> -{' '}
-            <span className="text-gray-300">
+            Showing <span className="text-gray-600">{startIndex + 1}</span> -{' '}
+            <span className="text-gray-600">
               {Math.min(startIndex + itemsPerPage, filteredTasks.length)}
             </span>{' '}
-            of <span className="text-gray-300">{filteredTasks.length}</span> tasks
+            of <span className="text-gray-600">{filteredTasks.length}</span> tasks
           </div>
 
           <div className="flex items-center gap-2">
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white disabled:opacity-20 disabled:pointer-events-none transition-all"
+              className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 border border-gray-300 text-gray-500 hover:bg-white/10 hover:text-[#111] disabled:opacity-20 disabled:pointer-events-none transition-all"
             >
               <span className="material-symbols-outlined text-[20px]">chevron_left</span>
             </button>
 
-            <div className="flex items-center gap-1.5 px-4 h-9 bg-white/5 border border-white/5 rounded-xl">
+            <div className="flex items-center gap-1.5 px-4 h-9 bg-white/5 border border-gray-200 rounded-xl">
               <span className="text-sm font-bold text-violet-400">{currentPage}</span>
               <span className="text-xs text-gray-600">/</span>
               <span className="text-xs text-gray-500">{totalPages}</span>
@@ -262,7 +262,7 @@ export default function TasksSection({
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white disabled:opacity-20 disabled:pointer-events-none transition-all"
+              className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 border border-gray-300 text-gray-500 hover:bg-white/10 hover:text-[#111] disabled:opacity-20 disabled:pointer-events-none transition-all"
             >
               <span className="material-symbols-outlined text-[20px]">chevron_right</span>
             </button>
@@ -272,3 +272,4 @@ export default function TasksSection({
     </div>
   )
 }
+

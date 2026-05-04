@@ -247,7 +247,7 @@ const ManageProjectThingsPage: React.FC = () => {
       )}
 
       {activeTab === 'upload' && (
-        <div className="text-gray-400 py-10 text-center font-display border-2 border-dashed border-gray-800 rounded-xl bg-[#1A1625]/50 flex flex-col items-center justify-center min-h-[300px]">
+        <div className="text-gray-500 py-10 text-center font-display border-2 border-dashed border-gray-800 rounded-xl bg-[#1A1625]/50 flex flex-col items-center justify-center min-h-[300px]">
           <span className="material-symbols-outlined text-4xl mb-4 text-violet-500 opacity-50">
             cloud_upload
           </span>
@@ -296,3 +296,4 @@ const ManageProjectThingsPage: React.FC = () => {
 }
 
 export default ManageProjectThingsPage
+

@@ -9,7 +9,7 @@ export const ReviewerFilters: React.FC = () => {
     <Card className="h-full bg-[#1A1625] border-gray-800 rounded-2xl p-4">
       <div className="flex items-center gap-2 mb-6">
         <FilterOutlined className="text-violet-400 text-xl" />
-        <Title level={5} className="!text-white !m-0 !font-normal !font-display">
+        <Title level={5} className="!text-[#111] !m-0 !font-normal !font-display">
           Filters
         </Title>
       </div>
@@ -19,7 +19,7 @@ export const ReviewerFilters: React.FC = () => {
           <Text className="text-gray-500 text-xs uppercase font-semibold pl-1">Project</Text>
           <Select
             defaultValue="all"
-            className="w-full [&_.ant-select-selector]:!bg-[#1a1625] [&_.ant-select-selector]:!border-white/10 [&_.ant-select-selector]:!text-white [&_.ant-select-arrow]:!text-white/50"
+            className="w-full [&_.ant-select-selector]:!bg-[#1a1625] [&_.ant-select-selector]:!border-gray-300 [&_.ant-select-selector]:!text-[#111] [&_.ant-select-arrow]:!text-[#111]/50"
             size="large"
             options={[{ value: 'all', label: 'All Active Projects' }]}
             dropdownStyle={{
@@ -34,3 +34,4 @@ export const ReviewerFilters: React.FC = () => {
     </Card>
   )
 }
+

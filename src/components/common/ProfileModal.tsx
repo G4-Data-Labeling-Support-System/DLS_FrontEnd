@@ -1,26 +1,53 @@
 import React, { useState, useEffect } from 'react'
-import { Form, Input, Button, notification } from 'antd'
-import { CloseOutlined, MailOutlined, CameraOutlined, EditOutlined } from '@ant-design/icons'
+import { X, Mail, Camera, Edit2 } from 'lucide-react'
 import { useAuthStore } from '@/store'
 import { userApi } from '@/api/userApi'
 import { API_BASE_URL } from '@/lib/axios'
 import type { UpdateUserRequest } from '@/shared/types/api.types'
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
 
 interface ProfileModalProps {
   open: boolean
   onClose: () => void
 }
 
+const formSchema = z.object({
+  email: z.string().email(),
+  username: z.string().min(1, { message: "Username is required" }),
+  specialization: z.string().optional(),
+})
+
 export const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose }) => {
   const { user, setUser } = useAuthStore()
-  const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
 
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      username: "",
+      specialization: "",
+    },
+  })
+
   useEffect(() => {
     if (user && open) {
-      form.setFieldsValue({
+      form.reset({
         email: user.email,
         username: user.username,
         specialization: user.specialization || ''
@@ -28,9 +55,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose }) => 
     }
   }, [user, open, form])
 
-  const handleSave = async () => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      const values = await form.validateFields()
       setLoading(true)
 
       const payload = {
@@ -48,11 +74,11 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose }) => 
         specialization: values.specialization
       })
 
-      notification.success({ message: 'Profile updated successfully' })
+      toast.success('Profile updated successfully')
       onClose()
     } catch (error) {
       console.error('Update failed:', error)
-      notification.error({ message: 'Failed to update profile' })
+      toast.error('Failed to update profile')
     } finally {
       setLoading(false)
     }
@@ -66,9 +92,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose }) => 
     const file = e.target.files?.[0]
     if (!file) return
 
-    // Basic validation
     if (!file.type.startsWith('image/')) {
-      notification.error({ message: 'Please select an image file' })
+      toast.error('Please select an image file')
       return
     }
 
@@ -76,7 +101,6 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose }) => 
       setUploadingAvatar(true)
       const response = await userApi.updateAvatar(user!.id, file)
 
-      // Assuming the backend returns the new avatar URL or we just need to refresh the user data
       const newAvatarUrl =
         (response as { avatarUrl?: string; data?: { avatarUrl?: string } }).avatarUrl ||
         (response as { avatarUrl?: string; data?: { avatarUrl?: string } }).data?.avatarUrl
@@ -86,17 +110,13 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose }) => 
         setUser(updatedUser)
         localStorage.setItem('user', JSON.stringify(updatedUser))
       } else {
-        // If it doesn't return the URL, we might need to refetch profile or just assume it worked
-        // and maybe the avatar path is predictable or returned in the whole user object
-        notification.warning({
-          message: 'Avatar updated, please refresh to see changes if not updated.'
-        })
+        toast.warning('Avatar updated, please refresh to see changes if not updated.')
       }
 
-      notification.success({ message: 'Avatar updated successfully' })
+      toast.success('Avatar updated successfully')
     } catch (error) {
       console.error('Avatar update failed:', error)
-      notification.error({ message: 'Failed to update avatar' })
+      toast.error('Failed to update avatar')
     } finally {
       setUploadingAvatar(false)
     }
@@ -122,15 +142,15 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose }) => 
 
       {/* Modal Content */}
       <div
-        className="relative w-full max-w-[650px] bg-[#0D0D0D] border border-[#333] rounded-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300"
+        className="relative w-full max-w-[650px] bg-[#f1f1f1] border border-gray-200 rounded-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-[100] w-8 h-8 cursor-pointer flex items-center justify-center rounded-full bg-black/30 text-white/50 hover:text-white hover:bg-black/50 transition-all border border-white/10"
+          className="absolute top-4 right-4 z-[100] w-8 h-8 cursor-pointer flex items-center justify-center rounded-full bg-white/80 text-[#111] hover:bg-white transition-all shadow-sm"
         >
-          <CloseOutlined />
+          <X className="w-4 h-4" />
         </button>
 
         {/* Banner Section */}
@@ -141,9 +161,9 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose }) => 
               'https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?auto=format&fit=crop&q=80&w=1000'
             }
             alt="Banner"
-            className="w-full h-full object-cover opacity-60"
+            className="w-full h-full object-cover opacity-90"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0D0D0D]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#f1f1f1]/80" />
         </div>
 
         {/* Content Container */}
@@ -152,7 +172,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose }) => 
           <div className="flex justify-between items-end mb-6">
             <div className="relative group cursor-pointer" onClick={handleAvatarClick}>
               <div
-                className={`w-28 h-28 rounded-full border-4 border-[#0D0D0D] overflow-hidden shadow-2xl bg-[#1A1A1A] transition-all ${uploadingAvatar ? 'opacity-50' : 'group-hover:brightness-75'}`}
+                className={`w-28 h-28 rounded-full border-4 border-[#f1f1f1] overflow-hidden shadow-lg bg-white transition-all ${uploadingAvatar ? 'opacity-50' : 'group-hover:brightness-90'}`}
               >
                 <img
                   src={getAvatarUrl(user?.avatar)}
@@ -161,12 +181,12 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose }) => 
                 />
                 {uploadingAvatar && (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400"></div>
                   </div>
                 )}
               </div>
-              <div className="absolute bottom-1 right-1 w-8 h-8 bg-blue-500 rounded-full border-2 border-[#0D0D0D] flex items-center justify-center text-white shadow-lg">
-                <CameraOutlined className="text-sm" />
+              <div className="absolute bottom-1 right-1 w-8 h-8 bg-blue-500 rounded-full border-2 border-white flex items-center justify-center text-white shadow-lg">
+                <Camera className="w-4 h-4" />
               </div>
               <input
                 type="file"
@@ -181,100 +201,94 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose }) => 
           {/* User Info Bar */}
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-1">
-              <h2 className="text-2xl font-bold text-white mb-0">
+              <h2 className="text-2xl font-bold text-[#111] mb-0">
                 {user?.username || 'User Name'}
               </h2>
               {user?.specialization && (
-                <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 text-xs font-bold rounded uppercase tracking-wider border border-blue-500/20">
+                <span className="px-2 py-0.5 bg-blue-100 text-blue-600 text-xs font-bold rounded uppercase tracking-wider border border-blue-200">
                   {user.specialization}
                 </span>
               )}
             </div>
-            <p className="text-gray-400 text-sm">{user?.email}</p>
+            <p className="text-gray-500 text-sm">{user?.email}</p>
           </div>
 
           {/* Form Section */}
-          <Form form={form} layout="vertical" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Form.Item
-                label={
-                  <span className="text-gray-400 font-bold text-xs uppercase tracking-wider">
-                    Email address
-                  </span>
-                }
-                name="email"
-              >
-                <Input
-                  prefix={<MailOutlined className="text-gray-500 mr-2" />}
-                  className="dark-form-input h-11"
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-500 font-bold text-xs uppercase tracking-wider">Email address</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
+                          <Input className="pl-10 h-11 bg-white border-gray-200 text-[#111]" {...field} />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </Form.Item>
 
-              <Form.Item
-                label={
-                  <span className="text-gray-400 font-bold text-xs uppercase tracking-wider">
-                    Username
-                  </span>
-                }
-                name="username"
-              >
-                <Input className="dark-form-input h-11" />
-              </Form.Item>
-            </div>
+                <FormField
+                  control={form.control}
+                  name="username"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-500 font-bold text-xs uppercase tracking-wider">Username</FormLabel>
+                      <FormControl>
+                        <Input className="h-11 bg-white border-gray-200 text-[#111]" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
-            <Form.Item
-              label={
-                <span className="text-gray-400 font-bold text-xs uppercase tracking-wider">
-                  Specialization
-                </span>
-              }
-              name="specialization"
-            >
-              <Input
-                prefix={<EditOutlined className="text-gray-500 mr-2" />}
-                className="dark-form-input h-11"
-                placeholder="e.g. Image Labeling, NLP, Audio Analysis"
+              <FormField
+                control={form.control}
+                name="specialization"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-500 font-bold text-xs uppercase tracking-wider">Specialization</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Edit2 className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
+                        <Input className="pl-10 h-11 bg-white border-gray-200 text-[#111]" placeholder="e.g. Image Labeling, NLP, Audio Analysis" {...field} />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </Form.Item>
 
-            {/* Footer Actions */}
-            <div className="flex justify-end gap-3 pt-6 border-t border-gray-800/50 mt-10">
-              <Button
-                onClick={onClose}
-                className="bg-transparent border-gray-700 text-white hover:bg-white/5 h-11 px-8 rounded-lg font-bold"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="primary"
-                loading={loading}
-                onClick={handleSave}
-                className="bg-[#2D2D2D] border-none text-white hover:bg-[#3D3D3D] h-11 px-8 rounded-lg font-bold"
-              >
-                Save changes
-              </Button>
-            </div>
+              {/* Footer Actions */}
+              <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 mt-10">
+                <Button
+                  type="button"
+                  onClick={onClose}
+                  variant="outline"
+                  className="h-11 px-8 rounded-lg font-bold"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="bg-[#111] text-white hover:bg-black h-11 px-8 rounded-lg font-bold"
+                >
+                  Save changes
+                </Button>
+              </div>
+            </form>
           </Form>
         </div>
       </div>
-
-      <style>{`
-                .dark-form-input {
-                    background: #1A1A1A !important;
-                    border: 1px solid #333 !important;
-                    color: white !important;
-                    border-radius: 8px !important;
-                    transition: all 0.3s;
-                }
-                .dark-form-input:focus, .dark-form-input:hover {
-                    border-color: #555 !important;
-                    background: #222 !important;
-                }
-                .ant-form-item-label label {
-                    color: #9CA3AF !important;
-                    padding-bottom: 8px;
-                }
-            `}</style>
     </div>
   )
 }
+

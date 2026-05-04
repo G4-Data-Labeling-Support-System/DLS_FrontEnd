@@ -62,13 +62,13 @@ export default function AssignmentHeader({ assignment }: { assignment: Assignmen
                 Assignment
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">{title}</h1>
-            <p className="text-sm text-gray-400 mt-1 font-mono">{id}</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#111] tracking-tight">{title}</h1>
+            <p className="text-sm text-gray-500 mt-1 font-mono">{id}</p>
           </div>
 
           {/* Stats pills */}
           <div className="flex flex-wrap gap-2 shrink-0">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-gray-300 text-xs text-gray-600">
               <span className="material-symbols-outlined text-[14px] text-violet-400">
                 folder_special
               </span>
@@ -88,7 +88,7 @@ export default function AssignmentHeader({ assignment }: { assignment: Assignmen
         </div>
 
         {/* Description */}
-        <p className="text-sm text-gray-300 leading-relaxed mb-6 max-w-3xl">{description}</p>
+        <p className="text-sm text-gray-600 leading-relaxed mb-6 max-w-3xl">{description}</p>
 
         {/* Progress Bar */}
         <div className="flex items-center gap-4">
@@ -106,3 +106,4 @@ export default function AssignmentHeader({ assignment }: { assignment: Assignmen
     </div>
   )
 }
+

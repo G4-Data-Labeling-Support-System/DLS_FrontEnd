@@ -143,12 +143,12 @@ export default function ReviewerAssignmentDetailPage() {
         <Button
           type="text"
           icon={<ArrowLeftOutlined />}
-          className="text-gray-400 hover:text-white mb-6 bg-white/5"
+          className="text-gray-500 hover:text-[#111] mb-6 bg-white/5"
           onClick={handleBack}
         >
           Back to Assignments
         </Button>
-        <div className="text-center text-gray-400 py-20 bg-[#1A1625]/40 rounded-2xl border-2 border-dashed border-white/5">
+        <div className="text-center text-gray-500 py-20 bg-[#1A1625]/40 rounded-2xl border-2 border-dashed border-gray-200">
           <p className="font-medium">{error || 'Assignment not found.'}</p>
         </div>
       </div>
@@ -177,26 +177,26 @@ export default function ReviewerAssignmentDetailPage() {
                 Review Assignment Detail
               </span>
             </div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">{assignment.name}</h1>
+            <h1 className="text-3xl font-bold text-[#111] tracking-tight">{assignment.name}</h1>
           </div>
         </div>
       </div>
 
       <div className="flex flex-col gap-6 relative z-10">
-        <div className="glass-panel rounded-2xl overflow-hidden shadow-xl flex flex-col md:flex-row items-stretch border border-white/5 bg-[#1A1625]/60 backdrop-blur-md">
-          <div className="flex-1 p-7 border-b md:border-b-0 md:border-r border-white/10">
-            <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+        <div className="glass-panel rounded-2xl overflow-hidden shadow-xl flex flex-col md:flex-row items-stretch border border-gray-200 bg-[#1A1625]/60 backdrop-blur-md">
+          <div className="flex-1 p-7 border-b md:border-b-0 md:border-r border-gray-300">
+            <h3 className="text-lg font-semibold text-[#111] mb-6 flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px] text-violet-400">info</span>
               Review Information
             </h3>
             <div className="space-y-5">
-              <div className="flex justify-between items-center py-2 border-b border-white/5">
+              <div className="flex justify-between items-center py-2 border-b border-gray-200">
                 <label className="text-xs text-gray-500 font-mono uppercase tracking-wider">Assignment ID</label>
                 <span className="text-xs font-mono text-violet-300">
                   {assignment.id}
                 </span>
               </div>
-              <div className="flex justify-between items-center py-2 border-b border-white/5">
+              <div className="flex justify-between items-center py-2 border-b border-gray-200">
                 <label className="text-xs text-gray-500 font-mono uppercase tracking-wider">Status</label>
                 <div className="px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-[10px] font-bold text-violet-400 uppercase tracking-widest">
                   {assignment.status}
@@ -218,12 +218,12 @@ export default function ReviewerAssignmentDetailPage() {
           </div>
 
           <div className="flex-1 p-7 flex flex-col">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-[#111] mb-4 flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px] text-fuchsia-400">description</span>
               Review Description
             </h3>
-            <div className="flex-1 bg-white/5 p-5 rounded-2xl border border-white/10 min-h-[120px]">
-              <p className="text-sm text-gray-300 leading-relaxed italic">
+            <div className="flex-1 bg-white/5 p-5 rounded-2xl border border-gray-300 min-h-[120px]">
+              <p className="text-sm text-gray-600 leading-relaxed italic">
                 {assignment.description || 'No description provided.'}
               </p>
             </div>
@@ -231,28 +231,28 @@ export default function ReviewerAssignmentDetailPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="glass-panel border border-white/5 bg-[#1A1625]/60 rounded-2xl p-6 shadow-xl">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <div className="glass-panel border border-gray-200 bg-[#1A1625]/60 rounded-2xl p-6 shadow-xl">
+            <h3 className="text-lg font-semibold text-[#111] mb-4 flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px] text-blue-400">folder_special</span>
               Associated Project
             </h3>
             <div
-              className="bg-white/5 p-5 rounded-xl border border-white/10 hover:border-blue-500/50 transition-all cursor-pointer"
+              className="bg-white/5 p-5 rounded-xl border border-gray-300 hover:border-blue-500/50 transition-all cursor-pointer"
               onClick={() => navigate(`/reviewer/projects/${assignment.projectId}`)}
             >
-              <h4 className="text-white font-bold">{assignment.projectId}</h4>
+              <h4 className="text-[#111] font-bold">{assignment.projectId}</h4>
               <p className="text-xs text-gray-500 mt-2">View project guidelines & details</p>
             </div>
           </div>
 
-          <div className="glass-panel border border-white/5 bg-[#1A1625]/60 rounded-2xl p-6 shadow-xl">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <div className="glass-panel border border-gray-200 bg-[#1A1625]/60 rounded-2xl p-6 shadow-xl">
+            <h3 className="text-lg font-semibold text-[#111] mb-4 flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px] text-fuchsia-400">database</span>
               Assigned Dataset
             </h3>
             {datasetName ? (
               <div
-                className="bg-white/5 p-5 rounded-xl border border-white/10 hover:border-fuchsia-500/50 hover:bg-white/10 transition-all cursor-pointer group"
+                className="bg-white/5 p-5 rounded-xl border border-gray-300 hover:border-fuchsia-500/50 hover:bg-white/10 transition-all cursor-pointer group"
                 onClick={() => {
                   setSearchParams(prev => {
                     const next = new URLSearchParams(prev)
@@ -261,7 +261,7 @@ export default function ReviewerAssignmentDetailPage() {
                   })
                 }}
               >
-                <h4 className="text-white font-bold group-hover:text-fuchsia-400 transition-colors">
+                <h4 className="text-[#111] font-bold group-hover:text-fuchsia-400 transition-colors">
                   {datasetName}
                 </h4>
                 <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
@@ -270,14 +270,14 @@ export default function ReviewerAssignmentDetailPage() {
                 </p>
               </div>
             ) : (
-              <div className="bg-white/5 p-5 rounded-xl border border-white/5 text-center italic text-gray-500">
+              <div className="bg-white/5 p-5 rounded-xl border border-gray-200 text-center italic text-gray-500">
                 {datasetIdState || assignment.datasetId || 'No assigned dataset'}
               </div>
             )}
           </div>
         </div>
 
-        <div className="glass-panel border border-white/5 bg-[#1A1625]/60 rounded-2xl p-7 shadow-xl">
+        <div className="glass-panel border border-gray-200 bg-[#1A1625]/60 rounded-2xl p-7 shadow-xl">
           <ReviewerTasksSection
             tasks={assignment.tasks}
             assignmentId={assignment.id}
@@ -287,3 +287,4 @@ export default function ReviewerAssignmentDetailPage() {
     </div>
   )
 }
+

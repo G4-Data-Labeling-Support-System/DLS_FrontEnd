@@ -8,7 +8,7 @@ const DatasetDetailPage: React.FC = () => {
 
   if (!id) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-gray-400">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-gray-500">
         <p className="text-lg">Dataset not found.</p>
       </div>
     )
@@ -22,3 +22,4 @@ const DatasetDetailPage: React.FC = () => {
 }
 
 export default DatasetDetailPage
+

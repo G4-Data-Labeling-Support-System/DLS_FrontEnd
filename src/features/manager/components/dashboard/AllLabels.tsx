@@ -262,7 +262,7 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
   return (
     <div className="w-full">
       <div className="flex justify-between items-center mb-6">
-        <Title level={4} className="!text-white !m-0 !font-display">
+        <Title level={4} className="!text-[#111] !m-0 !font-display">
           All Labels
         </Title>
         <Space>
@@ -278,10 +278,10 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
           />
           <Input
             placeholder="Search labels..."
-            prefix={<SearchOutlined className="text-gray-400" />}
+            prefix={<SearchOutlined className="text-gray-500" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            className="bg-[#1A1625] border-gray-700 text-white hover:border-violet-500 focus:border-violet-500 w-64"
+            className="bg-[#1A1625] border-gray-700 text-[#111] hover:border-violet-500 focus:border-violet-500 w-64"
           />
         </Space>
       </div>
@@ -319,11 +319,11 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
         width={640}
       >
         <div className="px-8 pt-10 pb-8">
-          <div className="text-center border-b border-white/5 pb-6 mb-6">
-            <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
+          <div className="text-center border-b border-gray-200 pb-6 mb-6">
+            <h2 className="text-[#111] text-2xl font-bold tracking-tight mb-2 font-display">
               Create Label
             </h2>
-            <p className="text-white/50 text-sm">Add a new label to a dataset.</p>
+            <p className="text-[#111]/50 text-sm">Add a new label to a dataset.</p>
           </div>
           <Form form={form} layout="vertical">
             <Form.Item
@@ -371,14 +371,14 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
               <Input.TextArea placeholder="Enter label description" rows={4} />
             </Form.Item>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
               <Button
                 onClick={() => {
                   form.resetFields()
                   setCreateModalOpen(false)
                   onCreateModalClose?.()
                 }}
-                className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
+                className="border-gray-300 text-[#111]/70 hover:text-[#111] hover:border-white/30"
               >
                 Cancel
               </Button>
@@ -406,11 +406,11 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
         width={640}
       >
         <div className="px-8 pt-10 pb-8">
-          <div className="text-center border-b border-white/5 pb-6 mb-6">
-            <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
+          <div className="text-center border-b border-gray-200 pb-6 mb-6">
+            <h2 className="text-[#111] text-2xl font-bold tracking-tight mb-2 font-display">
               Edit Label
             </h2>
-            <p className="text-white/50 text-sm">Update label information.</p>
+            <p className="text-[#111]/50 text-sm">Update label information.</p>
           </div>
           <Form form={editForm} layout="vertical">
             <Form.Item
@@ -437,7 +437,7 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
               <Input.TextArea placeholder="Enter label description" rows={4} />
             </Form.Item>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
               <Button
                 onClick={() => {
                   editForm.resetFields()
@@ -445,7 +445,7 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
                   setEditingLabelId(null)
                   setEditingLabel(null)
                 }}
-                className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
+                className="border-gray-300 text-[#111]/70 hover:text-[#111] hover:border-white/30"
               >
                 Cancel
               </Button>
@@ -479,24 +479,24 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
                 <ExclamationCircleOutlined className="text-red-500 text-2xl" />
               </div>
             </div>
-            <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
+            <h2 className="text-[#111] text-2xl font-bold tracking-tight mb-2 font-display">
               Deactivate Label
             </h2>
-            <p className="text-white/50 text-sm">
+            <p className="text-[#111]/50 text-sm">
               Are you sure you want to deactivate{' '}
-              <span className="text-white/80 font-medium">{deletingLabelName}</span>? This action
+              <span className="text-[#111]/80 font-medium">{deletingLabelName}</span>? This action
               cannot be undone.
             </p>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
             <Button
               onClick={() => {
                 setDeleteModalOpen(false)
                 setDeletingLabelId(null)
                 setDeletingLabelName('')
               }}
-              className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
+              className="border-gray-300 text-[#111]/70 hover:text-[#111] hover:border-white/30"
             >
               Cancel
             </Button>
@@ -515,3 +515,4 @@ export const AllLabels: React.FC<AllLabelsProps> = ({
     </div>
   )
 }
+

@@ -14,7 +14,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ onCreateProject }) =
     <Card className="h-full bg-[#1A1625] border-gray-800 rounded-2xl p-4">
       <div className="flex items-center gap-2 mb-6">
         <div className="text-violet-400 transform -rotate-12 bg-none text-xl">⚡</div>
-        <Title level={5} className="!text-white !m-0 !font-normal !font-display">
+        <Title level={5} className="!text-[#111] !m-0 !font-normal !font-display">
           Quick Actions
         </Title>
       </div>
@@ -33,3 +33,4 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ onCreateProject }) =
     </Card>
   )
 }
+

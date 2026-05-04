@@ -18,14 +18,14 @@ export function Header() {
       key: 'profile',
       icon: <UserOutlined />,
       label: 'Profile',
-      className: 'hover:bg-white/10 text-gray-200 hover:text-white transition-colors rounded-lg',
+      className: 'hover:bg-gray-100 text-[#111] hover:text-black transition-colors rounded-lg',
       onClick: () => setIsProfileModalOpen(true)
     },
     {
       key: 'settings',
       icon: <SettingOutlined />,
       label: 'Settings',
-      className: 'hover:bg-white/10 text-gray-200 hover:text-white transition-colors rounded-lg'
+      className: 'hover:bg-gray-100 text-[#111] hover:text-black transition-colors rounded-lg'
     },
     {
       type: 'divider'
@@ -35,7 +35,7 @@ export function Header() {
       icon: <LogoutOutlined />,
       danger: true,
       label: 'Logout',
-      className: 'rounded-lg hover:bg-red-500/10 hover:text-red-400 transition-colors',
+      className: 'rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors',
       onClick: () => {
         logout()
         navigate('/login')
@@ -53,7 +53,7 @@ export function Header() {
 
   return (
     <>
-      <header className="bg-transparent px-8 h-20 flex items-center justify-between z-10 border-b border-white/10 shrink-0 backdrop-blur-[2px]">
+      <header className="bg-[#f1f1f1]/80 px-8 h-20 flex items-center justify-between z-10 border-b border-gray-200 shrink-0 backdrop-blur-md">
         <BrandLogo />
 
         {/* Right side */}
@@ -61,10 +61,10 @@ export function Header() {
           {/* User Info & Dropdown */}
           <div className="flex items-center gap-3">
             <div className="flex flex-col items-end text-right mr-1 hidden sm:flex">
-              <span className="text-white text-sm font-bold leading-tight truncate max-w-[150px]">
+              <span className="text-[#111] text-sm font-bold leading-tight truncate max-w-[150px]">
                 {user?.fullName || user?.username || 'Guest'}
               </span>
-              <span className="text-gray-400 text-[10px] leading-tight truncate max-w-[180px]">
+              <span className="text-[#555] text-[10px] leading-tight truncate max-w-[180px]">
                 {user?.email || ''}
               </span>
             </div>
@@ -73,7 +73,7 @@ export function Header() {
               menu={{
                 items,
                 className:
-                  'p-2 rounded-2xl shadow-2xl border border-white/10 bg-[#1a1625]/95 backdrop-blur-md min-w-[200px]'
+                  'p-2 rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.1)] border border-gray-200 bg-white/95 backdrop-blur-md min-w-[200px]'
               }}
               trigger={['click']}
               placement="bottomRight"
@@ -83,7 +83,7 @@ export function Header() {
                   <img
                     src={getAvatarUrl(user?.avatar || user?.coverImage)}
                     alt="Avatar"
-                    className="w-full h-full object-cover border border-gray-600 rounded-full"
+                    className="w-full h-full object-cover border border-gray-300 rounded-full"
                   />
                 </div>
               </div>

@@ -175,15 +175,15 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
   return (
     <GlassModal open={open} onCancel={handleCancel} destroyOnHidden width={720}>
       <div className="px-8 pt-10 pb-8">
-        <div className="text-center border-b border-white/5 pb-6 mb-8">
-          <h2 className="text-white text-2xl font-bold tracking-tight mb-4 font-display">
+        <div className="text-center border-b border-gray-200 pb-6 mb-8">
+          <h2 className="text-[#111] text-2xl font-bold tracking-tight mb-4 font-display">
             {editId ? 'Edit Project' : 'Create New Project'}
           </h2>
           <Steps
             current={currentStep}
             items={steps}
             size="small"
-            className="!text-white custom-steps"
+            className="!text-[#111] custom-steps"
           />
         </div>
 
@@ -202,7 +202,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                 >
                   <Input
                     placeholder="e.g. Autonomous Vehicle Perception Phase 2"
-                    className="!bg-[#1a1625] !border-white/10 !text-white placeholder:!text-gray-600 focus:!border-violet-500 hover:!border-violet-500/50"
+                    className="!bg-[#1a1625] !border-gray-300 !text-[#111] placeholder:!text-gray-600 focus:!border-violet-500 hover:!border-violet-500/50"
                   />
                 </Form.Item>
 
@@ -210,7 +210,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                   <Input.TextArea
                     rows={6}
                     placeholder="Briefly describe the goals and scope of this project..."
-                    className="!bg-[#1a1625] !border-white/10 !text-white placeholder:!text-gray-600 resize-none focus:!border-violet-500 hover:!border-violet-500/50"
+                    className="!bg-[#1a1625] !border-gray-300 !text-[#111] placeholder:!text-gray-600 resize-none focus:!border-violet-500 hover:!border-violet-500/50"
                   />
                 </Form.Item>
 
@@ -218,7 +218,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                   <h4 className="text-violet-300 font-bold text-xs uppercase tracking-wider mb-2">
                     Manager Tip
                   </h4>
-                  <p className="text-gray-400 text-xs leading-relaxed m-0">
+                  <p className="text-gray-500 text-xs leading-relaxed m-0">
                     Step 1 defines the basic identity of your project.
                   </p>
                 </div>
@@ -234,7 +234,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                 >
                   <Input
                     placeholder="Enter guideline title..."
-                    className="!bg-[#1a1625] !border-white/10 !text-white placeholder:!text-gray-600 focus:!border-violet-500 hover:!border-violet-500/50"
+                    className="!bg-[#1a1625] !border-gray-300 !text-[#111] placeholder:!text-gray-600 focus:!border-violet-500 hover:!border-violet-500/50"
                   />
                 </Form.Item>
 
@@ -246,7 +246,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                   <Input.TextArea
                     rows={8}
                     placeholder="Write your guideline content here..."
-                    className="!bg-[#1a1625] !border-white/10 !text-white placeholder:!text-gray-600 resize-none focus:!border-violet-500 hover:!border-violet-500/50"
+                    className="!bg-[#1a1625] !border-gray-300 !text-[#111] placeholder:!text-gray-600 resize-none focus:!border-violet-500 hover:!border-violet-500/50"
                   />
                 </Form.Item>
 
@@ -254,17 +254,17 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                   <h4 className="text-fuchsia-300 font-bold text-xs uppercase tracking-wider mb-2">
                     Requirements Tip
                   </h4>
-                  <p className="text-gray-400 text-xs leading-relaxed m-0">
+                  <p className="text-gray-500 text-xs leading-relaxed m-0">
                     Detailed guidelines significantly improve label quality.
                   </p>
                 </div>
               </div>
             )}
 
-            <div className="flex justify-end gap-3 pt-6 mt-8 border-t border-white/5">
+            <div className="flex justify-end gap-3 pt-6 mt-8 border-t border-gray-200">
               <Button
                 onClick={handleCancel}
-                className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
+                className="border-gray-300 text-[#111]/70 hover:text-[#111] hover:border-white/30"
               >
                 Cancel
               </Button>
@@ -272,7 +272,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
               {currentStep === 1 && (
                 <Button
                   onClick={handlePrev}
-                  className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
+                  className="border-gray-300 text-[#111]/70 hover:text-[#111] hover:border-white/30"
                 >
                   Back
                 </Button>
@@ -303,3 +303,4 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
     </GlassModal>
   )
 }
+

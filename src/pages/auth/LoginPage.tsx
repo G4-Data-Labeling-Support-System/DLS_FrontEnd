@@ -1,20 +1,40 @@
 import { useAuth } from '@/features/auth/hooks'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { themeClasses } from '@/styles'
-import { Button } from '@/shared/components/ui/Button'
-import { MailOutlined, LockOutlined } from '@ant-design/icons'
-import { Form, Input } from 'antd'
-import { BrandLogo } from '@/components/common/BrandLogo'
+import { Button } from '@/shared/components/ui/Button' // Assuming this is still used or replaced later
 import type { User } from '@/shared/types/api.types'
 import type { AxiosError } from 'axios'
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+
+const formSchema = z.object({
+  email: z.string().min(1, { message: "Please enter your email" }).email({ message: "Please enter a valid email" }),
+  password: z.string().min(1, { message: "Please enter your password" }),
+})
 
 export default function LoginPage() {
   const navigate = useNavigate()
   const { login, isLoading } = useAuth()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  const onFinish = async (values: Record<string, string>) => {
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  })
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setErrorMessage(null)
     const { email, password } = values
 
@@ -45,7 +65,6 @@ export default function LoginPage() {
       const status = axiosError.response?.status
       const serverMsg = axiosError.response?.data?.message
 
-      // Tùy chỉnh Error Message theo Status Code ở đây:
       if (status === 400 || status === 401 || status === 403) {
         setErrorMessage('Invalid username or password. Please check and try again.')
       } else if (status === 404) {
@@ -53,123 +72,116 @@ export default function LoginPage() {
       } else if (status === 500) {
         setErrorMessage('Internal Server Error. Please contact support.')
       } else {
-        // Fallback: Lấy nội dung từ Backend hoặc hiển thị lỗi mặc định
         setErrorMessage(serverMsg || axiosError.message || 'An unexpected error occurred')
       }
     }
   }
 
   return (
-    <div
-      className={`relative flex flex-col items-center justify-center min-h-screen ${themeClasses.backgrounds.deepDark} text-white overflow-hidden`}
-    >
-      {/* Top Right Decoration */}
-      <div className="absolute top-0 right-0">
-        <div className="grid grid-cols-2">
-          <div className="w-16 h-16 bg-cyan-100"></div>
-          <div className="w-16 h-16 bg-black"></div>
-          <div className="w-16 h-16 bg-violet-400"></div>
-          <div className="w-16 h-16 bg-violet-200"></div>
+    <div className="flex min-h-screen bg-[#f1f1f1] text-[#111] overflow-hidden font-sans">
+      
+      {/* Left Column - Form */}
+      <div className="w-full lg:w-1/2 flex flex-col relative p-8 lg:p-16">
+        
+        {/* Top Logo */}
+        <div className="flex items-center gap-3 absolute top-8 left-8 lg:left-12">
+          <img src="/logo.svg" alt="Logo" className="w-8 h-8" />
+          <span className="text-xl font-bold tracking-tight text-[#111]">Annotationary</span>
         </div>
-      </div>
 
-      {/* Bottom Left Decoration */}
-      <div className="absolute bottom-0 left-0">
-        <div className="grid grid-cols-2">
-          <div className="w-16 h-16 bg-cyan-100"></div>
-          <div className="w-16 h-16 bg-violet-400"></div>
-          <div className="w-16 h-16 bg-black"></div>
-          <div className="w-16 h-16 bg-violet-200"></div>
-        </div>
-      </div>
-
-      {/* Right Side - Login Form */}
-      <div
-        className={`w-full flex items-center justify-center relative ${themeClasses.backgrounds.deepDark} p-6`}
-      >
-        <div className="w-full max-w-md flex flex-col gap-10 items-center relative z-10">
-          <div className="flex flex-col items-center gap-2">
-            <BrandLogo />
-            <p className="font-medium">Redefining AI precision</p>
-          </div>
-          <div className="login-card p-8 rounded-2xl border border-violet-500/20">
-            <div className="text-center mb-8">
-              <h1 className="font-space text-3xl font-bold tracking-tight text-white">Login</h1>
+        {/* Center Content */}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-full max-w-[360px] flex flex-col items-center">
+            
+            {/* Headers */}
+            <div className="text-center mb-10">
+              <h1 className="text-2xl font-bold tracking-tight text-[#111] mb-1">
+                Welcome to Annotationary
+              </h1>
+              <p className="text-2xl font-bold tracking-tight text-[#555]">
+                Start annotating now
+              </p>
             </div>
 
             {errorMessage && (
-              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+              <div className="w-full mb-6 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm text-center">
                 {errorMessage}
               </div>
             )}
 
-            <Form onFinish={onFinish} layout="vertical" requiredMark={false} className="space-y-4">
-              <Form.Item
-                name="email"
-                label={
-                  <span
-                    className={`text-xs font-medium ${themeClasses.text.secondary} uppercase tracking-wider pl-1`}
-                  >
-                    Email Address
-                  </span>
-                }
-                rules={[
-                  { required: true, message: 'Please enter your email' },
-                  { type: 'email', message: 'Please enter a valid email' }
-                ]}
-              >
-                <Input
-                  size="large"
-                  prefix={
-                    <MailOutlined className="text-white mr-3 opacity-80 drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]" />
-                  }
-                  className="glass-input"
-                  placeholder="name@example.com"
+            {/* Login Form */}
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem className="mb-4">
+                      <FormControl>
+                        <Input 
+                          placeholder="Enter your email" 
+                          {...field} 
+                          className="h-[52px] bg-[#e5e5e5] hover:bg-[#dcdcdc] focus:bg-[#dcdcdc] border-transparent focus:border-transparent rounded-xl px-4 text-sm text-[#111] placeholder:text-[#888] placeholder:font-medium transition-colors"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </Form.Item>
 
-              <Form.Item
-                name="password"
-                label={
-                  <span
-                    className={`text-xs font-medium ${themeClasses.text.secondary} uppercase tracking-wider pl-1`}
-                  >
-                    Password
-                  </span>
-                }
-                rules={[{ required: true, message: 'Please enter your password' }]}
-              >
-                <Input.Password
-                  size="large"
-                  prefix={
-                    <LockOutlined className="text-white mr-3 opacity-80 drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]" />
-                  }
-                  className="glass-input"
-                  placeholder="••••••••"
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem className="mb-8">
+                      <FormControl>
+                        <Input 
+                          type="password"
+                          placeholder="Enter your password" 
+                          {...field} 
+                          className="h-[52px] bg-[#e5e5e5] hover:bg-[#dcdcdc] focus:bg-[#dcdcdc] border-transparent focus:border-transparent rounded-xl px-4 text-sm text-[#111] placeholder:text-[#888] placeholder:font-medium transition-colors"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </Form.Item>
-              {/* 
-              <div className="flex justify-end pt-1">
-                <Link
-                  to="/forgot-password"
-                  className="text-xs text-violet-400 hover:text-fuchsia-400 transition-colors cursor-pointer"
+
+                <Button
+                  type="submit"
+                  isLoading={isLoading}
+                  className="w-full h-[52px] px-4 bg-[#111] text-white rounded-xl font-semibold hover:bg-black transition-colors"
                 >
-                  Forgot Password?
-                </Link>
-              </div> */}
-
-              <Button
-                type="submit"
-                variant="primary"
-                isLoading={isLoading}
-                className="w-100 px-4 py-2 rounded-lg font-medium font-inter cursor-pointer"
-              >
-                {isLoading ? 'Loging in...' : 'Login'}
-              </Button>
+                  {isLoading ? 'Loading...' : 'Continue'}
+                </Button>
+              </form>
             </Form>
+            
           </div>
         </div>
       </div>
+
+      {/* Right Column - Decorative Grid */}
+      <div className="hidden lg:flex w-1/2 p-6 items-center justify-center h-screen">
+        <div className="w-full h-full max-h-[900px] grid grid-cols-2 gap-4 lg:gap-6 pr-6">
+          
+          {/* Left Column of Grid */}
+          <div className="flex flex-col gap-4 lg:gap-6 pt-12">
+            <div className="bg-[#e0e0e0] rounded-[24px] w-full aspect-square"></div>
+            <div className="bg-[#e0e0e0] rounded-[24px] w-full aspect-[4/5]"></div>
+            <div className="bg-[#e0e0e0] rounded-[24px] w-full aspect-[4/3]"></div>
+          </div>
+
+          {/* Right Column of Grid */}
+          <div className="flex flex-col gap-4 lg:gap-6 pb-12">
+            <div className="bg-[#e0e0e0] rounded-[24px] w-full aspect-[4/5]"></div>
+            <div className="bg-[#e0e0e0] rounded-[24px] w-full aspect-[4/5]"></div>
+            <div className="bg-[#e0e0e0] rounded-[24px] w-full aspect-square"></div>
+          </div>
+          
+        </div>
+      </div>
+
     </div>
   )
 }

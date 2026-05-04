@@ -166,12 +166,12 @@ export default function AnnotatorAssignmentDetailPage() {
         <Button
           type="text"
           icon={<ArrowLeftOutlined />}
-          className="text-gray-400 hover:text-white mb-6 bg-white/5"
+          className="text-gray-500 hover:text-[#111] mb-6 bg-white/5"
           onClick={handleBack}
         >
           Back to Assignments
         </Button>
-        <div className="text-center text-gray-400 py-20 bg-[#1A1625]/40 rounded-2xl border-2 border-dashed border-white/5">
+        <div className="text-center text-gray-500 py-20 bg-[#1A1625]/40 rounded-2xl border-2 border-dashed border-gray-200">
           <span className="material-symbols-outlined text-5xl mb-4 opacity-20">assignment_late</span>
           <p className="font-medium">{error || 'Assignment not found.'}</p>
         </div>
@@ -204,7 +204,7 @@ export default function AnnotatorAssignmentDetailPage() {
                   Assignment Detail
                 </span>
               </div>
-              <h1 className="text-3xl font-bold text-white tracking-tight">{assignment.name}</h1>
+              <h1 className="text-3xl font-bold text-[#111] tracking-tight">{assignment.name}</h1>
             </div>
           </div>
         </div>
@@ -214,29 +214,29 @@ export default function AnnotatorAssignmentDetailPage() {
       <div className="flex flex-col gap-6 relative z-10">
 
         {/* Top Row: Main Info (2 columns) */}
-        <div className="glass-panel rounded-2xl overflow-hidden shadow-xl flex flex-col md:flex-row items-stretch border border-white/5 bg-[#1A1625]/60 backdrop-blur-md">
+        <div className="glass-panel rounded-2xl overflow-hidden shadow-xl flex flex-col md:flex-row items-stretch border border-gray-200 bg-[#1A1625]/60 backdrop-blur-md">
           {/* Left: Information */}
-          <div className="flex-1 p-7 border-b md:border-b-0 md:border-r border-white/10 relative">
+          <div className="flex-1 p-7 border-b md:border-b-0 md:border-r border-gray-300 relative">
             <div className="absolute -top-10 -left-10 w-40 h-40 rounded-full bg-violet-500/5 blur-[50px] pointer-events-none" />
-            <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-[#111] mb-6 flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px] text-violet-400">info</span>
               Assignment Information
             </h3>
             <div className="space-y-5">
-              <div className="flex justify-between items-center py-2 border-b border-white/5">
+              <div className="flex justify-between items-center py-2 border-b border-gray-200">
                 <label className="text-xs text-gray-500 font-mono uppercase tracking-wider">Assignment ID</label>
                 <span className="text-xs font-mono text-violet-300 bg-violet-500/10 px-2.5 py-1 rounded border border-violet-500/20">
                   {assignment.id}
                 </span>
               </div>
-              <div className="flex justify-between items-center py-2 border-b border-white/5">
+              <div className="flex justify-between items-center py-2 border-b border-gray-200">
                 <label className="text-xs text-gray-500 font-mono uppercase tracking-wider">Status</label>
                 <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-[10px] font-bold text-violet-400 uppercase tracking-widest`}>
                   <div className={`w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse`} />
                   {assignment.status || 'ACTIVE'}
                 </div>
               </div>
-              <div className="flex justify-between items-center py-2 border-b border-white/5">
+              <div className="flex justify-between items-center py-2 border-b border-gray-200">
                 <label className="text-xs text-gray-500 font-mono uppercase tracking-wider">Deadline</label>
                 <div
                   className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 border text-[10px] font-bold uppercase tracking-wider ${daysLeft <= 2 ? 'border-red-500/30 text-red-400' : daysLeft <= 5 ? 'border-amber-500/30 text-amber-400' : 'border-emerald-500/30 text-emerald-400'}`}
@@ -263,12 +263,12 @@ export default function AnnotatorAssignmentDetailPage() {
           {/* Right: Description */}
           <div className="flex-1 p-7 flex flex-col relative overflow-hidden">
             <div className="absolute -bottom-10 -right-10 w-40 h-40 rounded-full bg-fuchsia-500/5 blur-[50px] pointer-events-none" />
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-[#111] mb-4 flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px] text-fuchsia-400">description</span>
               Description
             </h3>
-            <div className="flex-1 bg-white/5 p-5 rounded-2xl border border-white/10 min-h-[120px]">
-              <p className="text-sm text-gray-300 leading-relaxed italic">
+            <div className="flex-1 bg-white/5 p-5 rounded-2xl border border-gray-300 min-h-[120px]">
+              <p className="text-sm text-gray-600 leading-relaxed italic">
                 {assignment.description || 'No description provided for this assignment.'}
               </p>
             </div>
@@ -278,18 +278,18 @@ export default function AnnotatorAssignmentDetailPage() {
         {/* Middle Row: Project & Dataset (2 columns) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
           {/* Associated Project */}
-          <div className="glass-panel border border-white/5 bg-[#1A1625]/60 backdrop-blur-md rounded-2xl p-6 shadow-xl relative overflow-hidden">
+          <div className="glass-panel border border-gray-200 bg-[#1A1625]/60 backdrop-blur-md rounded-2xl p-6 shadow-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-3xl pointer-events-none" />
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-[#111] mb-4 flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px] text-blue-400">folder_special</span>
               Associated Project
             </h3>
             {assignment.projectId ? (
               <div
-                className="bg-white/5 p-5 rounded-xl border border-white/10 hover:border-blue-500/50 hover:bg-white/10 transition-all cursor-pointer group"
+                className="bg-white/5 p-5 rounded-xl border border-gray-300 hover:border-blue-500/50 hover:bg-white/10 transition-all cursor-pointer group"
                 onClick={() => navigate(`/annotator/projects/${assignment.projectId}`)}
               >
-                <h4 className="text-white font-bold group-hover:text-blue-400 transition-colors">
+                <h4 className="text-[#111] font-bold group-hover:text-blue-400 transition-colors">
                   {assignment.projectId}
                 </h4>
                 <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
@@ -298,24 +298,24 @@ export default function AnnotatorAssignmentDetailPage() {
                 </p>
               </div>
             ) : (
-              <div className="bg-white/5 p-5 rounded-xl border border-white/5 text-center italic text-gray-500">
+              <div className="bg-white/5 p-5 rounded-xl border border-gray-200 text-center italic text-gray-500">
                 No associated project
               </div>
             )}
           </div>
 
           {/* Assigned Dataset */}
-          <div className="glass-panel border border-white/5 bg-[#1A1625]/60 backdrop-blur-md rounded-2xl p-6 shadow-xl relative overflow-hidden">
+          <div className="glass-panel border border-gray-200 bg-[#1A1625]/60 backdrop-blur-md rounded-2xl p-6 shadow-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-fuchsia-500/5 blur-3xl pointer-events-none" />
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-[#111] flex items-center gap-2">
                 <span className="material-symbols-outlined text-[18px] text-fuchsia-400">database</span>
                 Assigned Dataset
               </h3>
             </div>
             {datasetName ? (
               <div
-                className="bg-white/5 p-5 rounded-xl border border-white/10 hover:border-fuchsia-500/50 hover:bg-white/10 transition-all cursor-pointer group"
+                className="bg-white/5 p-5 rounded-xl border border-gray-300 hover:border-fuchsia-500/50 hover:bg-white/10 transition-all cursor-pointer group"
                 onClick={() => {
                   setSearchParams(prev => {
                     const next = new URLSearchParams(prev)
@@ -324,7 +324,7 @@ export default function AnnotatorAssignmentDetailPage() {
                   })
                 }}
               >
-                <h4 className="text-white font-bold group-hover:text-fuchsia-400 transition-colors">
+                <h4 className="text-[#111] font-bold group-hover:text-fuchsia-400 transition-colors">
                   {datasetName}
                 </h4>
                 <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
@@ -333,7 +333,7 @@ export default function AnnotatorAssignmentDetailPage() {
                 </p>
               </div>
             ) : (
-              <div className="bg-white/5 p-5 rounded-xl border border-white/5 text-center italic text-gray-500">
+              <div className="bg-white/5 p-5 rounded-xl border border-gray-200 text-center italic text-gray-500">
                 {datasetIdState || assignment.datasetId || 'No assigned dataset'}
               </div>
             )}
@@ -341,7 +341,7 @@ export default function AnnotatorAssignmentDetailPage() {
         </div>
 
         {/* Bottom Row: Tasks (Full Width) */}
-        <div className="glass-panel border border-white/5 bg-[#1A1625]/60 backdrop-blur-md rounded-2xl p-7 flex flex-col shadow-xl">
+        <div className="glass-panel border border-gray-200 bg-[#1A1625]/60 backdrop-blur-md rounded-2xl p-7 flex flex-col shadow-xl">
           <TasksSection
             tasks={assignment.tasks}
             assignmentId={assignment.id}
@@ -351,3 +351,4 @@ export default function AnnotatorAssignmentDetailPage() {
     </div>
   )
 }
+

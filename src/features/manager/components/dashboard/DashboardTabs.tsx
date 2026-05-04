@@ -20,7 +20,7 @@ export const DashboardTabs: React.FC<DashboardTabsProps> = ({ activeTab, onTabCh
       {showTab('project') && (
         <button
           onClick={() => onTabChange('project')}
-          className={`text-lg font-medium transition-colors cursor-pointer relative pb-2 ${activeTab === 'project' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
+          className={`text-lg font-medium transition-colors cursor-pointer relative pb-2 ${activeTab === 'project' ? 'text-[#111]' : 'text-gray-500 hover:text-gray-600'}`}
         >
           {tabLabels?.project || 'Projects'}
           {activeTab === 'project' && (
@@ -31,7 +31,7 @@ export const DashboardTabs: React.FC<DashboardTabsProps> = ({ activeTab, onTabCh
       {showTab('datasets') && (
         <button
           onClick={() => onTabChange('datasets')}
-          className={`text-lg font-medium transition-colors cursor-pointer relative pb-2 ${activeTab === 'datasets' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
+          className={`text-lg font-medium transition-colors cursor-pointer relative pb-2 ${activeTab === 'datasets' ? 'text-[#111]' : 'text-gray-500 hover:text-gray-600'}`}
         >
           {tabLabels?.datasets || 'Datasets'}
           {activeTab === 'datasets' && (
@@ -42,7 +42,7 @@ export const DashboardTabs: React.FC<DashboardTabsProps> = ({ activeTab, onTabCh
       {showTab('labels') && (
         <button
           onClick={() => onTabChange('labels')}
-          className={`text-lg font-medium transition-colors cursor-pointer relative pb-2 ${activeTab === 'labels' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
+          className={`text-lg font-medium transition-colors cursor-pointer relative pb-2 ${activeTab === 'labels' ? 'text-[#111]' : 'text-gray-500 hover:text-gray-600'}`}
         >
           {tabLabels?.labels || 'Labels'}
           {activeTab === 'labels' && (
@@ -53,7 +53,7 @@ export const DashboardTabs: React.FC<DashboardTabsProps> = ({ activeTab, onTabCh
       {(showTab('assignments') || showTab('assignment')) && (
         <button
           onClick={() => onTabChange(allowedTabs?.includes('assignment') ? 'assignment' : 'assignments')}
-          className={`text-lg font-medium transition-colors cursor-pointer relative pb-2 ${['assignments', 'assignment'].includes(activeTab) ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
+          className={`text-lg font-medium transition-colors cursor-pointer relative pb-2 ${['assignments', 'assignment'].includes(activeTab) ? 'text-[#111]' : 'text-gray-500 hover:text-gray-600'}`}
         >
           {tabLabels?.assignments || (allowedTabs?.includes('assignment') ? 'Assignment' : 'Assignments')}
           {['assignments', 'assignment'].includes(activeTab) && (
@@ -64,4 +64,5 @@ export const DashboardTabs: React.FC<DashboardTabsProps> = ({ activeTab, onTabCh
     </div>
   )
 }
+
 

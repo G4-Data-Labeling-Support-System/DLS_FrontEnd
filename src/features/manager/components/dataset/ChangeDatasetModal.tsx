@@ -106,18 +106,18 @@ export const ChangeDatasetModal: React.FC<ChangeDatasetModalProps> = ({
   return (
     <GlassModal open={open} onCancel={onCancel} destroyOnHidden width={480}>
       <div className="px-8 pt-10 pb-8">
-        <div className="text-center border-b border-white/5 pb-6 mb-6">
-          <h2 className="text-white text-xl font-bold tracking-tight mb-2 font-display">
+        <div className="text-center border-b border-gray-200 pb-6 mb-6">
+          <h2 className="text-[#111] text-xl font-bold tracking-tight mb-2 font-display">
             Change Assignment Dataset
           </h2>
-          <p className="text-white/50 text-sm">Select a new dataset for this assignment.</p>
+          <p className="text-[#111]/50 text-sm">Select a new dataset for this assignment.</p>
         </div>
 
         <Spin spinning={loading}>
           <Form form={form} layout="vertical">
             <Form.Item
               label={
-                <span className="text-gray-400 text-xs font-bold uppercase tracking-wider">
+                <span className="text-gray-500 text-xs font-bold uppercase tracking-wider">
                   Select Dataset
                 </span>
               }
@@ -138,10 +138,10 @@ export const ChangeDatasetModal: React.FC<ChangeDatasetModalProps> = ({
               </Select>
             </Form.Item>
 
-            <div className="flex justify-end gap-3 pt-6 mt-4 border-t border-white/5">
+            <div className="flex justify-end gap-3 pt-6 mt-4 border-t border-gray-200">
               <Button
                 onClick={onCancel}
-                className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
+                className="border-gray-300 text-[#111]/70 hover:text-[#111] hover:border-white/30"
               >
                 Cancel
               </Button>
@@ -179,3 +179,4 @@ export const ChangeDatasetModal: React.FC<ChangeDatasetModalProps> = ({
     </GlassModal>
   )
 }
+

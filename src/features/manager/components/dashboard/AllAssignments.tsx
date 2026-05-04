@@ -144,7 +144,7 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
   return (
     <div className="w-full">
       <div className="flex justify-between items-center mb-6">
-        <Title level={4} className="!text-white !m-0 !font-display">
+        <Title level={4} className="!text-[#111] !m-0 !font-display">
           All Assignments
         </Title>
         <Space>
@@ -163,10 +163,10 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
           />
           <Input
             placeholder="Search assignments..."
-            prefix={<SearchOutlined className="text-gray-400" />}
+            prefix={<SearchOutlined className="text-gray-500" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            className="bg-[#1A1625] border-gray-700 text-white hover:border-violet-500 focus:border-violet-500 w-64"
+            className="bg-[#1A1625] border-gray-700 text-[#111] hover:border-violet-500 focus:border-violet-500 w-64"
           />
         </Space>
       </div>
@@ -211,24 +211,24 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
                 <ExclamationCircleOutlined className="text-red-500 text-2xl" />
               </div>
             </div>
-            <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
+            <h2 className="text-[#111] text-2xl font-bold tracking-tight mb-2 font-display">
               Deactivate Assignment
             </h2>
-            <p className="text-white/50 text-sm">
+            <p className="text-[#111]/50 text-sm">
               Are you sure you want to deactivate{' '}
-              <span className="text-white/80 font-medium">{deletingAssignmentName}</span>? This
+              <span className="text-[#111]/80 font-medium">{deletingAssignmentName}</span>? This
               action cannot be undone.
             </p>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
             <Button
               onClick={() => {
                 setDeleteModalOpen(false)
                 setDeletingAssignmentId(null)
                 setDeletingAssignmentName('')
               }}
-              className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
+              className="border-gray-300 text-[#111]/70 hover:text-[#111] hover:border-white/30"
             >
               Cancel
             </Button>
@@ -247,3 +247,4 @@ export const AllAssignments: React.FC<AllAssignmentsProps> = ({
     </div>
   )
 }
+

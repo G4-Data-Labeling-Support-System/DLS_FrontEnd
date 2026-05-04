@@ -1,22 +1,21 @@
 import { theme } from 'antd'
 
 export const managerTheme = {
-  algorithm: theme.darkAlgorithm,
+  algorithm: theme.defaultAlgorithm,
   token: {
-    colorPrimary: '#8b5cf6', // Violet
+    colorPrimary: '#111111',
     fontFamily: "'Public Sans', sans-serif",
-    colorBgContainer: 'transparent' // Giúp các component lồng nhau không bị đè nền
+    colorBgContainer: 'transparent'
   },
   components: {
     Input: {
-      colorBgContainer: 'rgba(26, 22, 37, 0.6)',
-      activeBorderColor: '#8b5cf6'
+      colorBgContainer: '#ffffff',
+      activeBorderColor: '#111111'
     },
     Select: {
-      colorBgContainer: 'rgba(26, 22, 37, 0.6)',
-      colorPrimary: '#8b5cf6'
+      colorBgContainer: '#ffffff',
+      colorPrimary: '#111111'
     }
-    // Thêm các override khác nếu cần
   }
 }
 

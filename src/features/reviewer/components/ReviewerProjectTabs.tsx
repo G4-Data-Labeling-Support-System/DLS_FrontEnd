@@ -27,7 +27,7 @@ export const ReviewerProjectTabs: React.FC<ReviewerProjectTabsProps> = ({
           key={tab.key}
           onClick={() => navigate(tab.path)}
           className={`text-lg font-medium transition-colors cursor-pointer relative pb-2 ${
-            activeTab === tab.key ? 'text-white' : 'text-gray-500 hover:text-gray-300'
+            activeTab === tab.key ? 'text-[#111]' : 'text-gray-500 hover:text-gray-600'
           }`}
         >
           {tab.label}
@@ -39,3 +39,4 @@ export const ReviewerProjectTabs: React.FC<ReviewerProjectTabsProps> = ({
     </div>
   )
 }
+

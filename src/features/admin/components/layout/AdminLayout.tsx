@@ -31,7 +31,7 @@ export default function AdminLayout() {
           {/* Reusable Sidebar Component */}
           <Sider
             width={256}
-            className="z-20 border-r border-white/10"
+            className="z-20 border-r border-gray-300"
             theme="dark"
             style={{ background: 'transparent' }}
           >
@@ -47,3 +47,4 @@ export default function AdminLayout() {
     </ConfigProvider>
   )
 }
+

@@ -52,9 +52,9 @@ export default function AddProjectModal({ isOpen, onClose, onSuccess }: AddProje
 
   return (
     <GlassModal open={isOpen} onCancel={onClose} width={560}>
-      <div className="px-8 pt-10 pb-6 text-center border-b border-white/5">
-        <h2 className="text-white text-3xl font-bold tracking-tight mb-2">Create New Project</h2>
-        <p className="text-white/50 text-sm">
+      <div className="px-8 pt-10 pb-6 text-center border-b border-gray-200">
+        <h2 className="text-[#111] text-3xl font-bold tracking-tight mb-2">Create New Project</h2>
+        <p className="text-[#111]/50 text-sm">
           Initialize a new labeling project and configure its settings.
         </p>
       </div>
@@ -70,7 +70,7 @@ export default function AddProjectModal({ isOpen, onClose, onSuccess }: AddProje
         >
           <Form.Item
             name="projectName"
-            label={<span className="text-gray-300 font-medium">Project Name</span>}
+            label={<span className="text-gray-600 font-medium">Project Name</span>}
             rules={[{ required: true, message: 'Please enter a project name' }]}
           >
             <Input
@@ -82,18 +82,18 @@ export default function AddProjectModal({ isOpen, onClose, onSuccess }: AddProje
 
           <Form.Item
             name="description"
-            label={<span className="text-gray-300 font-medium">Description</span>}
+            label={<span className="text-gray-600 font-medium">Description</span>}
           >
             <Input.TextArea
               rows={4}
               placeholder="Briefly describe the goals and scope of this project..."
-              className="!bg-[#1a1625] !border-white/10 !text-white placeholder:!text-gray-600 resize-none focus:!border-violet-500 hover:!border-violet-500/50"
+              className="!bg-[#1a1625] !border-gray-300 !text-[#111] placeholder:!text-gray-600 resize-none focus:!border-violet-500 hover:!border-violet-500/50"
             />
           </Form.Item>
 
           <Form.Item
             name="status"
-            label={<span className="text-gray-300 font-medium">Initial Status</span>}
+            label={<span className="text-gray-600 font-medium">Initial Status</span>}
             rules={[{ required: true, message: 'Please select a status' }]}
           >
             <Select
@@ -110,12 +110,12 @@ export default function AddProjectModal({ isOpen, onClose, onSuccess }: AddProje
             />
           </Form.Item>
 
-          <div className="flex items-center gap-4 mt-4 pt-4 border-t border-white/5">
+          <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-200">
             <Button
               variant="secondary"
               size="md"
               onClick={onClose}
-              className="flex-1 h-11 border-white/10 bg-transparent text-gray-300 hover:text-white hover:border-white/30"
+              className="flex-1 h-11 border-gray-300 bg-transparent text-gray-600 hover:text-[#111] hover:border-white/30"
             >
               Cancel
             </Button>
@@ -134,3 +134,4 @@ export default function AddProjectModal({ isOpen, onClose, onSuccess }: AddProje
     </GlassModal>
   )
 }
+

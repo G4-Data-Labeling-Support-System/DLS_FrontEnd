@@ -57,7 +57,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
         <div className="flex-1 pr-2">
           <Title
             level={5}
-            className="!text-white !m-0 !text-sm leading-tight line-clamp-1"
+            className="!text-[#111] !m-0 !text-sm leading-tight line-clamp-1"
             title={projectName}
           >
             {projectName || 'Unnamed Project'}
@@ -76,7 +76,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
             <Button
               type="text"
               className="hover:bg-gray-800"
-              icon={<MoreOutlined className="text-gray-400" />}
+              icon={<MoreOutlined className="text-gray-500" />}
             />
           </Dropdown>
         </div>
@@ -85,13 +85,14 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       <div className="grid grid-cols-2 gap-2 bg-[#231e31] p-3 rounded-lg mt-auto">
         <div>
           <div className="text-[10px] text-gray-500 uppercase tracking-wider">Created At</div>
-          <div className="text-gray-300 text-xs font-semibold">{formatDate(createdAt)}</div>
+          <div className="text-gray-600 text-xs font-semibold">{formatDate(createdAt)}</div>
         </div>
         <div className="border-l border-gray-700 pl-2">
           <div className="text-[10px] text-gray-500 uppercase tracking-wider">Updated At</div>
-          <div className="text-gray-300 text-xs font-semibold">{formatDate(updatedAt)}</div>
+          <div className="text-gray-600 text-xs font-semibold">{formatDate(updatedAt)}</div>
         </div>
       </div>
     </Card>
   )
 }
+

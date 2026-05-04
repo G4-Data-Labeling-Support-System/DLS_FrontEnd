@@ -347,11 +347,11 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
         </div>
       ) : (
         <div className="px-8 pt-10 pb-8">
-          <div className="text-center border-b border-white/5 pb-6 mb-8">
-            <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
+          <div className="text-center border-b border-gray-200 pb-6 mb-8">
+            <h2 className="text-[#111] text-2xl font-bold tracking-tight mb-2 font-display">
               {isEdit ? 'Edit Dataset' : 'Create New Dataset'}
             </h2>
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-500 text-sm">
               {isEdit
                 ? 'Update the details below to modify your dataset.'
                 : 'Fill in the details below to create a new dataset.'}
@@ -371,13 +371,13 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
               <div className="space-y-4">
                 <Form.Item
                   name="projectId"
-                  label={<span className="text-white/90">Project</span>}
+                  label={<span className="text-[#111]/90">Project</span>}
                   rules={[{ required: true, message: 'Please select a project' }]}
                 >
                   <Select
                     size="large"
                     placeholder="Select a project"
-                    className="!bg-[#1a1625] !border-white/10 !text-white"
+                    className="!bg-[#1a1625] !border-gray-300 !text-[#111]"
                     disabled={isEdit ? hasAssignments : !!initialProjectId}
                     showSearch
                     optionFilterProp="children"
@@ -392,24 +392,24 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
 
                 <Form.Item
                   name="datasetName"
-                  label={<span className="text-white/90">Dataset Name</span>}
+                  label={<span className="text-[#111]/90">Dataset Name</span>}
                   rules={[{ required: true, message: 'Please enter dataset name' }]}
                 >
-                  <Input size="large" className="!bg-[#1a1625] !border-white/10 !text-white" />
+                  <Input size="large" className="!bg-[#1a1625] !border-gray-300 !text-[#111]" />
                 </Form.Item>
 
                 <Form.Item
                   name="description"
-                  label={<span className="text-white/90">Description</span>}
+                  label={<span className="text-[#111]/90">Description</span>}
                 >
                   <Input.TextArea
                     rows={4}
-                    className="!bg-[#1a1625] !border-white/10 !text-white resize-none"
+                    className="!bg-[#1a1625] !border-gray-300 !text-[#111] resize-none"
                   />
                 </Form.Item>
 
                 <Form.Item name="compressImages" valuePropName="checked" initialValue={true}>
-                  <Checkbox className="!text-gray-400">
+                  <Checkbox className="!text-gray-500">
                     <span className="text-xs">Compress images before upload</span>
                   </Checkbox>
                 </Form.Item>
@@ -417,7 +417,7 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
 
               <div className="space-y-4">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-white/90 font-medium text-sm">Image Uploads</span>
+                  <span className="text-[#111]/90 font-medium text-sm">Image Uploads</span>
                   <Segmented
                     options={[
                       { label: 'Files', value: 'file' },
@@ -440,7 +440,7 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
                   >
                     <div className="flex flex-col items-center py-4">
                       <InboxOutlined className="text-violet-500 text-3xl mb-2" />
-                      <p className="text-white text-xs">
+                      <p className="text-[#111] text-xs">
                         {uploadMode === 'folder' ? 'Drag folder here' : 'Drag images here'}
                       </p>
                     </div>
@@ -449,7 +449,7 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
                   {fileList.length > 0 && (
                     <div className="mt-4 max-h-[150px] overflow-y-auto">
                       <div className="flex justify-between mb-2">
-                        <span className="text-[10px] text-gray-400 uppercase font-bold">
+                        <span className="text-[10px] text-gray-500 uppercase font-bold">
                           Preview ({fileList.length})
                         </span>
                         <span
@@ -463,7 +463,7 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
                         {(showAllPreviews ? fileList : fileList.slice(0, 12)).map((file) => (
                           <div
                             key={file.uid}
-                            className="aspect-square rounded-lg bg-gray-800 border border-white/10 relative group overflow-hidden"
+                            className="aspect-square rounded-lg bg-gray-800 border border-gray-300 relative group overflow-hidden"
                           >
                             <div
                               className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer z-10"
@@ -509,10 +509,10 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-6 mt-8 border-t border-white/5">
+            <div className="flex justify-end gap-3 pt-6 mt-8 border-t border-gray-200">
               <Button
                 onClick={handleCancel}
-                className="bg-transparent border-white/10 text-white/70"
+                className="bg-transparent border-gray-300 text-[#111]/70"
               >
                 Cancel
               </Button>
@@ -532,3 +532,4 @@ export const CreateDatasetModal: React.FC<CreateDatasetModalProps> = ({
     </GlassModal>
   )
 }
+

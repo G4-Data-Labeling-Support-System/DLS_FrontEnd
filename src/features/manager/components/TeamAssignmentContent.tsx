@@ -128,9 +128,9 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({
       {/* GRID LAYOUT */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[600px] lg:h-[650px]">
         {/* --- CỘT TRÁI: AVAILABLE WORKFORCE --- */}
-        <div className="flex flex-col h-full bg-[#1a1625]/40 border border-white/5 rounded-2xl p-6 relative overflow-hidden">
+        <div className="flex flex-col h-full bg-[#1a1625]/40 border border-gray-200 rounded-2xl p-6 relative overflow-hidden">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-white font-bold text-lg flex items-center gap-2">
+            <h3 className="text-[#111] font-bold text-lg flex items-center gap-2">
               <span className="material-symbols-outlined text-violet-400">groups</span>
               Available Workforce
             </h3>
@@ -146,7 +146,7 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({
             <Input
               prefix={<SearchOutlined className="text-gray-500" />}
               placeholder="Search by name, skill..."
-              className="!bg-[#0f0e17]/50 !border-white/10 !text-white !rounded-xl !py-2.5 hover:!border-violet-500 focus:!border-violet-500"
+              className="!bg-[#0f0e17]/50 !border-gray-300 !text-[#111] !rounded-xl !py-2.5 hover:!border-violet-500 focus:!border-violet-500"
               onChange={(e) => setSearchTerm(e.target.value)}
               disabled={loading}
             />
@@ -154,7 +154,7 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({
               options={['All', 'Annotator', 'Reviewer']}
               value={filterRole}
               onChange={setFilterRole}
-              className="!bg-[#0f0e17]/50 p-1 rounded-lg [&_.ant-segmented-item]:text-gray-400 [&_.ant-segmented-item-selected]:!bg-violet-600 [&_.ant-segmented-item-selected]:!text-white [&_.ant-segmented-item-selected]:!shadow-[0_2px_8px_rgba(124,58,237,0.4)] [&_.ant-segmented-item-hover]:!text-gray-200"
+              className="!bg-[#0f0e17]/50 p-1 rounded-lg [&_.ant-segmented-item]:text-gray-500 [&_.ant-segmented-item-selected]:!bg-violet-600 [&_.ant-segmented-item-selected]:!text-[#111] [&_.ant-segmented-item-selected]:!shadow-[0_2px_8px_rgba(124,58,237,0.4)] [&_.ant-segmented-item-hover]:!text-gray-700"
               block
               disabled={loading}
             />
@@ -169,24 +169,24 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({
                 <p className="text-xs">Loading workforce...</p>
               </div>
             ) : filteredAvailableUsers.length === 0 ? (
-              <div className="h-40 flex flex-col items-center justify-center text-gray-500 italic border border-dashed border-white/5 rounded-xl">
+              <div className="h-40 flex flex-col items-center justify-center text-gray-500 italic border border-dashed border-gray-200 rounded-xl">
                 <p>No available users found.</p>
               </div>
             ) : (
               filteredAvailableUsers.map((user) => (
                 <div
                   key={user.id}
-                  className={`bg-[#0f0e17]/40 border border-white/5 rounded-xl px-4 py-3 flex items-center justify-between transition-all duration-200 hover:border-violet-500/50 hover:bg-[#0f0e17]/60 group ${user.status !== 'ACTIVE' ? 'opacity-60 grayscale' : ''}`}
+                  className={`bg-[#0f0e17]/40 border border-gray-200 rounded-xl px-4 py-3 flex items-center justify-between transition-all duration-200 hover:border-violet-500/50 hover:bg-[#0f0e17]/60 group ${user.status !== 'ACTIVE' ? 'opacity-60 grayscale' : ''}`}
                 >
                   <div className="flex items-center gap-3">
                     <Avatar
                       src={user.avatar}
                       size={40}
-                      className="border border-white/10 flex-shrink-0"
+                      className="border border-gray-300 flex-shrink-0"
                     />
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <h4 className="text-white font-bold text-sm truncate">{user.name}</h4>
+                        <h4 className="text-[#111] font-bold text-sm truncate">{user.name}</h4>
                         {user.status !== 'ACTIVE' && (
                           <StopOutlined className="text-red-500 text-xs" />
                         )}
@@ -221,7 +221,7 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({
                       type="primary"
                       size="small"
                       icon={<UserAddOutlined />}
-                      className="bg-[#2d2b3b] border-0 text-gray-300 hover:!bg-violet-600 hover:!text-white aspect-square rounded-lg flex items-center justify-center shadow-none"
+                      className="bg-[#2d2b3b] border-0 text-gray-600 hover:!bg-violet-600 hover:!text-[#111] aspect-square rounded-lg flex items-center justify-center shadow-none"
                       onClick={() => handleAddUser(user)}
                       disabled={user.status !== 'ACTIVE'}
                     />
@@ -233,23 +233,23 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({
         </div>
 
         {/* --- CỘT PHẢI: SELECTED TEAM --- */}
-        <div className="flex flex-col h-full bg-[#1a1625]/40 border border-white/5 rounded-2xl p-6 relative overflow-hidden">
+        <div className="flex flex-col h-full bg-[#1a1625]/40 border border-gray-200 rounded-2xl p-6 relative overflow-hidden">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-white font-bold text-lg flex items-center gap-2">
+            <h3 className="text-[#111] font-bold text-lg flex items-center gap-2">
               <span className="material-symbols-outlined text-fuchsia-400">verified_user</span>
               Selected Team
             </h3>
-            <span className="text-gray-400 text-xs">{selectedUsers.length} assigned</span>
+            <span className="text-gray-500 text-xs">{selectedUsers.length} assigned</span>
           </div>
 
-          <div className="bg-[#0f0e17]/60 border border-white/10 p-5 rounded-xl mb-4 relative overflow-hidden">
+          <div className="bg-[#0f0e17]/60 border border-gray-300 p-5 rounded-xl mb-4 relative overflow-hidden">
             <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-violet-500 to-fuchsia-500" />
             <div className="flex justify-between items-end mb-2">
-              <span className="text-[10px] font-bold text-gray-400 tracking-widest uppercase">
+              <span className="text-[10px] font-bold text-gray-500 tracking-widest uppercase">
                 Projected Throughput
               </span>
               <div className="text-right">
-                <span className="text-2xl font-bold text-white tracking-tight">
+                <span className="text-2xl font-bold text-[#111] tracking-tight">
                   {totalThroughput}
                 </span>
                 <span className="text-[10px] text-gray-500 ml-1 font-bold">TASKS / HR</span>
@@ -266,7 +266,7 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({
 
           <div className="flex-1 overflow-y-auto space-y-2 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-700 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-500 z-10 mb-4 pr-2">
             {selectedUsers.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-gray-500 border-2 border-dashed border-white/5 rounded-xl bg-[#0f0e17]/20">
+              <div className="h-full flex flex-col items-center justify-center text-gray-500 border-2 border-dashed border-gray-200 rounded-xl bg-[#0f0e17]/20">
                 <p>No team members assigned.</p>
                 <span className="text-xs opacity-50">Select from available workforce</span>
               </div>
@@ -279,8 +279,8 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({
                   <div className="flex items-center gap-3">
                     <Avatar src={user.avatar} size={36} />
                     <div>
-                      <p className="text-sm font-bold text-white leading-none">{user.name}</p>
-                      <p className="text-[10px] text-gray-400 leading-none mt-1">{user.role}</p>
+                      <p className="text-sm font-bold text-[#111] leading-none">{user.name}</p>
+                      <p className="text-[10px] text-gray-500 leading-none mt-1">{user.role}</p>
                     </div>
                   </div>
                   <Button
@@ -309,3 +309,4 @@ export const TeamAssignmentContent: React.FC<TeamAssignmentContentProps> = ({
     </Form>
   )
 }
+

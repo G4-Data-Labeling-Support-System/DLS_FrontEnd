@@ -25,7 +25,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className = '' }) => {
 
   return (
     <aside
-      className={`w-72 min-h-screen border-r border-white/5 px-6 py-8 flex flex-col ${className}`}
+      className={`w-72 min-h-screen border-r border-gray-200 px-6 py-8 flex flex-col ${className}`}
     >
       {/* Section Title */}
       <p className="text-xs tracking-widest text-gray-500 mb-6 font-semibold">MAIN MENU</p>
@@ -49,13 +49,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ className = '' }) => {
               <div className="flex items-center gap-4 text-lg">
                 <span
                   className={`text-xl ${
-                    active ? 'text-violet-400' : 'text-gray-500 group-hover:text-white'
+                    active ? 'text-violet-400' : 'text-gray-500 group-hover:text-[#111]'
                   }`}
                 >
                   {item.icon}
                 </span>
                 <span
-                  className={`font-medium text-base ${active ? 'text-violet-400' : 'text-white'} `}
+                  className={`font-medium text-base ${active ? 'text-violet-400' : 'text-[#111]'} `}
                 >
                   {item.label}
                 </span>
@@ -74,3 +74,4 @@ export const Sidebar: React.FC<SidebarProps> = ({ className = '' }) => {
     </aside>
   )
 }
+

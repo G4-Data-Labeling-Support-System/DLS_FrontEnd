@@ -24,7 +24,7 @@ export default function AnnotatorProjectDetail({ project }: { project: Project }
       case 'ARCHIVE':
         return 'border-red-500/30 bg-red-500/10 text-red-400'
       default:
-        return 'border-gray-500/30 bg-gray-500/10 text-gray-400'
+        return 'border-gray-500/30 bg-gray-500/10 text-gray-500'
     }
   }
 
@@ -49,10 +49,10 @@ export default function AnnotatorProjectDetail({ project }: { project: Project }
                 Project
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#111] tracking-tight">
               {project.projectName || project.name}
             </h1>
-            <p className="text-sm text-gray-400 mt-1 font-mono">
+            <p className="text-sm text-gray-500 mt-1 font-mono">
               {project.projectId || project.id}
             </p>
           </div>
@@ -68,8 +68,8 @@ export default function AnnotatorProjectDetail({ project }: { project: Project }
         </div>
 
         <div className="mb-6">
-          <h3 className="text-sm font-semibold text-white mb-2">Description</h3>
-          <p className="text-sm text-gray-300 leading-relaxed max-w-3xl">
+          <h3 className="text-sm font-semibold text-[#111] mb-2">Description</h3>
+          <p className="text-sm text-gray-600 leading-relaxed max-w-3xl">
             {project.description || (
               <span className="text-gray-500 italic">
                 No description provided for this project.
@@ -78,17 +78,18 @@ export default function AnnotatorProjectDetail({ project }: { project: Project }
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 border-t border-white/10 pt-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 border-t border-gray-300 pt-6">
           <div>
             <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Created At</p>
-            <p className="text-sm font-semibold text-gray-300">{formatDate(project.createdAt)}</p>
+            <p className="text-sm font-semibold text-gray-600">{formatDate(project.createdAt)}</p>
           </div>
           <div>
             <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Last Updated</p>
-            <p className="text-sm font-semibold text-gray-300">{formatDate(project.updatedAt)}</p>
+            <p className="text-sm font-semibold text-gray-600">{formatDate(project.updatedAt)}</p>
           </div>
         </div>
       </div>
     </div>
   )
 }
+

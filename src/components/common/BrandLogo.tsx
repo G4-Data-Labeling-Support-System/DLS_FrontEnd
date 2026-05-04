@@ -12,7 +12,7 @@ export const BrandLogo = () => {
         />
 
         {/* Text: Data Labeling System */}
-        <span className={`text-white font-bold text-2xl font-inter`}>
+        <span className={`text-[#111] font-bold text-2xl font-inter`}>
           Data Labeling{' '}
           <span className="font-semibold bg-linear-to-r from-violet-300 via-violet-500 to-cyan-200 bg-clip-text text-transparent leading-none">
             System
@@ -22,3 +22,4 @@ export const BrandLogo = () => {
     </div>
   )
 }
+

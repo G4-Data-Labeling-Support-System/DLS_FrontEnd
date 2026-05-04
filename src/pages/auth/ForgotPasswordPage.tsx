@@ -6,7 +6,7 @@ import { themeClasses } from '@/styles'
 
 export default function ForgotPasswordPage() {
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-screen ${themeClasses.backgrounds.deepDark} text-white overflow-hidden">
+    <div className="relative flex flex-col items-center justify-center min-h-screen ${themeClasses.backgrounds.deepDark} text-[#111] overflow-hidden">
       {/* Top Right Decoration */}
       <div className="absolute top-0 right-0">
         <div className="grid grid-cols-2">
@@ -38,10 +38,10 @@ export default function ForgotPasswordPage() {
           </div>
           <div className="login-card p-8 rounded-2xl border border-violet-500/20">
             <div className="mb-8">
-              <h1 className="font-space text-3xl font-bold tracking-tight text-white mb-3">
+              <h1 className="font-space text-3xl font-bold tracking-tight text-[#111] mb-3">
                 Forgot Password?
               </h1>
-              <p className="text-gray-400 text-sm leading-relaxed">
+              <p className="text-gray-500 text-sm leading-relaxed">
                 Enter your email to receive a password reset link.
               </p>
             </div>
@@ -49,7 +49,7 @@ export default function ForgotPasswordPage() {
               <Form.Item
                 name="email"
                 label={
-                  <span className="text-xs font-medium text-gray-400 uppercase tracking-wider pl-1">
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider pl-1">
                     Email Address
                   </span>
                 }
@@ -61,7 +61,7 @@ export default function ForgotPasswordPage() {
                 <Input
                   size="large"
                   prefix={
-                    <MailOutlined className="text-white opacity-80 drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]" />
+                    <MailOutlined className="text-[#111] opacity-80 drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]" />
                   }
                   className="glass-input"
                   placeholder="name@example.com"
@@ -82,3 +82,4 @@ export default function ForgotPasswordPage() {
     </div>
   )
 }
+

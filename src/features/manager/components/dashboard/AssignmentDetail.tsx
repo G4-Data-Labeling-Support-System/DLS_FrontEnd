@@ -303,7 +303,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
 
   if (!assignment) {
     return (
-      <div className="w-full text-center py-10 text-gray-400">
+      <div className="w-full text-center py-10 text-gray-500">
         Error loading assignment information.
       </div>
     )
@@ -372,7 +372,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
                 Assignment Detail
               </span>
             </div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">{assignment.assignmentName}</h1>
+            <h1 className="text-3xl font-bold text-[#111] tracking-tight">{assignment.assignmentName}</h1>
           </div>
           <div className="flex items-center gap-3">
             <Dropdown
@@ -387,7 +387,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
               disabled={isExporting}
             >
               <Button
-                className="bg-transparent border border-violet-500/30 text-violet-400 hover:text-white hover:border-violet-500 rounded-xl font-medium shadow-[0_0_20px_rgba(139,92,246,0.1)] h-10 px-6 transition-all"
+                className="bg-transparent border border-violet-500/30 text-violet-400 hover:text-[#111] hover:border-violet-500 rounded-xl font-medium shadow-[0_0_20px_rgba(139,92,246,0.1)] h-10 px-6 transition-all"
                 icon={<DownloadOutlined />}
                 loading={isExporting}
               >
@@ -414,29 +414,29 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
         {/* Top Row: Main Info (2 columns) */}
         <div className={`glass-panel border ${themeClasses.borders.violet10} rounded-2xl overflow-hidden shadow-xl flex flex-col md:flex-row items-stretch`}>
           {/* Left: Information */}
-          <div className="flex-1 p-7 border-b md:border-b-0 md:border-r border-white/10 relative">
+          <div className="flex-1 p-7 border-b md:border-b-0 md:border-r border-gray-300 relative">
             <div className="absolute -top-10 -left-10 w-40 h-40 rounded-full bg-violet-500/5 blur-[50px] pointer-events-none" />
-            <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-[#111] mb-6 flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px] text-violet-400">info</span>
               Assignment Information
             </h3>
             <div className="space-y-5">
-              <div className="flex justify-between items-center py-2 border-b border-white/5">
+              <div className="flex justify-between items-center py-2 border-b border-gray-200">
                 <label className="text-xs text-gray-500 font-mono uppercase tracking-wider">Assignment ID</label>
                 <span className="text-xs font-mono text-violet-300 bg-violet-500/10 px-2.5 py-1 rounded border border-violet-500/20">
                   {assignment.assignmentId}
                 </span>
               </div>
-              <div className="flex justify-between items-center py-2 border-b border-white/5">
+              <div className="flex justify-between items-center py-2 border-b border-gray-200">
                 <label className="text-xs text-gray-500 font-mono uppercase tracking-wider">Status</label>
                 <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full bg-${getStatusColor(assignment.status) === 'success' ? 'emerald' : getStatusColor(assignment.status) === 'warning' ? 'orange' : getStatusColor(assignment.status) === 'error' ? 'red' : 'violet'}-500/10 border border-${getStatusColor(assignment.status) === 'success' ? 'emerald' : getStatusColor(assignment.status) === 'warning' ? 'orange' : getStatusColor(assignment.status) === 'error' ? 'red' : 'violet'}-500/20 text-[10px] font-bold text-${getStatusColor(assignment.status) === 'success' ? 'emerald' : getStatusColor(assignment.status) === 'warning' ? 'orange' : getStatusColor(assignment.status) === 'error' ? 'red' : 'violet'}-400 uppercase tracking-widest`}>
                   <div className={`w-1.5 h-1.5 rounded-full bg-${getStatusColor(assignment.status) === 'success' ? 'emerald' : getStatusColor(assignment.status) === 'warning' ? 'orange' : getStatusColor(assignment.status) === 'error' ? 'red' : 'violet'}-400 animate-pulse`} />
                   {assignment.status || 'UNKNOWN'}
                 </div>
               </div>
-              <div className="flex justify-between items-center py-2 border-b border-white/5">
+              <div className="flex justify-between items-center py-2 border-b border-gray-200">
                 <label className="text-xs text-gray-500 font-mono uppercase tracking-wider">Created At</label>
-                <span className="text-sm text-gray-300">{formatDate(assignment.createdAt)}</span>
+                <span className="text-sm text-gray-600">{formatDate(assignment.createdAt)}</span>
               </div>
               <div className="mt-4">
                 <div className="flex justify-between items-center mb-2">
@@ -456,12 +456,12 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
           {/* Right: Description */}
           <div className="flex-1 p-7 flex flex-col relative overflow-hidden">
             <div className="absolute -bottom-10 -right-10 w-40 h-40 rounded-full bg-fuchsia-500/5 blur-[50px] pointer-events-none" />
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-[#111] mb-4 flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px] text-fuchsia-400">description</span>
               Description
             </h3>
-            <div className="flex-1 bg-black/20 p-5 rounded-2xl border border-white/5 min-h-[120px]">
-              <p className="text-sm text-gray-300 leading-relaxed italic">
+            <div className="flex-1 bg-black/20 p-5 rounded-2xl border border-gray-200 min-h-[120px]">
+              <p className="text-sm text-gray-600 leading-relaxed italic">
                 {assignment.description || 'No description provided for this assignment.'}
               </p>
             </div>
@@ -473,16 +473,16 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
           {/* Associated Project */}
           <div className={`glass-panel border ${themeClasses.borders.violet10} rounded-2xl p-6 shadow-xl relative overflow-hidden`}>
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-3xl pointer-events-none" />
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-[#111] mb-4 flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px] text-blue-400">folder_special</span>
               Associated Project
             </h3>
             {assignment.projectId ? (
               <div
-                className="bg-black/20 p-5 rounded-xl border border-white/10 hover:border-blue-500/50 hover:bg-black/30 transition-all cursor-pointer group"
+                className="bg-black/20 p-5 rounded-xl border border-gray-300 hover:border-blue-500/50 hover:bg-black/30 transition-all cursor-pointer group"
                 onClick={() => setViewProjectId(assignment.projectId || null)}
               >
-                <h4 className="text-white font-bold group-hover:text-blue-400 transition-colors">
+                <h4 className="text-[#111] font-bold group-hover:text-blue-400 transition-colors">
                   {projectName || `Project ID: ${assignment.projectId}`}
                 </h4>
                 <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
@@ -491,7 +491,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
                 </p>
               </div>
             ) : (
-              <div className="bg-black/20 p-5 rounded-xl border border-white/5 text-center italic text-gray-500">
+              <div className="bg-black/20 p-5 rounded-xl border border-gray-200 text-center italic text-gray-500">
                 No associated project
               </div>
             )}
@@ -501,7 +501,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
           <div className={`glass-panel border ${themeClasses.borders.violet10} rounded-2xl p-6 shadow-xl relative overflow-hidden`}>
             <div className="absolute top-0 right-0 w-32 h-32 bg-fuchsia-500/5 blur-3xl pointer-events-none" />
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-[#111] flex items-center gap-2">
                 <span className="material-symbols-outlined text-[18px] text-fuchsia-400">database</span>
                 Assigned Dataset
               </h3>
@@ -518,10 +518,10 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
             </div>
             {assignment.datasetId ? (
               <div
-                className="bg-black/20 p-5 rounded-xl border border-white/10 hover:border-fuchsia-500/50 hover:bg-black/30 transition-all cursor-pointer group"
+                className="bg-black/20 p-5 rounded-xl border border-gray-300 hover:border-fuchsia-500/50 hover:bg-black/30 transition-all cursor-pointer group"
                 onClick={() => setViewDatasetId(assignment.datasetId || null)}
               >
-                <h4 className="text-white font-bold group-hover:text-fuchsia-400 transition-colors">
+                <h4 className="text-[#111] font-bold group-hover:text-fuchsia-400 transition-colors">
                   {datasetName || `Dataset ID: ${assignment.datasetId}`}
                 </h4>
                 <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
@@ -530,7 +530,7 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
                 </p>
               </div>
             ) : (
-              <div className="bg-black/20 p-5 rounded-xl border border-white/5 text-center italic text-gray-500">
+              <div className="bg-black/20 p-5 rounded-xl border border-gray-200 text-center italic text-gray-500">
                 No assigned dataset
               </div>
             )}
@@ -539,8 +539,8 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
 
         {/* Bottom Row: Tasks (Full Width) */}
         <div className={`glass-panel border ${themeClasses.borders.violet10} rounded-2xl p-7 flex flex-col shadow-xl min-h-[400px]`}>
-          <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/5">
-            <h3 className="text-xl font-bold text-white flex items-center gap-3">
+          <div className="flex items-center justify-between mb-8 pb-4 border-b border-gray-200">
+            <h3 className="text-xl font-bold text-[#111] flex items-center gap-3">
               <span className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
                 <span className="material-symbols-outlined text-[20px] text-emerald-400">task</span>
               </span>
@@ -556,11 +556,11 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
               <Spin size="large" />
             </div>
           ) : tasks.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-white/5 rounded-2xl bg-black/10">
+            <div className="flex-1 flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-gray-200 rounded-2xl bg-black/10">
               <span className="material-symbols-outlined text-gray-600 text-6xl mb-4 opacity-10">
                 assignment_late
               </span>
-              <p className="text-gray-400 text-base font-medium">No tasks found</p>
+              <p className="text-gray-500 text-base font-medium">No tasks found</p>
               <p className="text-gray-600 text-xs mt-2">Tasks will appear here once created.</p>
             </div>
           ) : (
@@ -569,12 +569,12 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
                 <div
                   key={task.taskId}
                   onClick={() => setViewTaskId(task.taskId)}
-                  className="group bg-black/20 p-5 rounded-xl border border-white/5 hover:border-emerald-500/50 hover:bg-black/30 transition-all cursor-pointer relative overflow-hidden"
+                  className="group bg-black/20 p-5 rounded-xl border border-gray-200 hover:border-emerald-500/50 hover:bg-black/30 transition-all cursor-pointer relative overflow-hidden"
                 >
                   <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/5 blur-2xl pointer-events-none" />
                   <div className="flex flex-col gap-3 relative z-10">
                     <div className="flex justify-between items-start">
-                      <span className="text-white font-bold text-sm line-clamp-2 group-hover:text-emerald-400 transition-colors">
+                      <span className="text-[#111] font-bold text-sm line-clamp-2 group-hover:text-emerald-400 transition-colors">
                         {task.taskName || 'Untitled Task'}
                       </span>
                       <div className={`w-2 h-2 rounded-full ${task.taskStatus?.toUpperCase() === 'COMPLETED' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-gray-600'}`} />
@@ -627,3 +627,4 @@ export const AssignmentDetail: React.FC<AssignmentDetailProps> = ({
     </div>
   )
 }
+

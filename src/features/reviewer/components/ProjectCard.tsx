@@ -49,7 +49,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
         <div className="flex-1 pr-2">
           <Title
             level={5}
-            className="!text-white !m-0 !text-sm leading-tight line-clamp-1"
+            className="!text-[#111] !m-0 !text-sm leading-tight line-clamp-1"
             title={projectName}
           >
             {projectName || 'Unnamed Project'}
@@ -68,7 +68,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       </div>
 
       {description && (
-        <p className="text-gray-400 text-xs line-clamp-2 mb-4 mt-2 min-h-[32px]">
+        <p className="text-gray-500 text-xs line-clamp-2 mb-4 mt-2 min-h-[32px]">
           {description}
         </p>
       )}
@@ -77,9 +77,10 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       <div className="grid grid-cols-1 gap-2 bg-[#231e31] p-3 rounded-lg mt-auto">
         <div>
           <div className="text-[10px] text-gray-500 uppercase tracking-wider">Created At</div>
-          <div className="text-gray-300 text-xs font-semibold">{formatDate(createdAt)}</div>
+          <div className="text-gray-600 text-xs font-semibold">{formatDate(createdAt)}</div>
         </div>
       </div>
     </Card>
   )
 }
+

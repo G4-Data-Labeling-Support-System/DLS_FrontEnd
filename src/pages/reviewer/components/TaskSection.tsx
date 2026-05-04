@@ -27,8 +27,8 @@ export default function TasksSection({ tasks }: { tasks: Task[] }) {
         <div className="w-8 h-8 rounded-lg bg-fuchsia-500/10 border border-fuchsia-500/20 flex items-center justify-center">
           <span className="material-symbols-outlined text-[16px] text-fuchsia-400">grid_view</span>
         </div>
-        <h2 className="text-lg font-bold text-white">Tasks</h2>
-        <span className="text-xs font-mono text-gray-500 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">
+        <h2 className="text-lg font-bold text-[#111]">Tasks</h2>
+        <span className="text-xs font-mono text-gray-500 bg-white/5 border border-gray-300 px-2 py-0.5 rounded-full">
           {tasks.length} total
         </span>
       </div>
@@ -58,3 +58,4 @@ export default function TasksSection({ tasks }: { tasks: Task[] }) {
     </div>
   )
 }
+

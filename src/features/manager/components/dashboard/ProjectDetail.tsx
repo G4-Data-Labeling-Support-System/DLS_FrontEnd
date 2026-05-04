@@ -69,7 +69,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
       case 'ARCHIVE':
         return 'border-red-500/30 bg-red-500/10 text-red-400'
       default:
-        return 'border-gray-500/30 bg-gray-500/10 text-gray-400'
+        return 'border-gray-500/30 bg-gray-500/10 text-gray-500'
     }
   }
 
@@ -169,7 +169,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
 
   if (!project) {
     return (
-      <div className="w-full text-center py-10 text-gray-400">
+      <div className="w-full text-center py-10 text-gray-500">
         Error loading project information.
       </div>
     )
@@ -191,7 +191,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
             disabled={isExporting}
           >
             <Button
-              className="bg-transparent border border-violet-500/30 text-violet-400 hover:text-white hover:border-violet-500 rounded-lg font-medium"
+              className="bg-transparent border border-violet-500/30 text-violet-400 hover:text-[#111] hover:border-violet-500 rounded-lg font-medium"
               icon={<DownloadOutlined />}
               loading={isExporting}
             >
@@ -213,7 +213,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
       <div className="rounded-2xl grid lg:grid-cols-2 md:grid-cols-1 gap-6 mb-8 mt-2 items-stretch">
 
         {/* DESIGN APPLIED FROM ANNOTATOR FOR PROJECT INFO */}
-        <div className="glass-panel rounded-2xl p-7 relative overflow-hidden flex flex-col border border-white/5 bg-[#1A1625]/60 backdrop-blur-md shadow-xl">
+        <div className="glass-panel rounded-2xl p-7 relative overflow-hidden flex flex-col border border-gray-200 bg-[#1A1625]/60 backdrop-blur-md shadow-xl">
           <div className="absolute -top-10 -right-10 w-56 h-56 rounded-full bg-violet-500/10 blur-[60px] pointer-events-none" />
           <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-fuchsia-500/10 blur-[50px] pointer-events-none" />
 
@@ -228,10 +228,10 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
                     Project Information
                   </span>
                 </div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                <h1 className="text-2xl sm:text-3xl font-bold text-[#111] tracking-tight">
                   {project.projectName}
                 </h1>
-                <p className="text-sm text-gray-400 mt-1 font-mono hover:text-gray-300 transition-colors cursor-default">
+                <p className="text-sm text-gray-500 mt-1 font-mono hover:text-gray-600 transition-colors cursor-default">
                   {project.projectId}
                 </p>
               </div>
@@ -247,8 +247,8 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
             </div>
 
             <div className="mb-6 flex-1">
-              <h3 className="text-sm font-semibold text-white mb-2">Description</h3>
-              <p className="text-sm text-gray-300 leading-relaxed max-w-3xl">
+              <h3 className="text-sm font-semibold text-[#111] mb-2">Description</h3>
+              <p className="text-sm text-gray-600 leading-relaxed max-w-3xl">
                 {project.description || (
                   <span className="text-gray-500 italic">No description provided for this project.</span>
                 )}
@@ -257,7 +257,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
 
             {/* Members Section Integrated into Glass Design */}
             <div className="mb-6">
-              <h3 className="text-sm font-semibold text-white mb-2">Members</h3>
+              <h3 className="text-sm font-semibold text-[#111] mb-2">Members</h3>
               <div className="max-h-[120px] overflow-y-auto pr-2 custom-scrollbar space-y-2 py-1">
                 {members.length > 0 ? (
                   members.map(
@@ -271,7 +271,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
                       },
                       i: number
                     ) => (
-                      <div key={i} className="flex items-center gap-3 bg-white/5 p-2 rounded-lg border border-white/5 hover:bg-white/10 hover:border-violet-500/30 transition-all cursor-default">
+                      <div key={i} className="flex items-center gap-3 bg-white/5 p-2 rounded-lg border border-gray-200 hover:bg-white/10 hover:border-violet-500/30 transition-all cursor-default">
                         <Avatar
                           size="small"
                           className="border border-violet-500/30 ring-2 ring-violet-500/10"
@@ -281,11 +281,11 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
                           }
                         />
                         <div className="flex flex-col">
-                          <span className="text-sm font-medium text-gray-200">
+                          <span className="text-sm font-medium text-gray-700">
                             {member.user.username || 'Unknown User'}
                           </span>
                           {member.user.role && (
-                            <span className="text-[10px] text-gray-400 tracking-wider">
+                            <span className="text-[10px] text-gray-500 tracking-wider">
                               {member.user.role}
                             </span>
                           )}
@@ -299,14 +299,14 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 border-t border-white/10 pt-4 mt-auto">
+            <div className="grid grid-cols-2 gap-4 border-t border-gray-300 pt-4 mt-auto">
               <div>
                 <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Created At</p>
-                <p className="text-sm font-semibold text-gray-300">{formatDate(project.createdAt as string)}</p>
+                <p className="text-sm font-semibold text-gray-600">{formatDate(project.createdAt as string)}</p>
               </div>
               <div>
                 <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Last Updated</p>
-                <p className="text-sm font-semibold text-gray-300">{formatDate(project.updatedAt as string)}</p>
+                <p className="text-sm font-semibold text-gray-600">{formatDate(project.updatedAt as string)}</p>
               </div>
             </div>
           </div>
@@ -314,12 +314,12 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
 
         {/* PROJECT GUIDELINES SIDE */}
         <div className="bg-[#1A1625]/60 backdrop-blur-md border border-violet-500/20 rounded-2xl overflow-hidden shadow-xl flex flex-col h-full min-h-[400px]">
-          <div className="w-full flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#231e31]/60">
+          <div className="w-full flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-[#231e31]/60">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-inner">
                 <span className="material-symbols-outlined text-[16px] text-emerald-400">menu_book</span>
               </div>
-              <span className="font-semibold text-white text-base font-display">Project Guidelines</span>
+              <span className="font-semibold text-[#111] text-base font-display">Project Guidelines</span>
             </div>
             <Tag color="#10b981" className="border-0 bg-emerald-500/10 text-emerald-400 border-emerald-500/20 border shadow-inner rounded-full font-bold px-3 py-0.5 m-0 text-xs">
               {guidelines.length} total
@@ -330,17 +330,17 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
             {guidelines.length === 0 ? (
               <div className="w-full h-full flex flex-col items-center justify-center opacity-60">
                 <span className="material-symbols-outlined text-5xl mb-3 text-gray-600">article</span>
-                <p className="text-gray-400 text-sm">No guidelines available</p>
+                <p className="text-gray-500 text-sm">No guidelines available</p>
               </div>
             ) : (
               <div className="flex flex-col gap-4">
                 {guidelines.map((guideline: Record<string, unknown>, index: number) => (
                   <div
                     key={(guideline.guideId as string) || index}
-                    className="flex flex-col gap-3 bg-white/5 p-5 rounded-xl border border-white/10 hover:border-emerald-500/30 transition-all shadow-inner group"
+                    className="flex flex-col gap-3 bg-white/5 p-5 rounded-xl border border-gray-300 hover:border-emerald-500/30 transition-all shadow-inner group"
                   >
-                    <div className="flex justify-between items-start gap-2 border-b border-white/5 pb-3">
-                      <div className="flex items-center gap-3 font-display text-white font-semibold">
+                    <div className="flex justify-between items-start gap-2 border-b border-gray-200 pb-3">
+                      <div className="flex items-center gap-3 font-display text-[#111] font-semibold">
                         <span className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[11px] flex items-center justify-center font-bold font-sans">
                           {index + 1}
                         </span>
@@ -354,8 +354,8 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
                           items: [
                             {
                               key: 'edit',
-                              label: <span className="text-gray-300 hover:text-white font-medium">Edit Guideline</span>,
-                              icon: <EditOutlined className="text-gray-400" />,
+                              label: <span className="text-gray-600 hover:text-[#111] font-medium">Edit Guideline</span>,
+                              icon: <EditOutlined className="text-gray-500" />,
                               onClick: () => handleEditGuideline(guideline)
                             }
                           ]
@@ -366,13 +366,13 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
                         <Button
                           type="text"
                           size="small"
-                          icon={<MoreOutlined className="text-gray-400 group-hover:text-white transition-colors" />}
+                          icon={<MoreOutlined className="text-gray-500 group-hover:text-[#111] transition-colors" />}
                           className="hover:bg-white/10 border-none flex-shrink-0 -mr-2 shadow-none"
                         />
                       </Dropdown>
                     </div>
 
-                    <div className="text-gray-300 text-sm whitespace-pre-wrap leading-relaxed mt-1">
+                    <div className="text-gray-600 text-sm whitespace-pre-wrap leading-relaxed mt-1">
                       {(guideline.content as string) || 'No content provided.'}
                     </div>
 
@@ -410,34 +410,34 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
         width={520}
       >
         <div className="px-8 pt-10 pb-8">
-          <div className="text-center border-b border-white/5 pb-6 mb-6">
-            <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
+          <div className="text-center border-b border-gray-200 pb-6 mb-6">
+            <h2 className="text-[#111] text-2xl font-bold tracking-tight mb-2 font-display">
               Edit Guideline
             </h2>
           </div>
           <Form form={guidelineForm} layout="vertical">
             <Form.Item
-              label={<span className="text-gray-300 font-medium tracking-wide">Title</span>}
+              label={<span className="text-gray-600 font-medium tracking-wide">Title</span>}
               name="title"
               rules={[{ required: true, message: 'Please enter title' }]}
             >
-              <Input placeholder="Enter guideline title" className="bg-[#1A1625] border-gray-700 text-white hover:border-violet-500 focus:border-violet-500 rounded-lg px-3 py-2" />
+              <Input placeholder="Enter guideline title" className="bg-[#1A1625] border-gray-700 text-[#111] hover:border-violet-500 focus:border-violet-500 rounded-lg px-3 py-2" />
             </Form.Item>
             <Form.Item
-              label={<span className="text-gray-300 font-medium tracking-wide">Content</span>}
+              label={<span className="text-gray-600 font-medium tracking-wide">Content</span>}
               name="content"
               rules={[{ required: true, message: 'Please enter content' }]}
             >
-              <Input.TextArea placeholder="Enter guideline content" rows={5} className="bg-[#1A1625] border-gray-700 text-white hover:border-violet-500 focus:border-violet-500 rounded-lg p-3 custom-scrollbar" />
+              <Input.TextArea placeholder="Enter guideline content" rows={5} className="bg-[#1A1625] border-gray-700 text-[#111] hover:border-violet-500 focus:border-violet-500 rounded-lg p-3 custom-scrollbar" />
             </Form.Item>
-            <div className="flex justify-end gap-3 pt-6 border-t border-white/5 mt-6">
+            <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 mt-6">
               <Button
                 onClick={() => {
                   setIsGuidelineEditModalVisible(false)
                   setEditingGuideline(null)
                   guidelineForm.resetFields()
                 }}
-                className="border-white/10 text-white/70 hover:text-white hover:border-white/30 bg-transparent rounded-lg px-6 shadow-none"
+                className="border-gray-300 text-[#111]/70 hover:text-[#111] hover:border-white/30 bg-transparent rounded-lg px-6 shadow-none"
               >
                 Cancel
               </Button>
@@ -457,3 +457,4 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
 }
 
 export default ProjectDetail
+

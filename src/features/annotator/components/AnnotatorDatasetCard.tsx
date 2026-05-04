@@ -103,7 +103,7 @@ export default function AnnotatorDatasetCard({
 
   if (loading) {
     return (
-      <div className="glass-panel border border-white/5 rounded-2xl p-6 shadow-xl relative overflow-hidden animate-pulse">
+      <div className="glass-panel border border-gray-200 rounded-2xl p-6 shadow-xl relative overflow-hidden animate-pulse">
         <div className="h-6 bg-white/10 rounded w-1/3 mb-4"></div>
         <div className="space-y-3">
           <div className="h-4 bg-white/5 rounded w-full"></div>
@@ -143,7 +143,7 @@ export default function AnnotatorDatasetCard({
               placeholder="Search datasets..."
               value={searchTerm}
               onChange={handleSearchChange}
-              className="bg-white/5 border border-white/10 rounded-full py-1.5 pl-9 pr-4 text-xs text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all w-full sm:w-48"
+              className="bg-white/5 border border-gray-300 rounded-full py-1.5 pl-9 pr-4 text-xs text-[#111] placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all w-full sm:w-48"
             />
           </div>
         </div>
@@ -177,30 +177,30 @@ export default function AnnotatorDatasetCard({
                 >
                   <div className="p-4">
                     <div className="flex justify-between items-start mb-2">
-                      <h4 className="text-white font-semibold text-base">{dataset.datasetName}</h4>
-                      <span className="text-[10px] text-gray-500 font-mono bg-white/5 px-2 py-0.5 rounded-full border border-white/10 uppercase tracking-tighter">
+                      <h4 className="text-[#111] font-semibold text-base">{dataset.datasetName}</h4>
+                      <span className="text-[10px] text-gray-500 font-mono bg-white/5 px-2 py-0.5 rounded-full border border-gray-300 uppercase tracking-tighter">
                         {dataset.datasetId}
                       </span>
                     </div>
 
-                    <p className="text-xs text-gray-400 line-clamp-2 mb-3 leading-relaxed">
+                    <p className="text-xs text-gray-500 line-clamp-2 mb-3 leading-relaxed">
                       {dataset.description || 'No description provided.'}
                     </p>
 
                     <div className="flex justify-end mb-3">
-                      <div className="px-3 py-1 bg-violet-600 group-hover:bg-violet-700 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 shadow-lg shadow-violet-500/20">
+                      <div className="px-3 py-1 bg-violet-600 group-hover:bg-violet-700 text-[#111] text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 shadow-lg shadow-violet-500/20">
                         <span>View Detail</span>
                         <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between mt-auto pt-3 border-t border-white/5">
+                    <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-200">
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-1">
                           <span className="material-symbols-outlined text-[14px] text-gray-500">
                             layers
                           </span>
-                          <span className="text-[11px] text-gray-300 font-medium">
+                          <span className="text-[11px] text-gray-600 font-medium">
                             {dataset.totalItems || 0} items
                           </span>
                         </div>
@@ -233,13 +233,13 @@ export default function AnnotatorDatasetCard({
                   {/* Expanded Items View */}
                   {expandedDatasetId === dataset.datasetId && (
                     <div className="px-4 pb-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                      <div className="pt-4 border-t border-white/5">
+                      <div className="pt-4 border-t border-gray-200">
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                           {(dataset.dataitems || []).length > 0 ? (
                             (dataset.dataitems || []).map((item: DatasetItem) => (
                               <div
                                 key={item.itemId || item.id}
-                                className="relative group/item rounded-lg overflow-hidden border border-white/5 bg-black/20 aspect-square flex items-center justify-center"
+                                className="relative group/item rounded-lg overflow-hidden border border-gray-200 bg-black/20 aspect-square flex items-center justify-center"
                               >
                                 <div className="absolute inset-0 flex items-center justify-center bg-violet-500/5 group-hover/item:bg-violet-500/10 transition-colors">
                                   <span className="material-symbols-outlined text-gray-600 text-3xl opacity-20">
@@ -258,7 +258,7 @@ export default function AnnotatorDatasetCard({
                                   className="w-full h-full object-cover opacity-60 group-hover/item:opacity-100 transition-opacity"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover/item:opacity-100 transition-opacity p-2 flex flex-col justify-end">
-                                  <span className="text-[10px] text-white truncate font-medium">
+                                  <span className="text-[10px] text-[#111] truncate font-medium">
                                     {item.fileName || item.name || item.filename}
                                   </span>
                                 </div>
@@ -282,19 +282,19 @@ export default function AnnotatorDatasetCard({
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between mt-6 pt-6 border-t border-white/5">
+              <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-200">
                 <span className="text-[11px] text-gray-500 font-medium">
-                  Showing <span className="text-gray-300">{startIndex + 1}</span> -{' '}
-                  <span className="text-gray-300">
+                  Showing <span className="text-gray-600">{startIndex + 1}</span> -{' '}
+                  <span className="text-gray-600">
                     {Math.min(startIndex + itemsPerPage, filteredDatasets.length)}
                   </span>{' '}
-                  of <span className="text-gray-300">{filteredDatasets.length}</span> datasets
+                  of <span className="text-gray-600">{filteredDatasets.length}</span> datasets
                 </span>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setCurrentPage((p: number) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-all"
+                    className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 border border-gray-300 text-gray-500 hover:bg-white/10 hover:text-[#111] disabled:opacity-30 disabled:pointer-events-none transition-all"
                   >
                     <span className="material-symbols-outlined text-[18px]">chevron_left</span>
                   </button>
@@ -306,7 +306,7 @@ export default function AnnotatorDatasetCard({
                   <button
                     onClick={() => setCurrentPage((p: number) => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-all"
+                    className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 border border-gray-300 text-gray-500 hover:bg-white/10 hover:text-[#111] disabled:opacity-30 disabled:pointer-events-none transition-all"
                   >
                     <span className="material-symbols-outlined text-[18px]">chevron_right</span>
                   </button>
@@ -319,3 +319,4 @@ export default function AnnotatorDatasetCard({
     </div>
   )
 }
+

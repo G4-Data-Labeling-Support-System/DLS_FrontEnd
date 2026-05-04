@@ -27,7 +27,7 @@ export const FormFooter: React.FC<FormFooterProps> = ({
   hideSteps = false
 }) => {
   return (
-    <div className="mt-12 pt-6 border-t border-white/10 flex items-center justify-between">
+    <div className="mt-12 pt-6 border-t border-gray-300 flex items-center justify-between">
       {/* --- KHU VỰC TRÁI (NAV) --- */}
       <div className="flex items-center gap-4">
         {currentStep === 1 ? (
@@ -44,14 +44,14 @@ export const FormFooter: React.FC<FormFooterProps> = ({
             type="text"
             icon={<ArrowLeftOutlined />}
             onClick={onBack}
-            className="text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+            className="text-gray-500 hover:text-[#111] hover:bg-white/10 transition-colors"
           >
             Back
           </Button>
         )}
 
         {!hideSteps && (
-          <span className="text-gray-600 uppercase text-xs tracking-widest hidden md:inline-block border-l border-white/10 pl-4 ml-2">
+          <span className="text-gray-600 uppercase text-xs tracking-widest hidden md:inline-block border-l border-gray-300 pl-4 ml-2">
             Step {currentStep} of {totalSteps}
           </span>
         )}
@@ -80,3 +80,4 @@ export const FormFooter: React.FC<FormFooterProps> = ({
     </div>
   )
 }
+

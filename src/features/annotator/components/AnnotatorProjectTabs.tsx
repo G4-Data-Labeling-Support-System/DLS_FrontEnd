@@ -19,7 +19,7 @@ export const AnnotatorProjectTabs: React.FC<AnnotatorProjectTabsProps> = ({
       <button
         onClick={() => navigate(`/annotator/projects/${projectId}`)}
         className={`text-lg font-medium transition-colors cursor-pointer relative pb-2 ${
-          activeTab === 'detail' ? 'text-white' : 'text-gray-500 hover:text-gray-300'
+          activeTab === 'detail' ? 'text-[#111]' : 'text-gray-500 hover:text-gray-600'
         }`}
       >
         Project Detail
@@ -30,7 +30,7 @@ export const AnnotatorProjectTabs: React.FC<AnnotatorProjectTabsProps> = ({
       <button
         onClick={() => navigate(`/annotator/projects/${projectId}/assignments`)}
         className={`text-lg font-medium transition-colors cursor-pointer relative pb-2 ${
-          activeTab === 'assignment' ? 'text-white' : 'text-gray-500 hover:text-gray-300'
+          activeTab === 'assignment' ? 'text-[#111]' : 'text-gray-500 hover:text-gray-600'
         }`}
       >
         Assignments
@@ -41,7 +41,7 @@ export const AnnotatorProjectTabs: React.FC<AnnotatorProjectTabsProps> = ({
       <button
         onClick={() => navigate(`/annotator/projects/${projectId}/datasets`)}
         className={`text-lg font-medium transition-colors cursor-pointer relative pb-2 ${
-          activeTab === 'dataset' ? 'text-white' : 'text-gray-500 hover:text-gray-300'
+          activeTab === 'dataset' ? 'text-[#111]' : 'text-gray-500 hover:text-gray-600'
         }`}
       >
         Datasets
@@ -52,4 +52,5 @@ export const AnnotatorProjectTabs: React.FC<AnnotatorProjectTabsProps> = ({
     </div>
   )
 }
+
 

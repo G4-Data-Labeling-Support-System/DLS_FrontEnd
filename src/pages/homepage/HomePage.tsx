@@ -1,9 +1,16 @@
 import Hero from '@/pages/homepage/components/Hero'
+import Navbar from '@/pages/homepage/components/Navbar'
+import Services from '@/pages/homepage/components/Services'
 
 export default function HomePage() {
   return (
-    <div>
-      <Hero />
+    <div className="overflow-x-hidden font-sans selection:bg-black selection:text-[#111]">
+      <Navbar />
+      <div className="pt-24 pb-12 px-6 md:px-12 max-w-[1400px] mx-auto">
+        <Hero />
+        <Services />
+      </div>
     </div>
   )
 }
+

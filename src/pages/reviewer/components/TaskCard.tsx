@@ -35,27 +35,27 @@ export default function TaskCard({ task }: { task: Task }) {
     >
       {/* Top row: status info */}
       <div className="mb-3">
-        <div className="flex items-center gap-1.5 text-[11px] text-gray-300 mb-0.5">
-          <span className="font-semibold text-gray-400">Task_Status:</span>
+        <div className="flex items-center gap-1.5 text-[11px] text-gray-600 mb-0.5">
+          <span className="font-semibold text-gray-500">Task_Status:</span>
           <span
-            className={`font-semibold ${statusStyle.badge.includes('emerald') ? 'text-emerald-400' : statusStyle.badge.includes('amber') ? 'text-amber-400' : statusStyle.badge.includes('violet') ? 'text-violet-400' : 'text-gray-400'}`}
+            className={`font-semibold ${statusStyle.badge.includes('emerald') ? 'text-emerald-400' : statusStyle.badge.includes('amber') ? 'text-amber-400' : statusStyle.badge.includes('violet') ? 'text-violet-400' : 'text-gray-500'}`}
           >
             {taskStatus}
           </span>
         </div>
-        <div className="flex items-center gap-1.5 text-[11px] text-gray-300">
-          <span className="font-semibold text-gray-400">Annotation_Status:</span>
+        <div className="flex items-center gap-1.5 text-[11px] text-gray-600">
+          <span className="font-semibold text-gray-500">Annotation_Status:</span>
           <span className={`font-semibold ${annotationStyle}`}>{annotationLabel}</span>
         </div>
       </div>
 
       {/* Divider */}
-      <div className="border-t border-white/10 mb-3" />
+      <div className="border-t border-gray-300 mb-3" />
 
       {/* Task name + action */}
       <div className="flex items-center justify-between">
-        <h4 className="text-base font-bold text-white">{taskName}</h4>
-        <button className="flex items-center gap-1 text-[10px] font-bold text-violet-300 hover:text-white transition-colors opacity-0 group-hover:opacity-100">
+        <h4 className="text-base font-bold text-[#111]">{taskName}</h4>
+        <button className="flex items-center gap-1 text-[10px] font-bold text-violet-300 hover:text-[#111] transition-colors opacity-0 group-hover:opacity-100">
           <span>Open</span>
           <span className="material-symbols-outlined text-[13px]">arrow_forward</span>
         </button>
@@ -66,3 +66,4 @@ export default function TaskCard({ task }: { task: Task }) {
     </div>
   )
 }
+

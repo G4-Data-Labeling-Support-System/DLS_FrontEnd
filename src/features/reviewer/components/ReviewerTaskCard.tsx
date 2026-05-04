@@ -54,7 +54,7 @@ export default function ReviewerTaskCard({ task, assignmentId }: { task: Task; a
   return (
     <div
       onClick={() => navigate(`/reviewer/task/${task.id}`, { state: { assignmentId } })}
-      className="relative group rounded-xl p-5 cursor-pointer overflow-hidden bg-[#1A1625]/60 backdrop-blur-md border border-white/5 hover:border-violet-500/50 hover:bg-[#1A1625]/80 hover:shadow-[0_0_20px_rgba(139,92,246,0.15)] transition-all duration-300 shadow-xl"
+      className="relative group rounded-xl p-5 cursor-pointer overflow-hidden bg-[#1A1625]/60 backdrop-blur-md border border-gray-200 hover:border-violet-500/50 hover:bg-[#1A1625]/80 hover:shadow-[0_0_20px_rgba(139,92,246,0.15)] transition-all duration-300 shadow-xl"
     >
       <div className="mb-3 flex justify-between items-start">
         <div className="flex flex-col gap-1">
@@ -64,9 +64,9 @@ export default function ReviewerTaskCard({ task, assignmentId }: { task: Task; a
         <ArrowRightOutlined className="text-gray-600 group-hover:text-violet-400 transition-colors mt-1" />
       </div>
 
-      <div className="border-t border-white/10 mb-3" />
+      <div className="border-t border-gray-300 mb-3" />
 
-      <h4 className="text-base font-bold text-white mb-4 line-clamp-1">{taskName}</h4>
+      <h4 className="text-base font-bold text-[#111] mb-4 line-clamp-1">{taskName}</h4>
 
       <div className="space-y-1.5">
         <div className="flex justify-between items-center text-[10px]">
@@ -75,7 +75,7 @@ export default function ReviewerTaskCard({ task, assignmentId }: { task: Task; a
             {completed}/{total} items
           </span>
         </div>
-        <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+        <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-gray-200">
           <div
             className="h-full bg-gradient-to-r from-violet-600 to-fuchsia-500 transition-all duration-500 rounded-full"
             style={{ width: `${progress}%` }}
@@ -87,3 +87,4 @@ export default function ReviewerTaskCard({ task, assignmentId }: { task: Task; a
     </div>
   )
 }
+

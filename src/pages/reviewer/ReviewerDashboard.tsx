@@ -36,7 +36,7 @@ const ReviewerDashboard: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-[500px] gap-4">
         <Spin size="large" />
-        <Text className="text-gray-400">Loading Dashboard...</Text>
+        <Text className="text-gray-500">Loading Dashboard...</Text>
       </div>
     )
   }
@@ -48,10 +48,10 @@ const ReviewerDashboard: React.FC = () => {
         <div className="xl:col-span-3 space-y-6">
           <div className="flex justify-between items-start">
             <div>
-              <Title level={4} className="!text-white !m-0 !font-display">
+              <Title level={4} className="!text-[#111] !m-0 !font-display">
                 Reviewer Dashboard
               </Title>
-              <Text className="text-gray-400 text-xs">
+              <Text className="text-gray-500 text-xs">
                 Overview of current annotation progress and performance.
               </Text>
             </div>
@@ -78,3 +78,4 @@ const ReviewerDashboard: React.FC = () => {
 }
 
 export default ReviewerDashboard
+

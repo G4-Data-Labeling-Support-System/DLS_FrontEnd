@@ -90,7 +90,7 @@ export default function AnnotatorAllProjectsPage() {
     <div className="p-6">
       <div className="flex items-center gap-3 mb-8 border-b border-gray-800 pb-4">
         <span className="material-symbols-outlined text-[24px] text-fuchsia-400">folder_open</span>
-        <h1 className="text-2xl font-bold text-white tracking-tight">All Projects</h1>
+        <h1 className="text-2xl font-bold text-[#111] tracking-tight">All Projects</h1>
       </div>
 
       {loading ? (
@@ -99,7 +99,7 @@ export default function AnnotatorAllProjectsPage() {
           <span className="text-xs text-violet-400 font-mono">Syncing projects with server...</span>
         </div>
       ) : error ? (
-        <div className="text-center text-gray-400 py-20 bg-[#1A1625]/40 rounded-xl border border-dashed border-gray-700">
+        <div className="text-center text-gray-500 py-20 bg-[#1A1625]/40 rounded-xl border border-dashed border-gray-700">
           {error}
         </div>
       ) : projects.length > 0 ? (
@@ -118,10 +118,11 @@ export default function AnnotatorAllProjectsPage() {
           ))}
         </div>
       ) : (
-        <div className="text-center text-gray-400 py-20 bg-[#1A1625]/40 rounded-xl border border-dashed border-gray-700">
+        <div className="text-center text-gray-500 py-20 bg-[#1A1625]/40 rounded-xl border border-dashed border-gray-700">
           No projects available.
         </div>
       )}
     </div>
   )
 }
+

@@ -826,7 +826,7 @@ export default function AnnotationPage() {
         <span className="text-red-400 font-medium">{error || 'No data items found.'}</span>
         <button
           onClick={() => navigate(-1)}
-          className="mt-4 px-6 py-2 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-all font-bold"
+          className="mt-4 px-6 py-2 bg-white/5 border border-gray-300 rounded-lg text-[#111] hover:bg-white/10 transition-all font-bold"
         >
           Go Back
         </button>
@@ -835,7 +835,7 @@ export default function AnnotationPage() {
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col h-screen bg-[#111116] text-white overflow-hidden font-sans">
+    <div className="fixed inset-0 z-[100] flex flex-col h-screen bg-[#111116] text-[#111] overflow-hidden font-sans">
       {/* Optional minimal top bar for backing out */}
       <div className="absolute top-4 left-4 z-[200]">
         <button
@@ -843,7 +843,7 @@ export default function AnnotationPage() {
             saveCurrentToSession()
             navigate(-1)
           }}
-          className="px-4 py-2 bg-black/40 backdrop-blur border border-white/10 rounded-xl hover:bg-white/10 text-gray-400 flex items-center gap-2 transition text-sm font-medium shadow-xl absolute top-4 left-4 cursor-pointer"
+          className="px-4 py-2 bg-black/40 backdrop-blur border border-gray-300 rounded-xl hover:bg-white/10 text-gray-500 flex items-center gap-2 transition text-sm font-medium shadow-xl absolute top-4 left-4 cursor-pointer"
         >
           <span className="material-symbols-outlined text-[16px]">arrow_back</span>
           <span>Back</span>
@@ -853,8 +853,8 @@ export default function AnnotationPage() {
       <div className="flex flex-1 overflow-hidden h-full">
 
         {/* Left Column: Thumbnail List */}
-        <div style={{ width: leftWidth, minWidth: 160 }} className="border-r border-white/10 overflow-y-auto custom-scrollbar flex flex-col pt-16 mt-4 pb-4 shrink-0">
-          <div className="flex items-center px-2 py-2 border-b border-white/10 mx-4 mb-2 gap-3 text-[10px] font-bold uppercase tracking-widest text-gray-500">
+        <div style={{ width: leftWidth, minWidth: 160 }} className="border-r border-gray-300 overflow-y-auto custom-scrollbar flex flex-col pt-16 mt-4 pb-4 shrink-0">
+          <div className="flex items-center px-2 py-2 border-b border-gray-300 mx-4 mb-2 gap-3 text-[10px] font-bold uppercase tracking-widest text-gray-500">
             <span className="w-10 shrink-0 text-center">Status</span>
             <span className="w-16 shrink-0 text-center">Image</span>
             <span className="flex-1">Shapes</span>
@@ -899,12 +899,12 @@ export default function AnnotationPage() {
                     <img
                       src={item.url || (item as any).dataItem?.url || (item as any).dataitem?.url || (item as any).previewUrl}
                       alt={item.fileName || (item as any).dataItem?.fileName || (item as any).dataitem?.fileName || (item as any).filename}
-                      className={`w-16 h-12 object-cover rounded-md bg-black/50 border-[2px] ${isSelected ? 'border-violet-500 shadow-[0_0_12px_rgba(139,92,246,0.4)]' : 'border-white/10'}`}
+                      className={`w-16 h-12 object-cover rounded-md bg-black/50 border-[2px] ${isSelected ? 'border-violet-500 shadow-[0_0_12px_rgba(139,92,246,0.4)]' : 'border-gray-300'}`}
                     />
                     {/* Shape count badge */}
                     <div className={`absolute -bottom-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center text-[10px] font-bold border ${shapeCount > 0
-                      ? 'bg-violet-600 border-violet-400/50 text-white'
-                      : 'bg-black/70 border-white/10 text-gray-500'
+                      ? 'bg-violet-600 border-violet-400/50 text-[#111]'
+                      : 'bg-black/70 border-gray-300 text-gray-500'
                       }`}>
                       {shapeCount}
                     </div>
@@ -939,7 +939,7 @@ export default function AnnotationPage() {
         <div className="flex-[2] flex flex-col relative overflow-hidden bg-[#111116] pt-12 pb-6 px-5 mx-2 my-2 min-h-0">
 
           <div className="text-left mb-3">
-            <h2 className={`text-2xl font-medium tracking-wide transition-colors ${currentLabel ? 'text-gray-200' : 'text-gray-500'}`}>
+            <h2 className={`text-2xl font-medium tracking-wide transition-colors ${currentLabel ? 'text-gray-700' : 'text-gray-500'}`}>
               Select label and click the image to start
             </h2>
           </div>
@@ -1070,16 +1070,16 @@ export default function AnnotationPage() {
 
 
           {/* Bottom Action Bar */}
-          <div className="mt-8 border-t border-white/10 pt-5 flex w-full items-center justify-between gap-4">
+          <div className="mt-8 border-t border-gray-300 pt-5 flex w-full items-center justify-between gap-4">
 
             {/* Left: task counter */}
             <span className="text-xs  font-mono text-gray-500">task {currentIndex + 1}/{totalItems}</span>
 
             {/* Center: Undo / Redo / Reset */}
             <div className="flex items-center gap-1 flex-1 justify-center">
-              <button onClick={handleUndo} className="px-3 py-1.5 cursor-pointer rounded-lg text-xs font-bold text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-all">undo</button>
-              <button onClick={handleRedo} className="px-3 py-1.5 cursor-pointer rounded-lg text-xs font-bold text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-all">redo</button>
-              <button onClick={handleClearAll} className="px-3 py-1.5 cursor-pointer rounded-lg text-xs font-bold text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-all">reset</button>
+              <button onClick={handleUndo} className="px-3 py-1.5 cursor-pointer rounded-lg text-xs font-bold text-gray-500 hover:text-gray-600 hover:bg-white/5 transition-all">undo</button>
+              <button onClick={handleRedo} className="px-3 py-1.5 cursor-pointer rounded-lg text-xs font-bold text-gray-500 hover:text-gray-600 hover:bg-white/5 transition-all">redo</button>
+              <button onClick={handleClearAll} className="px-3 py-1.5 cursor-pointer rounded-lg text-xs font-bold text-gray-500 hover:text-gray-600 hover:bg-white/5 transition-all">reset</button>
             </div>
 
 
@@ -1088,8 +1088,8 @@ export default function AnnotationPage() {
               onClick={handleSubmitTask}
               disabled={!confidence || (shapes.length === 0 && selectedLabels.length === 0)}
               className={`shrink-0 px-6 py-2 rounded-lg text-sm font-bold transition-all shadow-lg ${confidence && (shapes.length > 0 || selectedLabels.length > 0)
-                ? 'bg-violet-600 hover:bg-violet-500 text-white shadow-violet-900/20 cursor-pointer'
-                : 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'
+                ? 'bg-violet-600 hover:bg-violet-500 text-[#111] shadow-violet-900/20 cursor-pointer'
+                : 'bg-gray-600 text-gray-500 cursor-not-allowed opacity-50'
                 }`}
             >
               Submit
@@ -1112,7 +1112,7 @@ export default function AnnotationPage() {
         </div>
 
         {/* Right Column: Comment, Labels, Confidence & Geometry */}
-        <div style={{ width: rightWidth, minWidth: 200 }} className="border-l border-white/5 px-6 py-6 flex flex-col gap-6 overflow-y-auto custom-scrollbar bg-[#16161a] shrink-0">
+        <div style={{ width: rightWidth, minWidth: 200 }} className="border-l border-gray-200 px-6 py-6 flex flex-col gap-6 overflow-y-auto custom-scrollbar bg-[#16161a] shrink-0">
 
           {/* Review Feedback Section */}
           {(currentAnnotation?.annotationStatus?.toUpperCase() === 'REJECTED' || currentAnnotation?.annotationStatus?.toUpperCase() === 'NEEDS_EDITING') && (
@@ -1173,7 +1173,7 @@ export default function AnnotationPage() {
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-[16px] text-violet-400">label</span>
-              <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Labels</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Labels</span>
             </div>
             <div className="flex flex-wrap gap-2">
               {labels.map(label => (
@@ -1198,16 +1198,16 @@ export default function AnnotationPage() {
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-[16px] text-orange-400">psychology</span>
-              <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Confidence</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Confidence</span>
             </div>
-            <div className="flex bg-black/40 rounded-xl border border-white/5 p-1 gap-1">
+            <div className="flex bg-black/40 rounded-xl border border-gray-200 p-1 gap-1">
               {(['LOW', 'MEDIUM', 'HIGH'] as const).map(level => (
                 <button
                   key={level}
                   onClick={() => setConfidence(level)}
                   className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${confidence === level
                     ? 'bg-orange-500/20 text-orange-400 border border-orange-500/50'
-                    : 'text-gray-500 hover:text-gray-300 hover:bg-white/5 border border-transparent'
+                    : 'text-gray-500 hover:text-gray-600 hover:bg-white/5 border border-transparent'
                     }`}
                 >
                   {level}
@@ -1219,22 +1219,22 @@ export default function AnnotationPage() {
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-[16px] text-amber-400">chat_bubble</span>
-              <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Comment</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Comment</span>
             </div>
             <textarea
               value={comment}
               placeholder='Add your comment here'
               onChange={(e) => setComment(e.target.value)}
-              className="w-full h-24 bg-white/5 rounded-xl border border-white/10 p-4 text-sm text-gray-300 focus:outline-none focus:border-violet-500/50 transition-colors resize-none"
+              className="w-full h-24 bg-white/5 rounded-xl border border-gray-300 p-4 text-sm text-gray-600 focus:outline-none focus:border-violet-500/50 transition-colors resize-none"
             />
           </div>
 
           <div className="flex flex-col gap-3 flex-1">
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-[16px] text-blue-400">poly</span>
-              <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Geometry</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Geometry</span>
             </div>
-            <div className="flex-1 bg-black/40 rounded-xl border border-white/5 p-4 overflow-y-auto min-h-[300px] custom-scrollbar">
+            <div className="flex-1 bg-black/40 rounded-xl border border-gray-200 p-4 overflow-y-auto min-h-[300px] custom-scrollbar">
               {shapes.length === 0 ? (
                 <div className="h-full flex items-center justify-center text-gray-600 text-xs font-mono">JSON</div>
               ) : (
@@ -1272,7 +1272,7 @@ function ToolbarButton({
       onClick={onClick}
       className={`
           w-7 h-7 p-4 flex items-center justify-center transition-all cursor-pointer rounded-md
-          ${active ? 'bg-violet-600 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/10'}
+          ${active ? 'bg-violet-600 text-[#111] shadow-lg' : 'text-gray-500 hover:text-[#111] hover:bg-white/10'}
       `}
     >
       <span className="material-symbols-outlined text-[16px]">{icon}</span>

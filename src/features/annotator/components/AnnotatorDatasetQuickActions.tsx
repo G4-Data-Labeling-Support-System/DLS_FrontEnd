@@ -13,7 +13,7 @@ export const AnnotatorDatasetQuickActions: React.FC = () => {
     <Card className="h-full bg-[#1A1625] border-gray-800 rounded-2xl p-4 shadow-xl">
       <div className="flex items-center gap-2 mb-6">
         <div className="text-amber-400 transform -rotate-12 bg-none text-xl">⚡</div>
-        <Title level={5} className="!text-white !m-0 !font-normal !font-display">
+        <Title level={5} className="!text-[#111] !m-0 !font-normal !font-display">
           Quick Actions
         </Title>
       </div>
@@ -34,7 +34,7 @@ export const AnnotatorDatasetQuickActions: React.FC = () => {
         </Button>
 
         <Button
-          className="w-full h-12 flex items-center justify-between bg-[#231e31] border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 hover:bg-[#2d2640]"
+          className="w-full h-12 flex items-center justify-between bg-[#231e31] border-gray-700 text-gray-600 hover:text-[#111] hover:border-gray-500 hover:bg-[#2d2640]"
           onClick={() => navigate(PATH_ANNOTATOR.projects)}
         >
           <div className="flex items-center">
@@ -47,3 +47,4 @@ export const AnnotatorDatasetQuickActions: React.FC = () => {
     </Card>
   )
 }
+

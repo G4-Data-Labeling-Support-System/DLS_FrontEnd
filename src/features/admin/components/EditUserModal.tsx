@@ -76,9 +76,9 @@ export default function EditUserModal({
   return (
     <GlassModal open={isOpen} onCancel={onClose} width={560}>
       {/* Header */}
-      <div className="px-8 pt-10 pb-6 text-center border-b border-white/5">
-        <h2 className="text-white text-3xl font-bold tracking-tight mb-2">Edit User</h2>
-        <p className="text-white/50 text-sm">Modify account details and access roles.</p>
+      <div className="px-8 pt-10 pb-6 text-center border-b border-gray-200">
+        <h2 className="text-[#111] text-3xl font-bold tracking-tight mb-2">Edit User</h2>
+        <p className="text-[#111]/50 text-sm">Modify account details and access roles.</p>
       </div>
 
       {/* Form Content */}
@@ -93,7 +93,7 @@ export default function EditUserModal({
           {/* Username Field */}
           <Form.Item
             name="username"
-            label={<span className="text-gray-300 font-medium">Username</span>}
+            label={<span className="text-gray-600 font-medium">Username</span>}
             rules={[{ required: true, message: 'Please enter a username' }]}
           >
             <Input
@@ -107,7 +107,7 @@ export default function EditUserModal({
           {/* Email Address Field */}
           <Form.Item
             name="email"
-            label={<span className="text-gray-300 font-medium">Email Address</span>}
+            label={<span className="text-gray-600 font-medium">Email Address</span>}
             rules={[
               { required: true, message: 'Please enter email address' },
               { type: 'email', message: 'Please enter a valid email' }
@@ -123,7 +123,7 @@ export default function EditUserModal({
           {/* Specialization */}
           <Form.Item
             name="specialization"
-            label={<span className="text-gray-300 font-medium">Specialization</span>}
+            label={<span className="text-gray-600 font-medium">Specialization</span>}
             // rules={[{ required: true, message: 'Please enter a specialization' }]}
           >
             <Input size="large" placeholder="e.g. NLP" />
@@ -132,7 +132,7 @@ export default function EditUserModal({
           {/* Role Selection Dropdown */}
           <Form.Item
             name="role"
-            label={<span className="text-gray-300 font-medium">Access Role</span>}
+            label={<span className="text-gray-600 font-medium">Access Role</span>}
             rules={[{ required: true, message: 'Please select a role' }]}
           >
             <Select
@@ -150,12 +150,12 @@ export default function EditUserModal({
           </Form.Item>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-4 mt-4 pt-4 border-t border-white/5">
+          <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-200">
             <Button
               variant="secondary"
               size="md"
               onClick={onClose}
-              className="flex-1 h-11 border-white/10 bg-transparent text-gray-300 hover:text-white hover:border-white/30"
+              className="flex-1 h-11 border-gray-300 bg-transparent text-gray-600 hover:text-[#111] hover:border-white/30"
             >
               Cancel
             </Button>
@@ -174,3 +174,4 @@ export default function EditUserModal({
     </GlassModal>
   )
 }
+

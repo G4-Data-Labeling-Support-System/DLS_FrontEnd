@@ -64,14 +64,14 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
   if (variant === 'compact') {
     return (
       <div
-        className={`flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-white/5 hover:border-blue-500/30 transition-colors cursor-pointer group ${
+        className={`flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-gray-200 hover:border-blue-500/30 transition-colors cursor-pointer group ${
           status?.toUpperCase() === 'INACTIVE' ? 'opacity-60 grayscale-[0.5]' : ''
         }`}
         onClick={onClick}
       >
         <div className="flex justify-between items-start">
           <h4
-            className="text-white font-bold text-sm truncate pr-2"
+            className="text-[#111] font-bold text-sm truncate pr-2"
             title={assignmentName || 'Unnamed Assignment'}
           >
             {assignmentName || 'Unnamed Assignment'}
@@ -117,7 +117,7 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
         <div className="flex-1 pr-2">
           <Title
             level={5}
-            className="!text-white !m-0 !text-sm leading-tight line-clamp-1"
+            className="!text-[#111] !m-0 !text-sm leading-tight line-clamp-1"
             title={assignmentName}
           >
             {assignmentName || 'Unnamed Assignment'}
@@ -136,7 +136,7 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
             <Button
               type="text"
               className="hover:bg-gray-800"
-              icon={<MoreOutlined className="text-gray-400" />}
+              icon={<MoreOutlined className="text-gray-500" />}
             />
           </Dropdown>
         </div>
@@ -145,13 +145,14 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
       <div className="grid grid-cols-2 gap-2 bg-[#231e31] p-3 rounded-lg mt-auto">
         <div>
           <div className="text-[10px] text-gray-500 uppercase tracking-wider">Created At</div>
-          <div className="text-gray-300 text-xs font-semibold">{formatDate(createdAt)}</div>
+          <div className="text-gray-600 text-xs font-semibold">{formatDate(createdAt)}</div>
         </div>
         <div className="border-l border-gray-700 pl-2">
           <div className="text-[10px] text-gray-500 uppercase tracking-wider">Updated At</div>
-          <div className="text-gray-300 text-xs font-semibold">{formatDate(updatedAt)}</div>
+          <div className="text-gray-600 text-xs font-semibold">{formatDate(updatedAt)}</div>
         </div>
       </div>
     </Card>
   )
 }
+

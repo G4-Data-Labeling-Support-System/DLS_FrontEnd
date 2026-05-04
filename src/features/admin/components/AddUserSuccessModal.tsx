@@ -57,14 +57,14 @@ export default function AddUserSuccessModal({
           </span>
         </div>
 
-        <h2 className="text-3xl font-bold text-white mb-3 tracking-tight">
+        <h2 className="text-3xl font-bold text-[#111] mb-3 tracking-tight">
           Account Created
           <br />
           Successfully!
         </h2>
 
-        <p className="text-white/60 text-sm leading-relaxed mb-8 max-w-[90%]">
-          User <strong className="text-white font-medium">{data.name}</strong> ({data.email}) has
+        <p className="text-[#111]/60 text-sm leading-relaxed mb-8 max-w-[90%]">
+          User <strong className="text-[#111] font-medium">{data.name}</strong> ({data.email}) has
           been added to the system as an{' '}
           <span className="text-violet-500 font-medium capitalize">{data.role}</span>.
         </p>
@@ -72,7 +72,7 @@ export default function AddUserSuccessModal({
         <div className="flex flex-col w-full gap-3 z-20">
           <Button
             onClick={onClose} // "Go to User List" implies closing purely if we are already on User List, or navigation. Assuming close for now.
-            className="w-full h-12 rounded-lg bg-gradient-to-r from-[#895af6] to-[#FF0080] text-white font-bold shadow-[0_0_25px_rgba(137,90,246,0.35)] hover:shadow-[0_0_35px_rgba(137,90,246,0.5)] transition-all duration-300 hover:scale-[1.01] active:scale-[0.98] border-none"
+            className="w-full h-12 rounded-lg bg-gradient-to-r from-[#895af6] to-[#FF0080] text-[#111] font-bold shadow-[0_0_25px_rgba(137,90,246,0.35)] hover:shadow-[0_0_35px_rgba(137,90,246,0.5)] transition-all duration-300 hover:scale-[1.01] active:scale-[0.98] border-none"
           >
             Go to User List
           </Button>
@@ -98,3 +98,4 @@ export default function AddUserSuccessModal({
     </GlassModal>
   )
 }
+

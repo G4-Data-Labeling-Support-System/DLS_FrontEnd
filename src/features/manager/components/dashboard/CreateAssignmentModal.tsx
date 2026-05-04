@@ -445,11 +445,11 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
   return (
     <GlassModal open={open} onCancel={handleCancel} destroyOnHidden width={640}>
       <div className="px-8 pt-10 pb-8">
-        <div className="text-center border-b border-white/5 pb-6 mb-6">
-          <h2 className="text-white text-2xl font-bold tracking-tight mb-2 font-display">
+        <div className="text-center border-b border-gray-200 pb-6 mb-6">
+          <h2 className="text-[#111] text-2xl font-bold tracking-tight mb-2 font-display">
             {isEditMode ? 'Edit Assignment' : 'Create Assignment'}
           </h2>
-          <p className="text-white/50 text-sm">
+          <p className="text-[#111]/50 text-sm">
             {isEditMode
               ? 'Update the details of this assignment.'
               : 'Set up a new assignment for this project.'}
@@ -583,7 +583,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
               showSearch
               optionFilterProp="children"
               disabled={!effectiveProjectId}
-              suffixIcon={<SearchOutlined className="text-white/30" />}
+              suffixIcon={<SearchOutlined className="text-[#111]/30" />}
               className="dataset-select-premium"
               options={datasets.map((d: Record<string, unknown>) => ({
                 label: (d.datasetName as string) || (d.name as string),
@@ -604,10 +604,10 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
             <Input.TextArea placeholder="Enter description" rows={4} />
           </Form.Item>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
             <Button
               onClick={handleCancel}
-              className="border-white/10 text-white/70 hover:text-white hover:border-white/30"
+              className="border-gray-300 text-[#111]/70 hover:text-[#111] hover:border-white/30"
             >
               Cancel
             </Button>
@@ -663,3 +663,4 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
     </GlassModal>
   )
 }
+

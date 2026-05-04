@@ -64,11 +64,11 @@ export default function AdminDashboard() {
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
       {/* Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-white/5 pb-1 mb-2">
+      <div className="flex items-center gap-2 border-b border-gray-200 pb-1 mb-2">
         <button
           onClick={() => setActiveTab('overview')}
           className={`flex items-center gap-2 px-6 py-2 text-xs font-bold uppercase tracking-widest transition-all relative ${
-            activeTab === 'overview' ? 'text-violet-400' : 'text-gray-500 hover:text-gray-300'
+            activeTab === 'overview' ? 'text-violet-400' : 'text-gray-500 hover:text-gray-600'
           }`}
         >
           <LineChartOutlined />
@@ -78,7 +78,7 @@ export default function AdminDashboard() {
         <button
           onClick={() => setActiveTab('health')}
           className={`flex items-center gap-2 px-6 py-2 text-xs font-bold uppercase tracking-widest transition-all relative ${
-            activeTab === 'health' ? 'text-violet-400' : 'text-gray-500 hover:text-gray-300'
+            activeTab === 'health' ? 'text-violet-400' : 'text-gray-500 hover:text-gray-600'
           }`}
         >
           <CheckCircleOutlined />
@@ -88,7 +88,7 @@ export default function AdminDashboard() {
         <button
           onClick={() => setActiveTab('logs')}
           className={`flex items-center gap-2 px-6 py-2 text-xs font-bold uppercase tracking-widest transition-all relative ${
-            activeTab === 'logs' ? 'text-violet-400' : 'text-gray-500 hover:text-gray-300'
+            activeTab === 'logs' ? 'text-violet-400' : 'text-gray-500 hover:text-gray-600'
           }`}
         >
           <ExclamationCircleOutlined />
@@ -108,7 +108,7 @@ export default function AdminDashboard() {
                   <p className={`font-body text-sm font-medium ${themeClasses.text.secondary} mb-1`}>
                     Total Datasets
                   </p>
-                  <div className="text-3xl font-bold tracking-tight text-white">
+                  <div className="text-3xl font-bold tracking-tight text-[#111]">
                     {isLoadingDatasets ? <Spin size="small" /> : totalDatasets}
                   </div>
                 </div>
@@ -126,7 +126,7 @@ export default function AdminDashboard() {
                     Total Tasks / Items
                   </p>
                   <div className="flex items-baseline gap-2">
-                    <div className="text-3xl font-bold tracking-tight text-white">
+                    <div className="text-3xl font-bold tracking-tight text-[#111]">
                       {isLoadingAssignments ? <Spin size="small" /> : totalTasks}
                     </div>
                     <span className={`text-lg ${themeClasses.text.tertiary} font-medium`}>
@@ -181,7 +181,7 @@ export default function AdminDashboard() {
                   <p className={`font-body text-sm font-medium ${themeClasses.text.secondary} mb-1`}>
                     Active Labelers
                   </p>
-                  <div className="text-3xl font-bold tracking-tight text-white">
+                  <div className="text-3xl font-bold tracking-tight text-[#111]">
                     {isLoadingUsers ? <Spin size="small" /> : activeLabelers}
                   </div>
                 </div>
@@ -215,7 +215,7 @@ export default function AdminDashboard() {
             <div className="grid gap-5 lg:grid-cols-4">
               <div className={`${themeClasses.cards.glass} lg:col-span-3 p-6 flex flex-col gap-4 overflow-hidden`}>
                 <div className="flex justify-between items-center mb-2">
-                  <h4 className="font-bold text-gray-200 uppercase tracking-widest text-xs">Task Pipeline Status</h4>
+                  <h4 className="font-bold text-gray-700 uppercase tracking-widest text-xs">Task Pipeline Status</h4>
                 </div>
                 
                 <div className="flex items-center justify-between gap-2 overflow-x-auto pb-4 custom-scrollbar">
@@ -225,7 +225,7 @@ export default function AdminDashboard() {
                       const s = getTaskStatus(a)
                       return !s || s === 'NOT_STARTED' || s === 'CREATED'
                     }).length}
-                    color="text-gray-400"
+                    color="text-gray-500"
                     bgColor="bg-gray-500/10"
                     borderColor="border-gray-500/20"
                     icon={<ClockCircleOutlined />}
@@ -271,7 +271,7 @@ export default function AdminDashboard() {
               </div>
 
               <div className={`${themeClasses.cards.glass} p-6 flex flex-col gap-4`}>
-                <h4 className="font-bold text-gray-200 uppercase tracking-widest text-xs mb-2">Tasks by Dataset</h4>
+                <h4 className="font-bold text-gray-700 uppercase tracking-widest text-xs mb-2">Tasks by Dataset</h4>
                 <div className="flex flex-col gap-4">
                   {(() => {
                     const dsMap: Record<string, number> = {}
@@ -286,7 +286,7 @@ export default function AdminDashboard() {
                     return sortedDs.map(([name, count]) => (
                       <div key={name} className="flex flex-col gap-1.5">
                         <div className="flex justify-between items-center text-xs">
-                          <span className="text-gray-300 truncate pr-2">{name}</span>
+                          <span className="text-gray-600 truncate pr-2">{name}</span>
                           <span className="text-fuchsia-400 font-bold">{count}</span>
                         </div>
                         <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
@@ -309,7 +309,7 @@ export default function AdminDashboard() {
           </div>
           <div className="lg:col-span-4 flex flex-col gap-6">
             <div className={`${themeClasses.cards.glass} p-6`}>
-              <h4 className="text-sm font-bold text-gray-200 uppercase tracking-widest mb-4">Monitoring Info</h4>
+              <h4 className="text-sm font-bold text-gray-700 uppercase tracking-widest mb-4">Monitoring Info</h4>
               <p className="text-xs text-gray-500 leading-relaxed mb-4">
                 Activity logs track system-wide events including logins, submissions, and status changes.
               </p>
@@ -336,8 +336,8 @@ function PipelineStep({ title, count, color, bgColor, borderColor, icon, alert }
       )}
       <div className={`text-xl ${color}`}>{icon}</div>
       <div className="flex flex-col items-center">
-        <span className="text-2xl font-black text-white">{count}</span>
-        <span className="text-[8px] font-black uppercase tracking-wider text-gray-400">{title}</span>
+        <span className="text-2xl font-black text-[#111]">{count}</span>
+        <span className="text-[8px] font-black uppercase tracking-wider text-gray-500">{title}</span>
       </div>
     </div>
   )
@@ -345,7 +345,7 @@ function PipelineStep({ title, count, color, bgColor, borderColor, icon, alert }
 
 function PipelineArrow() {
   return (
-    <div className="flex items-center justify-center opacity-30 text-white shrink-0">
+    <div className="flex items-center justify-center opacity-30 text-[#111] shrink-0">
       <LineChartOutlined className="rotate-90 text-[12px]" />
     </div>
   )
