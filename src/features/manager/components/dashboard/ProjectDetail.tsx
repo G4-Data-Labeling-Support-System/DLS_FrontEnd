@@ -421,14 +421,14 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({
               name="title"
               rules={[{ required: true, message: 'Please enter title' }]}
             >
-              <Input placeholder="Enter guideline title" className="bg-[#1A1625] border-gray-700 text-white hover:border-violet-500 focus:border-violet-500 rounded-lg px-3 py-2" />
+              <Input placeholder="Enter guideline title" className="!bg-[#1a1625] !border-white/10 !text-white placeholder:!text-gray-600 focus:!border-violet-500 hover:!border-violet-500/50" />
             </Form.Item>
             <Form.Item
               label={<span className="text-gray-300 font-medium tracking-wide">Content</span>}
               name="content"
               rules={[{ required: true, message: 'Please enter content' }]}
             >
-              <Input.TextArea placeholder="Enter guideline content" rows={5} className="bg-[#1A1625] border-gray-700 text-white hover:border-violet-500 focus:border-violet-500 rounded-lg p-3 custom-scrollbar" />
+              <Input.TextArea placeholder="Enter guideline content" rows={5} className="!bg-[#1a1625] !border-white/10 !text-white placeholder:!text-gray-600 resize-none focus:!border-violet-500 hover:!border-violet-500/50 custom-scrollbar" />
             </Form.Item>
             <div className="flex justify-end gap-3 pt-6 border-t border-white/5 mt-6">
               <Button

@@ -197,7 +197,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
               <div className="space-y-6">
                 <Form.Item
                   name="projectName"
-                  label="Project Name"
+                  label={<span className="text-gray-300 font-medium tracking-wide">Project Name</span>}
                   rules={[{ required: true, message: 'Please enter project name' }]}
                 >
                   <Input
@@ -206,7 +206,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                   />
                 </Form.Item>
 
-                <Form.Item name="description" label="Description">
+                <Form.Item name="description" label={<span className="text-gray-300 font-medium tracking-wide">Description</span>}>
                   <Input.TextArea
                     rows={6}
                     placeholder="Briefly describe the goals and scope of this project..."
@@ -229,7 +229,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
               <div className="space-y-6">
                 <Form.Item
                   name="guidelineTitle"
-                  label="Guideline Title"
+                  label={<span className="text-gray-300 font-medium tracking-wide">Guideline Title</span>}
                   rules={[{ required: true, message: 'Please enter guideline title' }]}
                 >
                   <Input
@@ -240,18 +240,18 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
 
                 <Form.Item
                   name="guidelineContent"
-                  label="Guideline Content"
+                  label={<span className="text-gray-300 font-medium tracking-wide">Guideline Content</span>}
                   rules={[{ required: true, message: 'Please enter guideline content' }]}
                 >
                   <Input.TextArea
-                    rows={8}
+                    rows={6}
                     placeholder="Write your guideline content here..."
                     className="!bg-[#1a1625] !border-white/10 !text-white placeholder:!text-gray-600 resize-none focus:!border-violet-500 hover:!border-violet-500/50"
                   />
                 </Form.Item>
 
-                <div className="p-4 rounded-xl bg-gradient-to-br from-fuchsia-500/10 to-violet-500/5 border border-fuchsia-500/20">
-                  <h4 className="text-fuchsia-300 font-bold text-xs uppercase tracking-wider mb-2">
+                <div className="p-4 rounded-xl bg-gradient-to-br from-violet-500/10 to-fuchsia-500/5 border border-violet-500/20">
+                  <h4 className="text-violet-300 font-bold text-xs uppercase tracking-wider mb-2">
                     Requirements Tip
                   </h4>
                   <p className="text-gray-400 text-xs leading-relaxed m-0">
@@ -291,7 +291,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                   type="primary"
                   loading={loading}
                   onClick={handleSubmit}
-                  className="bg-fuchsia-600 hover:bg-fuchsia-500 border-none px-8 shadow-[0_0_15px_rgba(192,38,211,0.3)]"
+                  className="bg-violet-600 hover:bg-violet-500 border-none px-8 shadow-md"
                 >
                   {editId ? 'Update project' : 'Complete Setup'}
                 </Button>
