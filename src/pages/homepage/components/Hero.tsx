@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 
 export default function Hero() {
   return (
-    <section className="flex flex-col lg:flex-row justify-between w-full gap-12 mt-10">
+    <section className="flex flex-col lg:flex-row items-center justify-between w-full gap-12 mt-10">
       {/* Left Content */}
       <div className="w-full lg:w-1/2 flex flex-col items-start text-left z-10">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#111] text-white text-xs font-bold tracking-wider mb-8">
@@ -21,29 +21,22 @@ export default function Hero() {
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4">
-          <button className="px-6 py-3.5 bg-[#111] text-white rounded-full font-semibold text-lg flex items-center gap-3 hover:bg-gray-800 transition-transform hover:scale-105 active:scale-95 shadow-xl">
+          <Link to="/price" className="px-6 py-3.5 bg-[#111]! text-white! rounded-full font-semibold text-lg flex items-center gap-3 hover:bg-gray-800 transition-transform! hover:scale-105 active:scale-95 shadow-xl">
             See Pricing
             <span className="flex items-center justify-center w-6 h-6 rounded-full bg-red-600">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </span>
-          </button>
+          </Link>
 
           <Link
             to="/login"
-            className="px-6 py-3.5 bg-[#e5e5e5] text-[#111] rounded-full font-semibold text-lg flex items-center gap-3 hover:bg-[#d5d5d5] transition-transform hover:scale-105 active:scale-95"
+            className="px-6 py-3.5 bg-[#e5e5e5]! text-[#111]! rounded-full font-semibold text-lg flex items-center gap-3 hover:bg-[#d5d5d5] transition-transform! hover:scale-105 active:scale-95"
           >
             Login
             <span className="flex items-center justify-center w-6 h-6 rounded-full bg-red-600 text-white">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </span>
           </Link>
-          
-          <button className="px-6 py-3.5 bg-[#e5e5e5] text-[#111] rounded-full font-semibold text-lg flex items-center gap-3 hover:bg-[#d5d5d5] transition-transform hover:scale-105 active:scale-95">
-            Get in Touch
-            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-red-600 text-white">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </span>
-          </button>
         </div>
       </div>
 
