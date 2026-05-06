@@ -1,6 +1,6 @@
 import { useAuth } from '@/features/auth/hooks'
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/shared/components/ui/Button' // Assuming this is still used or replaced later
 import type { User } from '@/shared/types/api.types'
 import type { AxiosError } from 'axios'
@@ -79,20 +79,20 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen bg-[#f1f1f1] text-[#111] overflow-hidden font-sans">
-      
+
       {/* Left Column - Form */}
       <div className="w-full lg:w-1/2 flex flex-col relative p-8 lg:p-16">
-        
+
         {/* Top Logo */}
-        <div className="flex items-center gap-3 absolute top-8 left-8 lg:left-12">
+        <Link to={"/"} className="flex items-center gap-3 absolute top-8 left-8 lg:left-12">
           <img src="/logo.svg" alt="Logo" className="w-8 h-8" />
           <span className="text-xl font-bold tracking-tight text-[#111]">Annotationary</span>
-        </div>
+        </Link>
 
         {/* Center Content */}
         <div className="flex-1 flex items-center justify-center">
           <div className="w-full max-w-[360px] flex flex-col items-center">
-            
+
             {/* Headers */}
             <div className="text-center mb-10">
               <h1 className="text-2xl font-bold tracking-tight text-[#111] mb-1">
@@ -118,9 +118,9 @@ export default function LoginPage() {
                   render={({ field }) => (
                     <FormItem className="mb-4">
                       <FormControl>
-                        <Input 
-                          placeholder="Enter your email" 
-                          {...field} 
+                        <Input
+                          placeholder="Enter your email"
+                          {...field}
                           className="h-[52px] bg-[#e5e5e5] hover:bg-[#dcdcdc] focus:bg-[#dcdcdc] border-transparent focus:border-transparent rounded-xl px-4 text-sm text-[#111] placeholder:text-[#888] placeholder:font-medium transition-colors"
                         />
                       </FormControl>
@@ -135,10 +135,10 @@ export default function LoginPage() {
                   render={({ field }) => (
                     <FormItem className="mb-8">
                       <FormControl>
-                        <Input 
+                        <Input
                           type="password"
-                          placeholder="Enter your password" 
-                          {...field} 
+                          placeholder="Enter your password"
+                          {...field}
                           className="h-[52px] bg-[#e5e5e5] hover:bg-[#dcdcdc] focus:bg-[#dcdcdc] border-transparent focus:border-transparent rounded-xl px-4 text-sm text-[#111] placeholder:text-[#888] placeholder:font-medium transition-colors"
                         />
                       </FormControl>
@@ -150,35 +150,46 @@ export default function LoginPage() {
                 <Button
                   type="submit"
                   isLoading={isLoading}
-                  className="w-full h-[52px] px-4 bg-[#111] text-white rounded-xl font-semibold hover:bg-black transition-colors"
+                  className="w-full h-[52px] px-4 bg-[#111] text-white rounded-xl font-semibold hover:bg-black transition-colors cursor-pointer"
                 >
                   {isLoading ? 'Loading...' : 'Continue'}
                 </Button>
               </form>
             </Form>
-            
+
           </div>
         </div>
       </div>
 
       {/* Right Column - Decorative Grid */}
-      <div className="hidden lg:flex w-1/2 p-6 items-center justify-center h-screen">
-        <div className="w-full h-full max-h-[900px] grid grid-cols-2 gap-4 lg:gap-6 pr-6">
-          
-          {/* Left Column of Grid */}
-          <div className="flex flex-col gap-4 lg:gap-6 pt-12">
-            <div className="bg-[#e0e0e0] rounded-[24px] w-full aspect-square"></div>
-            <div className="bg-[#e0e0e0] rounded-[24px] w-full aspect-[4/5]"></div>
-            <div className="bg-[#e0e0e0] rounded-[24px] w-full aspect-[4/3]"></div>
+      <div className="hidden lg:flex p-6 items-center justify-center h-screen">
+        <div className="w-full h-full max-h-175 grid grid-cols-2 gap-4 lg:gap-6 pr-6">
+
+          <div className="flex flex-col gap-4 lg:gap-6 animate-float">
+            {/* Top Left Image */}
+            <div className="rounded-3xl overflow-hidden shadow-2xl transform transition-transform hover:-translate-y-2 hover:shadow-3xl duration-500 ease-out">
+              <img src="/formix/poster_mockup_1777871044361.png" alt="Branding Paper" className="w-full h-95 object-cover" />
+            </div>
+            {/* Bottom Left Image (Box) */}
+            <div className="rounded-3xl overflow-hidden shadow-2xl transform transition-transform hover:-translate-y-2 hover:shadow-3xl duration-500 ease-out">
+              <img src="/formix/box_mockup_1777871271242.png" alt="Box Mockup" className="w-full h-70 object-cover" />
+            </div>
           </div>
 
-          {/* Right Column of Grid */}
-          <div className="flex flex-col gap-4 lg:gap-6 pb-12">
-            <div className="bg-[#e0e0e0] rounded-[24px] w-full aspect-[4/5]"></div>
-            <div className="bg-[#e0e0e0] rounded-[24px] w-full aspect-[4/5]"></div>
-            <div className="bg-[#e0e0e0] rounded-[24px] w-full aspect-square"></div>
+          <div className="flex flex-col gap-4 lg:gap-6 animate-float-delayed">
+            {/* Top Right Image (Macbook) */}
+            <div className="rounded-3xl overflow-hidden shadow-2xl transform transition-transform hover:-translate-y-2 hover:shadow-3xl duration-500 ease-out">
+              <img src="/formix/macbook_mockup_1777871225581.png" alt="Macbook Pro" className="w-full h-70 object-cover" />
+            </div>
+            {/* Bottom Right Image (iPhone) */}
+            <div className="rounded-3xl overflow-hidden shadow-2xl transform transition-transform hover:-translate-y-2 hover:shadow-3xl duration-500 ease-out">
+              <img src="/formix/iphone_mockup_1777871095631.png" alt="iPhone 16" className="w-full h-95 object-cover" />
+            </div>
           </div>
-          
+
+          {/* Subtle decorative glow */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-gradient-to-tr from-gray-200 to-transparent rounded-full blur-[100px] -z-10 mix-blend-multiply opacity-50"></div>
+
         </div>
       </div>
 

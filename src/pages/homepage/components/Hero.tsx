@@ -32,7 +32,7 @@ export default function Hero() {
             to="/login"
             className="px-6 py-3.5 bg-[#e5e5e5]! text-[#111]! rounded-full font-semibold text-lg flex items-center gap-3 hover:bg-[#d5d5d5] transition-transform! hover:scale-105 active:scale-95"
           >
-            Login
+            Get started
             <span className="flex items-center justify-center w-6 h-6 rounded-full bg-red-600 text-white">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </span>
