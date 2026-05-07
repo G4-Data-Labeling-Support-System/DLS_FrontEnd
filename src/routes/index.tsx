@@ -4,8 +4,8 @@ import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { PATH_ANNOTATOR, PATH_MANAGER } from './paths'
 import ManagerLayout from '@/components/layout/ManagerLayout'
 import { GuestGuard, RoleGuard } from './guards'
-import { Header } from '@/components/common/Header'
-import { LazyPage } from '@/components/common/LazyPage'
+import { Header } from '@/components/layout/Header'
+import { LazyPage } from '@/components/layout/LazyPage'
 import { Layout } from 'antd'
 // import ReviewerDashboardPage from '@/pages/reviewer/ReviewerDashboardPage'
 
@@ -97,7 +97,7 @@ export const router = createBrowserRouter([
         >
           <Layout className={`min-h-screen bg-[#0f0e17]`} style={{ background: '#0f0e17' }}>
             <Header />
-            <Layout.Content className="w-full max-w-[1600px] mx-auto p-6 overflow-auto bg-transparent">
+            <Layout.Content className="w-full max-w-400 mx-auto p-6 overflow-auto bg-transparent">
               <ProfilePage />
             </Layout.Content>
           </Layout>

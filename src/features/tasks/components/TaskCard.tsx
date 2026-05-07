@@ -3,35 +3,32 @@ import { useNavigate } from 'react-router-dom'
 import getTaskStatusStyle, {
   getAnnotationStatusLabel,
   getAnnotationStatusStyle
-} from './StatusStyle'
+} from '../utils/StatusStyle'
 import { useTaskDetail } from '@/features/annotator/hooks/useTaskDetail'
 import annotationApi from '@/services/annotation'
+import type { Task } from '../types'
 
-interface Task {
-  id: string
-  taskStatus?: string
-  status?: string
-  name?: string
-  filename?: string
-  annotationStatus?: string
-  completedItems?: number
-  totalItems?: number
-  reviewStatus?: string
-  [key: string]: string | number | boolean | undefined | object | null
+
+interface TaskCardProps {
+  task: Task
+  assignmentId?: string
+  role?: 'annotator' | 'reviewer'
 }
 
-export default function TaskCard({ task, assignmentId }: { task: Task; assignmentId?: string }) {
+export default function TaskCard({ task, assignmentId, role = 'annotator' }: TaskCardProps) {
   const navigate = useNavigate()
-  if (!task.id) return null // Guard against missing ID
-  const taskStatus = task.taskStatus || task.status || task.reviewStatus || 'NOT_STARTED'
+  if (!task.id) return null
+  
+  const taskStatus = (task.taskStatus || task.status || task.reviewStatus || 'NOT_STARTED').toUpperCase()
   const taskName = task.name || task.filename || 'Untitled Task'
 
+  // Annotator-specific logic for progress tracking
   const { data: dataItems = [] } = useTaskDetail(task.id)
   const [sessionAnnotations, setSessionAnnotations] = useState<any[]>([])
   const [remoteStatuses, setRemoteStatuses] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    if (task.id) {
+    if (role === 'annotator' && task.id) {
       const saved = localStorage.getItem(`annotation_session_${task.id}`)
       if (saved) {
         try {
@@ -39,26 +36,29 @@ export default function TaskCard({ task, assignmentId }: { task: Task; assignmen
         } catch (e) {}
       }
     }
-  }, [task.id])
+  }, [task.id, role])
 
   useEffect(() => {
-    if (dataItems.length === 0) return
-    dataItems.forEach(async (item: any) => {
-      const id = item.dataItemId || item.dataitemId || item.itemId || item.dataItem?.itemId || item.id
-      if (!id) return
-      try {
-        const res = await annotationApi.getAnnotationByDataItemId(id)
-        const remoteAnno = res.data?.data || res.data
-        if (remoteAnno && (remoteAnno.annotationStatus || remoteAnno.annotation_status || remoteAnno.status)) {
-          const status = (remoteAnno.annotationStatus || remoteAnno.annotation_status || remoteAnno.status).toUpperCase()
-          setRemoteStatuses(prev => ({ ...prev, [id]: status }))
-        }
-      } catch (err) {}
-    })
-  }, [dataItems])
+    if (role === 'annotator' && dataItems.length > 0) {
+      dataItems.forEach(async (item: any) => {
+        const id = item.dataItemId || item.dataitemId || item.itemId || item.dataItem?.itemId || item.id
+        if (!id) return
+        try {
+          const res = await annotationApi.getAnnotationByDataItemId(id)
+          const remoteAnno = res.data?.data || res.data
+          if (remoteAnno && (remoteAnno.annotationStatus || remoteAnno.annotation_status || remoteAnno.status)) {
+            const status = (remoteAnno.annotationStatus || remoteAnno.annotation_status || remoteAnno.status).toUpperCase()
+            setRemoteStatuses(prev => ({ ...prev, [id]: status }))
+          }
+        } catch (err) {}
+      })
+    }
+  }, [dataItems, role])
 
   const getAnnotatedCount = () => {
-    if (!dataItems.length) return task.completedItems ?? 0
+    if (role === 'reviewer') return Number(task.completedItems ?? 0)
+    
+    if (!dataItems.length) return Number(task.completedItems ?? 0)
     const annotatedIds = new Set<string>()
 
     dataItems.forEach((item: any) => {
@@ -81,32 +81,39 @@ export default function TaskCard({ task, assignmentId }: { task: Task; assignmen
   }
 
   const completed = getAnnotatedCount()
-  const total = dataItems.length > 0 ? dataItems.length : (task.totalItems ?? 0)
+  const total = dataItems.length > 0 ? dataItems.length : Number(task.totalItems ?? 0)
   const progress = total > 0 ? Math.round((completed / total) * 100) : 0
 
   const statusStyle = getTaskStatusStyle(taskStatus)
   const annotationLabel = getAnnotationStatusLabel(task.annotationStatus || '')
   const annotationStyle = getAnnotationStatusStyle(task.annotationStatus || '')
 
+  const handleNavigate = () => {
+    const path = role === 'reviewer' ? `/reviewer/task/${task.id}` : `/annotator/task/${task.id}`
+    navigate(path, { state: { assignmentId } })
+  }
+
   return (
     <div
-      onClick={() => navigate(`/annotator/task/${task.id}`, { state: { assignmentId } })}
+      onClick={handleNavigate}
       className="relative group rounded-xl p-5 cursor-pointer overflow-hidden bg-[#1A1625]/60 backdrop-blur-md border border-gray-200 hover:border-violet-500/50 hover:bg-[#1A1625]/80 hover:shadow-[0_0_20px_rgba(139,92,246,0.15)] transition-all duration-300 shadow-xl"
     >
       {/* Top row: status info */}
       <div className="mb-3">
         <div className="flex items-center gap-1.5 text-[11px] text-gray-600 mb-0.5">
-          <span className="font-semibold text-gray-500">Task_Status:</span>
+          <span className="font-semibold text-gray-500">Status:</span>
           <span
             className={`font-semibold ${statusStyle.badge.includes('emerald') ? 'text-emerald-400' : statusStyle.badge.includes('amber') ? 'text-amber-400' : statusStyle.badge.includes('violet') ? 'text-violet-400' : 'text-gray-500'}`}
           >
             {taskStatus}
           </span>
         </div>
-        <div className="flex items-center gap-1.5 text-[11px] text-gray-600">
-          <span className="font-semibold text-gray-500">Annotation_Status:</span>
-          <span className={`font-semibold ${annotationStyle}`}>{annotationLabel}</span>
-        </div>
+        {role === 'annotator' && (
+          <div className="flex items-center gap-1.5 text-[11px] text-gray-600">
+            <span className="font-semibold text-gray-500">Annotation:</span>
+            <span className={`font-semibold ${annotationStyle}`}>{annotationLabel}</span>
+          </div>
+        )}
       </div>
 
       {/* Divider */}
@@ -114,9 +121,9 @@ export default function TaskCard({ task, assignmentId }: { task: Task; assignmen
 
       {/* Task name + action */}
       <div className="flex items-center justify-between mb-3">
-        <h4 className="text-base font-bold text-[#111]">{taskName}</h4>
+        <h4 className="text-base font-bold text-[#111] line-clamp-1">{taskName}</h4>
         <button className="flex items-center gap-1 text-[10px] font-bold text-violet-300 hover:text-[#111] transition-colors opacity-0 group-hover:opacity-100">
-          <span>Open</span>
+          <span>{role === 'reviewer' ? 'Review' : 'Open'}</span>
           <span className="material-symbols-outlined text-[13px]">arrow_forward</span>
         </button>
       </div>
@@ -138,8 +145,7 @@ export default function TaskCard({ task, assignmentId }: { task: Task; assignmen
       </div>
 
       {/* Corner accent */}
-      <div className="absolute bottom-0 right-0 w-12 h-12 bg-violet-500/5 rounded-tl-full pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-12 h-12 bg-violet-500/5 rounded-tl-full pointer-events-none group-hover:bg-violet-500/10 transition-colors" />
     </div>
   )
 }
-

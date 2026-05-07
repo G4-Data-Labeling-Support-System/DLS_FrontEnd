@@ -1,6 +1,5 @@
-import Hero from '@/pages/homepage/components/Hero'
-import Navbar from '@/pages/homepage/components/Navbar'
-import Services from '@/pages/homepage/components/Services'
+import { Hero, Navbar, Services } from '@/features/landing-page'
+
 
 export default function HomePage() {
   return (

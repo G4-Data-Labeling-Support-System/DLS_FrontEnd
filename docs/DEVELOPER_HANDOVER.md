@@ -247,7 +247,7 @@ src/
 '@/store'     → './src/store'
 '@/shared'    → './src/shared'
 '@/features'  → './src/features'
-'@/lib'       → './src/lib'
+'@/utils'       → './src/lib'
 '@/routes'    → './src/routes'
 '@/pages'     → './src/pages'
 '@/components'→ './src/components'

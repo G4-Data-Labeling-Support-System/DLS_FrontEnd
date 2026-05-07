@@ -5,8 +5,9 @@ import { ArrowLeftOutlined, LoadingOutlined } from '@ant-design/icons'
 
 import assignmentApi from '@/services/AssignmentApi'
 import taskApi from '@/services/TaskApi'
-import { TasksSection } from '@/features/annotator'
+import { TasksSection } from '@/features/tasks'
 import AnnotatorDatasetDetailPage from '@/pages/annotator/AnnotatorDatasetDetailPage'
+
 
 interface AssignmentTask {
   id: string
@@ -345,7 +346,9 @@ export default function AnnotatorAssignmentDetailPage() {
           <TasksSection
             tasks={assignment.tasks}
             assignmentId={assignment.id}
+            role="annotator"
           />
+
         </div>
       </div>
     </div>

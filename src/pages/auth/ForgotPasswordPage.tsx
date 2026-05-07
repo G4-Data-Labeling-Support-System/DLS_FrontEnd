@@ -1,7 +1,7 @@
 import { Button } from '@/shared/components/ui/Button'
 import { MailOutlined } from '@ant-design/icons'
 import { Form, Input } from 'antd'
-import { BrandLogo } from '@/components/common/BrandLogo'
+import { BrandLogo } from '@/components/layout/BrandLogo'
 import { themeClasses } from '@/styles'
 
 export default function ForgotPasswordPage() {

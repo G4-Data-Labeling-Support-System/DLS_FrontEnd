@@ -1,42 +1,29 @@
-import { useState, useMemo } from 'react'
-import ReviewerTaskCard from './ReviewerTaskCard'
-import { Empty, Button, Input } from 'antd'
-import { SearchOutlined, FilterOutlined } from '@ant-design/icons'
+import { useState, useMemo, useEffect } from 'react'
+import TaskCard from './TaskCard'
+import type { Task } from '../types'
 
-export interface Task {
-  id: string
-  taskId?: string
-  assignmentId?: string
-  batchId?: string
-  batchLabel: string
-  taskName?: string
-  name?: string
-  filename?: string
-  taskStatus?: string
-  status?: string
-  annotationStatus?: string
-  completedItems?: number
-  totalItems?: number
-  reviewStatus?: string
-  [key: string]: string | number | boolean | undefined | object | null
-}
 
-interface ReviewerTasksSectionProps {
+interface TasksSectionProps {
   tasks?: Task[]
   assignmentId?: string
+  role?: 'annotator' | 'reviewer'
+  title?: string
 }
 
-export default function ReviewerTasksSection({
+export default function TasksSection({
   tasks: initialTasks = [],
-  assignmentId
-}: ReviewerTasksSectionProps) {
+  assignmentId,
+  role = 'annotator',
+  title = 'Tasks'
+}: TasksSectionProps) {
+  const [tasks, setTasks] = useState<Task[]>(initialTasks)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 6
 
-  const mappedTasks = useMemo(() => {
-    return initialTasks.map((t: Record<string, unknown>, idx: number) => {
+  useEffect(() => {
+    const mappedTasks: Task[] = initialTasks.map((t: any, idx: number) => {
       let status = String(t.task_status || t.taskStatus || t.status || t.reviewStatus || 'PENDING').toUpperCase()
       if (status === 'NOT_STARTED') status = 'PENDING'
 
@@ -55,14 +42,20 @@ export default function ReviewerTasksSection({
         taskStatus: status,
         completedItems,
         totalItems
-      } as Task
+      }
     })
+    setTasks(mappedTasks)
   }, [initialTasks])
 
   const filteredTasks = useMemo(() => {
-    const filtered = mappedTasks.filter((task) => {
+    const filtered = tasks.filter((task) => {
       const name = (task.name || task.filename || '').toLowerCase()
-      const taskStatus = (task.taskStatus || 'PENDING').toUpperCase()
+      const taskStatus = (
+        task.taskStatus ||
+        task.status ||
+        task.reviewStatus ||
+        'PENDING'
+      ).toUpperCase()
       const matchesSearch = name.includes(searchTerm.toLowerCase())
       const matchesStatus = statusFilter === 'ALL' || taskStatus === statusFilter
       return matchesSearch && matchesStatus
@@ -79,7 +72,7 @@ export default function ReviewerTasksSection({
       }
       return aName.localeCompare(bName, undefined, { numeric: true, sensitivity: 'base' })
     })
-  }, [mappedTasks, searchTerm, statusFilter])
+  }, [tasks, searchTerm, statusFilter])
 
   const totalPages = Math.ceil(filteredTasks.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
@@ -94,12 +87,18 @@ export default function ReviewerTasksSection({
     }, {})
   }, [paginatedTasks])
 
-  const availableStatuses = ['ALL', 'PENDING', 'IN_PROGRESS', 'IN_REVIEW', 'APPROVED', 'REJECTED']
+  const availableStatuses = role === 'reviewer' 
+    ? ['ALL', 'PENDING', 'IN_PROGRESS', 'IN_REVIEW', 'APPROVED', 'REJECTED']
+    : ['ALL', 'PENDING', 'IN_PROGRESS', 'COMPLETED']
 
-  if (!mappedTasks || mappedTasks.length === 0) {
+  if (!tasks || tasks.length === 0) {
     return (
       <div className="w-full py-10 text-center glass-panel rounded-2xl border border-gray-200">
-        <Empty description={<span className="text-gray-500">No tasks available for review.</span>} />
+        <span className="material-symbols-outlined text-gray-500 text-4xl mb-4">folder_open</span>
+        <h3 className="text-xl font-bold text-gray-500 mb-2">No Tasks Found</h3>
+        <p className="text-sm text-gray-500 max-w-md mx-auto">
+          There are currently no tasks available.
+        </p>
       </div>
     )
   }
@@ -109,18 +108,20 @@ export default function ReviewerTasksSection({
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
-             <FilterOutlined className="text-violet-400" />
+            <span className="material-symbols-outlined text-[20px] text-violet-400">
+              grid_view
+            </span>
           </div>
           <div>
-            <h2 className="text-xl font-bold text-[#111] tracking-tight">Tasks for Review</h2>
+            <h2 className="text-xl font-bold text-[#111] tracking-tight">{title}</h2>
             <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">
-              {filteredTasks.length} tasks matched
+              {filteredTasks.length} of {tasks.length} tasks matched
             </span>
           </div>
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-4">
-          <div className="flex p-1 bg-white/5 rounded-xl border border-gray-200 overflow-x-auto no-scrollbar">
+          <div className="flex p-1 bg-white/5 rounded-xl border border-gray-200 w-full sm:w-auto overflow-x-auto no-scrollbar">
             {availableStatuses.map((status) => (
               <button
                 key={status}
@@ -139,25 +140,40 @@ export default function ReviewerTasksSection({
             ))}
           </div>
 
-          <Input
-            placeholder="Search tasks..."
-            prefix={<SearchOutlined className="text-gray-500" />}
-            className="bg-white/5 border-gray-300 text-[#111] rounded-xl w-full sm:w-64"
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value)
-              setCurrentPage(1)
-            }}
-          />
+          <div className="relative group w-full sm:w-64">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-gray-500 group-focus-within:text-violet-400 transition-colors">
+              search
+            </span>
+            <input
+              type="text"
+              placeholder="Search tasks..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value)
+                setCurrentPage(1)
+              }}
+              className="w-full bg-white/5 border border-gray-300 rounded-xl py-2 pl-10 pr-4 text-sm text-[#111] focus:outline-none focus:border-violet-500/50 transition-all"
+            />
+          </div>
         </div>
       </div>
 
       {filteredTasks.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center py-20 text-center glass-panel rounded-2xl border border-gray-200">
-          <p className="text-gray-500">No tasks found matching your filters.</p>
-          <Button type="link" onClick={() => { setSearchTerm(''); setStatusFilter('ALL'); }}>
-            Clear Filters
-          </Button>
+          <span className="material-symbols-outlined text-gray-600 text-5xl mb-4 opacity-20">
+            manage_search
+          </span>
+          <p className="text-gray-500 text-base font-medium">No tasks found</p>
+          <button
+            onClick={() => {
+              setSearchTerm('')
+              setStatusFilter('ALL')
+              setCurrentPage(1)
+            }}
+            className="mt-6 text-violet-400 text-xs font-bold hover:text-violet-300 underline underline-offset-4"
+          >
+            Clear all filters
+          </button>
         </div>
       ) : (
         <div className="flex flex-col gap-8 flex-1">
@@ -172,10 +188,11 @@ export default function ReviewerTasksSection({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {batchTasks.map((task, idx) => (
-                  <ReviewerTaskCard
+                  <TaskCard
                     key={`${batchLabel}-${task.id}-${idx}`}
                     task={task}
                     assignmentId={assignmentId}
+                    role={role}
                   />
                 ))}
               </div>
@@ -195,27 +212,30 @@ export default function ReviewerTasksSection({
           </div>
 
           <div className="flex items-center gap-2">
-            <Button
-              disabled={currentPage === 1}
+            <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              className="rounded-xl"
+              disabled={currentPage === 1}
+              className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 border border-gray-300 text-gray-500 hover:text-[#111] disabled:opacity-20 transition-all"
             >
-              Previous
-            </Button>
-            <div className="px-4 py-1.5 bg-white/5 border border-gray-200 rounded-xl text-sm text-violet-400 font-bold">
-              {currentPage} / {totalPages}
+              <span className="material-symbols-outlined text-[20px]">chevron_left</span>
+            </button>
+
+            <div className="flex items-center gap-1.5 px-4 h-9 bg-white/5 border border-gray-200 rounded-xl">
+              <span className="text-sm font-bold text-violet-400">{currentPage}</span>
+              <span className="text-xs text-gray-600">/</span>
+              <span className="text-xs text-gray-500">{totalPages}</span>
             </div>
-            <Button
-              disabled={currentPage === totalPages}
+
+            <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              className="rounded-xl"
+              disabled={currentPage === totalPages}
+              className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 border border-gray-300 text-gray-500 hover:text-[#111] disabled:opacity-20 transition-all"
             >
-              Next
-            </Button>
+              <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+            </button>
           </div>
         </div>
       )}
     </div>
   )
 }
-

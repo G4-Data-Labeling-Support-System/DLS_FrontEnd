@@ -1,5 +1,5 @@
 // API Clients
-import { API_BASE_URL, createApiClient, getStoredToken, handleUnauthorized } from '@/lib/axios'
+import { API_BASE_URL, createApiClient, getStoredToken, handleUnauthorized } from '@/utils/axios'
 
 /**
  * Public Auth Client - Cho các API authentication không cần token (Login, Register...)

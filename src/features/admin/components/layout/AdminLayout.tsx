@@ -1,7 +1,7 @@
 import { Layout, ConfigProvider } from 'antd'
 import { Outlet } from 'react-router-dom'
 import { Sidebar } from '@/pages/admin/components/Sidebar'
-import { Header } from '@/components/common/Header'
+import { Header } from '@/components/layout/Header'
 import { themeClasses } from '@/styles'
 import { adminTheme } from '@/styles/themeConfig'
 

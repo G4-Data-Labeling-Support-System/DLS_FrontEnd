@@ -1,4 +1,4 @@
-import axiosClient from '@/lib/axios'
+import axiosClient from '@/utils/axios'
 import { ENDPOINTS } from './endpoints'
 
 interface GetAssignmentsParams {

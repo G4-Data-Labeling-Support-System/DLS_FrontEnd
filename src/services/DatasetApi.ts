@@ -1,4 +1,4 @@
-import axiosClient from '@/lib/axios'
+import axiosClient from '@/utils/axios'
 import type { AxiosProgressEvent } from 'axios'
 import { ENDPOINTS } from './endpoints'
 

@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react'
-import { Link } from 'react-router-dom'
 import { CloseOutlined } from '@ant-design/icons'
 
 const Navbar = () => {
@@ -81,4 +80,3 @@ const Navbar = () => {
 }
 
 export default Navbar
-

@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { Dropdown, type MenuProps } from 'antd'
 import { UserOutlined, LogoutOutlined, SettingOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
-import { BrandLogo } from '@/components/common/BrandLogo'
+import { BrandLogo } from '@/components/layout/BrandLogo'
 import { useAuthStore } from '@/store'
-import { API_BASE_URL } from '@/lib/axios'
+import { API_BASE_URL } from '@/utils/axios'
 import { ProfileModal } from './ProfileModal'
 
 export function Header() {

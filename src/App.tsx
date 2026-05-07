@@ -1,4 +1,4 @@
-import { queryClient } from '@/lib/react-query'
+import { queryClient } from '@/utils/react-query'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider } from 'react-router-dom'
 import { App as AntdApp, ConfigProvider } from 'antd'

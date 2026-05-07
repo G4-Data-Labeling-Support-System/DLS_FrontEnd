@@ -1,7 +1,6 @@
 import React from 'react'
 import { Outlet } from 'react-router-dom'
-import { Header } from '@/components/common/Header'
-// import '@/features/manager/components/manager.css';
+import { Header } from '@/components/layout/Header'
 
 const AdminLayout: React.FC = () => {
   return (

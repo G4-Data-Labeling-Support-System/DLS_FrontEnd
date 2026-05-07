@@ -1,4 +1,4 @@
-import axiosClient from '@/lib/axios'
+import axiosClient from '@/utils/axios'
 import type { AxiosError } from 'axios'
 import { ENDPOINTS } from './endpoints'
 import type { AnnotationSubmitItem } from '@/shared/types/api.types'

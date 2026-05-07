@@ -6,7 +6,8 @@ import { ArrowLeftOutlined, LoadingOutlined } from '@ant-design/icons'
 import assignmentApi from '@/services/AssignmentApi'
 import taskApi from '@/services/TaskApi'
 import ReviewerDatasetDetailPage from '@/pages/reviewer/ReviewerDatasetDetailPage'
-import ReviewerTasksSection, { type Task } from '@/features/reviewer/components/ReviewerTasksSection'
+import { TasksSection } from '@/features/tasks'
+
 
 interface Assignment {
   id: string
@@ -278,10 +279,13 @@ export default function ReviewerAssignmentDetailPage() {
         </div>
 
         <div className="glass-panel border border-gray-200 bg-[#1A1625]/60 rounded-2xl p-7 shadow-xl">
-          <ReviewerTasksSection
+          <TasksSection
             tasks={assignment.tasks}
             assignmentId={assignment.id}
+            role="reviewer"
+            title="Tasks for Review"
           />
+
         </div>
       </div>
     </div>

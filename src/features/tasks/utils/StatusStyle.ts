@@ -64,4 +64,3 @@ export function getAnnotationStatusStyle(status: string) {
       return 'text-gray-500'
   }
 }
-
