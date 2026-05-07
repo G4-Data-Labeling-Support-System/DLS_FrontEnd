@@ -1,9 +1,13 @@
 import React from 'react'
-import { Card, Button, Typography, Dropdown, Tag, type MenuProps } from 'antd'
-import { MoreOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button'
+import { MoreVertical, Edit, Trash2, Eye } from 'lucide-react'
+
 import type { GetLabelsParams } from '@/services/LabelApi'
 
-const { Title } = Typography
+
 
 interface LabelCardProps extends GetLabelsParams {
   onEdit?: () => void
@@ -21,32 +25,18 @@ export const LabelCard: React.FC<LabelCardProps> = ({
   onDelete,
   onClick
 }) => {
-  const items: MenuProps['items'] = [
-    { key: '1', label: 'View Details', icon: <EyeOutlined />, onClick: onClick },
-    { key: '2', label: 'Edit Label', icon: <EditOutlined />, onClick: onEdit },
-    { type: 'divider' },
-    {
-      key: '4',
-      label: <span className="text-red-500">Deactivate Label</span>,
-      icon: <DeleteOutlined className="text-red-500" />,
-      onClick: onDelete
-    }
-  ]
 
-  const getStatusColor = (status?: string) => {
+
+  const getStatusVariant = (status?: string) => {
     switch (status?.toUpperCase()) {
-      case 'ACTIVE':
-        return 'processing'
-      case 'COMPLETED':
-        return 'success'
-      case 'INACTIVE':
-        return 'error'
-      case 'DRAFT':
-        return 'default'
-      default:
-        return 'default'
+      case 'ACTIVE': return 'default'
+      case 'COMPLETED': return 'secondary'
+      case 'INACTIVE': return 'destructive'
+      case 'DRAFT': return 'outline'
+      default: return 'outline'
     }
   }
+
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A'
@@ -57,54 +47,70 @@ export const LabelCard: React.FC<LabelCardProps> = ({
 
   return (
     <Card
-      className={`bg-[#1A1625] border border-violet-500/20 rounded-xl overflow-hidden hover:bg-violet-500/10 hover:border-fuchsia-500/50 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(139,92,246,0.15)] transition-all duration-500 flex flex-col h-full cursor-pointer ${isInactive ? 'opacity-60 grayscale' : ''
-        }`}
+      className={`bg-white border-violet-500/10 rounded-xl overflow-hidden hover:bg-violet-500/[0.02] hover:border-violet-500/30 hover:-translate-y-1 transition-all duration-300 flex flex-col h-full cursor-pointer relative shadow-sm hover:shadow-md ${isInactive ? 'opacity-60 grayscale' : ''}`}
       onClick={onClick}
     >
-      <div className="flex justify-between items-start mb-2">
-        <div className="flex-1 pr-2 flex items-center gap-2">
-          {color && (
-            <div
-              className="w-4 h-4 rounded-full border border-white/20 shrink-0"
-              style={{ backgroundColor: color }}
-            />
-          )}
-          <Title
-            level={5}
-            className="!text-[#111] !m-0 !text-sm leading-tight line-clamp-2"
-            title={labelName}
-          >
-            {labelName || 'Unnamed Label'}
-          </Title>
+      <CardContent className="p-4">
+        <div className="flex justify-between items-start mb-4">
+          <div className="flex-1 pr-2 flex items-center gap-2">
+            {color && (
+              <div
+                className="w-3.5 h-3.5 rounded-full border border-gray-200 shrink-0 shadow-sm"
+                style={{ backgroundColor: color }}
+              />
+            )}
+            <h4 className="text-sm font-bold text-[#111] leading-tight line-clamp-2" title={labelName}>
+              {labelName || 'Unnamed Label'}
+            </h4>
+          </div>
+          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+            <Badge
+              variant={getStatusVariant(labelStatus)}
+              className="text-[9px] px-1.5 py-0 font-bold uppercase tracking-wider"
+            >
+              {labelStatus || 'UNKNOWN'}
+            </Badge>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button variant="ghost" size="icon" className="h-7 w-7">
+                    <MoreVertical className="h-4 w-4 text-gray-400" />
+                  </Button>
+                }
+              />
+
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={onClick}>
+                  <Eye className="mr-2 h-4 w-4" />
+                  View Details
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onEdit}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit Label
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={onDelete} className="text-red-500 focus:text-red-500">
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Deactivate
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
-        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-          <Tag
-            color={getStatusColor(labelStatus)}
-            className={`m-0 text-[10px] px-1.5 py-0 font-medium whitespace-nowrap border-0 rounded ${isInactive ? 'text-red-500' : ''
-              }`}
-          >
-            {(labelStatus || '').toUpperCase()}
-          </Tag>
-          <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
-            <Button
-              type="text"
-              className="hover:bg-gray-800"
-              icon={<MoreOutlined className="text-gray-500" />}
-            />
-          </Dropdown>
+
+        <div className="grid grid-cols-2 gap-2 bg-gray-50 p-3 rounded-lg mt-auto">
+          <div>
+            <div className="text-[9px] text-gray-500 uppercase font-bold tracking-widest">Created</div>
+            <div className="text-[#111] text-[10px] font-semibold">{formatDate(createdAt)}</div>
+          </div>
+          <div className="border-l border-gray-200 pl-2">
+            <div className="text-[9px] text-gray-500 uppercase font-bold tracking-widest">Updated</div>
+            <div className="text-[#111] text-[10px] font-semibold">{formatDate(updatedAt)}</div>
+          </div>
         </div>
-      </div>
-      <div className="grid grid-cols-2 gap-2 bg-[#231e31] p-3 rounded-lg mt-auto">
-        <div>
-          <div className="text-[10px] text-gray-500 uppercase tracking-wider">Created At</div>
-          <div className="text-gray-600 text-xs font-semibold">{formatDate(createdAt)}</div>
-        </div>
-        <div className="border-l border-gray-700 pl-2">
-          <div className="text-[10px] text-gray-500 uppercase tracking-wider">Updated At</div>
-          <div className="text-gray-600 text-xs font-semibold">{formatDate(updatedAt)}</div>
-        </div>
-      </div>
+      </CardContent>
     </Card>
+
   )
 }
 

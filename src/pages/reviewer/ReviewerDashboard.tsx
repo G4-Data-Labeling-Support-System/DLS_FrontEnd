@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import { Typography, Spin, Alert } from 'antd'
+import { Loader2, AlertCircle } from 'lucide-react'
+
 import { StatsCard } from '@/features/reviewer/components/StatsCard'
 import { ReviewerFilters } from '@/features/reviewer/components/ReviewerFilters'
 import { reviewerApi, type ReviewerStats } from '@/services/ReviewerApi'
 
-const { Title, Text } = Typography
+
 
 const ReviewerDashboard: React.FC = () => {
   const [stats, setStats] = useState<ReviewerStats | null>(null)
@@ -29,17 +30,26 @@ const ReviewerDashboard: React.FC = () => {
   }, [])
 
   if (error) {
-    return <Alert message="Error" description={error} type="error" showIcon />
+    return (
+      <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-4 flex items-center gap-3 text-destructive">
+        <AlertCircle className="h-5 w-5" />
+        <p className="font-medium">{error}</p>
+      </div>
+    )
   }
+
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-[500px] gap-4">
-        <Spin size="large" />
-        <Text className="text-gray-500">Loading Dashboard...</Text>
+        <Loader2 className="h-10 w-10 text-violet-500 animate-spin" />
+        <p className="text-gray-500 font-mono text-xs tracking-widest uppercase animate-pulse">
+          Loading Dashboard...
+        </p>
       </div>
     )
   }
+
 
   return (
     <div>
@@ -48,13 +58,14 @@ const ReviewerDashboard: React.FC = () => {
         <div className="xl:col-span-3 space-y-6">
           <div className="flex justify-between items-start">
             <div>
-              <Title level={4} className="!text-[#111] !m-0 !font-display">
+              <h1 className="text-xl font-bold text-[#111] tracking-tight">
                 Reviewer Dashboard
-              </Title>
-              <Text className="text-gray-500 text-xs">
+              </h1>
+              <p className="text-gray-500 text-xs">
                 Overview of current annotation progress and performance.
-              </Text>
+              </p>
             </div>
+
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Using a grid for stats cards to mimic ActiveProjects layout if more cards are added */}

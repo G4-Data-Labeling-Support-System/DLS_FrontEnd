@@ -4,6 +4,20 @@ import assignmentApi from '@/services/AssignmentApi'
 import { themeClasses } from '@/styles'
 import { useNavigate } from 'react-router-dom'
 import { PATH_ANNOTATOR } from '@/routes/paths'
+import { 
+  Database, 
+  Search, 
+  SearchX, 
+  ArrowRight, 
+  Layers, 
+  ChevronDown, 
+  ChevronUp, 
+  Calendar, 
+  Image as ImageIcon,
+  ChevronLeft,
+  ChevronRight
+} from 'lucide-react'
+
 
 interface Dataset {
   datasetId: string
@@ -130,14 +144,14 @@ export default function AnnotatorDatasetCard({
       <div className="relative z-10 flex flex-col h-full">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[18px] text-blue-400">database</span>
+            <Database className="w-4 h-4 text-blue-400" />
+
             <h3 className="text-sm font-mono text-blue-400 tracking-widest uppercase">Datasets</h3>
           </div>
 
           <div className="relative group">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[16px] text-gray-500 group-focus-within:text-blue-400 transition-colors">
-              search
-            </span>
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-blue-400 transition-colors" />
+
             <input
               type="text"
               placeholder="Search datasets..."
@@ -150,9 +164,8 @@ export default function AnnotatorDatasetCard({
 
         {filteredDatasets.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center py-12 text-center">
-            <span className="material-symbols-outlined text-gray-500 text-4xl mb-3 opacity-20">
-              search_off
-            </span>
+            <SearchX className="w-12 h-12 text-gray-400 mb-3 opacity-20" />
+
             <p className="text-gray-500 text-sm italic">
               {searchTerm
                 ? `No datasets matching "${searchTerm}"`
@@ -190,16 +203,16 @@ export default function AnnotatorDatasetCard({
                     <div className="flex justify-end mb-3">
                       <div className="px-3 py-1 bg-violet-600 group-hover:bg-violet-700 text-[#111] text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 shadow-lg shadow-violet-500/20">
                         <span>View Detail</span>
-                        <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
                       </div>
+
                     </div>
 
                     <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-200">
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-1">
-                          <span className="material-symbols-outlined text-[14px] text-gray-500">
-                            layers
-                          </span>
+                          <Layers className="w-3.5 h-3.5 text-gray-500" />
+
                           <span className="text-[11px] text-gray-600 font-medium">
                             {dataset.totalItems || 0} items
                           </span>
@@ -211,18 +224,17 @@ export default function AnnotatorDatasetCard({
                           }}
                           className={`flex items-center gap-1 text-[11px] font-bold transition-colors ${expandedDatasetId === dataset.datasetId ? 'text-blue-400' : 'text-gray-500 hover:text-blue-400'}`}
                         >
-                          <span className="material-symbols-outlined text-[16px]">
-                            {expandedDatasetId === dataset.datasetId
-                              ? 'keyboard_arrow_up'
-                              : 'keyboard_arrow_down'}
-                          </span>
+                          {expandedDatasetId === dataset.datasetId
+                            ? <ChevronUp className="w-4 h-4" />
+                            : <ChevronDown className="w-4 h-4" />
+                          }
+
                           {expandedDatasetId === dataset.datasetId ? 'Hide Items' : 'Show Items'}
                         </button>
                       </div>
                       <div className="flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[14px] text-gray-500">
-                          calendar_today
-                        </span>
+                        <Calendar className="w-3.5 h-3.5 text-gray-500" />
+
                         <span className="text-[11px] text-gray-500">
                           {formatDate(dataset.createdAt)}
                         </span>
@@ -242,9 +254,8 @@ export default function AnnotatorDatasetCard({
                                 className="relative group/item rounded-lg overflow-hidden border border-gray-200 bg-black/20 aspect-square flex items-center justify-center"
                               >
                                 <div className="absolute inset-0 flex items-center justify-center bg-violet-500/5 group-hover/item:bg-violet-500/10 transition-colors">
-                                  <span className="material-symbols-outlined text-gray-600 text-3xl opacity-20">
-                                    image
-                                  </span>
+                                  <ImageIcon className="w-8 h-8 text-gray-600 opacity-20" />
+
                                 </div>
                                 <img
                                   src={
@@ -296,7 +307,8 @@ export default function AnnotatorDatasetCard({
                     disabled={currentPage === 1}
                     className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 border border-gray-300 text-gray-500 hover:bg-white/10 hover:text-[#111] disabled:opacity-30 disabled:pointer-events-none transition-all"
                   >
-                    <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+                    <ChevronLeft className="w-4 h-4" />
+
                   </button>
                   <div className="flex items-center gap-1 px-2">
                     <span className="text-xs font-bold text-blue-400">{currentPage}</span>
@@ -308,7 +320,8 @@ export default function AnnotatorDatasetCard({
                     disabled={currentPage === totalPages}
                     className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 border border-gray-300 text-gray-500 hover:bg-white/10 hover:text-[#111] disabled:opacity-30 disabled:pointer-events-none transition-all"
                   >
-                    <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+                    <ChevronRight className="w-4 h-4" />
+
                   </button>
                 </div>
               </div>

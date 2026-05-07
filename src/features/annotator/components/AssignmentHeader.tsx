@@ -1,4 +1,6 @@
 import { useMemo } from 'react'
+import { ClipboardList, FolderOpen, Clock } from 'lucide-react'
+
 
 interface Assignment {
   id?: string
@@ -55,9 +57,8 @@ export default function AssignmentHeader({ assignment }: { assignment: Assignmen
           <div>
             {/* Breadcrumb label */}
             <div className="flex items-center gap-2 mb-2">
-              <span className="material-symbols-outlined text-[14px] text-violet-400">
-                assignment
-              </span>
+              <ClipboardList className="w-3.5 h-3.5 text-violet-400" />
+
               <span className="text-xs font-mono text-violet-400 tracking-widest uppercase">
                 Assignment
               </span>
@@ -69,9 +70,8 @@ export default function AssignmentHeader({ assignment }: { assignment: Assignmen
           {/* Stats pills */}
           <div className="flex flex-wrap gap-2 shrink-0">
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-gray-300 text-xs text-gray-600">
-              <span className="material-symbols-outlined text-[14px] text-violet-400">
-                folder_special
-              </span>
+              <FolderOpen className="w-3.5 h-3.5 text-violet-400" />
+
               {assignment.project?.projectName ||
                 assignment.project?.name ||
                 (typeof assignment.project === 'string' ? assignment.project : 'Unknown Project')}
@@ -79,7 +79,8 @@ export default function AssignmentHeader({ assignment }: { assignment: Assignmen
             <div
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border text-xs font-bold ${daysLeft <= 2 ? 'border-red-500/30 text-red-400' : daysLeft <= 5 ? 'border-amber-500/30 text-amber-400' : 'border-emerald-500/30 text-emerald-400'}`}
             >
-              <span className="material-symbols-outlined text-[14px]">schedule</span>
+              <Clock className="w-3.5 h-3.5" />
+
               {daysLeft > 0
                 ? `${daysLeft} day${daysLeft !== 1 ? 's' : ''} left`
                 : 'Deadline passed'}

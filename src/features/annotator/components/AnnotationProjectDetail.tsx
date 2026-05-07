@@ -1,4 +1,7 @@
+import { FolderOpen, Flag } from 'lucide-react'
+
 interface Project {
+
   id?: string
   projectId?: string
   name?: string
@@ -42,9 +45,8 @@ export default function AnnotatorProjectDetail({ project }: { project: Project }
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="material-symbols-outlined text-[14px] text-violet-400">
-                folder_special
-              </span>
+              <FolderOpen className="w-3.5 h-3.5 text-violet-400" />
+
               <span className="text-xs font-mono text-violet-400 tracking-widest uppercase">
                 Project
               </span>
@@ -61,7 +63,8 @@ export default function AnnotatorProjectDetail({ project }: { project: Project }
             <div
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold ${getStatusColor(project.projectStatus || project.status)}`}
             >
-              <span className="material-symbols-outlined text-[14px]">flag</span>
+              <Flag className="w-3.5 h-3.5" />
+
               {project.projectStatus || project.status || 'UNKNOWN'}
             </div>
           </div>

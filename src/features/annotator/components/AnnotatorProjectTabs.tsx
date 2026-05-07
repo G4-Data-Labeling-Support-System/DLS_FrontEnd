@@ -1,5 +1,6 @@
-import React from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
 
 export type AnnotatorProjectTabType = 'detail' | 'assignment' | 'dataset' | null
 
@@ -15,42 +16,35 @@ export const AnnotatorProjectTabs: React.FC<AnnotatorProjectTabsProps> = ({
   const navigate = useNavigate()
 
   return (
-    <div className="flex items-center gap-8 border-b border-gray-800 mb-6 pb-2">
-      <button
-        onClick={() => navigate(`/annotator/projects/${projectId}`)}
-        className={`text-lg font-medium transition-colors cursor-pointer relative pb-2 ${
-          activeTab === 'detail' ? 'text-[#111]' : 'text-gray-500 hover:text-gray-600'
-        }`}
-      >
-        Project Detail
-        {activeTab === 'detail' && (
-          <div className="absolute bottom-0 left-0 w-full h-0.5 bg-violet-500 rounded-t-md"></div>
-        )}
-      </button>
-      <button
-        onClick={() => navigate(`/annotator/projects/${projectId}/assignments`)}
-        className={`text-lg font-medium transition-colors cursor-pointer relative pb-2 ${
-          activeTab === 'assignment' ? 'text-[#111]' : 'text-gray-500 hover:text-gray-600'
-        }`}
-      >
-        Assignments
-        {activeTab === 'assignment' && (
-          <div className="absolute bottom-0 left-0 w-full h-0.5 bg-violet-500 rounded-t-md"></div>
-        )}
-      </button>
-      <button
-        onClick={() => navigate(`/annotator/projects/${projectId}/datasets`)}
-        className={`text-lg font-medium transition-colors cursor-pointer relative pb-2 ${
-          activeTab === 'dataset' ? 'text-[#111]' : 'text-gray-500 hover:text-gray-600'
-        }`}
-      >
-        Datasets
-        {activeTab === 'dataset' && (
-          <div className="absolute bottom-0 left-0 w-full h-0.5 bg-violet-500 rounded-t-md"></div>
-        )}
-      </button>
+    <div className="mb-6">
+      <Tabs value={activeTab || 'detail'} className="w-full">
+        <TabsList className="bg-transparent border-b border-gray-200 w-full justify-start rounded-none h-auto p-0 gap-8">
+          <TabsTrigger 
+            value="detail" 
+            onClick={() => navigate(`/annotator/projects/${projectId}`)}
+            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet-500 rounded-none pb-2 text-lg font-medium px-0 text-gray-500 data-[state=active]:text-[#111]"
+          >
+            Project Detail
+          </TabsTrigger>
+          <TabsTrigger 
+            value="assignment" 
+            onClick={() => navigate(`/annotator/projects/${projectId}/assignments`)}
+            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet-500 rounded-none pb-2 text-lg font-medium px-0 text-gray-500 data-[state=active]:text-[#111]"
+          >
+            Assignments
+          </TabsTrigger>
+          <TabsTrigger 
+            value="dataset" 
+            onClick={() => navigate(`/annotator/projects/${projectId}/datasets`)}
+            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet-500 rounded-none pb-2 text-lg font-medium px-0 text-gray-500 data-[state=active]:text-[#111]"
+          >
+            Datasets
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
     </div>
   )
 }
+
 
 

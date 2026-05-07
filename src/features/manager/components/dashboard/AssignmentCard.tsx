@@ -1,9 +1,12 @@
 import React from 'react'
-import { Card, Button, Typography, Dropdown, Tag, type MenuProps } from 'antd'
-import { MoreOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button'
+import { Eye, Edit, Trash2, MoreVertical } from 'lucide-react'
 import type { GetAssignmentsParams } from '@/services/AssignmentApi'
 
-const { Title } = Typography
+
 
 interface AssignmentCardProps extends GetAssignmentsParams {
   onEdit?: () => void
@@ -22,39 +25,20 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
   onClick,
   variant = 'default'
 }) => {
-  const items: MenuProps['items'] = [
-    { key: '1', label: 'View Details', icon: <EyeOutlined />, onClick: onClick },
-    { key: '2', label: 'Edit Assignment', icon: <EditOutlined />, onClick: onEdit },
-    ...(onDelete
-      ? [
-          { type: 'divider' as const },
-          {
-            key: '4',
-            label: <span className="text-red-500">Deactivate Assignment</span>,
-            icon: <DeleteOutlined className="text-red-500" />,
-            onClick: onDelete
-          }
-        ]
-      : [])
-  ]
-
-  // Status mapping using Assignment specific logic
-  const getStatusColor = (status?: string) => {
+  const getStatusVariant = (status?: string) => {
     switch (status?.toUpperCase()) {
-      case 'ASSIGNED':
-        return 'default'
-      case 'IN_PROGRESS':
-        return 'processing'
-      case 'REVIEWING':
-        return 'warning'
-      case 'COMPLETED':
-        return 'success'
-      case 'INACTIVE':
-        return 'error'
-      default:
-        return 'default'
+      case 'ASSIGNED': return 'outline'
+      case 'IN_PROGRESS': return 'default'
+      case 'REVIEWING': return 'secondary'
+      case 'COMPLETED': return 'default'
+      case 'INACTIVE': return 'destructive'
+      default: return 'outline'
     }
   }
+
+
+  // Status mapping using Assignment specific logic
+
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A'
@@ -64,7 +48,7 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
   if (variant === 'compact') {
     return (
       <div
-        className={`flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-gray-200 hover:border-blue-500/30 transition-colors cursor-pointer group ${
+        className={`flex flex-col gap-2 bg-gray-50 p-4 rounded-xl border border-gray-200 hover:border-violet-500/30 transition-all cursor-pointer group ${
           status?.toUpperCase() === 'INACTIVE' ? 'opacity-60 grayscale-[0.5]' : ''
         }`}
         onClick={onClick}
@@ -78,23 +62,22 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
           </h4>
         </div>
         <div className="flex items-center gap-2 mt-1">
-          <Tag
-            color={getStatusColor(status)}
-            className={`m-0 text-[10px] px-1.5 py-0 font-medium whitespace-nowrap ${
-              status?.toUpperCase() === 'INACTIVE' ? 'text-red-500' : ''
-            }`}
+          <Badge
+            variant={getStatusVariant(status)}
+            className="text-[9px] px-1.5 py-0 font-bold uppercase tracking-wider"
           >
             {status || 'UNKNOWN'}
-          </Tag>
+          </Badge>
           <span className="text-gray-500 text-[10px]">{formatDate(createdAt)}</span>
         </div>
       </div>
+
     )
   }
 
   return (
     <Card
-      className={`bg-[#1A1625] border border-violet-500/20 rounded-xl overflow-hidden hover:bg-violet-500/10 hover:border-fuchsia-500/50 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(139,92,246,0.15)] transition-all duration-500 flex flex-col h-full cursor-pointer relative pt-4 mt-3 ${
+      className={`bg-white border-violet-500/10 rounded-xl overflow-hidden hover:bg-violet-500/[0.02] hover:border-violet-500/30 hover:-translate-y-1 transition-all duration-300 flex flex-col h-full cursor-pointer relative shadow-sm hover:shadow-md ${
         status?.toUpperCase() === 'INACTIVE' ? 'opacity-60 grayscale-[0.5]' : ''
       }`}
       onClick={onClick}
@@ -103,56 +86,75 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
       typeof assignmentName === 'object' &&
       ('projectName' in (assignmentName as object) ||
         'project_name' in (assignmentName as object)) ? (
-        <div className="absolute -top-3 left-4 z-10">
-          <div className="bg-violet-500/20 border border-violet-500/30 text-violet-300 text-[10px] font-bold px-3 py-1 rounded-full backdrop-blur-sm shadow-lg flex items-center gap-1.5 transition-all group-hover:bg-violet-500/30 group-hover:border-violet-500/50">
-            <div className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+        <div className="absolute top-2 left-4 z-10">
+          <Badge variant="outline" className="bg-violet-50 border-violet-100 text-violet-600 text-[9px] font-bold">
             {String(
               (assignmentName as Record<string, unknown>).projectName ||
                 (assignmentName as Record<string, unknown>).project_name
             )}
-          </div>
+          </Badge>
         </div>
       ) : null}
-      <div className="flex justify-between items-start mb-2">
-        <div className="flex-1 pr-2">
-          <Title
-            level={5}
-            className="!text-[#111] !m-0 !text-sm leading-tight line-clamp-1"
-            title={assignmentName}
-          >
-            {assignmentName || 'Unnamed Assignment'}
-          </Title>
-        </div>
-        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-          <Tag
-            color={getStatusColor(status)}
-            className={`m-0 text-[10px] px-1.5 py-0 font-medium whitespace-nowrap ${
-              status?.toUpperCase() === 'INACTIVE' ? 'text-red-500' : ''
-            }`}
-          >
-            {status || 'UNKNOWN'}
-          </Tag>
-          <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
-            <Button
-              type="text"
-              className="hover:bg-gray-800"
-              icon={<MoreOutlined className="text-gray-500" />}
-            />
-          </Dropdown>
-        </div>
-      </div>
 
-      <div className="grid grid-cols-2 gap-2 bg-[#231e31] p-3 rounded-lg mt-auto">
-        <div>
-          <div className="text-[10px] text-gray-500 uppercase tracking-wider">Created At</div>
-          <div className="text-gray-600 text-xs font-semibold">{formatDate(createdAt)}</div>
+      <CardHeader className={`p-4 ${assignmentName && typeof assignmentName === 'object' ? 'pt-8' : 'pt-4'} pb-2 space-y-0`}>
+        <div className="flex justify-between items-start">
+          <CardTitle className="text-sm font-bold text-[#111] line-clamp-1 flex-1 pr-2">
+            {assignmentName || 'Unnamed Assignment'}
+          </CardTitle>
+          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+            <Badge
+              variant={getStatusVariant(status)}
+              className="text-[9px] px-1.5 py-0 font-bold uppercase tracking-wider"
+            >
+              {status || 'UNKNOWN'}
+            </Badge>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button variant="ghost" size="icon" className="h-7 w-7">
+                    <MoreVertical className="h-4 w-4 text-gray-400" />
+                  </Button>
+                }
+              />
+
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={onClick}>
+                  <Eye className="mr-2 h-4 w-4" />
+                  View Details
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onEdit}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit
+                </DropdownMenuItem>
+                {onDelete && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={onDelete} className="text-red-600">
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Deactivate
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
-        <div className="border-l border-gray-700 pl-2">
-          <div className="text-[10px] text-gray-500 uppercase tracking-wider">Updated At</div>
-          <div className="text-gray-600 text-xs font-semibold">{formatDate(updatedAt)}</div>
+      </CardHeader>
+
+      <CardContent className="p-4 pt-2 mt-auto">
+        <div className="grid grid-cols-2 gap-2 bg-gray-50 p-3 rounded-lg">
+          <div>
+            <div className="text-[9px] text-gray-500 uppercase font-bold tracking-widest">Created</div>
+            <div className="text-[#111] text-xs font-semibold">{formatDate(createdAt)}</div>
+          </div>
+          <div className="border-l border-gray-200 pl-2">
+            <div className="text-[9px] text-gray-500 uppercase font-bold tracking-widest">Updated</div>
+            <div className="text-[#111] text-xs font-semibold">{formatDate(updatedAt)}</div>
+          </div>
         </div>
-      </div>
+      </CardContent>
     </Card>
+
   )
 }
 

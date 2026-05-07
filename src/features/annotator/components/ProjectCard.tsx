@@ -1,8 +1,10 @@
 import React from 'react'
-import { Card, Button, Typography, Tag, Dropdown, type MenuProps } from 'antd'
-import { EyeOutlined, MoreOutlined } from '@ant-design/icons'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button'
+import { Eye, MoreVertical } from 'lucide-react'
 
-const { Title } = Typography
 
 export interface ProjectCardProps {
   id: string
@@ -21,25 +23,19 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   updatedAt,
   onClick
 }) => {
-  const items: MenuProps['items'] = [
-    { key: '1', label: 'View Project Details', icon: <EyeOutlined />, onClick: onClick }
-  ]
-
-  const getStatusColor = (status?: string) => {
+  const getStatusVariant = (status?: string) => {
     switch (status?.toUpperCase()) {
-      case 'ACTIVE':
-        return 'success'
-      case 'COMPLETED':
-        return 'processing'
-      case 'PAUSED':
-        return 'warning'
+      case 'ACTIVE': return 'default'
+      case 'COMPLETED': return 'secondary'
+      case 'PAUSED': return 'outline'
       case 'INACTIVE':
-      case 'ARCHIVE':
-        return 'error'
-      default:
-        return 'default'
+      case 'ARCHIVE': return 'destructive'
+      default: return 'outline'
     }
   }
+
+
+
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A'
@@ -48,51 +44,57 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
 
   return (
     <Card
-      className={`bg-[#1A1625] border border-violet-500/20 rounded-xl overflow-hidden hover:bg-violet-500/10 hover:border-fuchsia-500/50 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(139,92,246,0.15)] transition-all duration-500 flex flex-col h-full cursor-pointer relative mt-3 ${
+      className={`bg-white border-violet-500/10 rounded-xl overflow-hidden hover:bg-violet-500/[0.02] hover:border-violet-500/30 hover:-translate-y-1 transition-all duration-300 flex flex-col h-full cursor-pointer relative shadow-sm hover:shadow-md ${
         status?.toUpperCase() === 'INACTIVE' ? 'opacity-60 grayscale-[0.5]' : ''
       }`}
       onClick={onClick}
     >
-      <div className="flex justify-between items-start mb-2">
-        <div className="flex-1 pr-2">
-          <Title
-            level={5}
-            className="!text-[#111] !m-0 !text-sm leading-tight line-clamp-1"
-            title={projectName}
-          >
+      <CardHeader className="p-4 pb-2 space-y-0">
+        <div className="flex justify-between items-start">
+          <CardTitle className="text-sm font-bold text-[#111] line-clamp-1 flex-1 pr-2">
             {projectName || 'Unnamed Project'}
-          </Title>
-        </div>
-        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-          <Tag
-            color={getStatusColor(status)}
-            className={`m-0 text-[10px] px-1.5 py-0 font-medium whitespace-nowrap ${
-              status?.toUpperCase() === 'INACTIVE' ? 'text-red-500' : ''
-            }`}
-          >
-            {status || 'UNKNOWN'}
-          </Tag>
-          <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
-            <Button
-              type="text"
-              className="hover:bg-gray-800"
-              icon={<MoreOutlined className="text-gray-500" />}
-            />
-          </Dropdown>
-        </div>
-      </div>
+          </CardTitle>
+          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+            <Badge
+              variant={getStatusVariant(status)}
+              className="text-[9px] px-1.5 py-0 font-bold uppercase tracking-wider"
+            >
+              {status || 'UNKNOWN'}
+            </Badge>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button variant="ghost" size="icon" className="h-7 w-7">
+                    <MoreVertical className="h-4 w-4 text-gray-400" />
+                  </Button>
+                }
+              />
 
-      <div className="grid grid-cols-2 gap-2 bg-[#231e31] p-3 rounded-lg mt-auto">
-        <div>
-          <div className="text-[10px] text-gray-500 uppercase tracking-wider">Created At</div>
-          <div className="text-gray-600 text-xs font-semibold">{formatDate(createdAt)}</div>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={onClick}>
+                  <Eye className="mr-2 h-4 w-4" />
+                  View Details
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
-        <div className="border-l border-gray-700 pl-2">
-          <div className="text-[10px] text-gray-500 uppercase tracking-wider">Updated At</div>
-          <div className="text-gray-600 text-xs font-semibold">{formatDate(updatedAt)}</div>
+      </CardHeader>
+
+      <CardContent className="p-4 pt-2 mt-auto">
+        <div className="grid grid-cols-2 gap-2 bg-gray-50 p-3 rounded-lg">
+          <div>
+            <div className="text-[9px] text-gray-500 uppercase font-bold tracking-widest">Created</div>
+            <div className="text-[#111] text-xs font-semibold">{formatDate(createdAt)}</div>
+          </div>
+          <div className="border-l border-gray-200 pl-2">
+            <div className="text-[9px] text-gray-500 uppercase font-bold tracking-widest">Updated</div>
+            <div className="text-[#111] text-xs font-semibold">{formatDate(updatedAt)}</div>
+          </div>
         </div>
-      </div>
+      </CardContent>
     </Card>
+
   )
 }
 

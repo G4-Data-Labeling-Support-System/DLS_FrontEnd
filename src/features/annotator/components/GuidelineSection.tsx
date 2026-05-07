@@ -1,5 +1,7 @@
 import { themeClasses } from '@/styles'
 import { useState } from 'react'
+import { BookOpen, ChevronDown } from 'lucide-react'
+
 
 export default function GuidelineSection({ guideline }: { guideline?: string }) {
   const [expanded, setExpanded] = useState(true)
@@ -15,15 +17,15 @@ export default function GuidelineSection({ guideline }: { guideline?: string }) 
       >
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
-            <span className="material-symbols-outlined text-[16px] text-violet-400">menu_book</span>
+            <BookOpen className="w-4 h-4 text-violet-400" />
+
           </div>
           <span className="font-semibold text-[#111] text-sm">Annotation Guideline</span>
         </div>
-        <span
-          className={`material-symbols-outlined text-gray-500 text-[20px] transition-transform duration-300 ${expanded ? 'rotate-180' : ''}`}
-        >
-          expand_more
-        </span>
+        <ChevronDown
+          className={`w-5 h-5 text-gray-500 transition-transform duration-300 ${expanded ? 'rotate-180' : ''}`}
+        />
+
       </button>
 
       {/* Content */}

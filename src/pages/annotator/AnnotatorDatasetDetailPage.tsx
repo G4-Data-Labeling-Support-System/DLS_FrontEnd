@@ -3,8 +3,21 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import datasetApi from '@/services/DatasetApi'
 import { labelApi } from '@/services/LabelApi'
 import { themeClasses } from '@/styles'
-import { Pagination, Image, Spin } from 'antd'
+
+import { Loader2, Database, Info, FileText, FolderOpen, Tag, Grid, ImageOff, ChevronLeft, ChevronRight, X } from 'lucide-react'
+
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
 import { GlassModal } from '@/shared/components/ui/GlassModal'
+
+
+
 
 interface Dataset {
   datasetId: string
@@ -58,6 +71,8 @@ export default function AnnotatorDatasetDetailPage() {
   const [modalVisible, setModalVisible] = useState(false)
   const [itemDetailLoading, setItemDetailLoading] = useState(false)
   const itemsPerPage = 12
+  const totalPages = Math.max(1, Math.ceil(items.length / itemsPerPage))
+
 
   useEffect(() => {
     const fetchDatasetData = async () => {
@@ -218,8 +233,9 @@ export default function AnnotatorDatasetDetailPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="material-symbols-outlined text-[18px] text-blue-400">database</span>
+              <Database className="w-4 h-4 text-blue-400" />
               <span className="text-xs font-mono text-blue-400 tracking-widest uppercase">
+
                 Dataset Detail
               </span>
             </div>
@@ -237,9 +253,10 @@ export default function AnnotatorDatasetDetailPage() {
           <div className="flex-1 p-7 border-b md:border-b-0 md:border-r border-gray-300 relative">
             <div className="absolute -top-10 -left-10 w-40 h-40 rounded-full bg-violet-500/5 blur-[50px] pointer-events-none" />
             <h3 className="text-lg font-semibold text-[#111] mb-6 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px] text-violet-400">info</span>
+              <Info className="w-4 h-4 text-violet-400" />
               Dataset Information
             </h3>
+
             <div className="space-y-5">
               <div className="flex justify-between items-center py-2 border-b border-gray-200">
                 <label className="text-xs text-gray-500 font-mono uppercase tracking-wider">Dataset ID</label>
@@ -269,9 +286,11 @@ export default function AnnotatorDatasetDetailPage() {
           <div className="flex-1 p-7 flex flex-col relative overflow-hidden">
             <div className="absolute -bottom-10 -right-10 w-40 h-40 rounded-full bg-fuchsia-500/5 blur-[50px] pointer-events-none" />
             <h3 className="text-lg font-semibold text-[#111] mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px] text-fuchsia-400">description</span>
+              <FileText className="w-4 h-4 text-fuchsia-400" />
+
               Description
             </h3>
+
             <div className="flex-1 bg-black/20 p-5 rounded-2xl border border-gray-200 min-h-[120px]">
               <p className="text-sm text-gray-600 leading-relaxed italic">
                 {dataset.description || 'No description provided for this dataset.'}
@@ -285,9 +304,10 @@ export default function AnnotatorDatasetDetailPage() {
           {/* Associated Project */}
           <div className={`glass-panel border ${themeClasses.borders.violet10} rounded-2xl p-6 shadow-xl`}>
             <h3 className="text-lg font-semibold text-[#111] mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px] text-blue-400">folder_special</span>
+              <FolderOpen className="w-4 h-4 text-blue-400" />
               Associated Project
             </h3>
+
             <div
               className="bg-black/20 p-5 rounded-xl border border-gray-300 hover:border-blue-500/50 hover:bg-black/30 transition-all cursor-pointer group"
               onClick={() => navigate(`/annotator/projects/${projectId}`)}
@@ -296,8 +316,9 @@ export default function AnnotatorDatasetDetailPage() {
                 {dataset.project?.projectName || 'No Project Assigned'}
               </h4>
               <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
-                <span className="material-symbols-outlined text-[12px]">visibility</span>
+                <Info className="w-3 h-3" />
                 Click to view project details
+
               </p>
             </div>
           </div>
@@ -305,9 +326,10 @@ export default function AnnotatorDatasetDetailPage() {
           {/* Labels Section */}
           <div className={`glass-panel border ${themeClasses.borders.violet10} rounded-2xl p-6 shadow-xl`}>
             <h3 className="text-lg font-semibold text-[#111] mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px] text-emerald-400">label</span>
+              <Tag className="w-4 h-4 text-emerald-400" />
               Dataset Labels
             </h3>
+
             <div className="flex flex-wrap gap-2 max-h-[140px] overflow-y-auto pr-2 custom-scrollbar">
               {labels.length === 0 ? (
                 <p className="text-gray-500 text-sm italic py-2">No labels defined.</p>
@@ -335,11 +357,12 @@ export default function AnnotatorDatasetDetailPage() {
         >
           <div className="flex items-center justify-between mb-8 pb-4 border-b border-gray-200">
             <h3 className="text-xl font-bold text-[#111] flex items-center gap-3">
-              <span className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                <span className="material-symbols-outlined text-[20px] text-blue-400">grid_view</span>
-              </span>
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                <Grid className="w-5 h-5 text-blue-400" />
+              </div>
               Data Items
             </h3>
+
             <span className="text-xs font-mono bg-blue-500/10 px-4 py-1.5 rounded-full border border-blue-500/20 text-blue-400 font-medium tracking-tight">
               {items.length} items loaded
             </span>
@@ -347,9 +370,8 @@ export default function AnnotatorDatasetDetailPage() {
 
           {items.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-gray-200 rounded-2xl bg-black/10">
-              <span className="material-symbols-outlined text-gray-600 text-6xl mb-4 opacity-10">
-                image_not_supported
-              </span>
+              <ImageOff className="w-12 h-12 text-gray-400 mb-4 opacity-30" />
+
               <p className="text-gray-500 text-base font-medium">No data items found</p>
               <p className="text-gray-600 text-xs mt-2">Images will appear here once uploaded by the manager.</p>
             </div>
@@ -360,12 +382,10 @@ export default function AnnotatorDatasetDetailPage() {
                   <div
                     key={item.itemId || item.id}
                     onClick={() => handleItemClick(item)}
-                    className="relative group rounded-xl overflow-hidden border border-gray-300 bg-black/40 aspect-square flex items-center justify-center cursor-pointer hover:border-blue-500/50 transition-all shadow-lg hover:shadow-blue-500/5"
+                    className="relative group rounded-xl overflow-hidden border border-gray-300 bg-black/40 aspect-square flex items-center justify-center cursor-pointer hover:border-violet-500/50 transition-all shadow-lg hover:shadow-violet-500/5"
                   >
-                    <div className="absolute inset-0 flex items-center justify-center bg-blue-500/5 group-hover:bg-blue-500/10 transition-colors">
-                      <span className="material-symbols-outlined text-gray-700 text-4xl opacity-10">
-                        image
-                      </span>
+                    <div className="absolute inset-0 flex items-center justify-center bg-violet-500/5 group-hover:bg-violet-500/10 transition-colors">
+                      <ImageOff className="w-8 h-8 text-gray-700 opacity-10" />
                     </div>
                     <img
                       src={
@@ -380,17 +400,15 @@ export default function AnnotatorDatasetDetailPage() {
                       loading="lazy"
                     />
 
-                    {/* Overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end">
-                      <span className="text-[11px] text-[#111] line-clamp-2 font-medium leading-snug font-mono">
+                      <span className="text-[11px] text-white line-clamp-2 font-medium leading-snug font-mono">
                         {item.fileName || item.name || item.filename}
                       </span>
                     </div>
 
-                    {/* Badges */}
                     {item.labeled && (
                       <div className="absolute top-2 right-2 flex items-center gap-1.5 bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-md backdrop-blur-md shadow-lg shadow-black/20">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                         Labeled
                       </div>
                     )}
@@ -400,16 +418,38 @@ export default function AnnotatorDatasetDetailPage() {
 
               {/* Pagination Controls */}
               <div className="mt-8 pt-6 border-t border-gray-200 flex justify-end">
-                <Pagination
-                  current={currentPage}
-                  pageSize={itemsPerPage}
-                  total={items.length}
-                  onChange={(page) => setCurrentPage(page)}
-                  showSizeChanger={false}
-                  className="custom-pagination"
-                />
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                    
+                    {[...Array(totalPages)].map((_, i) => (
+                      <PaginationItem key={i}>
+                        <PaginationLink 
+                          isActive={currentPage === i + 1}
+                          onClick={() => setCurrentPage(i + 1)}
+                          className="cursor-pointer"
+                        >
+                          {i + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+
+                    <PaginationItem>
+                      <PaginationNext 
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
               </div>
             </>
+
           )}
         </div>
       </div>
@@ -425,26 +465,28 @@ export default function AnnotatorDatasetDetailPage() {
         <div className="px-8 pt-10 pb-8 min-h-[400px]">
           <div className="flex justify-between items-center border-b border-gray-200 pb-4 mb-6">
             <h2 className="text-[#111] text-xl font-bold font-display flex items-center gap-2">
-              <span className="material-symbols-outlined text-emerald-400">database</span>
+              <Database className="w-5 h-5 text-emerald-400" />
               {selectedItem
                 ? selectedItem.name || selectedItem.filename || selectedItem.fileName || 'Item Details'
                 : 'Item Details'}
             </h2>
             <button
               onClick={handleModalClose}
-              className="text-gray-500 hover:text-[#111] transition-colors flex items-center justify-center"
+              className="text-gray-500 hover:text-[#111] transition-colors p-2 rounded-full hover:bg-white/5"
             >
-              <span className="material-symbols-outlined">close</span>
+              <X className="w-5 h-5" />
             </button>
+
           </div>
 
           {selectedItem ? (
             <div className="flex flex-col gap-6 relative">
               {itemDetailLoading && (
                 <div className="absolute -top-4 right-0 flex items-center gap-2 text-xs text-emerald-400 animate-pulse bg-emerald-400/5 px-2 py-1 rounded-full border border-emerald-400/10 z-20">
-                  <Spin size="small" />
+                  <Loader2 className="w-3 h-3 animate-spin" />
                   <span>Loading full details...</span>
                 </div>
+
               )}
 
               <div className="bg-black/40 w-full h-80 rounded-xl flex items-center justify-center overflow-hidden border border-gray-200 relative group/item">
@@ -456,15 +498,16 @@ export default function AnnotatorDatasetDetailPage() {
                     }}
                     className="w-10 h-10 rounded-full bg-black/40 text-[#111] hover:bg-violet-500/80 transition-all flex items-center justify-center backdrop-blur-md border border-gray-300 opacity-0 group-hover/item:opacity-100"
                   >
-                    <span className="material-symbols-outlined">chevron_left</span>
+                    <ChevronLeft className="w-5 h-5" />
                   </button>
+
                 </div>
 
                 {selectedItem.imageUrl ||
                   selectedItem.url ||
                   selectedItem.previewUrl ||
                   selectedItem.path ? (
-                  <Image
+                  <img
                     src={
                       selectedItem.imageUrl ||
                       selectedItem.url ||
@@ -478,7 +521,6 @@ export default function AnnotatorDatasetDetailPage() {
                       'Item'
                     }
                     className="max-w-full max-h-full object-contain"
-                    rootClassName="w-full h-full flex items-center justify-center"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement
                       if (!target.src.includes('picsum.photos')) {
@@ -486,6 +528,7 @@ export default function AnnotatorDatasetDetailPage() {
                       }
                     }}
                   />
+
                 ) : (
                   <img
                     src={selectedItem.fileName ? `https://picsum.photos/seed/${selectedItem.itemId}/400/300` : 'https://picsum.photos/seed/placeholder/400/300'}
@@ -502,15 +545,17 @@ export default function AnnotatorDatasetDetailPage() {
                     }}
                     className="w-10 h-10 rounded-full bg-black/40 text-[#111] hover:bg-violet-500/80 transition-all flex items-center justify-center backdrop-blur-md border border-gray-300 opacity-0 group-hover/item:opacity-100"
                   >
-                    <span className="material-symbols-outlined">chevron_right</span>
+                    <ChevronRight className="w-5 h-5" />
+
                   </button>
                 </div>
 
                 {itemDetailLoading && (
                   <div className="absolute inset-0 bg-black/20 backdrop-blur-[1px] flex items-center justify-center pointer-events-none">
-                    <Spin size="large" />
+                    <Loader2 className="w-8 h-8 text-violet-500 animate-spin" />
                   </div>
                 )}
+
               </div>
 
               <div className="bg-[#231e31]/50 border border-gray-200 rounded-xl p-4">
@@ -563,8 +608,9 @@ export default function AnnotatorDatasetDetailPage() {
             </div>
           ) : itemDetailLoading ? (
             <div className="py-20 flex justify-center items-center">
-              <Spin size="large" />
+              <Loader2 className="w-10 h-10 text-violet-500 animate-spin" />
             </div>
+
           ) : (
             <div className="py-10 text-center text-gray-500">
               No details available
@@ -573,36 +619,21 @@ export default function AnnotatorDatasetDetailPage() {
         </div>
       </GlassModal>
       <style>{`
-        .custom-pagination .ant-pagination-item {
-          background: rgba(255, 255, 255, 0.05);
-          border-color: rgba(255, 255, 255, 0.1);
-          border-radius: 8px;
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
         }
-        .custom-pagination .ant-pagination-item a {
-          color: #9ca3af;
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
         }
-        .custom-pagination .ant-pagination-item-active {
-          background: rgba(59, 130, 246, 0.2) !important;
-          border-color: rgba(59, 130, 246, 0.5) !important;
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(139, 92, 246, 0.2);
+          border-radius: 10px;
         }
-        .custom-pagination .ant-pagination-item-active a {
-          color: #60a5fa !important;
-        }
-        .custom-pagination .ant-pagination-prev .ant-pagination-item-link,
-        .custom-pagination .ant-pagination-next .ant-pagination-item-link {
-          background: rgba(255, 255, 255, 0.05) !important;
-          color: #9ca3af !important;
-          border-color: rgba(255, 255, 255, 0.1) !important;
-          border-radius: 8px;
-        }
-        .custom-pagination .ant-pagination-disabled .ant-pagination-item-link {
-          opacity: 0.3;
-        }
-        .custom-pagination .ant-pagination-jump-prev .ant-pagination-item-container .ant-pagination-item-ellipsis,
-        .custom-pagination .ant-pagination-jump-next .ant-pagination-item-container .ant-pagination-item-ellipsis {
-          color: #4b5563;
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(139, 92, 246, 0.4);
         }
       `}</style>
+
     </div>
   )
 }

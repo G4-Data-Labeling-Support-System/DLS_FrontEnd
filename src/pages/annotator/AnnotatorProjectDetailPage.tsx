@@ -1,6 +1,11 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { Spin, Button, Tag } from 'antd'
-import { ArrowLeftOutlined, LoadingOutlined } from '@ant-design/icons'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { ArrowLeft, Info, FileText, FolderOpen } from 'lucide-react'
+
+
+
 
 import { AnnotatorProjectTabs } from '@/features/annotator/components/AnnotatorProjectTabs'
 import {
@@ -51,28 +56,34 @@ export default function AnnotatorProjectDetailPage() {
 
   if (loading && !project) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <Spin indicator={<LoadingOutlined className="text-4xl text-violet-500" spin />} />
-        <span className="mt-4 text-violet-400 font-mono">Loading Project...</span>
+      <div className="p-8 space-y-6">
+        <Skeleton className="h-10 w-32 rounded-lg" />
+        <Skeleton className="h-12 w-full rounded-xl" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Skeleton className="h-[400px] rounded-2xl" />
+          <Skeleton className="h-[400px] rounded-2xl" />
+        </div>
       </div>
     )
   }
+
 
   if (projectError || !project) {
     return (
       <div className="p-6">
         <Button
-          type="text"
-          icon={<ArrowLeftOutlined />}
-          className="text-gray-500 hover:text-[#111] mb-6"
+          variant="ghost"
           onClick={() => navigate('/annotator/projects')}
+          className="text-gray-500 hover:text-[#111] mb-6"
         >
+          <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Projects
         </Button>
-        <div className="text-center text-gray-500 py-20 bg-[#1A1625]/40 rounded-xl border border-dashed border-gray-700">
+        <div className="text-center text-gray-500 py-20 bg-gray-50 rounded-xl border border-dashed border-gray-200">
           Project not found or an error occurred.
         </div>
       </div>
+
     )
   }
 
@@ -84,13 +95,14 @@ export default function AnnotatorProjectDetailPage() {
 
       {/* Back Button */}
       <Button
-        type="text"
-        icon={<ArrowLeftOutlined />}
-        className="text-gray-500 hover:text-[#111] mb-6 relative z-10"
+        variant="ghost"
         onClick={() => navigate('/annotator/projects')}
+        className="text-gray-500 hover:text-[#111] mb-6 relative z-10"
       >
+        <ArrowLeft className="mr-2 h-4 w-4" />
         Back to Projects
       </Button>
+
 
       {/* Tabs Menu */}
       {projectId && <AnnotatorProjectTabs projectId={projectId} activeTab="detail" />}
@@ -106,9 +118,8 @@ export default function AnnotatorProjectDetailPage() {
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="material-symbols-outlined text-[14px] text-violet-400">
-                    folder_special
-                  </span>
+                  <FolderOpen className="w-4 h-4 text-violet-400" />
+
                   <span className="text-xs font-mono text-violet-400 tracking-widest uppercase font-bold">
                     Project Information
                   </span>
@@ -125,9 +136,10 @@ export default function AnnotatorProjectDetailPage() {
                 <div
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold uppercase ${getStatusColor(project.projectStatus)}`}
                 >
-                  <span className="material-symbols-outlined text-[14px]">flag</span>
+                  <Info className="w-3 h-3" />
                   {project.projectStatus || 'UNKNOWN'}
                 </div>
+
               </div>
             </div>
 
@@ -158,21 +170,24 @@ export default function AnnotatorProjectDetailPage() {
           <div className="w-full flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-[#231e31]/60">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-inner">
-                <span className="material-symbols-outlined text-[16px] text-emerald-400">menu_book</span>
+                <FileText className="w-4 h-4 text-emerald-400" />
               </div>
+
               <span className="font-semibold text-[#111] text-base font-display">Project Guidelines</span>
             </div>
-            <Tag color="#10b981" className="border-0 bg-emerald-500/10 text-emerald-400 border-emerald-500/20 border shadow-inner rounded-full font-bold px-3 py-0.5 m-0 text-xs">
+            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 rounded-full font-bold px-3 py-0.5">
               {guidelines.length} total
-            </Tag>
+            </Badge>
+
           </div>
           
           <div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
             {guidelines.length === 0 ? (
               <div className="w-full h-full flex flex-col items-center justify-center opacity-60">
-                <span className="material-symbols-outlined text-5xl mb-3 text-gray-600">article</span>
+                <FileText className="w-12 h-12 mb-3 text-gray-400" />
                 <p className="text-gray-500 text-sm">No guidelines available</p>
               </div>
+
             ) : (
               <div className="flex flex-col gap-4">
                 {guidelines.map((guideline: Guideline, index: number) => (

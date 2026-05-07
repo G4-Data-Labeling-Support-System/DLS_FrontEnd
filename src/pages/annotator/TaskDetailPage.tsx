@@ -1,12 +1,28 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { Card, Table, Descriptions, Tag, Typography, Spin, Button } from 'antd'
+import { Card, CardContent } from '@/components/ui/card'
+
 import {
-  DatabaseOutlined,
-  ArrowLeftOutlined,
-  PlayCircleOutlined,
-  ArrowRightOutlined
-} from '@ant-design/icons'
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { 
+  Database, 
+  ArrowLeft, 
+  PlayCircle, 
+  ArrowRight, 
+  Loader2,
+  Image as ImageIcon,
+  AlertCircle,
+  Calendar
+} from 'lucide-react'
+
 import taskApi from '@/services/TaskApi'
 import assignmentApi from '@/services/AssignmentApi'
 import annotationApi from '@/services/annotation'
@@ -14,7 +30,7 @@ import { useTaskDetail } from '@/features/annotator/hooks/useTaskDetail'
 import { ChangeDatasetModal } from '@/features/manager/components/dataset/ChangeDatasetModal'
 import { useAuthStore } from '@/store'
 
-const { Title, Text } = Typography
+
 
 export interface Task {
   taskId: string
@@ -160,133 +176,13 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({
   const annotatedCount = getAnnotatedCount()
   const progressPercent = Math.round((annotatedCount / (dataItems.length || 1)) * 100)
 
-  const columns = [
-    {
-      title: 'Preview',
-      key: 'preview',
-      width: '10%',
-      render: (_: string, record: TaskDataItemRecord) => (
-        <div className="w-10 h-10 rounded-lg border border-gray-200 overflow-hidden bg-black/20 flex items-center justify-center transition-all hover:border-violet-500/30">
-          {record.dataItem.url || record.dataItem.previewUrl ? (
-            <img
-              src={record.dataItem.url || record.dataItem.previewUrl}
-              alt="preview"
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <span className="material-symbols-outlined text-gray-600 text-sm">image</span>
-          )}
-        </div>
-      )
-    },
-    {
-      title: 'Filename',
-      key: 'filename',
-      width: '20%',
-      render: (_: unknown, record: TaskDataItemRecord) => (
-        <Text
-          className="text-gray-700 font-medium truncate block max-w-[200px]"
-          title={record.dataItem.fileName}
-        >
-          {record.dataItem.fileName}
-        </Text>
-      )
-    },
-    {
-      title: 'Format',
-      key: 'fileFormat',
-      width: '12%',
-      render: (_: unknown, record: TaskDataItemRecord) => (
-        <Tag className="bg-blue-500/10 border-blue-500/20 text-blue-400 font-medium rounded-md px-2 py-0.5">
-          {record.dataItem.fileFormat}
-        </Tag>
-      )
-    },
-    {
-      title: 'Data Type',
-      key: 'dataType',
-      width: '12%',
-      render: (_: unknown, record: TaskDataItemRecord) => (
-        <Tag className="bg-violet-500/10 border-violet-500/20 text-violet-400 font-medium rounded-md px-2 py-0.5">
-          {record.dataItem.dataType}
-        </Tag>
-      )
-    },
-    {
-      title: 'Status',
-      key: 'status',
-      width: '12%',
-      render: (_: unknown, record: any) => {
-        const canonicalId = record.dataItemId || record.dataitemId || record.itemId || record.dataItem?.itemId || record.id
-        const localAnno = sessionAnnotations.find(a => a.dataitemId === canonicalId)
-        const status = (
-          remoteStatuses[canonicalId] ||
-          localAnno?.annotationStatus ||
-          record.taskDataItemStatus ||
-          'NOT_STARTED'
-        ).toUpperCase()
 
-        const isApprove = status === 'APPROVED'
-        const isSubmitted = status === 'COMPLETED' || status === 'SUBMITTED'
-        const isRejected = status === 'REJECTED' || status === 'NEEDS_EDITING'
-        const isInProgress = status === 'IN_PROGRESS' || status === 'IN_EDITING'
-
-        return (
-          <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${isApprove ? 'bg-violet-500 shadow-[0_0_8px_rgba(139,92,246,0.4)]' :
-              isSubmitted ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' :
-                isRejected ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]' :
-                  isInProgress ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]' :
-                    'bg-gray-600'
-              }`} />
-            <span className={`text-xs font-bold uppercase tracking-wider ${isApprove ? 'text-violet-400' :
-              isSubmitted ? 'text-emerald-400' :
-                isRejected ? 'text-rose-400' :
-                  isInProgress ? 'text-amber-400' :
-                    'text-gray-500'
-              }`}>
-              {status}
-            </span>
-          </div>
-        )
-      }
-    },
-    {
-      title: 'Uploaded At',
-      key: 'uploadedAt',
-      width: '18%',
-      render: (_: unknown, record: TaskDataItemRecord) => (
-        <Text className="text-gray-500 text-sm">
-          {record.dataItem.uploadedAt
-            ? new Date(record.dataItem.uploadedAt).toLocaleDateString()
-            : 'N/A'}
-        </Text>
-      )
-    },
-    {
-      title: 'Action',
-      key: 'action',
-      width: '6%',
-      render: (_: unknown, record: TaskDataItemRecord, index: number) => (
-        <button
-          onClick={() => onItemClick?.(record, index)}
-          className="p-1.5 rounded-lg hover:bg-white/5 text-gray-500 hover:text-violet-400 transition-all cursor-pointer flex items-center justify-center"
-        >
-          <ArrowRightOutlined className="text-lg" />
-        </button>
-      )
-    }
-  ]
 
   if (loading || !task) {
     return (
       <div className="py-32 flex flex-col items-center gap-4">
-        <Spin
-          indicator={
-            <div className="w-12 h-12 rounded-full border-4 border-violet-500/20 border-t-violet-500 animate-spin" />
-          }
-        />
-        <span className="text-gray-500 font-medium tracking-widest text-[10px] uppercase">
+        <Loader2 className="w-12 h-12 text-violet-500 animate-spin" />
+        <span className="text-gray-500 font-medium tracking-widest text-[10px] uppercase animate-pulse">
           Loading Task Details...
         </span>
       </div>
@@ -298,119 +194,219 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-4">
           {onBack && (
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={onBack}
-              className="group flex items-center gap-2 text-gray-500 hover:text-[#111] transition-all bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg border border-gray-200 hover:border-gray-300"
+              className="group flex items-center gap-2 border-gray-200"
             >
-              <ArrowLeftOutlined className="text-xs group-hover:-translate-x-0.5 transition-transform" />
+              <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
               <span className="text-xs font-bold uppercase tracking-wider">Back</span>
-            </button>
+            </Button>
           )}
           <div className="flex flex-col">
-            <Title level={4} className="!text-[#111] !mb-0 tracking-tight font-bold">
+            <h1 className="text-2xl font-bold text-[#111] tracking-tight">
               {task.taskName || 'Untitled Task'}
-            </Title>
-            <Text className="text-gray-500 font-mono text-xs select-all">ID: {task.taskId}</Text>
+            </h1>
+            <span className="text-gray-500 font-mono text-xs select-all">ID: {task.taskId}</span>
           </div>
         </div>
         {onStartLabeling && (
           <Button
-            type="primary"
-            icon={<PlayCircleOutlined />}
             onClick={onStartLabeling}
-            className="bg-violet-600 border-none hover:bg-violet-500 rounded-xl h-auto py-2 h-[38px] flex items-center"
+            className="bg-violet-600 hover:bg-violet-700 text-white rounded-xl"
           >
+            <PlayCircle className="mr-2 h-4 w-4" />
             <span className="text-sm font-medium">Start Labeling</span>
           </Button>
         )}
       </div>
 
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-2">
         {/* Left Column: Metrics and Info */}
         <div className="lg:col-span-12">
-          <Card className="bg-[#16161a]/60 border-gray-200 backdrop-blur-xl rounded-2xl shadow-xl overflow-hidden hover:border-gray-300 transition-all duration-500">
-            <div className="p-2">
-              <Descriptions
-                column={{ xxl: 4, xl: 3, lg: 2, md: 2, sm: 1, xs: 1 }}
-                layout="vertical"
-                className="custom-descriptions"
-              >
-                <Descriptions.Item label="Assignment">
+          <Card className="bg-white border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="space-y-2">
+                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                    <Database className="w-3 h-3" />
+                    Assignment
+                  </div>
                   <div className="flex items-center gap-2">
-                    <DatabaseOutlined className="text-violet-400" />
-                    <span className="text-gray-700 font-medium">
+                    <span className="text-[#111] font-semibold text-sm">
                       {task.assignmentName || 'N/A'}
                     </span>
                     {isManager && (
-                      <button
+                      <Badge 
                         onClick={() => setIsChangeDatasetModalOpen(true)}
-                        className="text-[10px] bg-violet-500/10 text-violet-400 border border-violet-500/20 px-2 py-0.5 rounded hover:bg-violet-500/20 transition-all font-bold uppercase tracking-wider"
+                        variant="secondary"
+                        className="cursor-pointer hover:bg-violet-100 text-[9px]"
                       >
                         Change
-                      </button>
+                      </Badge>
                     )}
                   </div>
-                </Descriptions.Item>
-                <Descriptions.Item label="Progress">
-                  <div className="flex flex-col gap-1 w-full max-w-[200px]">
-                    <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider">
-                      <span className="text-violet-400">
-                        {progressPercent}%
-                      </span>
-                      <span className="text-gray-500">
-                        {annotatedCount} / {dataItems.length}
-                      </span>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Progress</div>
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-[10px] font-bold">
+                      <span className="text-violet-600">{progressPercent}%</span>
+                      <span className="text-gray-500">{annotatedCount} / {dataItems.length}</span>
                     </div>
-                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-violet-600 to-indigo-600 rounded-full transition-all duration-1000 ease-out"
-                        style={{
-                          width: `${progressPercent}%`
-                        }}
+                        className="h-full bg-violet-600 transition-all duration-1000"
+                        style={{ width: `${progressPercent}%` }}
                       />
                     </div>
                   </div>
-                </Descriptions.Item>
-                <Descriptions.Item label="Created At">
-                  <span className="text-gray-500 text-xs font-mono">
+                </div>
+
+                <div className="space-y-2">
+                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                    <Calendar className="w-3 h-3" />
+                    Created At
+                  </div>
+                  <div className="text-[#111] text-sm font-medium">
                     {task.createdAt ? new Date(task.createdAt).toLocaleDateString() : 'N/A'}
-                  </span>
-                </Descriptions.Item>
-              </Descriptions>
-            </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
           </Card>
         </div>
+
 
         {/* Full Width Table for Items */}
         <div className="lg:col-span-12 mt-6">
-          <div className="flex items-center gap-3 mb-6 px-2">
+          <div className="flex items-center gap-3 mb-6">
             <div className="w-8 h-8 rounded-xl bg-violet-500/10 flex items-center justify-center">
-              <DatabaseOutlined className="text-violet-400 text-sm" />
+              <Database className="w-4 h-4 text-violet-500" />
             </div>
-            <Title level={5} className="!text-[#111] !mb-0 tracking-tight font-bold">
-              Task Data Items
-            </Title>
-            <Tag className="bg-white/5 border-gray-300 text-gray-500 rounded-lg font-mono">
+            <h2 className="text-lg font-bold text-[#111]">Task Data Items</h2>
+            <Badge variant="secondary" className="font-mono">
               {dataItems.length}
-            </Tag>
+            </Badge>
           </div>
 
-          <Card className="bg-[#16161a]/40 border-gray-200 backdrop-blur-xl rounded-2xl shadow-2xl overflow-hidden">
-            <Table
-              dataSource={dataItems}
-              columns={columns}
-              loading={itemsLoading}
-              rowKey={(record: any, index) => String(record.taskItemId || record.dataItemId || record.id || `item-${index}`)}
-              pagination={{
-                pageSize: 10,
-                showSizeChanger: false,
-                className: 'custom-pagination !mt-8 !mb-4 !px-6'
-              }}
-              className="manager-task-table"
-            />
-            {itemsError && <div className="p-8 text-red-400 text-center">{String(itemsError)}</div>}
+          <Card className="bg-white border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gray-50/50">
+                  <TableHead className="w-[10%] px-6">Preview</TableHead>
+                  <TableHead className="w-[30%] px-6">Filename</TableHead>
+                  <TableHead className="w-[15%] px-6">Format/Type</TableHead>
+                  <TableHead className="w-[15%] px-6">Status</TableHead>
+                  <TableHead className="w-[20%] px-6">Uploaded At</TableHead>
+                  <TableHead className="w-[10%] px-6 text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {dataItems.map((record: any, index: number) => {
+                  const canonicalId = getCanonicalId(record)
+                  const localAnno = sessionAnnotations.find(a => a.dataitemId === canonicalId)
+                  const status = (
+                    remoteStatuses[canonicalId] ||
+                    localAnno?.annotationStatus ||
+                    record.taskDataItemStatus ||
+                    'NOT_STARTED'
+                  ).toUpperCase()
+
+                  const statusColors: Record<string, string> = {
+                    'APPROVED': 'bg-violet-500',
+                    'SUBMITTED': 'bg-emerald-500',
+                    'COMPLETED': 'bg-emerald-500',
+                    'REJECTED': 'bg-rose-500',
+                    'NEEDS_EDITING': 'bg-rose-500',
+                    'IN_PROGRESS': 'bg-amber-500',
+                  }
+                  
+                  const statusTextColors: Record<string, string> = {
+                    'APPROVED': 'text-violet-600',
+                    'SUBMITTED': 'text-emerald-600',
+                    'COMPLETED': 'text-emerald-600',
+                    'REJECTED': 'text-rose-600',
+                    'NEEDS_EDITING': 'text-rose-600',
+                    'IN_PROGRESS': 'text-amber-600',
+                  }
+
+                  const dotColor = statusColors[status] || 'bg-gray-400'
+                  const textColor = statusTextColors[status] || 'text-gray-500'
+
+                  return (
+                    <TableRow key={canonicalId || index} className="group hover:bg-gray-50/50 transition-colors">
+                      <TableCell className="px-6">
+                        <div className="w-10 h-10 rounded-lg border border-gray-200 overflow-hidden bg-gray-100 flex items-center justify-center group-hover:border-violet-500/30 transition-all">
+                          {record.dataItem.url || record.dataItem.previewUrl ? (
+                            <img
+                              src={record.dataItem.url || record.dataItem.previewUrl}
+                              alt="preview"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <ImageIcon className="w-4 h-4 text-gray-400" />
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-6">
+                        <span className="text-[#111] font-medium text-sm line-clamp-1" title={record.dataItem.fileName}>
+                          {record.dataItem.fileName}
+                        </span>
+                      </TableCell>
+                      <TableCell className="px-6">
+                        <div className="flex flex-wrap gap-1">
+                          <Badge variant="outline" className="text-[9px] bg-blue-50 border-blue-100 text-blue-600">
+                            {record.dataItem.fileFormat}
+                          </Badge>
+                          <Badge variant="outline" className="text-[9px] bg-violet-50 border-violet-100 text-violet-600">
+                            {record.dataItem.dataType}
+                          </Badge>
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-6">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full ${dotColor}`} />
+                          <span className={`text-[10px] font-bold uppercase tracking-wider ${textColor}`}>
+                            {status}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-6 text-gray-500 text-xs">
+                        {record.dataItem.uploadedAt ? new Date(record.dataItem.uploadedAt).toLocaleDateString() : 'N/A'}
+                      </TableCell>
+                      <TableCell className="px-6 text-right">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onItemClick?.(record, index)}
+                          className="h-8 w-8 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-all"
+                        >
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+            {itemsError && (
+              <div className="p-12 text-center">
+                <AlertCircle className="w-10 h-10 text-red-400 mx-auto mb-2 opacity-50" />
+                <p className="text-red-500 font-medium">{String(itemsError)}</p>
+              </div>
+            )}
+            {!itemsLoading && dataItems.length === 0 && (
+              <div className="p-12 text-center text-gray-400">
+                No items found for this task.
+              </div>
+            )}
           </Card>
         </div>
+
       </div>
 
       <ChangeDatasetModal
@@ -425,59 +421,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({
         }}
       />
 
-      <style>{`
-        .custom-descriptions .ant-descriptions-item-label {
-          color: #6b7280 !important;
-          font-size: 10px !important;
-          text-transform: uppercase !important;
-          letter-spacing: 0.1em !important;
-          font-weight: 700 !important;
-          padding-bottom: 8px !important;
-        }
-        .manager-task-table .ant-table {
-          background: transparent !important;
-        }
-        .manager-task-table .ant-table-thead > tr > th {
-          background: rgba(255, 255, 255, 0.02) !important;
-          color: #9ca3af !important;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
-          font-size: 11px;
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-          font-weight: 700;
-          padding: 16px 20px !important;
-        }
-        .manager-task-table .ant-table-tbody > tr > td {
-          border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
-          background: transparent !important;
-          padding: 16px 20px !important;
-        }
-        .manager-task-table .ant-table-tbody > tr:hover > td {
-          background: rgba(255, 255, 255, 0.02) !important;
-        }
-        .custom-pagination.ant-pagination .ant-pagination-item {
-          background: rgba(255, 255, 255, 0.03);
-          border-color: rgba(255, 255, 255, 0.05);
-          border-radius: 8px;
-        }
-        .custom-pagination.ant-pagination .ant-pagination-item a {
-          color: #9ca3af;
-        }
-        .custom-pagination.ant-pagination .ant-pagination-item-active {
-          background: rgba(139, 92, 246, 0.1);
-          border-color: #8b5cf6;
-        }
-        .custom-pagination.ant-pagination .ant-pagination-item-active a {
-          color: #a78bfa;
-        }
-        .custom-pagination.ant-pagination .ant-pagination-prev button,
-        .custom-pagination.ant-pagination .ant-pagination-next button {
-          background: rgba(255, 255, 255, 0.03);
-          border-color: rgba(255, 255, 255, 0.05);
-          color: #9ca3af;
-          border-radius: 8px;
-        }
-      `}</style>
+
     </div>
   )
 }
@@ -568,16 +512,18 @@ export default function TaskDetailPage() {
 
   if (error || (!task && !loading)) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 gap-4 min-h-screen bg-[#0f0e17]">
-        <span className="material-symbols-outlined text-red-500 text-5xl opacity-80">error</span>
-        <span className="text-red-400 font-medium">{error || 'Task not found.'}</span>
-        <button
+      <div className="flex flex-col items-center justify-center py-20 gap-4 min-h-screen bg-white">
+        <AlertCircle className="text-red-500 w-12 h-12 opacity-80" />
+        <span className="text-red-500 font-bold tracking-tight text-xl">{error || 'Task not found.'}</span>
+        <Button
           onClick={() => navigate(-1)}
-          className="text-[#111] text-sm font-bold px-6 py-2 bg-white/5 border border-gray-300 rounded-xl hover:bg-white/10 transition-colors"
+          variant="outline"
+          className="rounded-xl px-8"
         >
           Go Back
-        </button>
+        </Button>
       </div>
+
     )
   }
 

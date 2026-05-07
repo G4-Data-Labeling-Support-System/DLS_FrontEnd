@@ -4,6 +4,10 @@ import { useAuthStore } from '@/store/auth.store'
 import assignmentApi from '@/services/AssignmentApi'
 import projectApi from '@/services/ProjectApi'
 import { ProjectCard } from '@/features/annotator/components/ProjectCard'
+import { Skeleton } from '@/components/ui/skeleton'
+import { FolderOpen, AlertCircle } from 'lucide-react'
+
+
 
 export default function AnnotatorAllProjectsPage() {
   const navigate = useNavigate()
@@ -88,38 +92,38 @@ export default function AnnotatorAllProjectsPage() {
 
   return (
     <div className="p-6">
-      <div className="flex items-center gap-3 mb-8 border-b border-gray-800 pb-4">
-        <span className="material-symbols-outlined text-[24px] text-fuchsia-400">folder_open</span>
+      <div className="flex items-center gap-3 mb-8 border-b border-gray-200 pb-4">
+        <FolderOpen className="w-6 h-6 text-violet-500" />
         <h1 className="text-2xl font-bold text-[#111] tracking-tight">All Projects</h1>
       </div>
 
+
       {loading ? (
-        <div className="flex items-center gap-2 mb-4 animate-pulse">
-          <div className="w-2 h-2 rounded-full bg-violet-500"></div>
-          <span className="text-xs text-violet-400 font-mono">Syncing projects with server...</span>
-        </div>
-      ) : error ? (
-        <div className="text-center text-gray-500 py-20 bg-[#1A1625]/40 rounded-xl border border-dashed border-gray-700">
-          {error}
-        </div>
-      ) : projects.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-          {projects.map((p) => (
-            <ProjectCard
-              key={p.id}
-              id={p.id}
-              projectName={p.name}
-              status={p.status}
-              createdAt={p.createdAt}
-              updatedAt={p.updatedAt}
-              description={p.descriptionProject || p.description}
-              onClick={() => navigate(`/annotator/projects/${p.id}`)}
-            />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {[...Array(8)].map((_, i) => (
+            <Skeleton key={i} className="h-48 rounded-2xl" />
           ))}
         </div>
+      ) : error ? (
+        <div className="text-center py-20 bg-red-50 rounded-2xl border border-red-100 flex flex-col items-center gap-3">
+          <AlertCircle className="w-8 h-8 text-red-500" />
+          <p className="text-red-500 font-medium">{error}</p>
+        </div>
+      ) : projects.length === 0 ? (
+        <div className="text-center py-32 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+          <FolderOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-500">You haven't been assigned to any projects yet.</p>
+        </div>
       ) : (
-        <div className="text-center text-gray-500 py-20 bg-[#1A1625]/40 rounded-xl border border-dashed border-gray-700">
-          No projects available.
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {projects.map((project) => (
+            <ProjectCard
+              key={project.id}
+              {...project}
+              projectName={project.projectName || project.name}
+              onClick={() => navigate(`/annotator/projects/${project.id}`)}
+            />
+          ))}
         </div>
       )}
     </div>

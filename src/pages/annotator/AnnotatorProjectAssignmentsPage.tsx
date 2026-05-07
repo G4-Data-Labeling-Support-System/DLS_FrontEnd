@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { Spin, Button, Typography, Space, Select, Input, Empty } from 'antd'
-import { ArrowLeftOutlined, LoadingOutlined, SearchOutlined } from '@ant-design/icons'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Skeleton } from '@/components/ui/skeleton'
+import { ArrowLeft, Search, FilterX } from 'lucide-react'
+
+
 
 import { useAuthStore } from '@/store/auth.store'
 import assignmentApi, { type GetAssignmentsParams } from '@/services/AssignmentApi'
@@ -9,7 +14,7 @@ import { AssignmentCard } from '@/features/manager/components/dashboard/Assignme
 import { AnnotatorProjectTabs } from '@/features/annotator/components/AnnotatorProjectTabs'
 import AnnotatorAssignmentDetailPage from './AnnotatorAssignmentDetailPage'
 
-const { Title } = Typography
+
 
 interface RawAssignment extends GetAssignmentsParams {
   project?: {
@@ -87,13 +92,14 @@ export default function AnnotatorProjectAssignmentsPage() {
   return (
     <div className="p-6">
       <Button
-        type="text"
-        icon={<ArrowLeftOutlined />}
-        className="text-gray-500 hover:text-[#111] mb-6"
+        variant="ghost"
         onClick={() => navigate(`/annotator/projects/${projectId}`)}
+        className="text-gray-500 hover:text-[#111] mb-6"
       >
+        <ArrowLeft className="mr-2 h-4 w-4" />
         Back to Projects
       </Button>
+
 
       {/* Tabs Menu */}
       {projectId && <AnnotatorProjectTabs projectId={projectId} activeTab="assignment" />}
@@ -105,46 +111,49 @@ export default function AnnotatorProjectAssignmentsPage() {
       ) : (
         <>
           {/* Header with Filters */}
-          <div className="flex justify-between items-center mb-6 mt-0">
-            <Title level={4} className="!text-[#111] !m-0 !font-display">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 mt-0">
+            <h1 className="text-2xl font-bold text-[#111] tracking-tight">
               Project Assignments
-            </Title>
-            <Space>
-              <Select
-                value={statusFilter}
-                onChange={(value) => setStatusFilter(value)}
-                className="w-40"
-                options={[
-                  { value: 'ALL', label: 'All Statuses' },
-                  { value: 'ASSIGNED', label: 'Assigned' },
-                  { value: 'IN_PROGRESS', label: 'In Progress' },
-                  { value: 'REVIEWING', label: 'Reviewing' },
-                  { value: 'COMPLETED', label: 'Completed' }
-                ]}
-              />
-              <Input
-                placeholder="Search assignments..."
-                prefix={<SearchOutlined className="text-gray-500" />}
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                className="bg-[#1A1625] border-gray-700 text-[#111] hover:border-violet-500 focus:border-violet-500 w-64"
-              />
-            </Space>
+            </h1>
+            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+              <div className="relative flex-1 md:flex-none">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search assignments..."
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  className="pl-9 w-full md:w-64 bg-white"
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={(val) => setStatusFilter(val || 'ALL')}>
+                <SelectTrigger className="w-[160px] bg-white">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">All Statuses</SelectItem>
+                  <SelectItem value="ASSIGNED">Assigned</SelectItem>
+                  <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                  <SelectItem value="REVIEWING">Reviewing</SelectItem>
+                  <SelectItem value="COMPLETED">Completed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Tab Content */}
           <div className="mt-0">
             {loading && assignments.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20">
-                <Spin indicator={<LoadingOutlined className="text-4xl text-violet-500" spin />} />
-                <span className="mt-4 text-violet-400 font-mono">Loading Assignments...</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <Skeleton key={i} className="h-48 rounded-2xl" />
+                ))}
               </div>
             ) : error ? (
-              <div className="text-center text-gray-500 py-20 bg-[#1A1625]/40 rounded-xl border border-dashed border-gray-700">
-                {error}
+              <div className="text-center py-20 bg-red-50 rounded-2xl border border-red-100">
+                <p className="text-red-500">{error}</p>
               </div>
             ) : filteredAssignments.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredAssignments.map((a, idx) => (
                   <AssignmentCard
                     key={a.assignmentId || idx}
@@ -154,15 +163,15 @@ export default function AnnotatorProjectAssignmentsPage() {
                 ))}
               </div>
             ) : (
-              <Empty
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description={<span className="text-gray-500">No assignments found matching your filters.</span>}
-                className="my-10 p-10 bg-[#1A1625]/40 rounded-xl border border-dashed border-gray-700"
-              />
+              <div className="text-center py-32 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                <FilterX className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500">No assignments found matching your filters.</p>
+              </div>
             )}
           </div>
         </>
       )}
+
     </div>
   )
 }

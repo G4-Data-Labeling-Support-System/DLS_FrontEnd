@@ -1,50 +1,48 @@
 import React from 'react'
-import { Card, Button, Typography } from 'antd'
-import { FolderOpenOutlined, RightOutlined, PlayCircleOutlined } from '@ant-design/icons'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { FolderOpen, ChevronRight, Play, Zap } from 'lucide-react'
+
 import { useNavigate } from 'react-router-dom'
 import { PATH_ANNOTATOR } from '@/routes/paths'
 
-const { Title } = Typography
+
 
 export const AnnotatorDatasetQuickActions: React.FC = () => {
   const navigate = useNavigate()
 
   return (
-    <Card className="h-full bg-[#1A1625] border-gray-800 rounded-2xl p-4 shadow-xl">
-      <div className="flex items-center gap-2 mb-6">
-        <div className="text-amber-400 transform -rotate-12 bg-none text-xl">⚡</div>
-        <Title level={5} className="!text-[#111] !m-0 !font-normal !font-display">
-          Quick Actions
-        </Title>
-      </div>
-
-      <div className="flex flex-col gap-4">
-        {/* Placeholder for "Start Annotation" if we have a way to determine the next task */}
+    <Card className="h-full bg-white border-gray-200 rounded-2xl shadow-xl overflow-hidden">
+      <CardHeader className="p-6 pb-2">
+        <div className="flex items-center gap-2">
+          <Zap className="w-5 h-5 text-amber-500 fill-amber-500" />
+          <CardTitle className="text-lg font-bold text-[#111]">Quick Actions</CardTitle>
+        </div>
+      </CardHeader>
+      <CardContent className="p-6 pt-4 flex flex-col gap-4">
         <Button
-          type="primary"
-          size="large"
-          className="w-full h-12 flex items-center justify-center bg-violet-600 hover:bg-violet-500 border-none shadow-[0_0_15px_rgba(139,92,246,0.4)]"
-          onClick={() => {
-            // Logic to start annotation could go here
-            // For now, it's a prominent action
-          }}
+          size="lg"
+          className="w-full h-12 bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-500/20 font-bold tracking-wider"
+          onClick={() => {}}
         >
-          <PlayCircleOutlined className="text-lg mr-2" />
+          <Play className="w-4 h-4 mr-2 fill-current" />
           START ANNOTATING
         </Button>
 
         <Button
-          className="w-full h-12 flex items-center justify-between bg-[#231e31] border-gray-700 text-gray-600 hover:text-[#111] hover:border-gray-500 hover:bg-[#2d2640]"
+          variant="outline"
+          className="w-full h-12 flex items-center justify-between border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 hover:text-gray-900 px-4"
           onClick={() => navigate(PATH_ANNOTATOR.projects)}
         >
-          <div className="flex items-center">
-            <FolderOpenOutlined className="mr-3 text-lg text-amber-400" />
-            <span className="text-xs font-semibold">PROJECT & ASSIGNMENT LIST</span>
+          <div className="flex items-center gap-3">
+            <FolderOpen className="w-5 h-5 text-amber-500" />
+            <span className="text-xs font-bold uppercase tracking-wide">Projects & Assignments</span>
           </div>
-          <RightOutlined className="text-[10px]" />
+          <ChevronRight className="w-4 h-4 text-gray-400" />
         </Button>
-      </div>
+      </CardContent>
     </Card>
+
   )
 }
 

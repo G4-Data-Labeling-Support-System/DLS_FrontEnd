@@ -1,49 +1,52 @@
-import { Modal, ConfigProvider, type ModalProps } from 'antd'
-import { antdThemeConfig } from '@/styles/antdConfig'
-import React, { type CSSProperties } from 'react'
+import React from 'react'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { cn } from '@/lib/utils'
 
-interface GlassModalProps extends ModalProps {
+interface GlassModalProps {
+  open: boolean
+  onCancel: () => void
+  title?: React.ReactNode
   children: React.ReactNode
+  width?: number
   contentClassName?: string
+  destroyOnHidden?: boolean
 }
 
 export const GlassModal: React.FC<GlassModalProps> = ({
+  open,
+  onCancel,
+  title,
   children,
-  styles,
+  width = 600,
   contentClassName,
-  ...props
 }) => {
-  // Glass effect styles for the inner container
-  const glassContainerStyle: CSSProperties = {
-    background: 'rgba(20, 20, 30, 0.95)',
-    backdropFilter: 'blur(16px)',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
-    borderRadius: '16px',
-    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-    position: 'relative',
-    overflow: 'hidden'
-  }
-
   return (
-    <ConfigProvider theme={antdThemeConfig}>
-      <Modal
-        footer={null}
-        centered
-        closeIcon={null}
-        styles={{
-          mask: { backdropFilter: 'blur(4px)' },
-          body: { padding: 0 },
-          ...styles // Allow overriding styles
-        }}
-        {...props}
+    <Dialog open={open} onOpenChange={(val) => !val && onCancel()}>
+      <DialogContent 
+        className={cn(
+          "max-w-[calc(100vw-2rem)] bg-[#14141e]/95 backdrop-blur-xl border-white/10 shadow-2xl p-0 overflow-hidden rounded-2xl",
+          contentClassName
+        )}
+        style={{ width: width > 0 ? `${width}px` : 'auto' }}
       >
-        <div style={glassContainerStyle} className={contentClassName}>
-          {/* Holographic Accent Line */}
-          <div className="absolute top-0 left-0 h-[2px] w-full bg-gradient-to-r from-transparent via-violet-500 to-transparent opacity-60"></div>
-
+        {/* Holographic Accent Line */}
+        <div className="absolute top-0 left-0 h-[2px] w-full bg-gradient-to-r from-transparent via-violet-500 to-transparent opacity-60 z-50"></div>
+        
+        {title && (
+          <DialogHeader className="px-6 pt-6 pb-0 border-none">
+            <DialogTitle>{title}</DialogTitle>
+          </DialogHeader>
+        )}
+        
+        <div className="relative">
           {children}
         </div>
-      </Modal>
-    </ConfigProvider>
+      </DialogContent>
+    </Dialog>
   )
 }

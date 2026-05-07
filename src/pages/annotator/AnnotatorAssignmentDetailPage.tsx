@@ -1,7 +1,12 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { Spin, Button } from 'antd'
-import { ArrowLeftOutlined, LoadingOutlined } from '@ant-design/icons'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
+import { ArrowLeft, Tag, Info, Calendar, FileText, FolderOpen, Eye, Database } from 'lucide-react'
+
+
+
+
 
 import assignmentApi from '@/services/AssignmentApi'
 import taskApi from '@/services/TaskApi'
@@ -150,13 +155,22 @@ export default function AnnotatorAssignmentDetailPage() {
     }
   }
 
-  if (loading && !assignment) {
+  if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 min-h-[400px]">
-        <Spin indicator={<LoadingOutlined className="text-4xl text-violet-500" spin />} />
-        <span className="mt-4 text-violet-400 font-mono tracking-widest text-xs uppercase animate-pulse">
-          Loading Assignment Details...
-        </span>
+      <div className="min-h-screen bg-[#fafafa] p-8 flex flex-col gap-6">
+        <div className="flex items-center gap-4">
+          <Skeleton className="w-10 h-10 rounded-xl" />
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-64" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Skeleton className="h-32 rounded-2xl" />
+          <Skeleton className="h-32 rounded-2xl" />
+          <Skeleton className="h-32 rounded-2xl" />
+        </div>
+        <Skeleton className="h-96 rounded-2xl" />
       </div>
     )
   }
@@ -165,15 +179,14 @@ export default function AnnotatorAssignmentDetailPage() {
     return (
       <div className="p-8">
         <Button
-          type="text"
-          icon={<ArrowLeftOutlined />}
-          className="text-gray-500 hover:text-[#111] mb-6 bg-white/5"
+          variant="outline"
           onClick={handleBack}
+          className="mb-6"
         >
+          <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Assignments
         </Button>
-        <div className="text-center text-gray-500 py-20 bg-[#1A1625]/40 rounded-2xl border-2 border-dashed border-gray-200">
-          <span className="material-symbols-outlined text-5xl mb-4 opacity-20">assignment_late</span>
+        <div className="text-center text-gray-500 py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
           <p className="font-medium">{error || 'Assignment not found.'}</p>
         </div>
       </div>
@@ -197,10 +210,17 @@ export default function AnnotatorAssignmentDetailPage() {
       <div className="mb-8 relative z-10">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate(-1)}
+              className="w-10 h-10 rounded-xl bg-white border border-gray-200 shadow-sm hover:bg-gray-50 text-gray-600"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="material-symbols-outlined text-[18px] text-violet-400">assignment</span>
+                <Tag className="w-4 h-4 text-violet-400" />
                 <span className="text-xs font-mono text-violet-400 tracking-widest uppercase">
                   Assignment Detail
                 </span>
@@ -220,7 +240,7 @@ export default function AnnotatorAssignmentDetailPage() {
           <div className="flex-1 p-7 border-b md:border-b-0 md:border-r border-gray-300 relative">
             <div className="absolute -top-10 -left-10 w-40 h-40 rounded-full bg-violet-500/5 blur-[50px] pointer-events-none" />
             <h3 className="text-lg font-semibold text-[#111] mb-6 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px] text-violet-400">info</span>
+              <Info className="w-4 h-4 text-violet-400" />
               Assignment Information
             </h3>
             <div className="space-y-5">
@@ -242,7 +262,7 @@ export default function AnnotatorAssignmentDetailPage() {
                 <div
                   className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 border text-[10px] font-bold uppercase tracking-wider ${daysLeft <= 2 ? 'border-red-500/30 text-red-400' : daysLeft <= 5 ? 'border-amber-500/30 text-amber-400' : 'border-emerald-500/30 text-emerald-400'}`}
                 >
-                  <span className="material-symbols-outlined text-[14px]">schedule</span>
+                  <Calendar className="w-3 h-3" />
                   {daysLeft > 0 ? `${daysLeft} day${daysLeft !== 1 ? 's' : ''} left` : 'Deadline passed'}
                 </div>
               </div>
@@ -265,7 +285,7 @@ export default function AnnotatorAssignmentDetailPage() {
           <div className="flex-1 p-7 flex flex-col relative overflow-hidden">
             <div className="absolute -bottom-10 -right-10 w-40 h-40 rounded-full bg-fuchsia-500/5 blur-[50px] pointer-events-none" />
             <h3 className="text-lg font-semibold text-[#111] mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px] text-fuchsia-400">description</span>
+              <FileText className="w-4 h-4 text-fuchsia-400" />
               Description
             </h3>
             <div className="flex-1 bg-white/5 p-5 rounded-2xl border border-gray-300 min-h-[120px]">
@@ -282,7 +302,7 @@ export default function AnnotatorAssignmentDetailPage() {
           <div className="glass-panel border border-gray-200 bg-[#1A1625]/60 backdrop-blur-md rounded-2xl p-6 shadow-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-3xl pointer-events-none" />
             <h3 className="text-lg font-semibold text-[#111] mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px] text-blue-400">folder_special</span>
+              <FolderOpen className="w-4 h-4 text-blue-400" />
               Associated Project
             </h3>
             {assignment.projectId ? (
@@ -294,9 +314,12 @@ export default function AnnotatorAssignmentDetailPage() {
                   {assignment.projectId}
                 </h4>
                 <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[12px]">visibility</span>
+                  <Eye className="w-3 h-3" />
                   Click to view project details
                 </p>
+
+
+
               </div>
             ) : (
               <div className="bg-white/5 p-5 rounded-xl border border-gray-200 text-center italic text-gray-500">
@@ -310,9 +333,10 @@ export default function AnnotatorAssignmentDetailPage() {
             <div className="absolute top-0 right-0 w-32 h-32 bg-fuchsia-500/5 blur-3xl pointer-events-none" />
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-[#111] flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px] text-fuchsia-400">database</span>
+                <Database className="w-4 h-4 text-fuchsia-400" />
                 Assigned Dataset
               </h3>
+
             </div>
             {datasetName ? (
               <div
@@ -329,9 +353,12 @@ export default function AnnotatorAssignmentDetailPage() {
                   {datasetName}
                 </h4>
                 <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[12px]">visibility</span>
+                  <Eye className="w-3 h-3" />
                   Click to view dataset details
                 </p>
+
+
+
               </div>
             ) : (
               <div className="bg-white/5 p-5 rounded-xl border border-gray-200 text-center italic text-gray-500">

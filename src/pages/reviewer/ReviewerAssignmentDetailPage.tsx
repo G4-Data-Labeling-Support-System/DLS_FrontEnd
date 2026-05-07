@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { Spin, Button } from 'antd'
-import { ArrowLeftOutlined, LoadingOutlined } from '@ant-design/icons'
+import { Loader2, ArrowLeft } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+
 
 import assignmentApi from '@/services/AssignmentApi'
 import taskApi from '@/services/TaskApi'
 import ReviewerDatasetDetailPage from '@/pages/reviewer/ReviewerDatasetDetailPage'
 import { TasksSection } from '@/features/tasks'
+import type { Task } from '@/features/tasks/types'
+
 
 
 interface Assignment {
@@ -130,11 +133,12 @@ export default function ReviewerAssignmentDetailPage() {
   if (loading && !assignment) {
     return (
       <div className="flex flex-col items-center justify-center py-20 min-h-[400px]">
-        <Spin indicator={<LoadingOutlined className="text-4xl text-violet-500" spin />} />
+        <Loader2 className="h-10 w-10 text-violet-500 animate-spin" />
         <span className="mt-4 text-violet-400 font-mono tracking-widest text-xs uppercase animate-pulse">
           Loading Assignment Details...
         </span>
       </div>
+
     )
   }
 
@@ -142,13 +146,14 @@ export default function ReviewerAssignmentDetailPage() {
     return (
       <div className="p-8">
         <Button
-          type="text"
-          icon={<ArrowLeftOutlined />}
-          className="text-gray-500 hover:text-[#111] mb-6 bg-white/5"
+          variant="outline"
+          className="mb-4 bg-white/5 border-gray-300 hover:bg-white/10"
           onClick={handleBack}
         >
+          <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Assignments
         </Button>
+
         <div className="text-center text-gray-500 py-20 bg-[#1A1625]/40 rounded-2xl border-2 border-dashed border-gray-200">
           <p className="font-medium">{error || 'Assignment not found.'}</p>
         </div>

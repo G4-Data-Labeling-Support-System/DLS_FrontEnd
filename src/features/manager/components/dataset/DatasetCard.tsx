@@ -1,9 +1,12 @@
 import React from 'react'
-import { Card, Button, Typography, Dropdown, Tag, type MenuProps } from 'antd'
-import { MoreOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button'
+import { Eye, Edit, Trash2, MoreVertical, Database } from 'lucide-react'
 import type { GetDatasetsParams } from '@/services/DatasetApi'
 
-const { Title } = Typography
+
 
 interface DatasetCardProps extends GetDatasetsParams {
   onEdit?: () => void
@@ -25,38 +28,18 @@ export const DatasetCard: React.FC<DatasetCardProps> = ({
 }) => {
   const currentStatus = datasetStatus || dataItemStatus
 
-  const items: MenuProps['items'] = [
-    { key: '1', label: 'View Details', icon: <EyeOutlined />, onClick: onClick },
-    { key: '2', label: 'Edit Dataset', icon: <EditOutlined />, onClick: onEdit },
-    ...(onDelete
-      ? [
-          { type: 'divider' as const },
-          {
-            key: '4',
-            label: <span className="text-red-500">Deactivate Dataset</span>,
-            icon: <DeleteOutlined className="text-red-500" />,
-            onClick: onDelete
-          }
-        ]
-      : [])
-  ]
-
-  const getStatusColor = (s?: string) => {
+  const getStatusVariant = (s?: string) => {
     switch (s?.toUpperCase()) {
       case 'INACTIVE':
-      case 'ARCHIVE':
-        return 'error'
-      case 'COMPLETED':
-        return 'success'
-      case 'PAUSED':
-        return 'warning'
-      case 'ACTIVE':
-      case 'ASSIGNED':
-      case 'UNASSIGNED':
-      default:
-        return 'default'
+      case 'ARCHIVE': return 'destructive'
+      case 'COMPLETED': return 'default'
+      case 'PAUSED': return 'secondary'
+      default: return 'outline'
     }
   }
+
+
+
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A'
@@ -66,7 +49,7 @@ export const DatasetCard: React.FC<DatasetCardProps> = ({
   if (variant === 'compact') {
     return (
       <div
-        className="flex flex-col gap-2 bg-[#231e31] p-4 rounded-xl border border-gray-200 hover:border-violet-500/30 transition-colors cursor-pointer group"
+        className="flex flex-col gap-2 bg-gray-50 p-4 rounded-xl border border-gray-200 hover:border-violet-500/30 transition-all cursor-pointer group"
         onClick={onClick}
       >
         <div className="flex justify-between items-start">
@@ -78,26 +61,27 @@ export const DatasetCard: React.FC<DatasetCardProps> = ({
           </h4>
         </div>
         <div className="flex items-center gap-2 mt-1">
-          <div className="inline-block px-2 py-0.5 bg-[#2d2640] text-gray-600 text-[10px] font-bold rounded tracking-wide whitespace-nowrap">
+          <Badge variant="outline" className="text-[10px] bg-white border-gray-200">
             {totalItems || 0} Items
-          </div>
+          </Badge>
           {currentStatus && (
-            <Tag
-              color={getStatusColor(currentStatus)}
-              className="m-0 text-[10px] px-1.5 py-0 font-medium whitespace-nowrap border-0 rounded"
+            <Badge
+              variant={getStatusVariant(currentStatus)}
+              className="text-[9px] px-1.5 py-0 font-bold uppercase tracking-wider"
             >
               {currentStatus.toUpperCase()}
-            </Tag>
+            </Badge>
           )}
-          <span className="text-gray-500 text-[10px]">{formatDate(createdAt)}</span>
+          <span className="text-gray-500 text-[10px] ml-auto">{formatDate(createdAt)}</span>
         </div>
       </div>
+
     )
   }
 
   return (
     <Card
-      className={`bg-[#1A1625] border border-violet-500/20 rounded-xl overflow-hidden hover:bg-violet-500/10 hover:border-fuchsia-500/50 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(139,92,246,0.15)] transition-all duration-500 flex flex-col h-full cursor-pointer relative pt-4 mt-3 ${
+      className={`bg-white border-violet-500/10 rounded-xl overflow-hidden hover:bg-violet-500/[0.02] hover:border-violet-500/30 hover:-translate-y-1 transition-all duration-300 flex flex-col h-full cursor-pointer relative shadow-sm hover:shadow-md ${
         datasetStatus?.toUpperCase() === 'INACTIVE' ? 'opacity-60 grayscale-[0.5]' : ''
       }`}
       onClick={onClick}
@@ -105,57 +89,77 @@ export const DatasetCard: React.FC<DatasetCardProps> = ({
       {datasetName &&
       typeof datasetName === 'object' &&
       ('projectName' in (datasetName as object) || 'project_name' in (datasetName as object)) ? (
-        <div className="absolute -top-3 left-4 z-10">
-          <div className="bg-violet-500/20 border border-violet-500/30 text-violet-300 text-[10px] font-bold px-3 py-1 rounded-full backdrop-blur-sm shadow-lg flex items-center gap-1.5 transition-all group-hover:bg-violet-500/30 group-hover:border-violet-500/50">
-            <div className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+        <div className="absolute top-2 left-4 z-10">
+          <Badge variant="outline" className="bg-violet-50 border-violet-100 text-violet-600 text-[9px] font-bold">
             {String(
               (datasetName as Record<string, unknown>).projectName ||
                 (datasetName as Record<string, unknown>).project_name
             )}
-          </div>
+          </Badge>
         </div>
       ) : null}
-      <div className="flex justify-between items-start mb-2">
-        <div className="flex-1 pr-2">
-          <Title
-            level={5}
-            className="!text-[#111] !m-0 !text-sm leading-tight line-clamp-1"
-            title={datasetName}
-          >
-            {datasetName || 'Unnamed Dataset'}
-          </Title>
-        </div>
-        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-          <div className="flex items-center gap-2">
-            <div className="inline-block px-2 py-0.5 bg-[#2d2640] text-gray-600 text-[10px] font-bold rounded tracking-wide whitespace-nowrap">
-              {totalItems || 0} Items
-            </div>
-            {currentStatus && (
-              <Tag
-                color={getStatusColor(currentStatus)}
-                className="m-0 text-[10px] px-1.5 py-0 font-medium whitespace-nowrap border-0 rounded"
-              >
-                {currentStatus.toUpperCase()}
-              </Tag>
-            )}
-          </div>
-          <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
-            <Button
-              type="text"
-              className="hover:bg-gray-800"
-              icon={<MoreOutlined className="text-gray-500" />}
-            />
-          </Dropdown>
-        </div>
-      </div>
 
-      <div className="grid grid-cols-1 gap-2 bg-[#231e31] p-3 rounded-lg mt-auto">
-        <div>
-          <div className="text-[10px] text-gray-500 uppercase tracking-wider">Created At</div>
-          <div className="text-gray-600 text-xs font-semibold">{formatDate(createdAt)}</div>
+      <CardHeader className={`p-4 ${datasetName && typeof datasetName === 'object' ? 'pt-8' : 'pt-4'} pb-2 space-y-0`}>
+        <div className="flex justify-between items-start">
+          <CardTitle className="text-sm font-bold text-[#111] line-clamp-1 flex-1 pr-2">
+            {datasetName || 'Unnamed Dataset'}
+          </CardTitle>
+          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+            <Badge
+              variant={getStatusVariant(currentStatus)}
+              className="text-[9px] px-1.5 py-0 font-bold uppercase tracking-wider"
+            >
+              {currentStatus?.toUpperCase() || 'UNKNOWN'}
+            </Badge>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button variant="ghost" size="icon" className="h-7 w-7">
+                    <MoreVertical className="h-4 w-4 text-gray-400" />
+                  </Button>
+                }
+              />
+
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={onClick}>
+                  <Eye className="mr-2 h-4 w-4" />
+                  View Details
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onEdit}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit
+                </DropdownMenuItem>
+                {onDelete && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={onDelete} className="text-red-600">
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Deactivate
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
-      </div>
+      </CardHeader>
+
+      <CardContent className="p-4 pt-2 mt-auto">
+        <div className="flex items-center justify-between mb-3">
+          <Badge variant="outline" className="text-[10px] bg-gray-50 border-gray-100 font-mono">
+            <Database className="w-3 h-3 mr-1 opacity-50" />
+            {totalItems || 0} Items
+          </Badge>
+        </div>
+        <div className="grid grid-cols-1 gap-2 bg-gray-50 p-3 rounded-lg">
+          <div>
+            <div className="text-[9px] text-gray-500 uppercase font-bold tracking-widest">Created</div>
+            <div className="text-[#111] text-xs font-semibold">{formatDate(createdAt)}</div>
+          </div>
+        </div>
+      </CardContent>
     </Card>
+
   )
 }
 
