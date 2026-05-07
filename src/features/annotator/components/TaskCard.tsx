@@ -5,7 +5,7 @@ import getTaskStatusStyle, {
   getAnnotationStatusStyle
 } from './StatusStyle'
 import { useTaskDetail } from '@/features/annotator/hooks/useTaskDetail'
-import annotationApi from '@/api/annotation'
+import annotationApi from '@/services/annotation'
 
 interface Task {
   id: string

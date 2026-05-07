@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import logsApi, { type LogEntry } from '@/api/LogsApi'
+import logsApi, { type LogEntry } from '@/services/LogsApi'
 
 export const useLogs = (options?: { enabled?: boolean; pollingInterval?: number }) => {
   return useQuery({

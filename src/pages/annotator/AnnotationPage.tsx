@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { Spin, message, Image } from 'antd'
-import assignmentApi from '@/api/AssignmentApi'
-import taskApi from '@/api/TaskApi'
-import annotationApi from '@/api/annotation'
-import { reviewerApi } from '@/api/ReviewerApi'
+import assignmentApi from '@/services/AssignmentApi'
+import taskApi from '@/services/TaskApi'
+import annotationApi from '@/services/annotation'
+import { reviewerApi } from '@/services/ReviewerApi'
 import type { AnnotationSubmitItem } from '@/shared/types/api.types'
 
 interface Shape {

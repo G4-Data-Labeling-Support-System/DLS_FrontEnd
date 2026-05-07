@@ -5,8 +5,8 @@ import type { UploadFile } from 'antd/es/upload/interface'
 import type { UploadChangeParam } from 'antd/es/upload'
 import { isAxiosError, type AxiosProgressEvent } from 'axios'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
-import datasetApi from '@/api/DatasetApi'
-import projectApi, { type GetProjectsParams } from '@/api/ProjectApi'
+import datasetApi from '@/services/DatasetApi'
+import projectApi, { type GetProjectsParams } from '@/services/ProjectApi'
 import { compressImage } from '@/shared/utils/imageCompression'
 
 const { Dragger } = Upload

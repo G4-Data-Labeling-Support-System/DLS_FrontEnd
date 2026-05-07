@@ -5,9 +5,9 @@ import AssignmentHeader from './components/AssignmentHeader'
 import GuidelineSection from './components/GuidelineSection'
 import TasksSection from './components/TaskSection'
 import AnnotatorProjectDetail from './components/AnnotationProjectDetail'
-import assignmentApi from '@/api/AssignmentApi'
-import guidelineApi from '@/api/GuidelineApi'
-import projectApi from '@/api/ProjectApi'
+import assignmentApi from '@/services/AssignmentApi'
+import guidelineApi from '@/services/GuidelineApi'
+import projectApi from '@/services/ProjectApi'
 import { useAuthStore } from '@/store/auth.store'
 
 // ============ Types ============

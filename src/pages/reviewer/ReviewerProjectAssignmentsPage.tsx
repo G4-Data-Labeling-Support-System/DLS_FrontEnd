@@ -4,7 +4,7 @@ import { Spin, Button, Typography, Space, Select, Input, Empty } from 'antd'
 import { ArrowLeftOutlined, LoadingOutlined, SearchOutlined } from '@ant-design/icons'
 
 import { useAuthStore } from '@/store/auth.store'
-import assignmentApi from '@/api/AssignmentApi'
+import assignmentApi from '@/services/AssignmentApi'
 import { AssignmentCard } from '@/features/reviewer/components/AssignmentCard'
 import { ReviewerProjectTabs } from '@/features/reviewer/components/ReviewerProjectTabs'
 import ReviewerAssignmentDetailPage from './ReviewerAssignmentDetailPage'

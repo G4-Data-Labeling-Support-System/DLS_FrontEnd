@@ -11,7 +11,7 @@ import {
   ExclamationCircleOutlined
 } from '@ant-design/icons'
 import { themeClasses } from '@/styles'
-import type { LogEntry } from '@/api/LogsApi'
+import type { LogEntry } from '@/services/LogsApi'
 
 interface ActivityFeedProps {
   logs: LogEntry[]

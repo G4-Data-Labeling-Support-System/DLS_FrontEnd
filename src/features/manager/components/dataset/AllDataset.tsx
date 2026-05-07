@@ -1,6 +1,6 @@
 import { App, Spin, Empty, Input, Space, Typography, Button, Select } from 'antd'
 import { PlusOutlined, SearchOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
-import datasetApi, { type GetDatasetsParams } from '@/api/DatasetApi'
+import datasetApi, { type GetDatasetsParams } from '@/services/DatasetApi'
 import { DatasetCard } from './DatasetCard'
 import { DatasetDetail } from './DatasetDetail'
 import { CreateDatasetModal } from './CreateDatasetModal'

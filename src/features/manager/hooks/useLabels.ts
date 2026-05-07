@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import labelApiClient, { type GetLabelsParams } from '@/api/LabelApi'
+import labelApiClient, { type GetLabelsParams } from '@/services/LabelApi'
 
 const mapLabel = (l: Record<string, unknown>): GetLabelsParams => {
   const mapped: GetLabelsParams = {}

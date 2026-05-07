@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { X, Mail, Camera, Edit2 } from 'lucide-react'
 import { useAuthStore } from '@/store'
-import { userApi } from '@/api/userApi'
+import { userApi } from '@/services/userApi'
 import { API_BASE_URL } from '@/lib/axios'
 import type { UpdateUserRequest } from '@/shared/types/api.types'
 import { z } from "zod"

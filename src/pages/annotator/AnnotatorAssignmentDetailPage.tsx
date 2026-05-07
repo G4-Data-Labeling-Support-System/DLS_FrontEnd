@@ -3,8 +3,8 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { Spin, Button } from 'antd'
 import { ArrowLeftOutlined, LoadingOutlined } from '@ant-design/icons'
 
-import assignmentApi from '@/api/AssignmentApi'
-import taskApi from '@/api/TaskApi'
+import assignmentApi from '@/services/AssignmentApi'
+import taskApi from '@/services/TaskApi'
 import { TasksSection } from '@/features/annotator'
 import AnnotatorDatasetDetailPage from '@/pages/annotator/AnnotatorDatasetDetailPage'
 

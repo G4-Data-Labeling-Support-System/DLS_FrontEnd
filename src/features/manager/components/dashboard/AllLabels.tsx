@@ -9,8 +9,8 @@ import labelApiClient, {
   type GetLabelsParams,
   type CreateLabelPayload,
   type UpdateLabelPayload
-} from '@/api/LabelApi'
-import datasetApi, { type GetDatasetsParams } from '@/api/DatasetApi'
+} from '@/services/LabelApi'
+import datasetApi, { type GetDatasetsParams } from '@/services/DatasetApi'
 import { useDatasetsByProject } from '@/features/manager/hooks/useProjectDetail'
 import { useAllLabels, useInvalidateLabels } from '@/features/manager/hooks/useLabels'
 const { Title } = Typography

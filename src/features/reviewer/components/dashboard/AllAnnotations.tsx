@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Space, Typography, Spin, Input, Select, Empty } from 'antd'
 import { SearchOutlined } from '@ant-design/icons'
 import { AnnotationCard } from './AnnotationCard'
-import annotationApi, { type GetAnnotationsParams } from '@/api/annotation'
+import annotationApi, { type GetAnnotationsParams } from '@/services/annotation'
 
 const { Title } = Typography
 

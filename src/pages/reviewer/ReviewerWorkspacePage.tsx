@@ -2,9 +2,9 @@ import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Spin, message, Button, Result } from 'antd'
 import type { AxiosError } from 'axios'
-import { reviewerApi, type ReviewerItem, type ReviewerItemDetail, type Annotation } from '@/api/ReviewerApi'
-import assignmentApi from '@/api/AssignmentApi'
-import taskApi, { type Task } from '@/api/TaskApi'
+import { reviewerApi, type ReviewerItem, type ReviewerItemDetail, type Annotation } from '@/services/ReviewerApi'
+import assignmentApi from '@/services/AssignmentApi'
+import taskApi, { type Task } from '@/services/TaskApi'
 
 // ⚡ Cache for item details - prevents refetching
 const detailCache = new Map<string, ReviewerItemDetail>()

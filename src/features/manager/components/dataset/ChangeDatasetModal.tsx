@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { Form, Select, Button, App, Spin } from 'antd'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
-import datasetApi from '@/api/DatasetApi'
-import assignmentApi from '@/api/AssignmentApi'
+import datasetApi from '@/services/DatasetApi'
+import assignmentApi from '@/services/AssignmentApi'
 
 interface ChangeDatasetModalProps {
   open: boolean

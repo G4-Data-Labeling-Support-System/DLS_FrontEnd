@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { labelApi } from '@/api/LabelApi'
+import { labelApi } from '@/services/LabelApi'
 
 export const useLabels = () => {
   return useQuery({

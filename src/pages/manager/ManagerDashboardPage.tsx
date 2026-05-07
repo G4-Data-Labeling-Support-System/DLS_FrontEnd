@@ -5,7 +5,7 @@ import { AllAssignments } from '@/features/manager/components/dashboard/AllAssig
 import { QuickActions } from '@/features/manager/components/dashboard/QuickActions'
 import { AssignmentQuickActions } from '@/features/manager/components/dashboard/AssignmentQuickActions'
 import { CreateAssignmentModal } from '@/features/manager/components/dashboard/CreateAssignmentModal'
-import { type GetAssignmentsParams } from '@/api/AssignmentApi'
+import { type GetAssignmentsParams } from '@/services/AssignmentApi'
 import {
   DashboardTabs,
   type DashboardTabType

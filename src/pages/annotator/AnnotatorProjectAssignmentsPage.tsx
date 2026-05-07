@@ -4,7 +4,7 @@ import { Spin, Button, Typography, Space, Select, Input, Empty } from 'antd'
 import { ArrowLeftOutlined, LoadingOutlined, SearchOutlined } from '@ant-design/icons'
 
 import { useAuthStore } from '@/store/auth.store'
-import assignmentApi, { type GetAssignmentsParams } from '@/api/AssignmentApi'
+import assignmentApi, { type GetAssignmentsParams } from '@/services/AssignmentApi'
 import { AssignmentCard } from '@/features/manager/components/dashboard/AssignmentCard'
 import { AnnotatorProjectTabs } from '@/features/annotator/components/AnnotatorProjectTabs'
 import AnnotatorAssignmentDetailPage from './AnnotatorAssignmentDetailPage'

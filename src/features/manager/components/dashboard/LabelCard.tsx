@@ -1,7 +1,7 @@
 import React from 'react'
 import { Card, Button, Typography, Dropdown, Tag, type MenuProps } from 'antd'
 import { MoreOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons'
-import type { GetLabelsParams } from '@/api/LabelApi'
+import type { GetLabelsParams } from '@/services/LabelApi'
 
 const { Title } = Typography
 

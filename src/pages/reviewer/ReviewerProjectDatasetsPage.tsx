@@ -4,7 +4,7 @@ import { Spin, Button, Typography, Space, Select, Input, Empty } from 'antd'
 import { ArrowLeftOutlined, LoadingOutlined, SearchOutlined } from '@ant-design/icons'
 import type { AxiosError } from 'axios'
 
-import datasetApi from '@/api/DatasetApi'
+import datasetApi from '@/services/DatasetApi'
 import { DatasetCard } from '@/features/manager/components/dataset/DatasetCard'
 import { ReviewerProjectTabs } from '@/features/reviewer/components/ReviewerProjectTabs'
 

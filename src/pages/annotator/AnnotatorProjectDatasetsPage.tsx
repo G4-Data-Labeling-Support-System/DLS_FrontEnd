@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { Spin, Button, Typography, Space, Select, Input, Empty } from 'antd'
 import { ArrowLeftOutlined, LoadingOutlined, SearchOutlined } from '@ant-design/icons'
 
-import datasetApi, { type GetDatasetsParams } from '@/api/DatasetApi'
+import datasetApi, { type GetDatasetsParams } from '@/services/DatasetApi'
 import { DatasetCard } from '@/features/manager/components/dataset/DatasetCard'
 import { AnnotatorProjectTabs } from '@/features/annotator/components/AnnotatorProjectTabs'
 import AnnotatorDatasetDetailPage from './AnnotatorDatasetDetailPage'

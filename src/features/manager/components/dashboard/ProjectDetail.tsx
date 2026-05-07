@@ -11,9 +11,9 @@ import {
 } from 'antd'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
 import { EditOutlined, MoreOutlined, DownloadOutlined } from '@ant-design/icons'
-import guidelineApi from '@/api/GuidelineApi'
+import guidelineApi from '@/services/GuidelineApi'
 import { CreateProjectModal } from './CreateProjectModal'
-import assignmentApi from '@/api/AssignmentApi'
+import assignmentApi from '@/services/AssignmentApi'
 import {
   useProjectById,
   useGuidelinesByProject,

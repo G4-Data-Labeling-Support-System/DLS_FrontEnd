@@ -1,8 +1,8 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import projectApi from '@/api/ProjectApi'
-import assignmentApi, { type GetAssignmentsParams } from '@/api/AssignmentApi'
-import guidelineApi from '@/api/GuidelineApi'
-import datasetApi from '@/api/DatasetApi'
+import projectApi from '@/services/ProjectApi'
+import assignmentApi, { type GetAssignmentsParams } from '@/services/AssignmentApi'
+import guidelineApi from '@/services/GuidelineApi'
+import datasetApi from '@/services/DatasetApi'
 import { useInvalidateLabels } from './useLabels'
 
 export const useProjectById = (projectId: string) => {

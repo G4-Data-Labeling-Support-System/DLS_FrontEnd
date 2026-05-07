@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
-import datasetApi, { type GetDatasetsParams } from '@/api/DatasetApi'
-import { type GetAssignmentsParams } from '@/api/AssignmentApi'
+import datasetApi, { type GetDatasetsParams } from '@/services/DatasetApi'
+import { type GetAssignmentsParams } from '@/services/AssignmentApi'
 import { useInvalidateAssignments } from '@/features/manager/hooks/useProjectDetail'
 
 import { AllAssignments } from '@/features/manager/components/dashboard/AllAssignments'

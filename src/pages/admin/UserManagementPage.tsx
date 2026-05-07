@@ -17,7 +17,7 @@ import {
 } from '@ant-design/icons'
 import { App, Dropdown, Input, type MenuProps } from 'antd'
 import { useUsers, useDeactivateUser } from '@/features/admin/hooks/useUsers'
-import assignmentApi from '@/api/AssignmentApi'
+import assignmentApi from '@/services/AssignmentApi'
 import { useAuthStore } from '@/store/auth.store'
 
 export default function UserManagement() {

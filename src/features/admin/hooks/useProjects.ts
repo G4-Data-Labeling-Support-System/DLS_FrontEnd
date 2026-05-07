@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import projectApi, { type GetProjectsParams } from '@/api/ProjectApi'
+import projectApi, { type GetProjectsParams } from '@/services/ProjectApi'
 import type { AxiosError } from 'axios'
 
 export const useProjects = (params?: GetProjectsParams) => {

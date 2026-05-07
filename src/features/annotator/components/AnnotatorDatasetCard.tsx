@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import datasetApi from '@/api/DatasetApi'
-import assignmentApi from '@/api/AssignmentApi'
+import datasetApi from '@/services/DatasetApi'
+import assignmentApi from '@/services/AssignmentApi'
 import { themeClasses } from '@/styles'
 import { useNavigate } from 'react-router-dom'
 import { PATH_ANNOTATOR } from '@/routes/paths'

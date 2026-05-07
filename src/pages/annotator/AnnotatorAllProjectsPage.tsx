@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/auth.store'
-import assignmentApi from '@/api/AssignmentApi'
-import projectApi from '@/api/ProjectApi'
+import assignmentApi from '@/services/AssignmentApi'
+import projectApi from '@/services/ProjectApi'
 import { ProjectCard } from '@/features/annotator/components/ProjectCard'
 
 export default function AnnotatorAllProjectsPage() {

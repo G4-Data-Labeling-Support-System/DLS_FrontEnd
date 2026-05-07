@@ -7,9 +7,9 @@ import {
   PlayCircleOutlined,
   ArrowRightOutlined
 } from '@ant-design/icons'
-import taskApi from '@/api/TaskApi'
-import assignmentApi from '@/api/AssignmentApi'
-import annotationApi from '@/api/annotation'
+import taskApi from '@/services/TaskApi'
+import assignmentApi from '@/services/AssignmentApi'
+import annotationApi from '@/services/annotation'
 import { useTaskDetail } from '@/features/annotator/hooks/useTaskDetail'
 import { ChangeDatasetModal } from '@/features/manager/components/dataset/ChangeDatasetModal'
 import { useAuthStore } from '@/store'

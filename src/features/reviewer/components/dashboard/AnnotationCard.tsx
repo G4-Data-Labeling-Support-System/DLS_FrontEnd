@@ -1,7 +1,7 @@
 import React from 'react'
 import { Card, Button, Typography, Dropdown, Tag, type MenuProps } from 'antd'
 import { MoreOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons'
-import type { GetAnnotationsParams } from '@/api/annotation'
+import type { GetAnnotationsParams } from '@/services/annotation'
 
 const { Title, Text } = Typography
 

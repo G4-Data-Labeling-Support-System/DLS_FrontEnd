@@ -9,7 +9,7 @@ import {
   useAssignmentsByProject,
   useInvalidateAssignments
 } from '@/features/manager/hooks/useProjectDetail'
-import assignmentApi, { type GetAssignmentsParams } from '@/api/AssignmentApi'
+import assignmentApi, { type GetAssignmentsParams } from '@/services/AssignmentApi'
 
 const { Title } = Typography
 

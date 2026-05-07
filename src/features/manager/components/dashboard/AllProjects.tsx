@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Space, Typography, Spin, Input, Select, Empty, App, Button } from 'antd'
 import { SearchOutlined, PlusOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import { ProjectCard } from './ProjectCard'
-import projectApi, { type GetProjectsParams } from '@/api/ProjectApi'
+import projectApi, { type GetProjectsParams } from '@/services/ProjectApi'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
 const { Title } = Typography
 

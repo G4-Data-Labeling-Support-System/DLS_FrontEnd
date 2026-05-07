@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { App, Spin, Typography, Card, Descriptions } from 'antd'
 import { DatabaseOutlined } from '@ant-design/icons'
-import labelApiClient from '@/api/LabelApi'
-import datasetApi from '@/api/DatasetApi'
+import labelApiClient from '@/services/LabelApi'
+import datasetApi from '@/services/DatasetApi'
 import { DatasetDetail } from '../dataset/DatasetDetail'
 import { useSearchParams } from 'react-router-dom'
 

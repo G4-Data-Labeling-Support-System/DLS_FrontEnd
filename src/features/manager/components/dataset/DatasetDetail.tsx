@@ -8,8 +8,8 @@ import {
   Button
 } from 'antd'
 import { EditOutlined } from '@ant-design/icons'
-import datasetApi from '@/api/DatasetApi'
-import projectApi from '@/api/ProjectApi'
+import datasetApi from '@/services/DatasetApi'
+import projectApi from '@/services/ProjectApi'
 import { ProjectDetail } from '../dashboard/ProjectDetail'
 import { useSearchParams } from 'react-router-dom'
 import { GlassModal } from '@/shared/components/ui/GlassModal'
